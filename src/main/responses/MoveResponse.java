@@ -1,6 +1,6 @@
-package sandbox2.responses;
+package main.responses;
 
-import sandbox2.requests.Request;
+import main.requests.Request;
 
 public class MoveResponse extends Response {
 

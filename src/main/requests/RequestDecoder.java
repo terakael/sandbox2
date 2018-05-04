@@ -1,4 +1,4 @@
-package sandbox2.requests;
+package main.requests;
 
 import javax.websocket.DecodeException;
 import javax.websocket.Decoder;

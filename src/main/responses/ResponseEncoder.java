@@ -1,4 +1,4 @@
-package sandbox2.responses;
+package main.responses;
 
 import javax.websocket.EncodeException;
 import javax.websocket.Encoder;

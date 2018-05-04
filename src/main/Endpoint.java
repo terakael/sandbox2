@@ -1,14 +1,14 @@
-package sandbox2;
+package main;
 
 import javax.websocket.server.ServerEndpoint;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import sandbox2.requests.Request;
-import sandbox2.requests.RequestDecoder;
-import sandbox2.responses.Response;
-import sandbox2.responses.ResponseFactory;
-import sandbox2.responses.ResponseEncoder;
+import main.requests.Request;
+import main.requests.RequestDecoder;
+import main.responses.Response;
+import main.responses.ResponseFactory;
+import main.responses.ResponseEncoder;
 
 import java.io.IOException;
 import java.util.Collections;

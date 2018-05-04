@@ -1,4 +1,4 @@
-package sandbox2;
+package main;
 
 public class Stats {
 	int strength = 0;

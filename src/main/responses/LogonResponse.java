@@ -1,7 +1,7 @@
-package sandbox2.responses;
+package main.responses;
 
-import sandbox2.Stats;
-import sandbox2.requests.Request;
+import main.Stats;
+import main.requests.Request;
 
 public class LogonResponse extends Response {
 	

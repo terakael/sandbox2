@@ -1,4 +1,4 @@
-package sandbox2;
+package main;
 
 import java.util.Scanner;
 

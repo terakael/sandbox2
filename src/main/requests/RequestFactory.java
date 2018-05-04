@@ -1,4 +1,4 @@
-package sandbox2.requests;
+package main.requests;
 
 import java.util.HashMap;
 import java.util.Map;
