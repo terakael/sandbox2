@@ -1,9 +1,11 @@
 package main.responses;
 
+import lombok.Getter;
 import main.requests.Request;
 
 public abstract class Response {
 	
+	@Getter
 	private int success;
 	private String responseText;
 	private String action;
@@ -17,6 +19,6 @@ public abstract class Response {
 		this.responseText = responseText;
 	}
 
-	public abstract void process(Request req);
+	public abstract boolean process(Request req);// true broadcasts message to all, false sends to requester
 
 }

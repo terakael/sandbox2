@@ -9,7 +9,9 @@ public class UnknownResponse extends Response {
 	}
 
 	@Override
-	public void process(Request req) {
+	public boolean process(Request req) {
+		assert(false);
 		setRecoAndResponseText(0, "Unknown action.");
+		return false;
 	}
 }

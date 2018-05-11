@@ -10,7 +10,9 @@ public class RequestFactory {
 	private static Map<String, Class<?>> map = new HashMap<>();
 	static {
 		map.put("logon", LogonRequest.class);
+		map.put("logoff", LogoffRequest.class);
 		map.put("move", MoveRequest.class);
+		map.put("message", MessageRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))
