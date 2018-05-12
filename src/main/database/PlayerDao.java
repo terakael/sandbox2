@@ -8,135 +8,106 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerDao {
-	private static Connection conn;
-
-	public PlayerDao(Connection conn) {
-		if (PlayerDao.conn == null)
-			PlayerDao.conn = conn;
-	}
+	private PlayerDao() {}
 	
-	public PlayerDto getPlayerById(int id) {
-		PreparedStatement ps = null;
-		try {
-			ResultSet rs = null;
-			ps = conn.prepareStatement("select id, name, password, posx, posy from player where id = ?");
+	public static PlayerDto getPlayerById(int id) throws SQLException {
+		final String query = "select id, name, password, posx, posy from player where id = ?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
 			ps.setInt(1, id);
-			rs = ps.executeQuery();
 			
-			return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"));
-		} catch (SQLException e) {
-			// shit
-		} finally {
-			if (ps != null) {
-				try {
-					ps.close();
-				} catch (Exception e) {}
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"));
+				return null;
 			}
 		}
-		return null;
 	}
 	
-	public PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
-		PreparedStatement ps = null;
-		try {
-			ResultSet rs = null;
-			ps = conn.prepareStatement("select id, name, password, posx, posy from player where name = ? and password = ?");
+	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
+		final String query = "select id, name, password, posx, posy from player where name = ? and password = ?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
 			ps.setString(1, username);
 			ps.setString(2, password);
-			rs = ps.executeQuery();
 			
-			if (rs.next())
-				return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"));
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"));
+				return null;
+			}
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-		} finally {
-			if (ps != null)
-				try {
-					ps.close();
-				} catch (Exception e) {}
 		}
 		return null;
 	}
 	
-	public void setDestinationPosition(int id, int x, int y) {
-		PreparedStatement ps = null;
-		
-		try {
-			ps = conn.prepareStatement("update player set posx=?, posy=? where id=?");
+	public static void setDestinationPosition(int id, int x, int y) {
+		final String query = "update player set posx=?, posy=? where id=?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
 			ps.setInt(1, x);
 			ps.setInt(2, y);
 			ps.setInt(3, id);
+			
 			ps.executeUpdate();
 		} catch (SQLException e) {
-			assert(false);
-		} finally {
-			if (ps != null) {
-				try {
-					ps.close();
-				} catch (Exception e) {}
-			}
+			System.out.println(e.getMessage());
 		}
 	}
-
-	public void updateLastLoggedIn(int id) {
-		PreparedStatement ps = null;
-		
-		try {
-			ps = conn.prepareStatement("update player set last_logged_in=now() where id=?");
+	
+	public static void updateLastLoggedIn(int id) {
+		final String query = "update player set last_logged_in=now() where id=?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
 			ps.setInt(1, id);
 			ps.executeUpdate();
 		} catch (SQLException e) {
-			assert(false);
-		} finally {
-			if (ps != null) {
-				try {
-					ps.close();
-				} catch (Exception e) {}
-			}
+			System.out.println(e.getMessage());
 		}
 	}
 	
 	public static String getNameFromId(int id) {
-		PreparedStatement ps = null;
-		try {
-			ResultSet rs = null;
-			ps = conn.prepareStatement("select name from player where id = ?");
+		final String query = "select name from player where id = ?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
 			ps.setInt(1, id);
-			rs = ps.executeQuery();
 			
-			if (rs.next())
-				return rs.getString("name");
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getString("name");
+			}
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-		} finally {
-			if (ps != null)
-				try {
-					ps.close();
-				} catch (Exception e) {}
 		}
+		
 		return "";
 	}
-
+	
 	public static List<PlayerDto> getAllPlayers() {
 		List<PlayerDto> playerList = new ArrayList<>();
-		PreparedStatement ps = null;
-		try {
-			ResultSet rs = null;
-			ps = conn.prepareStatement("select id, name, posx, posy from player inner join player_session on player_session.player_id = player.id");
-			rs = ps.executeQuery();
-			
+		final String query = "select id, name, posx, posy from player inner join player_session on player_session.player_id = player.id";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+			ResultSet rs = ps.executeQuery();
+		) {
 			while (rs.next())
-				playerList.add(new PlayerDto(rs.getInt("id"), rs.getString("name"), "", rs.getInt("posx"), rs.getInt("posy")));
+				playerList.add(new PlayerDto(rs.getInt("id"), rs.getString("name"), null, rs.getInt("posx"), rs.getInt("posy")));
 		} catch (SQLException e) {
-			// shit
-		} finally {
-			if (ps != null) {
-				try {
-					ps.close();
-				} catch (Exception e) {}
-			}
+			System.out.println(e.getMessage());
 		}
+		
 		return playerList;
 	}
-
 }

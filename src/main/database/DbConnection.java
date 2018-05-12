@@ -1,28 +1,32 @@
 package main.database;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.apache.commons.dbcp.BasicDataSource;
+
+// connection pool: https://stackoverflow.com/questions/7592056/am-i-using-jdbc-connection-pooling
+
 public class DbConnection {
-	private static DbConnection connection;
-	private Connection conn;
-	private DbConnection(Connection conn) {
-		this.conn = conn;
+	private static final BasicDataSource dataSource = new BasicDataSource();
+	static {
+		dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+		dataSource.setUrl("jdbc:mysql://localhost:3306/local_schema?autoReconnect=true&useSSL=false");
+		dataSource.setUsername("root");
+		dataSource.setPassword("ey3a4y3e");
+		System.out.println("datasource set");
+	}
+	
+	private DbConnection() {
+		//
 	}
 	
 	public static Connection get() {
-		if (connection == null) {
-			try {
-				connection = new DbConnection(DriverManager.getConnection(
-								"jdbc:mysql://localhost:3306/local_schema?autoReconnect=true&useSSL=false", 
-								"root", 
-								"ey3a4y3e"));
-			} catch (SQLException e) {
-				 assert(false);
-			}
+		try {
+			return dataSource.getConnection();
+		} catch (SQLException e) {
+			System.out.println(e);
+			return null;
 		}
-		
-		return connection.conn;
 	}
 }

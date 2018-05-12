@@ -8,26 +8,78 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StatsDao {
-	private static Connection conn;
-	public StatsDao(Connection conn) {
-		if (StatsDao.conn == null)
-			StatsDao.conn = conn;
+	private StatsDao() {}
+	
+	private static Map<Integer, String> cachedStats = null;
+	
+	public static Map<String, Integer> getStatsByPlayerId(int id) {
+		final String query = "select player_id, stat_name, exp from view_player_stats where player_id = ?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, id);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				Map<String, Integer> stats = new HashMap<>();
+				while (rs.next())
+					stats.put(rs.getString("stat_name"), rs.getInt("exp"));
+				return stats;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 	
-	public Map<String, Integer> getStatsByPlayerId(int id) {
-		try {
-			ResultSet rs = null;
-			PreparedStatement ps = conn.prepareStatement("select player_id, stat_name, exp from view_player_stats where player_id = ?");
-			ps.setInt(1, id);
-			rs = ps.executeQuery();
-			
-			Map<String, Integer> stats = new HashMap<>();
+	public static void addExpToPlayer(int playerId, int statId, int exp) {
+		final String query = "update player_stats set exp=exp+? where player_id=? and stat_id=?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, exp);
+			ps.setInt(2, playerId);
+			ps.setInt(3, statId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static Map<Integer, String> getStats() {
+		final String query = "select id, short_name from stats";
+		
+		Map<Integer, String> stats = new HashMap<>();
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+			ResultSet rs = ps.executeQuery()
+		) {
 			while (rs.next())
-				stats.put(rs.getString("stat_name"), rs.getInt("exp"));
+				stats.put(rs.getInt("id"), rs.getString("short_name"));
 			return stats;
 		} catch (SQLException e) {
-			// shit
+			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public static int getStatIdByName(String stat) {
+		if (StatsDao.cachedStats == null) {
+			StatsDao.cachedStats = StatsDao.getStats();
+			if (StatsDao.cachedStats == null)
+				return -1;
+		}
+		
+		for (Map.Entry<Integer, String> entry : StatsDao.cachedStats.entrySet()) {
+			if (entry.getValue().equals(stat))
+				return entry.getKey();
+		}
+		
+		return -1;
 	}
 }

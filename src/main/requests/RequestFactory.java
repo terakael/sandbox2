@@ -13,6 +13,8 @@ public class RequestFactory {
 		map.put("logoff", LogoffRequest.class);
 		map.put("move", MoveRequest.class);
 		map.put("message", MessageRequest.class);
+		map.put("duel", DuelRequest.class);
+		map.put("trade", TradeRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

@@ -18,6 +18,15 @@ public class ResponseFactory {
 		if (action.equals("message"))
 			return new MessageResponse(action);
 		
+		if (action.equals("addexp"))
+			return new AddExpResponse(action);
+		
+		if (action.equals("duel"))
+			return new DuelResponse(action);
+		
+		if (action.equals("trade"))
+			return new TradeResponse(action);
+		
 		return new UnknownResponse(action);
 	}
 }

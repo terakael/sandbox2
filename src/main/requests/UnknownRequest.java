@@ -4,6 +4,6 @@ public class UnknownRequest extends Request {
 	@Override
 	public String getAction() {
 		assert(false);
-		return "Unknown";
+		return "unknown";
 	}
 }

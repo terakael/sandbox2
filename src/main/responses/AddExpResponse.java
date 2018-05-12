@@ -2,16 +2,18 @@ package main.responses;
 
 import javax.websocket.Session;
 
-import lombok.Getter;
 import lombok.Setter;
 import main.requests.Request;
 
-public class PlayerLeaveResponse extends Response {
+@Setter
+public class AddExpResponse extends Response {
 	
-	@Getter @Setter private int id;
-	@Setter private String name;
-	
-	public PlayerLeaveResponse(String action) {
+	private int id;
+	private int statId;
+	private String statShortName;
+	private int exp;
+
+	public AddExpResponse(String action) {
 		super(action);
 	}
 

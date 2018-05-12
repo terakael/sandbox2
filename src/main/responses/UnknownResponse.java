@@ -1,5 +1,7 @@
 package main.responses;
 
+import javax.websocket.Session;
+
 import main.requests.Request;
 
 public class UnknownResponse extends Response {
@@ -9,9 +11,9 @@ public class UnknownResponse extends Response {
 	}
 
 	@Override
-	public boolean process(Request req) {
+	public ResponseType process(Request req, Session client) {
 		assert(false);
 		setRecoAndResponseText(0, "Unknown action.");
-		return false;
+		return ResponseType.client_only;
 	}
 }

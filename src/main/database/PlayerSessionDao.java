@@ -8,110 +8,80 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerSessionDao {
-	private static Connection conn;
-	public PlayerSessionDao(Connection conn) {
-		if (PlayerSessionDao.conn == null)
-			PlayerSessionDao.conn = conn;
-	}
+	private PlayerSessionDao() {}
 	
 	public static void addPlayer(int id) {
-		PreparedStatement ps = null;
-		
-		try {
-			ps = conn.prepareStatement("insert into player_session (player_id) values (?)");
+		final String query = "insert into player_session (player_id) values (?)";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
 			ps.setInt(1, id);
 			ps.executeUpdate();
 		} catch (SQLException e) {
-			assert(false);
-		} finally {
-			if (ps != null) {
-				try {
-					ps.close();
-				} catch (Exception e) {}
-			}
+			e.printStackTrace();
 		}
 	}
 	
 	public static void removePlayer(int id) {
-		PreparedStatement ps = null;
-		
-		try {
-			ps = conn.prepareStatement("delete from player_session where player_id = ?");
+		final String query = "delete from player_session where player_id = ?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
 			ps.setInt(1, id);
 			ps.executeUpdate();
 		} catch (SQLException e) {
-			assert(false);
-		} finally {
-			if (ps != null) {
-				try {
-					ps.close();
-				} catch (Exception e) {}
-			}
+			e.printStackTrace();
 		}
 	}
 	
 	public static List<Integer> getActivePlayers() {
 		List<Integer> activePlayers = new ArrayList<>();
-		PreparedStatement ps = null;
-		try {
-			ResultSet rs = null;
-			ps = conn.prepareStatement("select player_id from player_session");
-			rs = ps.executeQuery();
-			
-			if (rs.next())
+		final String query = "select player_id from player_session";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+			ResultSet rs = ps.executeQuery();	
+		) {
+			while (rs.next())
 				activePlayers.add(rs.getInt("player_id"));
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		} finally {
-			if (ps != null)
-				try {
-					ps.close();
-				} catch (Exception e) {}
+			e.printStackTrace();
 		}
+		
 		return activePlayers;
-	}
-
-	public static void setDb(Connection connection) {
-		if (PlayerSessionDao.conn == null)
-			PlayerSessionDao.conn = connection;
 	}
 	
 	public static void clearAllSessions() {
-		PreparedStatement ps = null;
-		
-		try {
-			ps = conn.prepareStatement("delete from player_session");
+		final String query = "delete from player_session";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
 			ps.executeUpdate();
 		} catch (SQLException e) {
-			assert(false);
-		} finally {
-			if (ps != null) {
-				try {
-					ps.close();
-				} catch (Exception e) {}
-			}
+			e.printStackTrace();
 		}
 	}
 
 	public static boolean entryExists(int id) {
-		PreparedStatement ps = null;
-		try {
-			ResultSet rs = null;
-			ps = conn.prepareStatement("select count(*) cnt from player_session where player_id = ?");
+		final String query = "select count(*) cnt from player_session where player_id = ?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
 			ps.setInt(1, id);
-			rs = ps.executeQuery();
 			
-			if (rs.next())
-				return rs.getInt("cnt") == 1;
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getInt("cnt") == 1;
+			}
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		} finally {
-			if (ps != null)
-				try {
-					ps.close();
-				} catch (Exception e) {}
+			e.printStackTrace();
 		}
 		
+		assert(false);
 		return true;// weird case, say that the entry does exist
 	}
 }

@@ -1,13 +1,16 @@
 package main.responses;
 
+import javax.websocket.Session;
+
 import lombok.Setter;
 import main.database.PlayerDto;
 import main.requests.Request;
+import main.responses.Response.ResponseType;
 
 public class PlayerEnterResponse extends Response {
 	
-	@Setter private String userId;
-	@Setter private String username;
+	@Setter private String id;
+	@Setter private String name;
 	@Setter private int x;
 	@Setter private int y;
 	
@@ -18,8 +21,8 @@ public class PlayerEnterResponse extends Response {
 	}
 
 	@Override
-	public boolean process(Request req) {
-		return false;
+	public ResponseType process(Request req, Session client) {
+		return ResponseType.client_only;
 	}
 	
 	public void setPlayer(PlayerDto player) {

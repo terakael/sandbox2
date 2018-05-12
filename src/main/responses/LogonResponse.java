@@ -1,8 +1,9 @@
 package main.responses;
 
-import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
+
+import javax.websocket.Session;
 
 import lombok.Getter;
 import main.Stats;
@@ -16,8 +17,8 @@ import main.requests.Request;
 
 public class LogonResponse extends Response {
 	
-	@Getter private String userId;
-	@Getter private String username;
+	@Getter private String id;
+	@Getter private String name;
 	@Getter private int x;
 	@Getter private int y;
 	private Stats stats;
@@ -28,40 +29,38 @@ public class LogonResponse extends Response {
 	}
 	
 	@Override
-	public boolean process(Request req) {
+	public ResponseType process(Request req, Session client) {
 		if (!(req instanceof LogonRequest)) {
 			setRecoAndResponseText(0, "funny business");
-			return false;
+			return ResponseType.client_only;
 		}
 		
 		LogonRequest logonReq = (LogonRequest)req;
-		PlayerDao dao = new PlayerDao(DbConnection.get());
 		
-		PlayerDto dto = dao.getPlayerByUsernameAndPassword(logonReq.getUsername(), logonReq.getPassword());
+		PlayerDto dto = PlayerDao.getPlayerByUsernameAndPassword(logonReq.getName(), logonReq.getPassword());
 		if (dto == null) {
 			setRecoAndResponseText(0, "invalid credentials");
-			return false;
+			return ResponseType.client_only;
 		} else {
 			if (PlayerSessionDao.entryExists(dto.getId())) {
 				setRecoAndResponseText(0, "already logged in");
-				return false;
+				return ResponseType.client_only;
 			}
-			dao.updateLastLoggedIn(dto.getId());
+			PlayerDao.updateLastLoggedIn(dto.getId());
 		}
 		
-		userId = Integer.toString(dto.getId());
-		username = dto.getName();
+		id = Integer.toString(dto.getId());
+		name = dto.getName();
 		
 		x = dto.getX();
 		y = dto.getY();
 		
-		StatsDao statsDao = new StatsDao(DbConnection.get());
-		Map<String, Integer> statList = statsDao.getStatsByPlayerId(dto.getId());
+		Map<String, Integer> statList = StatsDao.getStatsByPlayerId(dto.getId());
 		stats = new Stats(statList);
 		
 		players = PlayerDao.getAllPlayers();
 
 		setRecoAndResponseText(1, "");
-		return false;
+		return ResponseType.client_only;
 	}
 }
