@@ -11,7 +11,7 @@ public class PlayerDao {
 	private PlayerDao() {}
 	
 	public static PlayerDto getPlayerById(int id) throws SQLException {
-		final String query = "select id, name, password, posx, posy from player where id = ?";
+		final String query = "select id, name, password, posx, posy, current_hp, max_hp from view_player where id = ?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -20,14 +20,14 @@ public class PlayerDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"));
+					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"));
 				return null;
 			}
 		}
 	}
 	
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
-		final String query = "select id, name, password, posx, posy from player where name = ? and password = ?";
+		final String query = "select id, name, password, posx, posy, current_hp, max_hp from view_player where name = ? and password = ?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -37,7 +37,7 @@ public class PlayerDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"));
+					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"));
 				return null;
 			}
 		} catch (SQLException e) {
@@ -75,6 +75,21 @@ public class PlayerDao {
 		}
 	}
 	
+	public static void updateCurrentHp(int id, int hp) {
+		final String query = "update player set current_hp=? where id=?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, hp);
+			ps.setInt(2, id);
+			
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
 	public static String getNameFromId(int id) {
 		final String query = "select name from player where id = ?";
 		try (
@@ -96,18 +111,75 @@ public class PlayerDao {
 	
 	public static List<PlayerDto> getAllPlayers() {
 		List<PlayerDto> playerList = new ArrayList<>();
-		final String query = "select id, name, posx, posy from player inner join player_session on player_session.player_id = player.id";
+		final String query = "select id, name, posx, posy, current_hp, max_hp from view_player inner join player_session on player_session.player_id = view_player.id";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 			ResultSet rs = ps.executeQuery();
 		) {
 			while (rs.next())
-				playerList.add(new PlayerDto(rs.getInt("id"), rs.getString("name"), null, rs.getInt("posx"), rs.getInt("posy")));
+				playerList.add(new PlayerDto(rs.getInt("id"), rs.getString("name"), null, rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp")));
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
 		
 		return playerList;
+	}
+
+	public static int getCurrentHpByPlayerId(int id) {
+		int hp = 0;
+		final String query = "select current_hp from player where id = ?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, id);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getInt("current_hp");
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return hp;
+	}
+
+	public static int getMaxHpByPlayerId(int id) {
+		int hp = 0;
+		final String query = "select max_hp from view_player where id = ?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, id);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getInt("max_hp");
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return hp;
+	}
+
+	public static void updateCurrentPosition(int id, int x, int y) {
+		final String query = "update player set posx=?, posy=? where id=?";
+		try (
+				Connection connection = DbConnection.get();
+				PreparedStatement ps = connection.prepareStatement(query)
+			) {
+				ps.setInt(1, x);
+				ps.setInt(2, y);
+				ps.setInt(3, id);
+				
+				ps.executeUpdate();
+			} catch (SQLException e) {
+				System.out.println(e.getMessage());
+			}
+		
 	}
 }

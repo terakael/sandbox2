@@ -38,7 +38,7 @@ public class Endpoint {
 	private static Set<Session> peers = Collections.synchronizedSet(new HashSet<Session>());
 	
 	// players actively ingame
-	private static Map<Session, PlayerDto> playerSessions = new HashMap<>();
+	private static Map<PlayerDto, Session> playerSessions = new HashMap<>();
 	
 	static {
 		PlayerSessionDao.clearAllSessions();
@@ -83,9 +83,9 @@ public class Endpoint {
 					LogonResponse logonResp = (LogonResponse)response;
 					int userId = Integer.parseInt(logonResp.getId());
 					
-					PlayerDto player = new PlayerDto(userId, logonResp.getName(), "", logonResp.getX(), logonResp.getY());
+					PlayerDto player = new PlayerDto(userId, logonResp.getName(), "", logonResp.getX(), logonResp.getY(), logonResp.getCurrentHp(), logonResp.getMaxHp());
 					PlayerSessionDao.addPlayer(userId);
-					playerSessions.put(client, player);
+					playerSessions.put(player, client);
 					peers.remove(client);
 					
 					PlayerEnterResponse enter = new PlayerEnterResponse("playerEnter");
@@ -104,7 +104,7 @@ public class Endpoint {
 		}
 	}
 	
-	private void broadcastMessageToEveryone(String text, String colour) {
+	public static void broadcastMessageToEveryone(String text, String colour) {
 		MessageResponse msgResp = new MessageResponse("message");
 		msgResp.setRecoAndResponseText(1, "");
 		msgResp.setColour(colour);
@@ -112,12 +112,12 @@ public class Endpoint {
 		sendTextToEveryone(gson.toJson(msgResp), null, true);
 	}
 	
-	private void sendTextToEveryone(String text, Session client, boolean includeClient) {
-		for (Map.Entry<Session, PlayerDto> peer : playerSessions.entrySet()) {
-			if (!includeClient && peer.getKey() == client)
+	public static void sendTextToEveryone(String text, Session client, boolean includeClient) {
+		for (Map.Entry<PlayerDto, Session> peer : playerSessions.entrySet()) {
+			if (!includeClient && peer.getValue() == client)
 				continue;
 			try {
-				peer.getKey().getBasicRemote().sendText(text);
+				peer.getValue().getBasicRemote().sendText(text);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -132,22 +132,29 @@ public class Endpoint {
 		System.out.println("onClose");
 		peers.remove(session);
 		
-		if (playerSessions.containsKey(session)) {
-			PlayerDto player = playerSessions.get(session);
-			playerSessions.remove(session);
-			PlayerSessionDao.removePlayer(player.getId());
-			//broadcastMessageToEveryone(String.format("%s has logged out.", player.getName()), "#0ff");
+		PlayerDto key = null;
+		for (Map.Entry<PlayerDto, Session> peer : playerSessions.entrySet()) {
+			if (peer.getValue() == session) {
+				key = peer.getKey();
+				break;
+			}
+		}
+		
+		if (key != null) {
+			playerSessions.remove(key);
+			PlayerSessionDao.removePlayer(key.getId());
+			
 			PlayerLeaveResponse leave = new PlayerLeaveResponse("playerLeave");
-			leave.setId(player.getId());
-			leave.setName(player.getName());
+			leave.setId(key.getId());
+			leave.setName(key.getName());
 			sendTextToEveryone(gson.toJson(leave), null, false);
 		}
 	}
 	
-	public static Session getSessionByPlayerId(int id) {
-		for (Map.Entry<Session, PlayerDto> entry : Endpoint.playerSessions.entrySet()) {
-			if (entry.getValue().getId() == id)
-				return entry.getKey();
+	public static Session getSessionByPlayerId(int id) {		
+		for (Map.Entry<PlayerDto, Session> entry : Endpoint.playerSessions.entrySet()) {
+			if (entry.getKey().getId() == id)
+				return entry.getValue();
 		}
 		return null;
 	}

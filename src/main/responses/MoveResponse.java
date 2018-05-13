@@ -2,6 +2,7 @@ package main.responses;
 
 import javax.websocket.Session;
 
+import main.FightManager;
 import main.database.DbConnection;
 import main.database.PlayerDao;
 import main.requests.MoveRequest;
@@ -35,6 +36,8 @@ public class MoveResponse extends Response {
 		y = ((moveReq.getY() / 32) * 32) + 16;
 		
 		PlayerDao.setDestinationPosition(moveReq.getId(), x, y);
+		
+		FightManager.cancelFight(moveReq.getId());
 		
 		setRecoAndResponseText(1, "");
 		return ResponseType.broadcast;

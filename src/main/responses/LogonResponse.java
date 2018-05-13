@@ -21,6 +21,8 @@ public class LogonResponse extends Response {
 	@Getter private String name;
 	@Getter private int x;
 	@Getter private int y;
+	@Getter private int currentHp;
+	@Getter private int maxHp;
 	private Stats stats;
 	private List<PlayerDto> players;
 
@@ -54,6 +56,8 @@ public class LogonResponse extends Response {
 		
 		x = dto.getX();
 		y = dto.getY();
+		currentHp = dto.getCurrentHp();
+		maxHp = dto.getMaxHp();
 		
 		Map<String, Integer> statList = StatsDao.getStatsByPlayerId(dto.getId());
 		stats = new Stats(statList);

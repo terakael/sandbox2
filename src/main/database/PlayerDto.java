@@ -11,4 +11,6 @@ public class PlayerDto {
 	private transient String password;
 	private int x;
 	private int y;
+	private int currentHp;
+	private int maxHp;
 }

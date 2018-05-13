@@ -7,6 +7,7 @@ import javax.websocket.Session;
 import lombok.Getter;
 import lombok.Setter;
 import main.Endpoint;
+import main.FightManager;
 import main.PlayerRequestManager;
 import main.database.PlayerDao;
 import main.requests.PlayerRequest;
@@ -64,6 +65,10 @@ public abstract class PlayerResponse extends Response {
 			// clear player B's duel request as it is accepted, and also clear player A's trade request as it is old
 			PlayerRequestManager.removeRequest(playerReq.getObjectId());
 			PlayerRequestManager.removeRequest(playerReq.getId());
+			
+			if (playerReq.getRequestType() == PlayerRequestManager.PlayerRequestType.duel) {
+				FightManager.addFight(playerReq.getId(), playerReq.getObjectId());
+			}
 		}
 		else
 			PlayerRequestManager.addRequest(playerReq.getId(), playerReq.getObjectId(), playerReq.getRequestType());

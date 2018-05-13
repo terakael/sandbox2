@@ -12,6 +12,9 @@ public class Server {
 		try {
 			server.start();
 			
+			FightManager fightManager = new FightManager();
+			fightManager.start();
+			
 			System.out.println("press any key to quit");
 			new Scanner(System.in).nextLine();
 		} catch (DeploymentException e) {
