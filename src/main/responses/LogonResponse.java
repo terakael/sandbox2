@@ -8,9 +8,16 @@ import javax.websocket.Session;
 import lombok.Getter;
 import main.Stats;
 import main.database.DbConnection;
+import main.database.ItemDao;
+import main.database.ItemDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
+import main.database.PlayerInventoryDao;
 import main.database.PlayerSessionDao;
+import main.database.SpriteFrameDao;
+import main.database.SpriteFrameDto;
+import main.database.SpriteMapDao;
+import main.database.SpriteMapDto;
 import main.database.StatsDao;
 import main.requests.LogonRequest;
 import main.requests.Request;
@@ -25,6 +32,10 @@ public class LogonResponse extends Response {
 	@Getter private int maxHp;
 	private Stats stats;
 	private List<PlayerDto> players;
+	private List<SpriteMapDto> spriteMaps;
+	private List<ItemDto> items;
+	private List<SpriteFrameDto> spriteFrames;
+	private List<Integer> inventory;
 
 	public LogonResponse(String action) {
 		super(action);
@@ -63,6 +74,10 @@ public class LogonResponse extends Response {
 		stats = new Stats(statList);
 		
 		players = PlayerDao.getAllPlayers();
+		spriteMaps = SpriteMapDao.getAllSpriteMaps();
+		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
+		items = ItemDao.getAllItems();
+		inventory = PlayerInventoryDao.getInventoryListByPlayerId(dto.getId());
 
 		setRecoAndResponseText(1, "");
 		return ResponseType.client_only;
