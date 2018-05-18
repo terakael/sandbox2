@@ -26,6 +26,7 @@ public class FightManager implements Runnable {
 	private static class FightingPlayer {
 		private int id;
 		private int hp;
+		private int maxHp;
 		private Session session;
 		private Map<String, Integer> stats;
 		
@@ -33,7 +34,8 @@ public class FightManager implements Runnable {
 			this.id = id;
 			this.session = Endpoint.getSessionByPlayerId(id);
 			this.stats = StatsDao.getStatsByPlayerId(id);
-			this.hp = PlayerDao.getCurrentHpByPlayerId(id);
+			this.hp = StatsDao.getCurrentHpByPlayerId(id);
+			this.maxHp = StatsDao.getMaxHpByPlayerId(id);
 		}
 		
 		public int getHit() {
@@ -83,12 +85,12 @@ public class FightManager implements Runnable {
 				
 				newHp = player2Hp - dmg;
 				if (newHp <= 0) {
-					newHp = PlayerDao.getMaxHpByPlayerId(player2.getId());
+					newHp = StatsDao.getMaxHpByPlayerId(player2.getId());
 					fightOver = true;
 				}
 				
 				player2.setHp(newHp);
-				PlayerDao.updateCurrentHp(player2.getId(), newHp); 
+				StatsDao.setRelativeBoostByPlayerIdStatId(player2.getId(), 5, newHp - player2.getMaxHp());
 			} else {
 				int dmg = player2.getHit() - player1.getBlock();
 				if (dmg < 0)
@@ -99,12 +101,12 @@ public class FightManager implements Runnable {
 				
 				newHp = player1Hp - dmg;
 				if (newHp <= 0) {
-					newHp = PlayerDao.getMaxHpByPlayerId(player1.getId());
+					newHp = StatsDao.getMaxHpByPlayerId(player1.getId());
 					fightOver = true;
 				}
 				
 				player1.setHp(newHp);
-				PlayerDao.updateCurrentHp(player1.getId(), newHp); 
+				StatsDao.setRelativeBoostByPlayerIdStatId(player1.getId(), 5, newHp - player1.getMaxHp()); 
 			}
 			
 			Endpoint.sendTextToEveryone(gson.toJson(damageResponse), null, false);

@@ -6,7 +6,6 @@ import lombok.Setter;
 @Getter @Setter
 public class MoveRequest extends Request {
 	//private int destinationTileId; // TODO
-	private int id;
 	private int x;
 	private int y;
 }

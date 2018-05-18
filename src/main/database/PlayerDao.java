@@ -75,21 +75,6 @@ public class PlayerDao {
 		}
 	}
 	
-	public static void updateCurrentHp(int id, int hp) {
-		final String query = "update player set current_hp=? where id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, hp);
-			ps.setInt(2, id);
-			
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-	}
-	
 	public static String getNameFromId(int id) {
 		final String query = "select name from player where id = ?";
 		try (
@@ -124,46 +109,6 @@ public class PlayerDao {
 		}
 		
 		return playerList;
-	}
-
-	public static int getCurrentHpByPlayerId(int id) {
-		int hp = 0;
-		final String query = "select current_hp from player where id = ?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, id);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("current_hp");
-			}
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-		
-		return hp;
-	}
-
-	public static int getMaxHpByPlayerId(int id) {
-		int hp = 0;
-		final String query = "select max_hp from view_player where id = ?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, id);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("max_hp");
-			}
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-		
-		return hp;
 	}
 
 	public static void updateCurrentPosition(int id, int x, int y) {

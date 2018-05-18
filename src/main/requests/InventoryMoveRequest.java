@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Setter @Getter
-public class Request {
-	private int id;
-	private String action;
+public class InventoryMoveRequest extends Request {
+	private int src;
+	private int dest;
 }

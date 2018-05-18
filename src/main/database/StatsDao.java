@@ -82,4 +82,64 @@ public class StatsDao {
 		
 		return -1;
 	}
+	
+	public static void setRelativeBoostByPlayerIdStatId(int playerId, int statId, int relativeBoost) {
+		final String query = "update player_stats set relative_boost=? where player_id=? and stat_id=?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, relativeBoost);
+			ps.setInt(2, playerId);
+			ps.setInt(3, statId);
+			
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	public static int getCurrentHpByPlayerId(int id) {
+		int hp = 0;
+		final String query = "select floor(sqrt(exp)) + relative_boost as current_boost from player_stats where player_id = ? and stat_id = 5";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, id);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getInt("current_boost");
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return hp;
+	}
+	
+	public static int getLevelFromExp(int exp) {
+		return (int)Math.sqrt(exp);
+	}
+
+	public static int getMaxHpByPlayerId(int id) {
+		final String query = "select exp from player_stats where player_id = ? and stat_id = 5";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, id);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return getLevelFromExp(rs.getInt("exp"));
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return 0;
+	}
 }

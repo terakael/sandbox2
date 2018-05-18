@@ -27,6 +27,9 @@ public class ResponseFactory {
 		if (action.equals("trade"))
 			return new TradeResponse(action);
 		
+		if (action.equals("inv") || action.equals("invmove") || action.equals("invadd") || action.equals("invdrop"))
+			return new InventoryUpdateResponse(action);
+		
 		return new UnknownResponse(action);
 	}
 }
