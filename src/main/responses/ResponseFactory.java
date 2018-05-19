@@ -30,6 +30,15 @@ public class ResponseFactory {
 		if (action.equals("inv") || action.equals("invmove") || action.equals("invadd") || action.equals("invdrop"))
 			return new InventoryUpdateResponse(action);
 		
+		if (action.equals("equip"))
+			return new EquipResponse(action);
+		
+		if (action.equals("drop"))
+			return new DropResponse(action);
+		
+		if (action.equals("take"))
+			return new TakeResponse(action);
+		
 		return new UnknownResponse(action);
 	}
 }

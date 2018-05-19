@@ -17,6 +17,9 @@ public class RequestFactory {
 		map.put("trade", TradeRequest.class);
 		map.put("inv", InventoryUpdateRequest.class);
 		map.put("invmove", InventoryMoveRequest.class);
+		map.put("equip", EquipRequest.class);
+		map.put("drop", DropRequest.class);
+		map.put("take", TakeRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

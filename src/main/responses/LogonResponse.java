@@ -6,8 +6,10 @@ import java.util.Map;
 import javax.websocket.Session;
 
 import lombok.Getter;
+import main.GroundItemManager;
 import main.Stats;
 import main.database.DbConnection;
+import main.database.EquipmentDao;
 import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.PlayerDao;
@@ -36,6 +38,8 @@ public class LogonResponse extends Response {
 	private List<ItemDto> items;
 	private List<SpriteFrameDto> spriteFrames;
 	private List<Integer> inventory;
+	private List<Integer> equippedSlots;
+	private List<GroundItemManager.GroundItem> groundItems;
 
 	public LogonResponse(String action) {
 		super(action);
@@ -78,6 +82,8 @@ public class LogonResponse extends Response {
 		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
 		items = ItemDao.getAllItems();
 		inventory = PlayerInventoryDao.getInventoryListByPlayerId(dto.getId());
+		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(dto.getId());
+		groundItems = GroundItemManager.getGroundItems();
 
 		setRecoAndResponseText(1, "");
 		return ResponseType.client_only;

@@ -10,7 +10,7 @@ import java.util.List;
 public class PlayerDao {
 	private PlayerDao() {}
 	
-	public static PlayerDto getPlayerById(int id) throws SQLException {
+	public static PlayerDto getPlayerById(int id) {
 		final String query = "select id, name, password, posx, posy, current_hp, max_hp from view_player where id = ?";
 		try (
 			Connection connection = DbConnection.get();
@@ -21,9 +21,12 @@ public class PlayerDao {
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
 					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"));
-				return null;
 			}
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
+		
+		return null;
 	}
 	
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {

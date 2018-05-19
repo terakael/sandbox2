@@ -51,7 +51,7 @@ public class PlayerInventoryDao {
 		return null;
 	}
 
-	public static void setItemFromPlayerIdAndSlot(int playerId, int slot, int itemId) {
+	public static boolean setItemFromPlayerIdAndSlot(int playerId, int slot, int itemId) {
 		final String query = "update player_inventories set item_id=? where player_id=? and slot=?";
 		try (
 			Connection connection = DbConnection.get();
@@ -60,9 +60,41 @@ public class PlayerInventoryDao {
 			ps.setInt(1, itemId);
 			ps.setInt(2, playerId);
 			ps.setInt(3, slot);
-			ps.executeUpdate();
+			return ps.executeUpdate() == 1;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		return false;
+	}
+
+	public static boolean addItemByItemIdPlayerId(int playerId, int itemId) {
+		
+		int freeSlot = getFreeSlotByPlayerId(playerId);
+		if (freeSlot == -1) {
+			// no free slots
+			return false;
+		}
+		
+		return setItemFromPlayerIdAndSlot(playerId, freeSlot, itemId);
+	}
+	
+	public static int getFreeSlotByPlayerId(int playerId) {
+		final String query = "select slot from player_inventories where player_id=? and item_id=0 order by slot limit 1";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, playerId);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getInt("slot");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return -1;
 	}
 }
