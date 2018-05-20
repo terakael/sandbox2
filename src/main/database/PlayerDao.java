@@ -20,7 +20,7 @@ public class PlayerDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"));
+					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"), AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -40,7 +40,7 @@ public class PlayerDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"));
+					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"), AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
 				return null;
 			}
 		} catch (SQLException e) {
@@ -105,8 +105,11 @@ public class PlayerDao {
 			PreparedStatement ps = connection.prepareStatement(query);
 			ResultSet rs = ps.executeQuery();
 		) {
-			while (rs.next())
-				playerList.add(new PlayerDto(rs.getInt("id"), rs.getString("name"), null, rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp")));
+			while (rs.next()) {
+				int playerId = rs.getInt("id");
+				playerList.add(new PlayerDto(playerId, rs.getString("name"), null, rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"), AnimationDao.loadAnimationsByPlayerId(playerId)));
+			}
+				
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}

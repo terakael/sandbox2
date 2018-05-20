@@ -5,6 +5,7 @@ import javax.websocket.server.ServerEndpoint;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 
+import main.database.AnimationDao;
 import main.database.DbConnection;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
@@ -83,7 +84,7 @@ public class Endpoint {
 					LogonResponse logonResp = (LogonResponse)response;
 					int userId = Integer.parseInt(logonResp.getId());
 					
-					PlayerDto player = new PlayerDto(userId, logonResp.getName(), "", logonResp.getX(), logonResp.getY(), logonResp.getCurrentHp(), logonResp.getMaxHp());
+					PlayerDto player = new PlayerDto(userId, logonResp.getName(), "", logonResp.getX(), logonResp.getY(), logonResp.getCurrentHp(), logonResp.getMaxHp(), AnimationDao.loadAnimationsByPlayerId(userId));
 					PlayerSessionDao.addPlayer(userId);
 					playerSessions.put(player, client);
 					peers.remove(client);

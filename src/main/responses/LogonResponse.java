@@ -8,6 +8,8 @@ import javax.websocket.Session;
 import lombok.Getter;
 import main.GroundItemManager;
 import main.Stats;
+import main.database.AnimationDao;
+import main.database.AnimationDto;
 import main.database.DbConnection;
 import main.database.EquipmentDao;
 import main.database.ItemDao;
@@ -40,6 +42,7 @@ public class LogonResponse extends Response {
 	private List<Integer> inventory;
 	private List<Integer> equippedSlots;
 	private List<GroundItemManager.GroundItem> groundItems;
+	private AnimationDto animations;
 
 	public LogonResponse(String action) {
 		super(action);
@@ -84,6 +87,7 @@ public class LogonResponse extends Response {
 		inventory = PlayerInventoryDao.getInventoryListByPlayerId(dto.getId());
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(dto.getId());
 		groundItems = GroundItemManager.getGroundItems();
+		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
 
 		setRecoAndResponseText(1, "");
 		return ResponseType.client_only;

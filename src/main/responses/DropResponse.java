@@ -32,7 +32,15 @@ public class DropResponse extends Response {
 		DropRequest dropReq = (DropRequest)req;
 		ItemDto itemToDrop = PlayerInventoryDao.getItemFromPlayerIdAndSlot(dropReq.getId(), dropReq.getSlot());
 		if (itemToDrop == null) {
-			setRecoAndResponseText(0, "item doesn't exist");
+			setRecoAndResponseText(0, "you can't drop an item that doesn't exist.");
+			return ResponseType.client_only;
+		}
+		
+		// check if the item is equipped
+		List<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(dropReq.getId());
+		if (equippedSlots.contains(dropReq.getSlot())) {
+			// the slot is equipped, we can't drop it
+			setRecoAndResponseText(0, "you can't drop it while it's equipped.");
 			return ResponseType.client_only;
 		}
 		

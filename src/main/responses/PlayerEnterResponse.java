@@ -3,6 +3,7 @@ package main.responses;
 import javax.websocket.Session;
 
 import lombok.Setter;
+import main.database.AnimationDto;
 import main.database.PlayerDto;
 import main.requests.Request;
 import main.responses.Response.ResponseType;

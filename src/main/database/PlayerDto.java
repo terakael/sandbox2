@@ -13,4 +13,5 @@ public class PlayerDto {
 	private int y;
 	private int currentHp;
 	private int maxHp;
+	private AnimationDto animations;
 }
