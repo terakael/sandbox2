@@ -1,11 +1,13 @@
 package main.responses;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.websocket.Session;
 
 import lombok.Getter;
+import main.Endpoint;
 import main.GroundItemManager;
 import main.Stats;
 import main.database.AnimationDao;
@@ -23,15 +25,16 @@ import main.database.SpriteFrameDto;
 import main.database.SpriteMapDao;
 import main.database.SpriteMapDto;
 import main.database.StatsDao;
+import main.processing.WorldProcessor;
 import main.requests.LogonRequest;
 import main.requests.Request;
+import main.state.Player;
 
 public class LogonResponse extends Response {
 	
 	@Getter private String id;
 	@Getter private String name;
-	@Getter private int x;
-	@Getter private int y;
+	@Getter private int tileId;
 	@Getter private int currentHp;
 	@Getter private int maxHp;
 	private Stats stats;
@@ -49,7 +52,7 @@ public class LogonResponse extends Response {
 	}
 	
 	@Override
-	public ResponseType process(Request req, Session client) {
+	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof LogonRequest)) {
 			setRecoAndResponseText(0, "funny business");
 			return ResponseType.client_only;
@@ -58,22 +61,25 @@ public class LogonResponse extends Response {
 		LogonRequest logonReq = (LogonRequest)req;
 		
 		PlayerDto dto = PlayerDao.getPlayerByUsernameAndPassword(logonReq.getName(), logonReq.getPassword());
+		Player player = new Player(dto, client);
 		if (dto == null) {
 			setRecoAndResponseText(0, "invalid credentials");
+			responseMaps.addClientOnlyResponse(player, this);
 			return ResponseType.client_only;
 		} else {
 			if (PlayerSessionDao.entryExists(dto.getId())) {
 				setRecoAndResponseText(0, "already logged in");
+				responseMaps.addClientOnlyResponse(player, this);
 				return ResponseType.client_only;
 			}
 			PlayerDao.updateLastLoggedIn(dto.getId());
+			PlayerSessionDao.addPlayer(dto.getId());
 		}
 		
 		id = Integer.toString(dto.getId());
 		name = dto.getName();
 		
-		x = dto.getX();
-		y = dto.getY();
+		tileId = dto.getTileId();
 		currentHp = dto.getCurrentHp();
 		maxHp = dto.getMaxHp();
 		
@@ -88,7 +94,11 @@ public class LogonResponse extends Response {
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(dto.getId());
 		groundItems = GroundItemManager.getGroundItems();
 		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
-
+		
+		Endpoint.playerSessions.put(dto, client);// TODO remove
+		WorldProcessor.playerSessions.put(client, player);
+		
+		responseMaps.addClientOnlyResponse(player, this);
 		setRecoAndResponseText(1, "");
 		return ResponseType.client_only;
 	}

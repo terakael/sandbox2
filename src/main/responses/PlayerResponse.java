@@ -1,6 +1,8 @@
 package main.responses;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
 
 import javax.websocket.Session;
 
@@ -10,9 +12,13 @@ import main.Endpoint;
 import main.FightManager;
 import main.PlayerRequestManager;
 import main.database.PlayerDao;
+import main.processing.WorldProcessor;
 import main.requests.PlayerRequest;
 import main.requests.Request;
 import main.responses.ResponseFactory;
+import main.state.Player;
+
+// this response is for trades/duels
 
 @Setter @Getter
 public abstract class PlayerResponse extends Response {
@@ -26,18 +32,20 @@ public abstract class PlayerResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client) {
+	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof PlayerRequest)) {
 			setRecoAndResponseText(0, "funny business");
 			return ResponseType.client_only;
 		}
 		
+		Player player = WorldProcessor.playerSessions.get(client);
 		PlayerRequest playerReq = (PlayerRequest)req;
 		
 		
 		Session otherSession = Endpoint.getSessionByPlayerId(playerReq.getObjectId());
 		if (otherSession == null) {
 			setRecoAndResponseText(0, "Couldn't find opponent.");
+			responseMaps.addClientOnlyResponse(player, this);
 			return ResponseType.client_only;
 		}
 		
@@ -50,11 +58,16 @@ public abstract class PlayerResponse extends Response {
 		otherResponse.setOpponentId(playerReq.getId());
 		otherResponse.setOpponentName(PlayerDao.getNameFromId(playerReq.getId()));
 		otherResponse.setAccepted(exists ? 1 : 0);
-		try {
-			otherSession.getBasicRemote().sendText(gson.toJson(otherResponse));
-		} catch (IOException e) {
-			e.printStackTrace();
+
+		Player otherPlayer = null;
+		for (Player p : WorldProcessor.playerSessions.values()) {
+			if (p.getDto().getId() == playerReq.getObjectId()) {
+				otherPlayer = p;
+				break;
+			}
 		}
+		responseMaps.addClientOnlyResponse(otherPlayer, otherResponse);
+//			otherSession.getBasicRemote().sendText(gson.toJson(otherResponse));
 		
 		if (exists) {
 			// if the users agree to a request, then we want to clear pending requests from both parties.
@@ -70,8 +83,9 @@ public abstract class PlayerResponse extends Response {
 				FightManager.addFight(playerReq.getId(), playerReq.getObjectId());
 			}
 		}
-		else
+		else {
 			PlayerRequestManager.addRequest(playerReq.getId(), playerReq.getObjectId(), playerReq.getRequestType());
+		}
 		
 		
 		

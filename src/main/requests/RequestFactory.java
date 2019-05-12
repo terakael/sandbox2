@@ -7,7 +7,7 @@ import com.google.gson.Gson;
 
 public class RequestFactory {
 	private static Gson gson = new Gson();
-	private static Map<String, Class<?>> map = new HashMap<>();
+	private static Map<String, Class<? extends Request>> map = new HashMap<>();
 	static {
 		map.put("logon", LogonRequest.class);
 		map.put("logoff", LogoffRequest.class);
@@ -20,6 +20,7 @@ public class RequestFactory {
 		map.put("equip", EquipRequest.class);
 		map.put("drop", DropRequest.class);
 		map.put("take", TakeRequest.class);
+		map.put("follow", FollowRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

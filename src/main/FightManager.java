@@ -16,10 +16,16 @@ import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.PlayerDao;
 import main.database.StatsDao;
+import main.processing.PathFinder;
+import main.processing.WorldProcessor;
 import main.responses.DamageResponse;
 import main.responses.DeathResponse;
+import main.responses.Response;
+import main.responses.ResponseMaps;
+import main.state.Player;
+import main.state.Player.PlayerState;
 
-public class FightManager implements Runnable {
+public class FightManager {
 	private Thread thread;
 	private static Gson gson = new Gson();
 	private static Random rand = new Random();
@@ -69,9 +75,30 @@ public class FightManager implements Runnable {
 		
 		
 		//returns true if the fight is over
-		public boolean process() {
+		public boolean process(ResponseMaps responseMaps) {
 			if (player1.getSession() == null || player2.getSession() == null)
 				return true;
+			
+			Player p1 = null;
+			Player p2 = null;
+			for (Player p : WorldProcessor.playerSessions.values()) {
+				if (p.getDto().getId() == player1.getId())
+					p1 = p;
+				
+				if (p.getDto().getId() == player2.getId())
+					p2 = p;
+				
+				if (p1 != null && p2 != null)
+					break;
+			}
+			
+			if (!PathFinder.isNextTo(p1.getTileId(), p2.getTileId())) {
+				p1.setTargetPlayerId(p2.getDto().getId());
+				p1.setState(PlayerState.chasing);
+				p2.setTargetPlayerId(p1.getDto().getId());
+				p2.setState(PlayerState.chasing);
+				return false;
+			}
 			
 			// update the bonuses as the players can change weapons/armour during the fight
 			player1.setBonuses(EquipmentDao.getEquipmentBonusesByPlayerId(player1.getId()));
@@ -79,18 +106,24 @@ public class FightManager implements Runnable {
 			
 			FightingPlayer attackingPlayer = player1turn ? player1 : player2;
 			FightingPlayer defendingPlayer = player1turn ? player2 : player1;
-			boolean fightOver = processAttack(attackingPlayer, defendingPlayer);
+			boolean fightOver = processAttack(attackingPlayer, defendingPlayer, responseMaps);
 			
 			if (fightOver) {
 				// send the death response to the dead player
+				FightingPlayer deadPlayer = player1turn ? player2 : player1;
+				
+				Player player = p1.getDto().getId() == deadPlayer.getId() ? p1 : p2;
 				
 				DeathResponse deathResponse = new DeathResponse("dead");
 				deathResponse.setId(player1turn ? player2.getId() : player1.getId());// if it's player1's turn then player2 died
 				deathResponse.setCurrentHp(player1turn ? player2.getHit() : player1.getHp());
-				deathResponse.setX(1000);
-				deathResponse.setY(1000);
-				PlayerDao.updateCurrentPosition(deathResponse.getId(), deathResponse.getX(), deathResponse.getY());
-				Endpoint.sendTextToEveryone(gson.toJson(deathResponse), null, false);
+				deathResponse.setTileId(1000);
+				player.setTileId(1000);
+				
+				p1.setState(PlayerState.idle);
+				p2.setState(PlayerState.idle);
+				
+				responseMaps.addBroadcastResponse(deathResponse);
 			}
 			
 			player1turn = !player1turn;
@@ -99,7 +132,7 @@ public class FightManager implements Runnable {
 		}
 	}
 	
-	private static boolean processAttack(FightingPlayer attackingPlayer, FightingPlayer defendingPlayer) {
+	private static boolean processAttack(FightingPlayer attackingPlayer, FightingPlayer defendingPlayer, ResponseMaps responseMaps) {
 		boolean fightOver = false;
 		
 		int dmg = Math.max(attackingPlayer.getHit() - defendingPlayer.getBlock(), 0);
@@ -117,9 +150,9 @@ public class FightManager implements Runnable {
 		
 		defendingPlayer.setHp(newHp);
 		StatsDao.setRelativeBoostByPlayerIdStatId(defendingPlayer.getId(), 5, newHp - defendingPlayer.getMaxHp());
-	
-		Endpoint.sendTextToEveryone(gson.toJson(damageResponse), null, false);
 		
+		responseMaps.addBroadcastResponse(damageResponse);
+	
 		return fightOver;
 	}
 	
@@ -138,10 +171,10 @@ public class FightManager implements Runnable {
 		}
 	}
 	
-	public static void process() {
+	public static void process(ResponseMaps responseMaps) {
 		List<Fight> finishedFights = new ArrayList<>();
 		for (Fight fight : fights) {
-			if (fight.process()) {// returns whether the fight is over or not
+			if (fight.process(responseMaps)) {// returns whether the fight is over or not
 				finishedFights.add(fight);
 			}
 		}
@@ -149,23 +182,5 @@ public class FightManager implements Runnable {
 		// clean up finished fights
 		for (Fight fight : finishedFights)
 			fights.remove(fight);
-	}
-
-	public void run() {
-		while (true) {
-			try {
-				process();
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	public void start() {
-		if (thread == null) {
-			thread = new Thread(this, "fightmanager");
-			thread.start();
-		}
 	}
 }

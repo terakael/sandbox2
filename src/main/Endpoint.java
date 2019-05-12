@@ -10,6 +10,7 @@ import main.database.DbConnection;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerSessionDao;
+import main.processing.WorldProcessor;
 import main.requests.Request;
 import main.requests.RequestDecoder;
 import main.responses.LogonResponse;
@@ -18,6 +19,7 @@ import main.responses.PlayerEnterResponse;
 import main.responses.PlayerLeaveResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
+import main.state.Player;
 import main.responses.Response.ResponseType;
 import main.responses.ResponseEncoder;
 
@@ -39,7 +41,9 @@ public class Endpoint {
 	private static Set<Session> peers = Collections.synchronizedSet(new HashSet<Session>());
 	
 	// players actively ingame
-	private static Map<PlayerDto, Session> playerSessions = new HashMap<>();
+	public static Map<PlayerDto, Session> playerSessions = new HashMap<>();// TODO move to WorldProcessor
+	
+	public static Map<Session, Request> requestMap = new HashMap<>();
 	
 	static {
 		PlayerSessionDao.clearAllSessions();
@@ -53,56 +57,9 @@ public class Endpoint {
 	
 	@OnMessage
 	public void onMessage(Request msg, Session client) {
-		System.out.println("req: " + msg.getAction());
-		Response response = ResponseFactory.create(msg.getAction());
-		
-		// TODO: hand over response responsibility to worker thread
-		// singleton manager has a thread pool, takes an available worker and hands the responsibility over.
-		// manager also holds onto the session maps and DAO connections.
-		// Manager.processRequest(msg, client);
-		
-		try {
-			Thread.sleep(200);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		try {
-			ResponseType responseType = response.process(msg, client);
-			String respAsc = gson.toJson(response);
-			
-			// eventually this would be range-based, based on the player position.
-			// probably the bool return would turn into an enum:
-			// broadcastToEveryone, broadcastLocalToClient, sendToClient
-			switch (responseType) {
-			case broadcast:
-				sendTextToEveryone(respAsc, client, true);
-				break;
-			case client_only:
-				if (msg.getAction().equals("logon") && response.getSuccess() == 1) {					
-					// let everyone know this cool guy has logged in					
-					LogonResponse logonResp = (LogonResponse)response;
-					int userId = Integer.parseInt(logonResp.getId());
-					
-					PlayerDto player = new PlayerDto(userId, logonResp.getName(), "", logonResp.getX(), logonResp.getY(), logonResp.getCurrentHp(), logonResp.getMaxHp(), AnimationDao.loadAnimationsByPlayerId(userId));
-					PlayerSessionDao.addPlayer(userId);
-					playerSessions.put(player, client);
-					peers.remove(client);
-					
-					PlayerEnterResponse enter = new PlayerEnterResponse("playerEnter");
-					enter.setPlayer(player);
-					sendTextToEveryone(gson.toJson(enter), client, false);// dont send playerEnter to player logging in
-				}
-				client.getBasicRemote().sendText(respAsc);
-				break;
-			default:
-				break;
-			}
-		} catch (JsonParseException e) {
-			response.setRecoAndResponseText(0, "json parse exception");
-		} catch (IOException e) {
-			response.setRecoAndResponseText(0, "io exception");
-		}
+		// collect the messages for the WorldProcessor to process every tick
+		System.out.println("req: id: " + msg.getId() +  " action: " + msg.getAction());
+		requestMap.put(client, msg);
 	}
 	
 	public static void broadcastMessageToEveryone(String text, String colour) {
@@ -140,6 +97,8 @@ public class Endpoint {
 				break;
 			}
 		}
+		
+		WorldProcessor.playerSessions.remove(session);
 		
 		if (key != null) {
 			playerSessions.remove(key);

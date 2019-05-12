@@ -2,6 +2,7 @@ package main.responses;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.websocket.Session;
 
@@ -10,9 +11,11 @@ import lombok.Setter;
 import main.database.EquipmentDao;
 import main.database.ItemDto;
 import main.database.PlayerInventoryDao;
+import main.processing.WorldProcessor;
 import main.requests.InventoryMoveRequest;
 import main.requests.InventoryUpdateRequest;
 import main.requests.Request;
+import main.state.Player;
 
 @Setter
 public class InventoryUpdateResponse extends Response {	
@@ -24,13 +27,14 @@ public class InventoryUpdateResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client) {		
+	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {		
 		if (req instanceof InventoryMoveRequest)
 			processInventoryMoveRequest((InventoryMoveRequest)req, client);
 		
 		inventory = PlayerInventoryDao.getInventoryListByPlayerId(req.getId());
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(req.getId());
 		
+		responseMaps.addClientOnlyResponse(WorldProcessor.playerSessions.get(client), this);
 		return ResponseType.client_only;
 	}
 	

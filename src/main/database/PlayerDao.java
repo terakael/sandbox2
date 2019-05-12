@@ -11,7 +11,7 @@ public class PlayerDao {
 	private PlayerDao() {}
 	
 	public static PlayerDto getPlayerById(int id) {
-		final String query = "select id, name, password, posx, posy, current_hp, max_hp from view_player where id = ?";
+		final String query = "select id, name, password, tile_id, current_hp, max_hp from view_player where id = ?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -20,7 +20,7 @@ public class PlayerDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"), AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
+					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("tile_id"), rs.getInt("current_hp"), rs.getInt("max_hp"), AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -30,7 +30,7 @@ public class PlayerDao {
 	}
 	
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
-		final String query = "select id, name, password, posx, posy, current_hp, max_hp from view_player where name = ? and password = ?";
+		final String query = "select id, name, password, tile_id, current_hp, max_hp from view_player where name = ? and password = ?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -40,29 +40,13 @@ public class PlayerDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"), AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
+					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("tile_id"), rs.getInt("current_hp"), rs.getInt("max_hp"), AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
 				return null;
 			}
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
 		return null;
-	}
-	
-	public static void setDestinationPosition(int id, int x, int y) {
-		final String query = "update player set posx=?, posy=? where id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, x);
-			ps.setInt(2, y);
-			ps.setInt(3, id);
-			
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
 	}
 	
 	public static void updateLastLoggedIn(int id) {
@@ -99,7 +83,7 @@ public class PlayerDao {
 	
 	public static List<PlayerDto> getAllPlayers() {
 		List<PlayerDto> playerList = new ArrayList<>();
-		final String query = "select id, name, posx, posy, current_hp, max_hp from view_player inner join player_session on player_session.player_id = view_player.id";
+		final String query = "select id, name, tile_id, current_hp, max_hp from view_player inner join player_session on player_session.player_id = view_player.id";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
@@ -107,7 +91,7 @@ public class PlayerDao {
 		) {
 			while (rs.next()) {
 				int playerId = rs.getInt("id");
-				playerList.add(new PlayerDto(playerId, rs.getString("name"), null, rs.getInt("posx"), rs.getInt("posy"), rs.getInt("current_hp"), rs.getInt("max_hp"), AnimationDao.loadAnimationsByPlayerId(playerId)));
+				playerList.add(new PlayerDto(playerId, rs.getString("name"), null, rs.getInt("tile_id"), rs.getInt("current_hp"), rs.getInt("max_hp"), AnimationDao.loadAnimationsByPlayerId(playerId)));
 			}
 				
 		} catch (SQLException e) {
@@ -116,21 +100,19 @@ public class PlayerDao {
 		
 		return playerList;
 	}
-
-	public static void updateCurrentPosition(int id, int x, int y) {
-		final String query = "update player set posx=?, posy=? where id=?";
+	
+	public static void updateTileId(int id, int tileId) {
+		final String query = "update player set tile_id=? where id=?";
 		try (
 				Connection connection = DbConnection.get();
 				PreparedStatement ps = connection.prepareStatement(query)
 			) {
-				ps.setInt(1, x);
-				ps.setInt(2, y);
-				ps.setInt(3, id);
+				ps.setInt(1, tileId);
+				ps.setInt(2, id);
 				
 				ps.executeUpdate();
 			} catch (SQLException e) {
 				System.out.println(e.getMessage());
 			}
-		
 	}
 }

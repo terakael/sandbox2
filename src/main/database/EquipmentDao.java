@@ -147,12 +147,12 @@ public class EquipmentDao {
 			ps.setInt(1, playerId);
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new EquipmentBonusDto(rs.getInt("acc"), rs.getInt("str"), rs.getInt("def"), rs.getInt("agil"));
+					return new EquipmentBonusDto(rs.getInt("acc"), rs.getInt("str"), rs.getInt("def"), rs.getInt("agil"), 0);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		
-		return new EquipmentBonusDto(0, 0, 0, 0);
+		return new EquipmentBonusDto(0, 0, 0, 0, 0);
 	}
 } 

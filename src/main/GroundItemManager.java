@@ -14,8 +14,7 @@ public class GroundItemManager {
 	@Setter @Getter @AllArgsConstructor
 	public static class GroundItem {
 		private int id;
-		private int x;
-		private int y;
+		private int tileId;
 		private int groundItemId;
 	}
 	@Getter private static List<GroundItem> groundItems = new ArrayList<>();
@@ -26,8 +25,8 @@ public class GroundItemManager {
 		return groundItemIdSetter;
 	}
 	
-	public static void add(int itemId, int x, int y) {
-		groundItems.add(new GroundItem(itemId, x, y, generateGroundItemId()));
+	public static void add(int itemId, int tileId) {
+		groundItems.add(new GroundItem(itemId, tileId, generateGroundItemId()));
 	}
 	
 	public static void remove(int groundItemId) {
