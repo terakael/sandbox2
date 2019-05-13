@@ -55,7 +55,7 @@ public class LogonResponse extends Response {
 	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof LogonRequest)) {
 			setRecoAndResponseText(0, "funny business");
-			return ResponseType.client_only;
+			return null;
 		}
 		
 		LogonRequest logonReq = (LogonRequest)req;
@@ -95,11 +95,15 @@ public class LogonResponse extends Response {
 		groundItems = GroundItemManager.getGroundItems();
 		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
 		
-		Endpoint.playerSessions.put(dto, client);// TODO remove
 		WorldProcessor.playerSessions.put(client, player);
 		
 		responseMaps.addClientOnlyResponse(player, this);
-		setRecoAndResponseText(1, "");
+		
+		// broadcast to the rest of the players that this player has logged in
+		PlayerEnterResponse playerEnter = new PlayerEnterResponse("playerEnter");
+		playerEnter.setPlayer(player.getDto());
+		responseMaps.addBroadcastResponse(playerEnter, player);
+		
 		return ResponseType.client_only;
 	}
 }

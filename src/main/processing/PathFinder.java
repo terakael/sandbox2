@@ -9,7 +9,7 @@ import lombok.Setter;
 public class PathFinder {
 	private static PathFinder instance;
 	
-	private static final int LENGTH = 250;
+	public static final int LENGTH = 250;
 	private static final int HEIGHT = 250;
 	
 	private PathNode[] nodes = new PathNode[LENGTH * HEIGHT];

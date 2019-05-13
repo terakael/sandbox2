@@ -41,7 +41,12 @@ public class FightManager {
 		
 		public FightingPlayer(int id) {
 			this.id = id;
-			this.session = Endpoint.getSessionByPlayerId(id);
+			for (Player p : WorldProcessor.playerSessions.values()) {
+				if (p.getDto().getId() == id) {
+					this.session = p.getSession();
+					break;
+				}
+			}
 			this.stats = StatsDao.getStatsByPlayerId(id);
 			this.hp = StatsDao.getCurrentHpByPlayerId(id);
 			this.maxHp = StatsDao.getMaxHpByPlayerId(id);

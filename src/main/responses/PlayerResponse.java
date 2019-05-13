@@ -41,8 +41,14 @@ public abstract class PlayerResponse extends Response {
 		Player player = WorldProcessor.playerSessions.get(client);
 		PlayerRequest playerReq = (PlayerRequest)req;
 		
+		Session otherSession = null;
+		for (Player p : WorldProcessor.playerSessions.values()) {
+			if (p.getDto().getId() == playerReq.getObjectId()) {
+				otherSession = p.getSession();
+				break;
+			}
+		}
 		
-		Session otherSession = Endpoint.getSessionByPlayerId(playerReq.getObjectId());
 		if (otherSession == null) {
 			setRecoAndResponseText(0, "Couldn't find opponent.");
 			responseMaps.addClientOnlyResponse(player, this);

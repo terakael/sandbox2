@@ -37,7 +37,6 @@ public class MessageResponse extends Response {
 		Player player = WorldProcessor.playerSessions.get(client);
 		
 		MessageRequest messageReq = (MessageRequest)req;
-		setRecoAndResponseText(1, "");
 		
 		String msg = messageReq.getMessage();
 		id = messageReq.getId();

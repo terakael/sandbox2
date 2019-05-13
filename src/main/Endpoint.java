@@ -3,31 +3,17 @@ package main;
 import javax.websocket.server.ServerEndpoint;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-
-import main.database.AnimationDao;
-import main.database.DbConnection;
-import main.database.PlayerDao;
-import main.database.PlayerDto;
 import main.database.PlayerSessionDao;
 import main.processing.WorldProcessor;
+import main.requests.PlayerLeaveRequest;
 import main.requests.Request;
 import main.requests.RequestDecoder;
-import main.responses.LogonResponse;
-import main.responses.MessageResponse;
-import main.responses.PlayerEnterResponse;
-import main.responses.PlayerLeaveResponse;
-import main.responses.Response;
-import main.responses.ResponseFactory;
 import main.state.Player;
-import main.responses.Response.ResponseType;
 import main.responses.ResponseEncoder;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,9 +25,6 @@ public class Endpoint {
 	
 	// connections to the server; not necessarily players (i.e. logon screen)
 	private static Set<Session> peers = Collections.synchronizedSet(new HashSet<Session>());
-	
-	// players actively ingame
-	public static Map<PlayerDto, Session> playerSessions = new HashMap<>();// TODO move to WorldProcessor
 	
 	public static Map<Session, Request> requestMap = new HashMap<>();
 	
@@ -62,27 +45,6 @@ public class Endpoint {
 		requestMap.put(client, msg);
 	}
 	
-	public static void broadcastMessageToEveryone(String text, String colour) {
-		MessageResponse msgResp = new MessageResponse("message");
-		msgResp.setRecoAndResponseText(1, "");
-		msgResp.setColour(colour);
-		msgResp.setMessage(text);
-		sendTextToEveryone(gson.toJson(msgResp), null, true);
-	}
-	
-	public static void sendTextToEveryone(String text, Session client, boolean includeClient) {
-		for (Map.Entry<PlayerDto, Session> peer : playerSessions.entrySet()) {
-			if (!includeClient && peer.getValue() == client)
-				continue;
-			try {
-				peer.getValue().getBasicRemote().sendText(text);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-	
 	@OnClose
 	public void onClose(Session session) {
 		// TODO: all good to clear the session in normal cases, but in combat they should stay 
@@ -90,33 +52,20 @@ public class Endpoint {
 		System.out.println("onClose");
 		peers.remove(session);
 		
-		PlayerDto key = null;
-		for (Map.Entry<PlayerDto, Session> peer : playerSessions.entrySet()) {
-			if (peer.getValue() == session) {
-				key = peer.getKey();
-				break;
-			}
-		}
+		Player playerToRemove = WorldProcessor.playerSessions.get(session);
+		if (playerToRemove == null)
+			return;
 		
 		WorldProcessor.playerSessions.remove(session);
 		
-		if (key != null) {
-			playerSessions.remove(key);
-			PlayerSessionDao.removePlayer(key.getId());
+		if (playerToRemove.getDto() != null) {
+			PlayerSessionDao.removePlayer(playerToRemove.getDto().getId());
 			
-			PlayerLeaveResponse leave = new PlayerLeaveResponse("playerLeave");
-			leave.setId(key.getId());
-			leave.setName(key.getName());
-			sendTextToEveryone(gson.toJson(leave), null, false);
+			PlayerLeaveRequest req = new PlayerLeaveRequest();
+			req.setAction("playerLeave");
+			req.setId(playerToRemove.getDto().getId());
+			req.setName(playerToRemove.getDto().getName());
+			requestMap.put(null, req);
 		}
 	}
-	
-	public static Session getSessionByPlayerId(int id) {		
-		for (Map.Entry<PlayerDto, Session> entry : Endpoint.playerSessions.entrySet()) {
-			if (entry.getKey().getId() == id)
-				return entry.getValue();
-		}
-		return null;
-	}
-
 }
