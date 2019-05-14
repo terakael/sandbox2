@@ -1,15 +1,9 @@
 package main.responses;
 
-import java.util.ArrayList;
-import java.util.Map;
-
 import javax.websocket.Session;
-
-import com.google.gson.Gson;
 
 import lombok.Setter;
 import main.requests.Request;
-import main.state.Player;
 
 
 public class PlayerUpdateResponse extends Response {
@@ -33,9 +27,8 @@ public class PlayerUpdateResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
-		// TODO Auto-generated method stub
-		return null;
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
+
 	}
 
 }

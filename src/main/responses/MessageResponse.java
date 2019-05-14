@@ -1,8 +1,6 @@
 package main.responses;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,11 +9,10 @@ import javax.websocket.Session;
 import lombok.Setter;
 import main.database.PlayerDao;
 import main.database.StatsDao;
+import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.MessageRequest;
 import main.requests.Request;
-import main.responses.Response.ResponseType;
-import main.state.Player;
 
 public class MessageResponse extends Response {
 	private String name;
@@ -28,10 +25,10 @@ public class MessageResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof MessageRequest)) {
 			setRecoAndResponseText(0, "funny business");
-			return ResponseType.client_only;
+			return;
 		}
 		
 		Player player = WorldProcessor.playerSessions.get(client);
@@ -41,8 +38,10 @@ public class MessageResponse extends Response {
 		String msg = messageReq.getMessage();
 		id = messageReq.getId();
 		
-		if (msg.length() >= 2 && msg.substring(0, 2).equals("::"))
-			return handleDebugCommand(id, msg, client);
+		if (msg.length() >= 2 && msg.substring(0, 2).equals("::")) {
+			handleDebugCommand(id, msg, client);
+			return;
+		}
 		
 		if (msg.length() > 100)
 			msg = msg.substring(0, 100);
@@ -51,7 +50,6 @@ public class MessageResponse extends Response {
 		message = msg;
 		
 		responseMaps.addLocalResponse(player, this);
-		return ResponseType.broadcast;// TODO change to ResponseType.local
 	}
 	
 	private ResponseType handleDebugCommand(int playerId, String msg, Session client) {

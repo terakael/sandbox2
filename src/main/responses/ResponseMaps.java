@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Getter;
-import main.state.Player;
+import main.processing.Player;
 
 @Getter
 public class ResponseMaps {

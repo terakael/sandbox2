@@ -2,11 +2,11 @@ package main.responses;
 
 import javax.websocket.Session;
 
+import main.processing.Player;
 import main.processing.WorldProcessor;
+import main.processing.Player.PlayerState;
 import main.requests.FollowRequest;
 import main.requests.Request;
-import main.state.Player;
-import main.state.Player.PlayerState;
 
 public class FollowResponse extends Response {
 
@@ -15,9 +15,9 @@ public class FollowResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof FollowRequest)) {
-			return null;
+			return;
 		}
 		
 		FollowRequest request = (FollowRequest)req;
@@ -26,7 +26,6 @@ public class FollowResponse extends Response {
 		Player player = WorldProcessor.playerSessions.get(client);
 		player.setTargetPlayerId(request.getObjectId());
 		player.setState(PlayerState.following);
-		return null;
 	}
 
 }

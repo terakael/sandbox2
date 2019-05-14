@@ -17,13 +17,13 @@ import main.database.EquipmentDao;
 import main.database.PlayerDao;
 import main.database.StatsDao;
 import main.processing.PathFinder;
+import main.processing.Player;
 import main.processing.WorldProcessor;
+import main.processing.Player.PlayerState;
 import main.responses.DamageResponse;
 import main.responses.DeathResponse;
 import main.responses.Response;
 import main.responses.ResponseMaps;
-import main.state.Player;
-import main.state.Player.PlayerState;
 
 public class FightManager {
 	private Thread thread;

@@ -1,21 +1,16 @@
 package main.responses;
 
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Stack;
 
 import javax.websocket.Session;
 
 import main.FightManager;
-import main.database.DbConnection;
-import main.database.PlayerDao;
 import main.processing.PathFinder;
+import main.processing.Player;
 import main.processing.WorldProcessor;
+import main.processing.Player.PlayerState;
 import main.requests.MoveRequest;
 import main.requests.Request;
-import main.responses.Response.ResponseType;
-import main.state.Player;
-import main.state.Player.PlayerState;
 
 public class MoveResponse extends Response {
 	private int id;
@@ -27,13 +22,13 @@ public class MoveResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
 		// the MoveRequest tells us which square the player wants to move to.
 		// we run the A* algorithm and return them a list of points to move to.
 		
 		if (!(req instanceof MoveRequest)) {
 			setRecoAndResponseText(0, "funny business");
-			return ResponseType.client_only;
+			return;
 		}
 		
 		MoveRequest moveReq = (MoveRequest)req;
@@ -48,16 +43,13 @@ public class MoveResponse extends Response {
 			int destY = moveReq.getY() / 32;
 			
 			
-			int srcTile = player.getTileId();
 			int destTile = destX + (destY * 250);
 			
-			Stack<Integer> ints = PathFinder.findPath(srcTile, destTile, true);
+			Stack<Integer> ints = PathFinder.findPath(player.getTileId(), destTile, true);
 			player.setPath(ints);
 		}
 		
-		setRecoAndResponseText(1, "");
 		responseMaps.addBroadcastResponse(this);
-		return ResponseType.broadcast;
 	}
 
 }

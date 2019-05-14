@@ -1,16 +1,13 @@
 package main.responses;
 
-import java.util.ArrayList;
-import java.util.Map;
-
 import javax.websocket.Session;
 
 import com.google.gson.Gson;
 
 import lombok.Getter;
 import main.requests.Request;
-import main.state.Player;
 
+@SuppressWarnings("unused")
 public abstract class Response {
 	protected static Gson gson = new Gson();
 	
@@ -23,6 +20,7 @@ public abstract class Response {
 	
 	@Getter
 	private int success = 1;
+	
 	private String responseText = "";
 	private String action;
 	
@@ -35,6 +33,6 @@ public abstract class Response {
 		this.responseText = responseText;
 	}
 
-	public abstract ResponseType process(Request req, Session client, ResponseMaps responseMaps);
+	public abstract void process(Request req, Session client, ResponseMaps responseMaps);
 
 }

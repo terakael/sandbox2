@@ -4,11 +4,11 @@ import javax.websocket.server.ServerEndpoint;
 
 import com.google.gson.Gson;
 import main.database.PlayerSessionDao;
+import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.PlayerLeaveRequest;
 import main.requests.Request;
 import main.requests.RequestDecoder;
-import main.state.Player;
 import main.responses.ResponseEncoder;
 
 import java.util.Collections;
@@ -65,7 +65,7 @@ public class Endpoint {
 			req.setAction("playerLeave");
 			req.setId(playerToRemove.getDto().getId());
 			req.setName(playerToRemove.getDto().getName());
-			requestMap.put(null, req);
+			requestMap.put(session, req);
 		}
 	}
 }

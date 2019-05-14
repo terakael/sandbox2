@@ -15,17 +15,12 @@ import main.requests.Request;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
-import main.state.Player;
 
 public class WorldProcessor implements Runnable {
 	private Thread thread;
 	private static final int TICK_DURATION = 600;
 	private static Gson gson = new Gson();
 	
-//	private Map<Player, ArrayList<Response>> clientOnlyResponses = new HashMap<>();
-//	private Map<Player, ArrayList<Response>> localResponses = new HashMap<>();
-//	private ArrayList<Response> broadcastResponses = new ArrayList<>();
-//	private Map<Player, ArrayList<Response>> broadcastExcludeClientResponses = new HashMap<>();
 	public static Map<Session, Player> playerSessions = new HashMap<>();
 	
 	public void start() {

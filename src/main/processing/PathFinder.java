@@ -10,9 +10,8 @@ public class PathFinder {
 	private static PathFinder instance;
 	
 	public static final int LENGTH = 250;
-	private static final int HEIGHT = 250;
 	
-	private PathNode[] nodes = new PathNode[LENGTH * HEIGHT];
+	private PathNode[] nodes = new PathNode[LENGTH * LENGTH];// always square so no need for separate length/width variables
 	
 	
 	private PathFinder() {
@@ -69,7 +68,7 @@ public class PathFinder {
 	}
 	
 	private PathNode getNode(int id, int siblingId) {
-		if (siblingId < 0 || siblingId >= LENGTH * HEIGHT) 
+		if (siblingId < 0 || siblingId >= LENGTH * LENGTH) 
 			return null;// above first row or below last row
 		
 		if (id % LENGTH == 0 && siblingId == id - 1)

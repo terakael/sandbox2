@@ -1,13 +1,9 @@
 package main.responses;
 
-import java.util.ArrayList;
-import java.util.Map;
-
 import javax.websocket.Session;
 
 import lombok.Setter;
 import main.requests.Request;
-import main.state.Player;
 
 @Setter
 public class DamageResponse extends Response {
@@ -21,8 +17,8 @@ public class DamageResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
-		return null;
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
+
 	}
 
 }

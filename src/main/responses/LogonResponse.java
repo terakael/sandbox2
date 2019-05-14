@@ -1,18 +1,15 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.websocket.Session;
 
 import lombok.Getter;
-import main.Endpoint;
 import main.GroundItemManager;
 import main.Stats;
 import main.database.AnimationDao;
 import main.database.AnimationDto;
-import main.database.DbConnection;
 import main.database.EquipmentDao;
 import main.database.ItemDao;
 import main.database.ItemDto;
@@ -20,15 +17,17 @@ import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerInventoryDao;
 import main.database.PlayerSessionDao;
+import main.database.SceneryDao;
+import main.database.SceneryDto;
 import main.database.SpriteFrameDao;
 import main.database.SpriteFrameDto;
 import main.database.SpriteMapDao;
 import main.database.SpriteMapDto;
 import main.database.StatsDao;
+import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.LogonRequest;
 import main.requests.Request;
-import main.state.Player;
 
 public class LogonResponse extends Response {
 	
@@ -45,6 +44,7 @@ public class LogonResponse extends Response {
 	private List<Integer> inventory;
 	private List<Integer> equippedSlots;
 	private List<GroundItemManager.GroundItem> groundItems;
+	private List<SceneryDto> scenery;
 	private AnimationDto animations;
 
 	public LogonResponse(String action) {
@@ -52,10 +52,10 @@ public class LogonResponse extends Response {
 	}
 	
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof LogonRequest)) {
 			setRecoAndResponseText(0, "funny business");
-			return null;
+			return;
 		}
 		
 		LogonRequest logonReq = (LogonRequest)req;
@@ -65,12 +65,12 @@ public class LogonResponse extends Response {
 		if (dto == null) {
 			setRecoAndResponseText(0, "invalid credentials");
 			responseMaps.addClientOnlyResponse(player, this);
-			return ResponseType.client_only;
+			return;
 		} else {
 			if (PlayerSessionDao.entryExists(dto.getId())) {
 				setRecoAndResponseText(0, "already logged in");
 				responseMaps.addClientOnlyResponse(player, this);
-				return ResponseType.client_only;
+				return;
 			}
 			PlayerDao.updateLastLoggedIn(dto.getId());
 			PlayerSessionDao.addPlayer(dto.getId());
@@ -94,6 +94,7 @@ public class LogonResponse extends Response {
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(dto.getId());
 		groundItems = GroundItemManager.getGroundItems();
 		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
+		scenery = SceneryDao.getAllSceneryByRoom(1);// TODO dynamic based on player room when there's more rooms
 		
 		WorldProcessor.playerSessions.put(client, player);
 		
@@ -103,7 +104,5 @@ public class LogonResponse extends Response {
 		PlayerEnterResponse playerEnter = new PlayerEnterResponse("playerEnter");
 		playerEnter.setPlayer(player.getDto());
 		responseMaps.addBroadcastResponse(playerEnter, player);
-		
-		return ResponseType.client_only;
 	}
 }

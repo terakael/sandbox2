@@ -1,14 +1,9 @@
 package main.responses;
 
-import java.util.ArrayList;
-import java.util.Map;
-
 import javax.websocket.Session;
 
-import main.processing.WorldProcessor;
 import main.requests.LogoffRequest;
 import main.requests.Request;
-import main.state.Player;
 
 public class LogoffResponse extends Response {
 
@@ -17,14 +12,14 @@ public class LogoffResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof LogoffRequest)) {
 			setRecoAndResponseText(0, "funny business");
-			return ResponseType.client_only;
+			return;
 		}
 		
-		responseMaps.addClientOnlyResponse(WorldProcessor.playerSessions.get(client), this);
-		return ResponseType.client_only;
+		// everyone should receive the logoff response so the client can remove the otherPlayer (or handle current player logoff)
+		responseMaps.addBroadcastResponse(this);
 	}
 
 }

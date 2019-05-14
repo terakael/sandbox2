@@ -1,17 +1,12 @@
 package main.responses;
 
-import java.util.ArrayList;
-import java.util.Map;
-
 import javax.websocket.Session;
 
 import lombok.Setter;
-import main.database.AnimationDto;
 import main.database.PlayerDto;
 import main.requests.Request;
-import main.responses.Response.ResponseType;
-import main.state.Player;
 
+// TODO deprecate in favour of PlayerUpdateResponse
 public class PlayerEnterResponse extends Response {
 	
 	@Setter private String id;
@@ -25,8 +20,8 @@ public class PlayerEnterResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
-		return ResponseType.client_only;
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
+		
 	}
 	
 	public void setPlayer(PlayerDto player) {

@@ -17,16 +17,15 @@ public class PlayerLeaveResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {		
+	public void process(Request req, Session client, ResponseMaps responseMaps) {		
 		if (!(req instanceof PlayerLeaveRequest)) {
-			return null;
+			return;
 		}
 		
 		PlayerLeaveRequest request = (PlayerLeaveRequest)req;
 		id = request.getId();
 		name = request.getName();
 		responseMaps.addBroadcastResponse(this);
-		return null;
 	}
 
 }

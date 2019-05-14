@@ -1,8 +1,5 @@
-package main.state;
+package main.processing;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 
 import javax.websocket.Session;
@@ -12,18 +9,11 @@ import lombok.Getter;
 import lombok.Setter;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
-import main.processing.PathFinder;
-import main.processing.WorldProcessor;
-import main.requests.FollowRequest;
-import main.requests.MoveRequest;
 import main.requests.Request;
-import main.responses.MoveResponse;
 import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
-import main.responses.UnknownResponse;
-import main.responses.Response.ResponseType;
 
 public class Player {
 	public enum PlayerState {
@@ -167,40 +157,4 @@ public class Player {
 	public int getTileId() {
 		return dto.getTileId();
 	}
-	
-//	@Getter private String name;
-//	static private Vector2D vecZero = new Vector2D(0, 0);
-//	@Getter private Vector2D currentPos = new Vector2D(0, 0);
-//	private Vector2D destPos = new Vector2D(0, 0);
-//	private static final float speed = 200.0f;// two tiles per second
-//	@Getter private Session client;
-//	
-//	public Player(PlayerDto p, Session client) {
-//		this.id = p.getId();
-//		this.name = p.getName();
-//		this.client = client;
-//		this.currentPos = new Vector2D(p.getX(), p.getY());
-//		this.destPos = new Vector2D(p.getX(), p.getY());
-//	}
-//	
-//	public void process(float dt) {
-//		double len = Vector2D.distance(destPos, currentPos);
-//		if (len == 0)
-//			return;
-//		
-//		Vector2D dir = destPos.subtract(currentPos).normalize();
-//		
-//		float scale = dt * speed;
-//		
-//		currentPos = currentPos.add(dt * speed, dir);
-//		
-//		if (Vector2D.distance(destPos, currentPos) > len) {
-//			currentPos = destPos;
-//			PlayerDao.updateCurrentPosition(id, (int)currentPos.getX(), (int)currentPos.getY());
-//		}
-//	}
-//
-//	public void setDestinationPosition(int x, int y) {
-//		destPos = new Vector2D(x, y);
-//	}
 }

@@ -2,18 +2,16 @@ package main.responses;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import javax.websocket.Session;
 
 import main.database.EquipmentDao;
 import main.database.EquipmentDto;
 import main.database.ItemDto;
 import main.database.PlayerInventoryDao;
+import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.EquipRequest;
 import main.requests.Request;
-import main.state.Player;
 
 public class EquipResponse extends Response {
 	private List<Integer> equippedSlots = new ArrayList<>();
@@ -23,10 +21,10 @@ public class EquipResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof EquipRequest)) {
 			setRecoAndResponseText(0, "funny business");
-			return ResponseType.client_only;
+			return;
 		}
 		
 		Player player = WorldProcessor.playerSessions.get(client);
@@ -40,7 +38,7 @@ public class EquipResponse extends Response {
 			// item isn't equippable.
 			setRecoAndResponseText(0, "item not equippable");
 			responseMaps.addClientOnlyResponse(player, this);
-			return ResponseType.client_only;
+			return;
 		}
 		
 		// we also handle the unequipping here too, so if it's already equipped then unequip it.
@@ -54,7 +52,6 @@ public class EquipResponse extends Response {
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(equipReq.getId());
 		
 		responseMaps.addClientOnlyResponse(player, this);
-		return ResponseType.client_only;// will probs change to broadcast when we can see their worn items
 	}
 	
 }

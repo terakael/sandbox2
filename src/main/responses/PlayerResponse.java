@@ -1,22 +1,17 @@
 package main.responses;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
-
 import javax.websocket.Session;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.Endpoint;
 import main.FightManager;
 import main.PlayerRequestManager;
 import main.database.PlayerDao;
+import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.PlayerRequest;
 import main.requests.Request;
 import main.responses.ResponseFactory;
-import main.state.Player;
 
 // this response is for trades/duels
 
@@ -32,10 +27,10 @@ public abstract class PlayerResponse extends Response {
 	}
 
 	@Override
-	public ResponseType process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof PlayerRequest)) {
 			setRecoAndResponseText(0, "funny business");
-			return ResponseType.client_only;
+			return;
 		}
 		
 		Player player = WorldProcessor.playerSessions.get(client);
@@ -52,7 +47,7 @@ public abstract class PlayerResponse extends Response {
 		if (otherSession == null) {
 			setRecoAndResponseText(0, "Couldn't find opponent.");
 			responseMaps.addClientOnlyResponse(player, this);
-			return ResponseType.client_only;
+			return;
 		}
 		
 		
@@ -92,10 +87,6 @@ public abstract class PlayerResponse extends Response {
 		else {
 			PlayerRequestManager.addRequest(playerReq.getId(), playerReq.getObjectId(), playerReq.getRequestType());
 		}
-		
-		
-		
-		return ResponseType.no_response;
 	}
 
 }
