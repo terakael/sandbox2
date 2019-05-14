@@ -18,7 +18,7 @@ import main.responses.ResponseMaps;
 
 public class WorldProcessor implements Runnable {
 	private Thread thread;
-	private static final int TICK_DURATION = 600;
+	private static final int TICK_DURATION_MS = 600;
 	private static Gson gson = new Gson();
 	
 	public static Map<Session, Player> playerSessions = new HashMap<>();
@@ -40,7 +40,10 @@ public class WorldProcessor implements Runnable {
 			try {
 				// run for 0.6 seconds, minus the processing time so the ticks are always 0.6s.
 				// if the processing time is more than 0.6 seconds then don't sleep at all (this happens when breakpoints are hit)
-				Thread.sleep(Math.max(0, TICK_DURATION - ((System.nanoTime() - prevTime) / 1000000)));
+				long processTimeMs = (System.nanoTime() - prevTime) / 1000000;
+				if (processTimeMs >= TICK_DURATION_MS / 2)
+					System.out.println(String.format("WARNING: process time took %dms (%d%% of total allowed processing time)", processTimeMs, (int)(((float)processTimeMs / TICK_DURATION_MS) * 100)));
+				Thread.sleep(Math.max(0, TICK_DURATION_MS - processTimeMs));
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
