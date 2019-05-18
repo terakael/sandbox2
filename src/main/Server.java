@@ -5,6 +5,7 @@ import java.util.Scanner;
 
 import javax.websocket.DeploymentException;
 
+import main.database.MineableDao;
 import main.database.SceneryDao;
 import main.processing.PathFinder;
 import main.processing.WorldProcessor;
@@ -34,6 +35,7 @@ public class Server {
 			CachedResourcesResponse.get();// loads/caches all the sprite maps, scenery etc and gets sent on client load
 			PathFinder.get();// init the path nodes and relationships
 			ExamineResponse.initializeExamineMap();// all the scenery examine
+			MineableDao.setupCaches();// mineable tiles, mineable objects
 			
 			WorldProcessor processor = new WorldProcessor();
 			processor.start();

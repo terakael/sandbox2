@@ -31,6 +31,7 @@ public class MoveResponse extends Response {
 		Player player = WorldProcessor.playerSessions.get(client);
 		if (player != null) {
 			player.setState(PlayerState.walking);
+			player.setSavedRequest(null);
 			
 			int destX = moveReq.getX() / 32;
 			int destY = moveReq.getY() / 32;

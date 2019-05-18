@@ -108,7 +108,7 @@ public class PathFinder {
 		// cannot move to an impassable tile.
 		// TODO move to the nearest passable tile.
 		if (nodes[to].getWeight() == -1)
-			return output;
+			includeToTile = false;
 		
 		ArrayList<PathNode> open = new ArrayList<>();
 		ArrayList<PathNode> closed = new ArrayList<>();
@@ -127,7 +127,7 @@ public class PathFinder {
 			
 			for (int i = 0; i < q.getSiblings().length; ++i) {
 				PathNode successor = q.getSibling(i);
-				if (successor == null || successor.getWeight() == -1)// corner and edge nodes have some null siblings
+				if (successor == null || (successor.getWeight() == -1 && successor != nodes[to]))// corner and edge nodes have some null siblings
 					continue;
 				
 				if (closed.contains(successor))

@@ -23,6 +23,7 @@ public class RequestFactory {
 		map.put("follow", FollowRequest.class);
 		map.put("resources", ResourceRequest.class);
 		map.put("examine", ExamineRequest.class);
+		map.put("mine", MineRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

@@ -7,9 +7,18 @@ import javax.websocket.Session;
 
 import lombok.Getter;
 import lombok.Setter;
+import main.database.MineableDao;
+import main.database.MineableDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
+import main.database.PlayerInventoryDao;
+import main.database.StatsDao;
+import main.requests.AddExpRequest;
+import main.requests.MineRequest;
 import main.requests.Request;
+import main.responses.AddExpResponse;
+import main.responses.FinishMiningResponse;
+import main.responses.InventoryUpdateResponse;
 import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
@@ -57,7 +66,7 @@ public class Player {
 					else {
 						Response response = ResponseFactory.create(savedRequest.getAction());
 						response.process(savedRequest, session, responseMaps);
-						savedRequest = null;
+//						savedRequest = null;
 					}
 				}
 			}
@@ -115,7 +124,7 @@ public class Player {
 		case mining:
 			// waiting until the tick counter hits zero, then do the actual mining and create a finish_mining response
 			if (--tickCounter <= 0) {
-				// do checks:
+				// TODO do checks:
 				// is player close enough to target tile?
 				// is target tile a rock?
 				// does player have level to mine this rock?
@@ -126,6 +135,37 @@ public class Player {
 				// create storage_update response
 				// create finish_mining response
 				// set state to idle.
+				if (!(savedRequest instanceof MineRequest)) {
+					savedRequest = null;
+					state = PlayerState.idle;
+					return;
+				}
+				
+				MineRequest mineRequest = (MineRequest)savedRequest;
+				
+				MineableDto mineable = MineableDao.getMineableDtoByTileId(mineRequest.getTileId());
+				if (mineable == null) {
+					return;
+				}
+				PlayerInventoryDao.addItemByItemIdPlayerId(getId(), mineable.getItemId());
+				
+				Request pidRequest = new Request();
+				pidRequest.setId(getId());
+				
+				AddExpRequest addExpReq = new AddExpRequest();
+				addExpReq.setId(getId());
+				addExpReq.setAction("addexp");
+				addExpReq.setStatId(6);// mining
+				addExpReq.setExp(mineable.getExp());
+				
+				new AddExpResponse("addexp").process(addExpReq, session, responseMaps);
+				
+				FinishMiningResponse finishMining = new FinishMiningResponse("finish_mining");
+				finishMining.process(savedRequest, session, responseMaps);
+				
+				new InventoryUpdateResponse("invupdate").process(pidRequest, session, responseMaps);
+				
+				savedRequest = null;
 				state = PlayerState.idle;
 			}
 			break;

@@ -83,6 +83,19 @@ public class StatsDao {
 		return -1;
 	}
 	
+	public static String getStatShortNameByStatId(int id) {
+		if (StatsDao.cachedStats == null) {
+			StatsDao.cachedStats = StatsDao.getStats();
+			if (StatsDao.cachedStats == null)
+				return null;
+		}
+		
+		if (StatsDao.cachedStats.containsKey(id))
+			return StatsDao.cachedStats.get(id);
+		
+		return null;
+	}
+	
 	public static void setRelativeBoostByPlayerIdStatId(int playerId, int statId, int relativeBoost) {
 		final String query = "update player_stats set relative_boost=? where player_id=? and stat_id=?";
 		

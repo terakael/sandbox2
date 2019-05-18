@@ -48,6 +48,9 @@ public class ResponseFactory {
 		if (action.equals("examine"))
 			return new ExamineResponse(action);
 		
+		if (action.equals("mine"))
+			return new MineResponse(action);
+		
 		return new UnknownResponse(action);
 	}
 }
