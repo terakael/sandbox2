@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import main.Endpoint;
 import main.FightManager;
 import main.requests.Request;
+import main.responses.LogonResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
@@ -85,11 +86,31 @@ public class WorldProcessor implements Runnable {
 		// process npcs
 		// TODO
 		
+		ArrayList<Session> sessionsToKill = new ArrayList<>();
+		
 		// go through the clientResponses and send the response array to each player
 		for (Map.Entry<Player, ArrayList<Response>> responses : clientResponses.entrySet()) {
 			try {
 				responses.getKey().getSession().getBasicRemote().sendText(gson.toJson(responses.getValue()));
+				
+				// if there were any failed logon responses then kill the connection
+				for (Response response : responses.getValue()) {
+					if (response instanceof LogonResponse) {
+						if (response.getSuccess() == 0) {
+							sessionsToKill.add(responses.getKey().getSession());
+						}
+					}
+				}
 			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		for (Session session : sessionsToKill) {
+			try {
+				session.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

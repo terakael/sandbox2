@@ -21,6 +21,7 @@ public class RequestFactory {
 		map.put("drop", DropRequest.class);
 		map.put("take", TakeRequest.class);
 		map.put("follow", FollowRequest.class);
+		map.put("resources", ResourceRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

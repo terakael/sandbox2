@@ -35,7 +35,7 @@ public class Endpoint {
 	@OnOpen
 	public void onOpen(Session session) {
 		System.out.println("onOpen");
-		peers.add(session);
+//		peers.add(session);
 	}
 	
 	@OnMessage
@@ -50,7 +50,7 @@ public class Endpoint {
 		// TODO: all good to clear the session in normal cases, but in combat they should stay 
 		// in-game for like a minute to prevent x-logging when in danger
 		System.out.println("onClose");
-		peers.remove(session);
+//		peers.remove(session);
 		
 		Player playerToRemove = WorldProcessor.playerSessions.get(session);
 		if (playerToRemove == null)
@@ -61,11 +61,11 @@ public class Endpoint {
 		WorldProcessor.playerSessions.remove(session);
 		
 		if (playerToRemove.getDto() != null) {
-			PlayerSessionDao.removePlayer(playerToRemove.getDto().getId());
+			PlayerSessionDao.removePlayer(playerToRemove.getId());
 			
 			PlayerLeaveRequest req = new PlayerLeaveRequest();
 			req.setAction("playerLeave");
-			req.setId(playerToRemove.getDto().getId());
+			req.setId(playerToRemove.getId());
 			req.setName(playerToRemove.getDto().getName());
 			requestMap.put(session, req);
 		}
