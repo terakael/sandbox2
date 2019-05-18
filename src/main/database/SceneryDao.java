@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class SceneryDao {
@@ -102,5 +103,44 @@ public class SceneryDao {
 			e.printStackTrace();
 		}
 		return instanceList;
+	}
+	
+	public static void addRoomScenery(int roomId, int sceneryId, int tileId) {
+		String query = "insert into room_scenery (room_id, scenery_id, tile_id) values (?, ?, ?)";
+		try (
+				Connection connection = DbConnection.get();
+				PreparedStatement ps = connection.prepareStatement(query)
+			) {
+				ps.setInt(1, roomId);
+				ps.setInt(2, sceneryId);
+				ps.setInt(3, tileId);
+				ps.executeUpdate();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+	}
+	
+	public static HashSet<Integer> getImpassableTileIdsByRoomId(int roomId) {
+		String query = "select tile_id from room_scenery ";
+		query += " inner join scenery on room_scenery.scenery_id=scenery.id and impassable=1";
+		query += " where room_id=?";
+		
+		HashSet<Integer> tileIds = new HashSet<>();
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, roomId);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					tileIds.add(rs.getInt("tile_id"));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return tileIds;
 	}
 }

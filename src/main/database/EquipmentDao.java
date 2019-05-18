@@ -111,6 +111,23 @@ public class EquipmentDao {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void clearAllEquppedItems(int playerId) {
+		final String query = 
+				"delete player_equipment from player_equipment " + 
+				"inner join equipment on equipment.item_id=player_equipment.equipment_id " + 
+				"where player_id=?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, playerId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public static boolean isItemEquippedByItemIdAndSlot(int playerId, int itemId, int slot) {
 		final String query = "select slot from player_equipment where player_id=? and equipment_id=? and slot=?";

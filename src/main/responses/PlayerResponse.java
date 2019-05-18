@@ -36,20 +36,12 @@ public abstract class PlayerResponse extends Response {
 		Player player = WorldProcessor.playerSessions.get(client);
 		PlayerRequest playerReq = (PlayerRequest)req;
 		
-		Session otherSession = null;
-		for (Player p : WorldProcessor.playerSessions.values()) {
-			if (p.getDto().getId() == playerReq.getObjectId()) {
-				otherSession = p.getSession();
-				break;
-			}
-		}
-		
-		if (otherSession == null) {
+		Player otherPlayer = WorldProcessor.getPlayerById(playerReq.getObjectId());
+		if (otherPlayer == null) {
 			setRecoAndResponseText(0, "Couldn't find opponent.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
-		}
-		
+		}		
 		
 		boolean exists = PlayerRequestManager.requestExists(playerReq.getObjectId(), playerReq.getId(), playerReq.getRequestType());
 		PlayerResponse otherResponse = (PlayerResponse)ResponseFactory.create(playerReq.getAction());
@@ -60,15 +52,7 @@ public abstract class PlayerResponse extends Response {
 		otherResponse.setOpponentName(PlayerDao.getNameFromId(playerReq.getId()));
 		otherResponse.setAccepted(exists ? 1 : 0);
 
-		Player otherPlayer = null;
-		for (Player p : WorldProcessor.playerSessions.values()) {
-			if (p.getDto().getId() == playerReq.getObjectId()) {
-				otherPlayer = p;
-				break;
-			}
-		}
 		responseMaps.addClientOnlyResponse(otherPlayer, otherResponse);
-//			otherSession.getBasicRemote().sendText(gson.toJson(otherResponse));
 		
 		if (exists) {
 			// if the users agree to a request, then we want to clear pending requests from both parties.

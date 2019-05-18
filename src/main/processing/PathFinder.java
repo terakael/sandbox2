@@ -1,10 +1,14 @@
 package main.processing;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Stack;
 
 import lombok.Getter;
 import lombok.Setter;
+import main.database.SceneryDao;
 
 public class PathFinder {
 	private static PathFinder instance;
@@ -15,6 +19,8 @@ public class PathFinder {
 	
 	
 	private PathFinder() {
+		HashSet<Integer> impassableTileIds = SceneryDao.getImpassableTileIdsByRoomId(1);
+		
 		for (int i = 0; i < nodes.length; ++i) {
 			nodes[i] = new PathNode();
 		}
@@ -32,7 +38,7 @@ public class PathFinder {
 			};
 			
 			nodes[i].setId(i);
-			nodes[i].setWeight(1);
+			nodes[i].setWeight(impassableTileIds.contains(i) ? -1 : 1);
 			nodes[i].setSiblings(siblings);
 		}
 	}
@@ -62,6 +68,17 @@ public class PathFinder {
 			}
 		}
 		
+		public PathNode getSibling(int elementId) {
+			if (elementId >= 0 && elementId < siblings.length)
+				return siblings[elementId];
+			return null;
+		}
+		
+		public boolean isSiblingPassable(int elementId) {
+			PathNode sibling = getSibling(elementId);
+			return sibling != null && sibling.getWeight() != -1;
+		}
+		
 		public double getF() {
 			return g + h;
 		}
@@ -88,6 +105,11 @@ public class PathFinder {
 		if (from < 0 || from >= nodes.length || to < 0 || to >= nodes.length)
 			return output;
 		
+		// cannot move to an impassable tile.
+		// TODO move to the nearest passable tile.
+		if (nodes[to].getWeight() == -1)
+			return output;
+		
 		ArrayList<PathNode> open = new ArrayList<>();
 		ArrayList<PathNode> closed = new ArrayList<>();
 		
@@ -95,25 +117,54 @@ public class PathFinder {
 		open.add(nodes[from]);
 		
 		while (!open.isEmpty() ) {
-			PathNode q = null;
-			for (PathNode node : open) {
-				if (q == null) {
-					q = node;
-				} else {
-					if (node.getF() < q.getF()) {
-						q = node;
-					}
-				}
-			}
+			// get lowest F node from open list
+			PathNode q = Collections.min(open, Comparator.comparing(s -> s.getF()));
+
 			open.remove(q);
 			closed.add(q);
 			
-			q.setAsParent();
+			//q.setAsParent();
 			
 			for (int i = 0; i < q.getSiblings().length; ++i) {
-				PathNode successor = q.getSiblings()[i];
-				if (successor == null)// corner and edge nodes have some null siblings
+				PathNode successor = q.getSibling(i);
+				if (successor == null || successor.getWeight() == -1)// corner and edge nodes have some null siblings
 					continue;
+				
+				if (closed.contains(successor))
+					continue;
+
+				// 0   1   2
+				// 3   q   4
+				// 5   6   7
+				
+				// don't cut corners
+				if (i == 0 && (!q.isSiblingPassable(1) || !q.isSiblingPassable(3))) {
+					continue;
+				} 
+				if (i == 2 && (!q.isSiblingPassable(1) || !q.isSiblingPassable(4))) {
+					continue;
+				} 
+				if (i == 5 && (!q.isSiblingPassable(3) || !q.isSiblingPassable(6))) {
+					continue;
+				} 
+				if (i == 7 && (!q.isSiblingPassable(4) || !q.isSiblingPassable(6))) {
+					continue;
+				}
+				
+				boolean isDiagonal = i == 0 || i == 2 || i == 5 || i == 7;
+				
+				double newG = q.getG() + (isDiagonal ? 1.414 : 1.0);
+				double newH = calculateManhattan(successor.getId(), to);
+				double newF = newG + newH;
+
+				if (newF < successor.getF() || !open.contains(successor)) {
+					successor.setG(newG);
+					successor.setH(newH);
+					successor.setParent(q);
+					
+					if (!open.contains(successor))
+						open.add(successor);
+				}
 				
 				if (successor == nodes[to]) {
 					// found it
@@ -127,19 +178,16 @@ public class PathFinder {
 					return output;
 				}
 				
-				if (closed.contains(successor))
-					continue;
-				
-				boolean isDiagonal = i == 0 || i == 2 || i == 5 || i == 7;
-				
-				successor.setG(q.getG() + (isDiagonal ? 1.414 : 1));
-				successor.h = calculateManhattan(successor.getId(), to);
-				
-				if (open.contains(successor)) {
-					//if (successor.getG())
-				} else {
-					open.add(successor);
-				}
+//				if (open.contains(successor)) {
+//					if (successor.getG() < newG)
+//						continue;
+//					open.remove(successor);
+//				}
+//				
+//				successor.setParent(q);
+//				successor.setG(newG);
+//				successor.setH(newH);
+//				open.add(successor);
 			}
 		}
 		

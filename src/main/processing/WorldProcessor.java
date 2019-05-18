@@ -162,4 +162,12 @@ public class WorldProcessor implements Runnable {
 		
 		return localPlayers;
 	}
+	
+	public static Player getPlayerById(int id) {
+		for (Player player : playerSessions.values()) {
+			if (player.getDto().getId() == id)
+				return player;
+		}
+		return null;
+	}
 }

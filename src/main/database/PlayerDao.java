@@ -81,6 +81,26 @@ public class PlayerDao {
 		return "";
 	}
 	
+	public static int getIdFromName(String name) {
+		final String query = "select id from player where name = ?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setString(1, name);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getInt("id");
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return -1;
+	}
+	
 	public static List<PlayerDto> getAllPlayers() {
 		List<PlayerDto> playerList = new ArrayList<>();
 		final String query = "select id, name, tile_id, current_hp, max_hp from view_player inner join player_session on player_session.player_id = view_player.id";

@@ -97,4 +97,19 @@ public class PlayerInventoryDao {
 		
 		return -1;
 	}
+	
+	public static boolean clearInventoryByPlayerId(int playerId) {
+		final String query = "update player_inventories set item_id=0 where player_id=?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, playerId);
+			return ps.executeUpdate() == 1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
 }

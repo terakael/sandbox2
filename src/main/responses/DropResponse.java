@@ -3,6 +3,7 @@ package main.responses;
 import java.util.List;
 import javax.websocket.Session;
 
+import lombok.Setter;
 import main.GroundItemManager;
 import main.database.EquipmentDao;
 import main.database.ItemDto;
@@ -13,7 +14,7 @@ import main.requests.DropRequest;
 import main.requests.Request;
 
 public class DropResponse extends Response {
-	private List<GroundItemManager.GroundItem> groundItems;
+	@Setter private List<GroundItemManager.GroundItem> groundItems;
 	
 	public DropResponse(String action) {
 		super(action);

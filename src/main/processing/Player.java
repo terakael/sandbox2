@@ -74,13 +74,7 @@ public class Player {
 				responseMaps.addLocalResponse(this, playerUpdateResponse);
 			}
 
-			Player targetPlayer = null;
-			for (Player p : WorldProcessor.playerSessions.values()) {
-				if (p.getDto().getId() == targetPlayerId) {
-					targetPlayer = p;
-					break;
-				}
-			}
+			Player targetPlayer = WorldProcessor.getPlayerById(targetPlayerId);
 			
 			// maybe the target player logged out
 			if (targetPlayer == null) {
@@ -156,5 +150,13 @@ public class Player {
 	
 	public int getTileId() {
 		return dto.getTileId();
+	}
+	
+	public boolean isGod() {
+		return dto.getId() == 3;// god id
+	}
+	
+	public int getId() {
+		return dto.getId();
 	}
 }
