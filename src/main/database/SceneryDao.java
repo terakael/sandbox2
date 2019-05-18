@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -142,5 +143,26 @@ public class SceneryDao {
 		}
 		
 		return tileIds;
+	}
+	
+	public static HashMap<Integer, String> getExamineMap() {
+		String query = "select id, examine from scenery";
+		
+		HashMap<Integer, String> examineMap = new HashMap<>();
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					examineMap.put(rs.getInt("id"), rs.getString("examine"));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return examineMap;
 	}
 }

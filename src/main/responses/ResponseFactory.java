@@ -45,6 +45,9 @@ public class ResponseFactory {
 		if (action.equals("playerLeave"))
 			return new PlayerLeaveResponse(action);
 		
+		if (action.equals("examine"))
+			return new ExamineResponse(action);
+		
 		return new UnknownResponse(action);
 	}
 }

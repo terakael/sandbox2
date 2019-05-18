@@ -57,7 +57,6 @@ public class Player {
 					else {
 						Response response = ResponseFactory.create(savedRequest.getAction());
 						response.process(savedRequest, session, responseMaps);
-						
 						savedRequest = null;
 					}
 				}
@@ -97,12 +96,11 @@ public class Player {
 				responseMaps.addLocalResponse(this, playerUpdateResponse);
 			}
 
-			Player targetPlayer = null;
-			for (Player p : WorldProcessor.playerSessions.values()) {
-				if (p.getDto().getId() == targetPlayerId) {
-					targetPlayer = p;
-					break;
-				}
+			Player targetPlayer = WorldProcessor.getPlayerById(targetPlayerId);	
+			if (targetPlayer == null) {
+				// player could have logged out as they were chasing
+				state = PlayerState.idle;
+				break;
 			}
 			
 			if (!PathFinder.isNextTo(dto.getTileId(), targetPlayer.dto.getTileId())) {

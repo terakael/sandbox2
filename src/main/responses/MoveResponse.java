@@ -13,10 +13,6 @@ import main.requests.MoveRequest;
 import main.requests.Request;
 
 public class MoveResponse extends Response {
-	private int id;
-	private int x;
-	private int y;
-
 	public MoveResponse(String action) {
 		super(action);
 	}
@@ -25,11 +21,8 @@ public class MoveResponse extends Response {
 	public void process(Request req, Session client, ResponseMaps responseMaps) {
 		// the MoveRequest tells us which square the player wants to move to.
 		// we run the A* algorithm and return them a list of points to move to.
-		
-		if (!(req instanceof MoveRequest)) {
-			setRecoAndResponseText(0, "funny business");
+		if (!(req instanceof MoveRequest))
 			return;
-		}
 		
 		MoveRequest moveReq = (MoveRequest)req;
 
@@ -42,14 +35,11 @@ public class MoveResponse extends Response {
 			int destX = moveReq.getX() / 32;
 			int destY = moveReq.getY() / 32;
 			
-			
 			int destTile = destX + (destY * 250);
 			
 			Stack<Integer> ints = PathFinder.findPath(player.getTileId(), destTile, true);
 			player.setPath(ints);
 		}
-		
-		responseMaps.addBroadcastResponse(this);
 	}
 
 }

@@ -9,6 +9,7 @@ import main.database.SceneryDao;
 import main.processing.PathFinder;
 import main.processing.WorldProcessor;
 import main.responses.CachedResourcesResponse;
+import main.responses.ExamineResponse;
 
 public class Server {
 
@@ -32,6 +33,7 @@ public class Server {
 			
 			CachedResourcesResponse.get();// loads/caches all the sprite maps, scenery etc and gets sent on client load
 			PathFinder.get();// init the path nodes and relationships
+			ExamineResponse.initializeExamineMap();// all the scenery examine
 			
 			WorldProcessor processor = new WorldProcessor();
 			processor.start();

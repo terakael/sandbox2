@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class ItemDao {
@@ -46,5 +47,24 @@ public class ItemDao {
 		}
 		
 		return items;
+	}
+	
+	public static HashMap<Integer, String> getExamineMap() {
+		final String query = "select id, description from items";
+		HashMap<Integer, String> examineMap = new HashMap<>();
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					examineMap.put(rs.getInt("id"), rs.getString("description"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return examineMap;
 	}
 }

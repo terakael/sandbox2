@@ -38,13 +38,9 @@ public class LogonResponse extends Response {
 	@Getter private int maxHp;
 	private Stats stats;
 	private List<PlayerDto> players;
-//	private List<SpriteMapDto> spriteMaps;
-//	private List<ItemDto> items;
-//	private List<SpriteFrameDto> spriteFrames;
 	private List<Integer> inventory;
 	private List<Integer> equippedSlots;
 	private List<GroundItemManager.GroundItem> groundItems;
-//	private List<SceneryDto> scenery;
 	private AnimationDto animations;
 
 	public LogonResponse(String action) {
@@ -87,14 +83,10 @@ public class LogonResponse extends Response {
 		stats = new Stats(statList);
 		
 		players = PlayerDao.getAllPlayers();
-//		spriteMaps = SpriteMapDao.getAllSpriteMaps();
-//		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
-//		items = ItemDao.getAllItems();
 		inventory = PlayerInventoryDao.getInventoryListByPlayerId(dto.getId());
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(dto.getId());
 		groundItems = GroundItemManager.getGroundItems();
 		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
-//		scenery = SceneryDao.getAllSceneryByRoom(1);// TODO dynamic based on player room when there's more rooms
 		
 		WorldProcessor.playerSessions.put(client, player);
 		
