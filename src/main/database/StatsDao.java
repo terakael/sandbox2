@@ -34,6 +34,26 @@ public class StatsDao {
 		return null;
 	}
 	
+	public static int getStatLevelByStatIdPlayerId(int statId, int playerId) {
+		final String query = "select exp from player_stats where stat_id=? and player_id=?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, statId);
+			ps.setInt(2, playerId);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return getLevelFromExp(rs.getInt("exp"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return -1;
+	}
+	
 	public static void addExpToPlayer(int playerId, int statId, int exp) {
 		final String query = "update player_stats set exp=exp+? where player_id=? and stat_id=?";
 		

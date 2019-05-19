@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import main.database.ContextOptionsDao;
+import main.database.ContextOptionsDto;
 import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.SceneryDao;
@@ -20,7 +21,7 @@ public class CachedResourcesResponse extends Response {
 	private List<ItemDto> items = null;
 	private List<SpriteFrameDto> spriteFrames = null;
 	private List<SceneryDto> scenery = null;
-	private Map<Integer, String> contextOptions = null;
+	private List<ContextOptionsDto> contextOptions = null;
 	private static CachedResourcesResponse instance = null;
 
 	private CachedResourcesResponse() {

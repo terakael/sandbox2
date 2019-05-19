@@ -3,6 +3,7 @@ package main.responses;
 import main.database.MineableDao;
 import main.database.MineableDto;
 import main.database.PlayerInventoryDao;
+import main.database.StatsDao;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
@@ -36,6 +37,11 @@ public class MineResponse extends Response {
 			}
 			
 			// TODO does the player have the level to mine this?
+			if (StatsDao.getStatLevelByStatIdPlayerId(6, player.getId()) < mineable.getLevel()) {
+				setRecoAndResponseText(0, String.format("you need %d mining to mine this.", mineable.getLevel()));
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
 			
 			// TODO does player have inventory space
 			if (PlayerInventoryDao.getFreeSlotByPlayerId(player.getId()) == -1) {

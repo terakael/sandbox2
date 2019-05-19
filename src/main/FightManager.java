@@ -122,8 +122,8 @@ public class FightManager {
 				DeathResponse deathResponse = new DeathResponse();
 				deathResponse.setId(deadPlayer.getId());
 				deathResponse.setCurrentHp(deadPlayer.getMaxHp());
-				deathResponse.setTileId(1000);
-				deadPlayer.getRawPlayer().setTileId(1000);
+				deathResponse.setTileId(31375);
+				deadPlayer.getRawPlayer().setTileId(31375);
 				
 				p1.setState(PlayerState.idle);
 				p2.setState(PlayerState.idle);
