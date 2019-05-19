@@ -1,18 +1,17 @@
 package main.responses;
 
-import javax.websocket.Session;
-
+import main.processing.Player;
 import main.requests.LogoffRequest;
 import main.requests.Request;
 
 public class LogoffResponse extends Response {
 
-	public LogoffResponse(String action) {
-		super(action);
+	public LogoffResponse() {
+		setAction("logoff");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof LogoffRequest)) {
 			setRecoAndResponseText(0, "funny business");
 			return;

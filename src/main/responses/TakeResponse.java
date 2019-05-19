@@ -1,13 +1,10 @@
 package main.responses;
 
 import java.util.List;
-import javax.websocket.Session;
-
 import main.GroundItemManager;
 import main.database.PlayerInventoryDao;
 import main.processing.PathFinder;
 import main.processing.Player;
-import main.processing.WorldProcessor;
 import main.processing.Player.PlayerState;
 import main.requests.Request;
 import main.requests.TakeRequest;
@@ -16,20 +13,18 @@ public class TakeResponse extends Response {
 	@SuppressWarnings("unused")// used on serialization
 	private List<GroundItemManager.GroundItem> groundItems;
 
-	public TakeResponse(String action) {
-		super(action);
+	public TakeResponse() {
+		setAction("take");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof TakeRequest)) {
 			setRecoAndResponseText(0, "funny business");
 			return;
 		}
 		
 		TakeRequest takeReq = (TakeRequest)req;
-		
-		Player player = WorldProcessor.playerSessions.get(client);
 		
 		// TODO check player distance from groundItem
 		GroundItemManager.GroundItem item = GroundItemManager.getGroundItemByGroundItemId(takeReq.getGroundItemId());
@@ -56,8 +51,8 @@ public class TakeResponse extends Response {
 		groundItems = GroundItemManager.getGroundItems();
 	
 		// update the player inventory/equipped items and only send it to the player
-		InventoryUpdateResponse resp = new InventoryUpdateResponse("invupdate");
-		resp.process(takeReq, client, responseMaps);// adds itself to the appropriate responseMap
+		Response resp = ResponseFactory.create("invupdate");
+		resp.process(takeReq, player, responseMaps);// adds itself to the appropriate responseMap
 //		resp.setInventory(PlayerInventoryDao.getInventoryListByPlayerId(takeReq.getId()));
 //		resp.setEquippedSlots(EquipmentDao.getEquippedSlotsByPlayerId(takeReq.getId()));
 		

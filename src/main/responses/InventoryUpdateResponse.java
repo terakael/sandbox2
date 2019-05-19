@@ -2,13 +2,11 @@ package main.responses;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.websocket.Session;
-
 import lombok.Setter;
 import main.database.EquipmentDao;
 import main.database.ItemDto;
 import main.database.PlayerInventoryDao;
-import main.processing.WorldProcessor;
+import main.processing.Player;
 import main.requests.InventoryMoveRequest;
 import main.requests.Request;
 
@@ -17,22 +15,22 @@ public class InventoryUpdateResponse extends Response {
 	private List<Integer> inventory = new ArrayList<>();
 	private List<Integer> equippedSlots = new ArrayList<>();
 
-	public InventoryUpdateResponse(String action) {
-		super(action);
+	public InventoryUpdateResponse() {
+		setAction("invupdate");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {		
+	public void process(Request req, Player player, ResponseMaps responseMaps) {		
 		if (req instanceof InventoryMoveRequest)
-			processInventoryMoveRequest((InventoryMoveRequest)req, client);
+			processInventoryMoveRequest((InventoryMoveRequest)req, player);
 		
 		inventory = PlayerInventoryDao.getInventoryListByPlayerId(req.getId());
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(req.getId());
 		
-		responseMaps.addClientOnlyResponse(WorldProcessor.playerSessions.get(client), this);
+		responseMaps.addClientOnlyResponse(player, this);
 	}
 	
-	private void processInventoryMoveRequest(InventoryMoveRequest req, Session client) {
+	private void processInventoryMoveRequest(InventoryMoveRequest req, Player player) {
 		// check if there's already an item in the slot we're trying to move the src item to
 		ItemDto destItem = PlayerInventoryDao.getItemFromPlayerIdAndSlot(req.getId(), req.getDest());
 		ItemDto srcItem = PlayerInventoryDao.getItemFromPlayerIdAndSlot(req.getId(), req.getSrc());

@@ -65,7 +65,14 @@ public class WorldProcessor implements Runnable {
 		for (Map.Entry<Session, Request> entry : requestMap.entrySet()) {
 			final Request request = entry.getValue();
 			Response response = ResponseFactory.create(request.getAction());
-			response.process(request, entry.getKey(), responseMaps);
+			
+			if (request.getAction().equals("logon")) {
+				// player isn't created at this point; it's created within this function
+				LogonResponse logonResponse = (LogonResponse)response;
+				logonResponse.processLogon(request, entry.getKey(), responseMaps);
+			} else {
+				response.process(request, playerSessions.get(entry.getKey()), responseMaps);
+			}
 		}
 		
 		// process players

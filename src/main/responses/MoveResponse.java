@@ -2,23 +2,20 @@ package main.responses;
 
 import java.util.Stack;
 
-import javax.websocket.Session;
-
 import main.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
-import main.processing.WorldProcessor;
 import main.processing.Player.PlayerState;
 import main.requests.MoveRequest;
 import main.requests.Request;
 
 public class MoveResponse extends Response {
-	public MoveResponse(String action) {
-		super(action);
+	public MoveResponse() {
+		setAction("move");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		// the MoveRequest tells us which square the player wants to move to.
 		// we run the A* algorithm and return them a list of points to move to.
 		if (!(req instanceof MoveRequest))
@@ -28,7 +25,6 @@ public class MoveResponse extends Response {
 
 		FightManager.cancelFight(moveReq.getId());
 		
-		Player player = WorldProcessor.playerSessions.get(client);
 		if (player != null) {
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(null);

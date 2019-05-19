@@ -1,17 +1,14 @@
 package main.responses;
 
-import javax.websocket.Session;
-
+import main.processing.Player;
 import main.requests.Request;
 
 public class UnknownResponse extends Response {
 
-	public UnknownResponse(String action) {
-		super(action);
-	}
+	protected UnknownResponse() {}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		assert(false);
 		setRecoAndResponseText(0, "Unknown action.");
 	}

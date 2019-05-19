@@ -3,8 +3,6 @@ package main.responses;
 import java.util.List;
 import java.util.Map;
 
-import javax.websocket.Session;
-
 import main.database.ContextOptionsDao;
 import main.database.ItemDao;
 import main.database.ItemDto;
@@ -14,6 +12,7 @@ import main.database.SpriteFrameDao;
 import main.database.SpriteFrameDto;
 import main.database.SpriteMapDao;
 import main.database.SpriteMapDto;
+import main.processing.Player;
 import main.requests.Request;
 
 public class CachedResourcesResponse extends Response {
@@ -24,20 +23,20 @@ public class CachedResourcesResponse extends Response {
 	private Map<Integer, String> contextOptions = null;
 	private static CachedResourcesResponse instance = null;
 
-	private CachedResourcesResponse(String action) {
-		super(action);
+	private CachedResourcesResponse() {
+		setAction("cached_resources");
 	}
 	
 	public static CachedResourcesResponse get() {
 		if (instance == null) {
-			instance = new CachedResourcesResponse("cached_resources");
+			instance = new CachedResourcesResponse();
 			instance.loadCachedResources();
 		}
 		return instance;
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		
 	}
 	

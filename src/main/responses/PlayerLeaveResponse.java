@@ -1,9 +1,8 @@
 package main.responses;
 
-import javax.websocket.Session;
-
 import lombok.Getter;
 import lombok.Setter;
+import main.processing.Player;
 import main.requests.PlayerLeaveRequest;
 import main.requests.Request;
 
@@ -12,12 +11,12 @@ public class PlayerLeaveResponse extends Response {
 	@Getter @Setter private int id;
 	@Setter private String name;
 	
-	public PlayerLeaveResponse(String action) {
-		super(action);
+	public PlayerLeaveResponse() {
+		setAction("playerLeave");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {		
+	public void process(Request req, Player player, ResponseMaps responseMaps) {		
 		if (!(req instanceof PlayerLeaveRequest)) {
 			return;
 		}

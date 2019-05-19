@@ -1,8 +1,7 @@
 package main.responses;
 
-import javax.websocket.Session;
-
 import lombok.Setter;
+import main.processing.Player;
 import main.requests.Request;
 
 @Setter
@@ -12,12 +11,12 @@ public class DamageResponse extends Response {
 	int otherId;
 	int damage;
 
-	public DamageResponse(String action) {
-		super(action);
+	public DamageResponse() {
+		setAction("damage");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 
 	}
 

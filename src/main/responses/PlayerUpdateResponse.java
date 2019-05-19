@@ -1,8 +1,7 @@
 package main.responses;
 
-import javax.websocket.Session;
-
 import lombok.Setter;
+import main.processing.Player;
 import main.requests.Request;
 
 
@@ -22,12 +21,12 @@ public class PlayerUpdateResponse extends Response {
 		Integer sword = null;
 	}
 
-	public PlayerUpdateResponse(String action) {
-		super(action);
+	public PlayerUpdateResponse() {
+		setAction("player_update");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 
 	}
 

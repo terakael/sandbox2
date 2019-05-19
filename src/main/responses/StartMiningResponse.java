@@ -1,24 +1,22 @@
 package main.responses;
 
-import javax.websocket.Session;
-
-import main.processing.WorldProcessor;
+import main.processing.Player;
 import main.requests.MineRequest;
 import main.requests.Request;
 
 public class StartMiningResponse extends Response {
 
-	public StartMiningResponse(String action) {
-		super(action);
+	public StartMiningResponse() {
+		setAction("start_mining");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof MineRequest))
 			return;
 		
 		MineRequest request = (MineRequest)req;
-		responseMaps.addClientOnlyResponse(WorldProcessor.playerSessions.get(client), this);
+		responseMaps.addClientOnlyResponse(player, this);
 	}
 
 }

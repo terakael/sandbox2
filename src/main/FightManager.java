@@ -101,24 +101,25 @@ public class FightManager {
 				
 				// drop all dead players items on ground
 				List<Integer> inventoryList = PlayerInventoryDao.getInventoryListByPlayerId(deadPlayer.getId());
-				for (int itemId : inventoryList)
-					GroundItemManager.add(itemId, deadPlayer.getRawPlayer().getTileId());
+				for (int itemId : inventoryList) {
+					if (itemId != 0)
+						GroundItemManager.add(itemId, deadPlayer.getRawPlayer().getTileId());
+				}
 				PlayerInventoryDao.clearInventoryByPlayerId(deadPlayer.getId());
 				
 				Request req = new Request();
 				req.setId(deadPlayer.getId());
 				
 				// this pulls the equipped items and inventory list by playerId (set in the req above)
-				InventoryUpdateResponse invResponse = new InventoryUpdateResponse("invupdate");
-				invResponse.process(req, deadPlayer.getRawPlayer().getSession(), responseMaps);
+				new InventoryUpdateResponse().process(req, deadPlayer.getRawPlayer(), responseMaps);
 				
 				// TODO don't use dropResponse, use a new ground_update response
-				DropResponse dropResponse = new DropResponse("drop");
+				DropResponse dropResponse = new DropResponse();
 				dropResponse.setGroundItems(GroundItemManager.getGroundItems());
 				responseMaps.addBroadcastResponse(dropResponse);
 				
 				// broadcast that the player died
-				DeathResponse deathResponse = new DeathResponse("dead");
+				DeathResponse deathResponse = new DeathResponse();
 				deathResponse.setId(deadPlayer.getId());
 				deathResponse.setCurrentHp(deadPlayer.getMaxHp());
 				deathResponse.setTileId(1000);
@@ -141,7 +142,7 @@ public class FightManager {
 		
 		int dmg = Math.max(attackingPlayer.getHit() - defendingPlayer.getBlock(), 0);
 		
-		DamageResponse damageResponse = new DamageResponse("damage");
+		DamageResponse damageResponse = new DamageResponse();
 		damageResponse.setDamage(dmg);
 		damageResponse.setId(defendingPlayer.getId());// id=player being damaged; otherId=player doing the damage
 		damageResponse.setOtherId(attackingPlayer.getId());

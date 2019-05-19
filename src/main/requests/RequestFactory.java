@@ -30,4 +30,10 @@ public class RequestFactory {
 			return (Request) gson.fromJson(jsonText, map.get(action));
 		return new UnknownRequest();
 	}
+	public static Request create(String action, int id) {
+		Request request = new Request();
+		request.setAction(action);
+		request.setId(id);
+		return request;
+	}
 }

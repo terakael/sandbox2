@@ -11,18 +11,10 @@ import main.Stats;
 import main.database.AnimationDao;
 import main.database.AnimationDto;
 import main.database.EquipmentDao;
-import main.database.ItemDao;
-import main.database.ItemDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerInventoryDao;
 import main.database.PlayerSessionDao;
-import main.database.SceneryDao;
-import main.database.SceneryDto;
-import main.database.SpriteFrameDao;
-import main.database.SpriteFrameDto;
-import main.database.SpriteMapDao;
-import main.database.SpriteMapDto;
 import main.database.StatsDao;
 import main.processing.Player;
 import main.processing.WorldProcessor;
@@ -43,12 +35,11 @@ public class LogonResponse extends Response {
 	private List<GroundItemManager.GroundItem> groundItems;
 	private AnimationDto animations;
 
-	public LogonResponse(String action) {
-		super(action);
+	public LogonResponse() {
+		setAction("logon");
 	}
 	
-	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void processLogon(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof LogonRequest)) {
 			setRecoAndResponseText(0, "funny business");
 			return;
@@ -93,8 +84,13 @@ public class LogonResponse extends Response {
 		responseMaps.addClientOnlyResponse(player, this);
 		
 		// broadcast to the rest of the players that this player has logged in
-		PlayerEnterResponse playerEnter = new PlayerEnterResponse("playerEnter");
+		PlayerEnterResponse playerEnter = (PlayerEnterResponse)ResponseFactory.create("playerEnter");
 		playerEnter.setPlayer(player.getDto());
 		responseMaps.addBroadcastResponse(playerEnter, player);
+	}
+	
+	@Override
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
+		
 	}
 }

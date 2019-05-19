@@ -16,9 +16,11 @@ import main.database.StatsDao;
 import main.requests.AddExpRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
+import main.requests.RequestFactory;
 import main.responses.AddExpResponse;
 import main.responses.FinishMiningResponse;
 import main.responses.InventoryUpdateResponse;
+import main.responses.MineResponse;
 import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
@@ -55,7 +57,7 @@ public class Player {
 			if (!path.isEmpty()) {				
 				setTileId(path.pop());
 
-				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse("player_update");
+				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTile(getTileId());
 				responseMaps.addLocalResponse(this, playerUpdateResponse);
@@ -65,7 +67,7 @@ public class Player {
 						state = PlayerState.idle;
 					else {
 						Response response = ResponseFactory.create(savedRequest.getAction());
-						response.process(savedRequest, session, responseMaps);
+						response.process(savedRequest, this, responseMaps);
 //						savedRequest = null;
 					}
 				}
@@ -76,7 +78,7 @@ public class Player {
 		case following: {
 			if (!path.isEmpty()) {
 				setTileId(path.pop());
-				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse("player_update");
+				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTile(getTileId());
 				responseMaps.addLocalResponse(this, playerUpdateResponse);
@@ -99,7 +101,7 @@ public class Player {
 			// similar to walking, but need to recalculate path each tick due to moving target
 			if (!path.isEmpty()) {
 				setTileId(path.pop());
-				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse("player_update");
+				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTile(getTileId());
 				responseMaps.addLocalResponse(this, playerUpdateResponse);
@@ -142,15 +144,14 @@ public class Player {
 				}
 				
 				MineRequest mineRequest = (MineRequest)savedRequest;
-				
 				MineableDto mineable = MineableDao.getMineableDtoByTileId(mineRequest.getTileId());
 				if (mineable == null) {
+					MineResponse mineResponse = new MineResponse();
+					mineResponse.setRecoAndResponseText(0, "you can't mine that.");
+					responseMaps.addClientOnlyResponse(this, mineResponse);
 					return;
 				}
 				PlayerInventoryDao.addItemByItemIdPlayerId(getId(), mineable.getItemId());
-				
-				Request pidRequest = new Request();
-				pidRequest.setId(getId());
 				
 				AddExpRequest addExpReq = new AddExpRequest();
 				addExpReq.setId(getId());
@@ -158,12 +159,9 @@ public class Player {
 				addExpReq.setStatId(6);// mining
 				addExpReq.setExp(mineable.getExp());
 				
-				new AddExpResponse("addexp").process(addExpReq, session, responseMaps);
-				
-				FinishMiningResponse finishMining = new FinishMiningResponse("finish_mining");
-				finishMining.process(savedRequest, session, responseMaps);
-				
-				new InventoryUpdateResponse("invupdate").process(pidRequest, session, responseMaps);
+				new AddExpResponse().process(addExpReq, this, responseMaps);
+				new FinishMiningResponse().process(savedRequest, this, responseMaps);
+				new InventoryUpdateResponse().process(RequestFactory.create("", getId()), this, responseMaps);
 				
 				savedRequest = null;
 				state = PlayerState.idle;

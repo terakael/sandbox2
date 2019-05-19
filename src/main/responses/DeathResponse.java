@@ -1,9 +1,8 @@
 package main.responses;
 
-import javax.websocket.Session;
-
 import lombok.Getter;
 import lombok.Setter;
+import main.processing.Player;
 import main.requests.Request;
 
 public class DeathResponse extends Response {
@@ -11,12 +10,12 @@ public class DeathResponse extends Response {
 	@Getter @Setter private int tileId;
 	@Setter private int currentHp;
 
-	public DeathResponse(String action) {
-		super(action);
+	public DeathResponse() {
+		setAction("dead");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 
 	}
 

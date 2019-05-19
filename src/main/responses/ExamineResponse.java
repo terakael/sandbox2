@@ -3,11 +3,9 @@ package main.responses;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.websocket.Session;
-
 import main.database.ItemDao;
 import main.database.SceneryDao;
-import main.processing.WorldProcessor;
+import main.processing.Player;
 import main.requests.ExamineRequest;
 import main.requests.Request;
 
@@ -21,12 +19,12 @@ public class ExamineResponse extends Response {
 		itemExamineMap = ItemDao.getExamineMap();
 	}
 
-	public ExamineResponse(String action) {
-		super(action);
+	public ExamineResponse() {
+		setAction("examine");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof ExamineRequest))
 			return;
 		
@@ -43,7 +41,7 @@ public class ExamineResponse extends Response {
 			break;
 		}
 		
-		responseMaps.addClientOnlyResponse(WorldProcessor.playerSessions.get(client), this);
+		responseMaps.addClientOnlyResponse(player, this);
 	}
 
 }

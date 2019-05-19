@@ -1,7 +1,5 @@
 package main.responses;
 
-import javax.websocket.Session;
-
 import lombok.Getter;
 import lombok.Setter;
 import main.FightManager;
@@ -22,18 +20,15 @@ public abstract class PlayerResponse extends Response {
 	String opponentName;
 	int accepted;
 
-	public PlayerResponse(String action) {
-		super(action);
-	}
+	protected PlayerResponse() {}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof PlayerRequest)) {
 			setRecoAndResponseText(0, "funny business");
 			return;
 		}
-		
-		Player player = WorldProcessor.playerSessions.get(client);
+
 		PlayerRequest playerReq = (PlayerRequest)req;
 		
 		Player otherPlayer = WorldProcessor.getPlayerById(playerReq.getObjectId());

@@ -1,9 +1,8 @@
 package main.responses;
 
-import javax.websocket.Session;
-
 import lombok.Setter;
 import main.database.PlayerDto;
+import main.processing.Player;
 import main.requests.Request;
 
 // TODO deprecate in favour of PlayerUpdateResponse
@@ -15,12 +14,12 @@ public class PlayerEnterResponse extends Response {
 	
 	PlayerDto player;
 
-	public PlayerEnterResponse(String action) {
-		super(action);
+	public PlayerEnterResponse() {
+		setAction("playerEnter");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		
 	}
 	

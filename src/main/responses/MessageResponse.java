@@ -1,11 +1,5 @@
 package main.responses;
 
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.websocket.Session;
-
 import lombok.Setter;
 import main.database.PlayerDao;
 import main.database.StatsDao;
@@ -21,18 +15,16 @@ public class MessageResponse extends Response {
 	@Setter private String message;
 	@Setter private String colour = "yellow";
 
-	public MessageResponse(String action) {
-		super(action);
+	public MessageResponse() {
+		setAction("message");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof MessageRequest)) {
 			setRecoAndResponseText(0, "funny business");
 			return;
 		}
-		
-		Player player = WorldProcessor.playerSessions.get(client);
 		
 		MessageRequest messageReq = (MessageRequest)req;
 		
@@ -130,7 +122,7 @@ public class MessageResponse extends Response {
 			targetPlayer = player;
 		}
 		
-		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse("player_update");
+		PlayerUpdateResponse playerUpdate = (PlayerUpdateResponse)ResponseFactory.create("player_update");
 		playerUpdate.setId(targetPlayer.getDto().getId());
 		playerUpdate.setTile(destTileId);
 		targetPlayer.setTileId(destTileId);
@@ -176,7 +168,7 @@ public class MessageResponse extends Response {
 		if (targetPlayer == null)
 			return;// targetPlayer is valid based on the id check above, but they're not logged in so we can't send them their response
 		
-		AddExpResponse resp = new AddExpResponse("addexp");
+		AddExpResponse resp = new AddExpResponse();
 		resp.setId(targetPlayerId);
 		resp.setStatId(statId);
 		resp.setStatShortName(msgParts[0]);
@@ -184,7 +176,7 @@ public class MessageResponse extends Response {
 		
 		responseMaps.addClientOnlyResponse(targetPlayer, resp);
 		
-		MessageResponse messageResponse = new MessageResponse("");
+		MessageResponse messageResponse = new MessageResponse();
 		messageResponse.setRecoAndResponseText(0, String.format("Your god has granted you %dexp in %s; %s him!", exp, msgParts[0], exp <= 0 ? "fear" : "praise"));
 		responseMaps.addClientOnlyResponse(targetPlayer, messageResponse);
 	}

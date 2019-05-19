@@ -1,10 +1,8 @@
 package main.responses;
 
-import javax.websocket.Session;
-
 import lombok.Setter;
 import main.database.StatsDao;
-import main.processing.WorldProcessor;
+import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.Request;
 
@@ -16,12 +14,12 @@ public class AddExpResponse extends Response {
 	private String statShortName;
 	private int exp;
 
-	public AddExpResponse(String action) {
-		super(action);
+	public AddExpResponse() {
+		setAction("addexp");
 	}
 
 	@Override
-	public void process(Request req, Session client, ResponseMaps responseMaps) {
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof AddExpRequest))
 			return;
 		
@@ -33,7 +31,7 @@ public class AddExpResponse extends Response {
 		if (statId != -1)
 			StatsDao.addExpToPlayer(request.getId(), statId, exp);
 		
-		responseMaps.addClientOnlyResponse(WorldProcessor.playerSessions.get(client), this);
+		responseMaps.addClientOnlyResponse(player, this);
 	}
 
 }
