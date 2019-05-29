@@ -69,6 +69,9 @@ public class ResponseFactory {
 		case "finish_mining":
 			response = new FinishMiningResponse();
 			break;
+		case "use":
+			response = new UseResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;

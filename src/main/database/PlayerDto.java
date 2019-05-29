@@ -12,5 +12,6 @@ public class PlayerDto {
 	private int tileId;
 	private int currentHp;
 	private int maxHp;
+	private int combatLevel;
 	private AnimationDto animations;
 }

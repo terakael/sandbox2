@@ -36,29 +36,27 @@ public class MineResponse extends Response {
 				return;
 			}
 			
-			// TODO does the player have the level to mine this?
+			// TODO does player have a pickaxe in their inventory?
+			
+			// does the player have the level to mine this?
 			if (StatsDao.getStatLevelByStatIdPlayerId(6, player.getId()) < mineable.getLevel()) {
 				setRecoAndResponseText(0, String.format("you need %d mining to mine this.", mineable.getLevel()));
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
 			}
 			
-			// TODO does player have inventory space
+			// does player have inventory space
 			if (PlayerInventoryDao.getFreeSlotByPlayerId(player.getId()) == -1) {
 				setRecoAndResponseText(0, "your inventory is too full to mine anymore.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
 			}
 			
-			//setRecoAndResponseText(0, "you got this far in the mineable, nice");
-			StartMiningResponse miningStart = (StartMiningResponse)ResponseFactory.create("start_mining");
-			miningStart.process(request, player, responseMaps);
+			new StartMiningResponse().process(request, player, responseMaps);
 			
 			player.setState(PlayerState.mining);
 			player.setSavedRequest(req);
 			player.setTickCounter(5);
-			
-//			responseMaps.addClientOnlyResponse(player, this);
 		}
 	}
 

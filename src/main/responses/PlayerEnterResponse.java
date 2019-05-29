@@ -11,7 +11,7 @@ public class PlayerEnterResponse extends Response {
 	@Setter private String id;
 	@Setter private String name;
 	@Setter private int tileId;
-	
+	@Setter private int combatLevel;
 	PlayerDto player;
 
 	public PlayerEnterResponse() {

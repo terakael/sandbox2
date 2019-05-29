@@ -8,48 +8,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+
+import main.responses.CachedResourcesResponse;
 
 public class SceneryDao {
 	private SceneryDao() {};
-	
-	public static SceneryDto getSceneryById(int id) {
-		final String query = "select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, attributes from scenery where id=?";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, id);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					SceneryDto dto = new SceneryDto();
-					dto.setId(rs.getInt("id"));
-					dto.setName(rs.getString("name"));
-					dto.setSpriteMapId(rs.getInt("sprite_map_id"));
-					dto.setX(rs.getInt("x"));
-					dto.setY(rs.getInt("y"));
-					dto.setW(rs.getInt("w"));
-					dto.setH(rs.getInt("h"));
-					dto.setAnchorX(rs.getFloat("anchor_x"));
-					dto.setAnchorY(rs.getFloat("anchor_y"));
-					dto.setFramecount(rs.getInt("framecount"));
-					dto.setFramerate(rs.getInt("framerate"));
-					dto.setAttributes(rs.getInt("attributes"));
-					//dto.setInstances(getInstanceListBySceneryId(id));
-					
-					return dto;
-				}
-			} 
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
+
 	public static List<SceneryDto> getAllSceneryByRoom(int roomId) {
 		// TODO query is wrong
 		final String query = 
-				"select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, attributes from scenery " +
+				"select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, leftclick_option, other_options from scenery " +
 				" where id in (select distinct scenery_id from room_scenery where room_id=?)";
 		
 		List<SceneryDto> sceneryList = new ArrayList<>();
@@ -73,7 +42,8 @@ public class SceneryDao {
 					dto.setAnchorY(rs.getFloat("anchor_y"));
 					dto.setFramecount(rs.getInt("framecount"));
 					dto.setFramerate(rs.getInt("framerate"));
-					dto.setAttributes(rs.getInt("attributes"));
+					dto.setLeftclickOption(rs.getInt("leftclick_option"));
+					dto.setOtherOptions(rs.getInt("other_options"));
 					dto.setInstances(getInstanceListByRoomIdAndSceneryId(roomId, rs.getInt("id")));
 					sceneryList.add(dto);
 				}
@@ -84,10 +54,10 @@ public class SceneryDao {
 		return sceneryList;
 	}
 	
-	public static ArrayList<Integer> getInstanceListByRoomIdAndSceneryId(int roomId, int sceneryId) {
+	public static HashSet<Integer> getInstanceListByRoomIdAndSceneryId(int roomId, int sceneryId) {
 		String query = "select tile_id from room_scenery where room_id=? and scenery_id=?";
 		
-		ArrayList<Integer> instanceList = new ArrayList<>();
+		HashSet<Integer> instanceList = new HashSet<>();
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -164,5 +134,13 @@ public class SceneryDao {
 		}
 		
 		return examineMap;
+	}
+	
+	public static int getSceneryIdByTileId(int tileId) {
+		for (SceneryDto dto : CachedResourcesResponse.get().getScenery()) {
+			if (dto.getInstances().contains(tileId))
+				return dto.getId();
+		}
+		return -1;
 	}
 }

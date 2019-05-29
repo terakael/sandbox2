@@ -1,15 +1,17 @@
 package main.database;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
 @NoArgsConstructor
 public class SceneryDto {
-	private int id;
+	@Getter private int id;
 	private String name;
 	private int spriteMapId;
 	private int x;
@@ -20,6 +22,7 @@ public class SceneryDto {
 	private float anchorY;
 	private int framecount;
 	private int framerate;
-	private int attributes;
-	private ArrayList<Integer> instances = null;
+	private int leftclickOption;
+	private int otherOptions;
+	@Getter private HashSet<Integer> instances = null;
 }

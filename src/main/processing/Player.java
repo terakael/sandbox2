@@ -155,13 +155,12 @@ public class Player {
 				
 				AddExpRequest addExpReq = new AddExpRequest();
 				addExpReq.setId(getId());
-				addExpReq.setAction("addexp");
 				addExpReq.setStatId(6);// mining
 				addExpReq.setExp(mineable.getExp());
 				
 				new AddExpResponse().process(addExpReq, this, responseMaps);
 				new FinishMiningResponse().process(savedRequest, this, responseMaps);
-				new InventoryUpdateResponse().process(RequestFactory.create("", getId()), this, responseMaps);
+				new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);
 				
 				savedRequest = null;
 				state = PlayerState.idle;

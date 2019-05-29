@@ -14,13 +14,11 @@ import lombok.Getter;
 public class MineableDao {
 	private MineableDao() {}
 	
-	@Getter private static List<MineableDto> mineables = null;
-	@Getter private static HashSet<Integer> mineableTiles = null;
+	private static List<MineableDto> mineables = null;
 	@Getter private static HashMap<Integer, HashSet<Integer>> mineableInstances = null;
 	
 	public static void setupCaches() {
 		cacheMineables();
-		cacheMineableTiles();
 		cacheMineableInstances();
 	}
 	
@@ -60,22 +58,6 @@ public class MineableDao {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-		}
-	}
-	
-	private static void cacheMineableTiles() {
-		final String query = "select tile_id from room_scenery where scenery_id in (select scenery_id from mineable)";
-		
-		mineableTiles = new HashSet<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery()
-		) {
-			while (rs.next())
-				mineableTiles.add(rs.getInt("tile_id"));
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
 	}
 	

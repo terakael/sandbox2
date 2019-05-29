@@ -3,6 +3,7 @@ package main.responses;
 import java.util.List;
 import java.util.Map;
 
+import lombok.Getter;
 import main.database.ContextOptionsDao;
 import main.database.ContextOptionsDto;
 import main.database.ItemDao;
@@ -16,6 +17,7 @@ import main.database.SpriteMapDto;
 import main.processing.Player;
 import main.requests.Request;
 
+@Getter
 public class CachedResourcesResponse extends Response {
 	private List<SpriteMapDto> spriteMaps = null;
 	private List<ItemDto> items = null;

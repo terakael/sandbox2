@@ -12,10 +12,6 @@ public class StartMiningResponse extends Response {
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (!(req instanceof MineRequest))
-			return;
-		
-		MineRequest request = (MineRequest)req;
 		responseMaps.addClientOnlyResponse(player, this);
 	}
 

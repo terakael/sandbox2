@@ -106,7 +106,6 @@ public class PathFinder {
 			return output;
 		
 		// cannot move to an impassable tile.
-		// TODO move to the nearest passable tile.
 		if (nodes[to].getWeight() == -1)
 			includeToTile = false;
 		

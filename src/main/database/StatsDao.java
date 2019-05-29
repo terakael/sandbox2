@@ -175,4 +175,24 @@ public class StatsDao {
 		
 		return 0;
 	}
+	
+	public static int getCombatLevelByPlayerId(int id) {
+		Map<String, Integer> stats = getStatsByPlayerId(id);
+		
+		int combat = 0;
+		for (Map.Entry<String, Integer> stat : stats.entrySet()) {
+			switch (stat.getKey()) {
+			case "str":
+			case "acc":
+			case "def":
+			case "agil":
+			case "hp":
+				combat += getLevelFromExp(stat.getValue());
+				break;
+			default:
+				break;
+			}
+		}
+		return combat;
+	}
 }

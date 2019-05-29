@@ -86,6 +86,7 @@ public class LogonResponse extends Response {
 		// broadcast to the rest of the players that this player has logged in
 		PlayerEnterResponse playerEnter = (PlayerEnterResponse)ResponseFactory.create("playerEnter");
 		playerEnter.setPlayer(player.getDto());
+		playerEnter.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
 		responseMaps.addBroadcastResponse(playerEnter, player);
 	}
 	
