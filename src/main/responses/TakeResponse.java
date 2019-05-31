@@ -2,7 +2,7 @@ package main.responses;
 
 import java.util.List;
 import main.GroundItemManager;
-import main.database.PlayerInventoryDao;
+import main.database.PlayerStorageDao;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
@@ -45,7 +45,7 @@ public class TakeResponse extends Response {
 			return;
 		}
 		
-		if (PlayerInventoryDao.addItemByItemIdPlayerId(takeReq.getId(), item.getId()))
+		if (PlayerStorageDao.addItemByItemIdPlayerId(takeReq.getId(), item.getId()))
 			GroundItemManager.remove(takeReq.getGroundItemId());
 		
 		groundItems = GroundItemManager.getGroundItems();

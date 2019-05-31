@@ -72,6 +72,9 @@ public class ResponseFactory {
 		case "use":
 			response = new UseResponse();
 			break;
+		case "smith":
+			response = new SmithResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;

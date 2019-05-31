@@ -11,7 +11,7 @@ import main.database.MineableDao;
 import main.database.MineableDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
-import main.database.PlayerInventoryDao;
+import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.requests.AddExpRequest;
 import main.requests.MineRequest;
@@ -151,7 +151,7 @@ public class Player {
 					responseMaps.addClientOnlyResponse(this, mineResponse);
 					return;
 				}
-				PlayerInventoryDao.addItemByItemIdPlayerId(getId(), mineable.getItemId());
+				PlayerStorageDao.addItemByItemIdPlayerId(getId(), mineable.getItemId());
 				
 				AddExpRequest addExpReq = new AddExpRequest();
 				addExpReq.setId(getId());

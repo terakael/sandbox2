@@ -9,7 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
-import main.database.PlayerInventoryDao;
+import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.processing.PathFinder;
 import main.processing.Player;
@@ -100,12 +100,12 @@ public class FightManager {
 				EquipmentDao.clearAllEquppedItems(deadPlayer.getId());
 				
 				// drop all dead players items on ground
-				List<Integer> inventoryList = PlayerInventoryDao.getInventoryListByPlayerId(deadPlayer.getId());
+				List<Integer> inventoryList = PlayerStorageDao.getInventoryListByPlayerId(deadPlayer.getId());
 				for (int itemId : inventoryList) {
 					if (itemId != 0)
 						GroundItemManager.add(itemId, deadPlayer.getRawPlayer().getTileId());
 				}
-				PlayerInventoryDao.clearInventoryByPlayerId(deadPlayer.getId());
+				PlayerStorageDao.clearInventoryByPlayerId(deadPlayer.getId());
 				
 				Request req = new Request();
 				req.setId(deadPlayer.getId());

@@ -46,4 +46,40 @@ public class SmithableDao {
 
 		return null;
 	}
+	
+	public static SmithableDto getSmithableItemByItemId(int itemId) {
+		final String query = 
+			"select item_id, name, level, material_1, material1_name, count_1, material_2, material2_name, count_2, material_3, material3_name, count_3"
+			+ " from view_smithable"
+			+ " where item_id=?";
+			
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, itemId);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return new SmithableDto(
+							rs.getInt("item_id"),
+							rs.getString("name"),
+							rs.getInt("level"),
+							rs.getInt("material_1"),
+							rs.getString("material1_name"),
+							rs.getInt("count_1"),
+							rs.getInt("material_2"),
+							rs.getString("material2_name"),
+							rs.getInt("count_2"),
+							rs.getInt("material_3"),
+							rs.getString("material3_name"),
+							rs.getInt("count_3")
+					);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
 }

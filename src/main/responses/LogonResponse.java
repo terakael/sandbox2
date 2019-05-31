@@ -13,8 +13,8 @@ import main.database.AnimationDto;
 import main.database.EquipmentDao;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
-import main.database.PlayerInventoryDao;
 import main.database.PlayerSessionDao;
+import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.processing.Player;
 import main.processing.WorldProcessor;
@@ -74,7 +74,7 @@ public class LogonResponse extends Response {
 		stats = new Stats(statList);
 		
 		players = PlayerDao.getAllPlayers();
-		inventory = PlayerInventoryDao.getInventoryListByPlayerId(dto.getId());
+		inventory = PlayerStorageDao.getInventoryListByPlayerId(dto.getId());
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(dto.getId());
 		groundItems = GroundItemManager.getGroundItems();
 		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());

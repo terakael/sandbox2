@@ -23,7 +23,7 @@ public abstract class Response {
 	@Getter
 	private int success = 1;
 	
-	private String responseText = "";
+	@Setter private String responseText = "";
 	@Setter private String action;
 
 	public void setRecoAndResponseText(int success, String responseText) {

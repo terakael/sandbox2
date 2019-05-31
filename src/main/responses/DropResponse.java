@@ -5,7 +5,7 @@ import lombok.Setter;
 import main.GroundItemManager;
 import main.database.EquipmentDao;
 import main.database.ItemDto;
-import main.database.PlayerInventoryDao;
+import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.DropRequest;
 import main.requests.Request;
@@ -25,7 +25,7 @@ public class DropResponse extends Response {
 		}
 		
 		DropRequest dropReq = (DropRequest)req;
-		ItemDto itemToDrop = PlayerInventoryDao.getItemFromPlayerIdAndSlot(player.getDto().getId(), dropReq.getSlot());
+		ItemDto itemToDrop = PlayerStorageDao.getItemFromPlayerIdAndSlot(player.getDto().getId(), dropReq.getSlot());
 		if (itemToDrop == null) {
 			setRecoAndResponseText(0, "you can't drop an item that doesn't exist.");
 			responseMaps.addClientOnlyResponse(player, this);
@@ -42,13 +42,13 @@ public class DropResponse extends Response {
 		}
 		
 		GroundItemManager.add(itemToDrop.getId(), player.getTileId());
-		PlayerInventoryDao.setItemFromPlayerIdAndSlot(dropReq.getId(), dropReq.getSlot(), 0);
+		PlayerStorageDao.setItemFromPlayerIdAndSlot(dropReq.getId(), dropReq.getSlot(), 0);
 		
 		groundItems = GroundItemManager.getGroundItems();
 		
 		// update the player inventory/equipped items and only send it to the player
 		InventoryUpdateResponse resp = (InventoryUpdateResponse)ResponseFactory.create("invupdate");
-		resp.setInventory(PlayerInventoryDao.getInventoryListByPlayerId(player.getDto().getId()));
+		resp.setInventory(PlayerStorageDao.getInventoryListByPlayerId(player.getDto().getId()));
 		resp.setEquippedSlots(EquipmentDao.getEquippedSlotsByPlayerId(player.getDto().getId()));
 		
 		responseMaps.addClientOnlyResponse(player, resp);

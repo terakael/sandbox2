@@ -2,7 +2,7 @@ package main.responses;
 
 import main.database.MineableDao;
 import main.database.MineableDto;
-import main.database.PlayerInventoryDao;
+import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.processing.PathFinder;
 import main.processing.Player;
@@ -46,7 +46,7 @@ public class MineResponse extends Response {
 			}
 			
 			// does player have inventory space
-			if (PlayerInventoryDao.getFreeSlotByPlayerId(player.getId()) == -1) {
+			if (PlayerStorageDao.getFreeSlotByPlayerId(player.getId()) == -1) {
 				setRecoAndResponseText(0, "your inventory is too full to mine anymore.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;

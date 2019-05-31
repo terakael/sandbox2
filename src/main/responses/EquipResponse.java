@@ -5,7 +5,7 @@ import java.util.List;
 import main.database.EquipmentDao;
 import main.database.EquipmentDto;
 import main.database.ItemDto;
-import main.database.PlayerInventoryDao;
+import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.EquipRequest;
 import main.requests.Request;
@@ -25,7 +25,7 @@ public class EquipResponse extends Response {
 		}
 		
 		EquipRequest equipReq = (EquipRequest)req;
-		ItemDto item = PlayerInventoryDao.getItemFromPlayerIdAndSlot(equipReq.getId(), equipReq.getSlot());		
+		ItemDto item = PlayerStorageDao.getItemFromPlayerIdAndSlot(equipReq.getId(), equipReq.getSlot());		
 		
 		// so we have the item from the requested slot, but is it equippable?
 		EquipmentDto equip = EquipmentDao.getEquipmentByItemId(item.getId());
