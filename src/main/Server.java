@@ -5,6 +5,7 @@ import java.util.Scanner;
 
 import javax.websocket.DeploymentException;
 
+import main.database.ItemDao;
 import main.database.MineableDao;
 import main.database.SceneryDao;
 import main.processing.PathFinder;
@@ -36,6 +37,7 @@ public class Server {
 			PathFinder.get();// init the path nodes and relationships
 			ExamineResponse.initializeExamineMap();// all the scenery examine
 			MineableDao.setupCaches();// mineable tiles, mineable objects
+			ItemDao.setupCaches();
 			
 			WorldProcessor processor = new WorldProcessor();
 			processor.start();

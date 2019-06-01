@@ -2,11 +2,14 @@ package main.responses;
 
 import java.util.ArrayList;
 
+import main.database.ItemDao;
+import main.database.MineableDao;
 import main.database.PlayerStorageDao;
 import main.database.SmithableDao;
 import main.database.SmithableDto;
 import main.database.StatsDao;
 import main.processing.Player;
+import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.SmithRequest;
@@ -77,7 +80,17 @@ public class SmithResponse extends Response {
 		// update the inventory for the client
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 		
+		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId())));
+		responseMaps.addClientOnlyResponse(player, this);
+		
 		// TODO add smithing experience
+		int exp = MineableDao.getMineableExpByItemId(dto.getMaterial1()) * dto.getCount1();
+		if (dto.getMaterial2() != 0)
+			exp += MineableDao.getMineableExpByItemId(dto.getMaterial2()) * dto.getCount2();
+		if (dto.getMaterial3() != 0)
+			exp += MineableDao.getMineableExpByItemId(dto.getMaterial3()) * dto.getCount3();
+		
+		new AddExpResponse().process(new AddExpRequest(player.getId(), 7, exp), player, responseMaps);
 	}
 
 	private boolean playerHasItemsInInventory(int playerId, int materialId, int count) {

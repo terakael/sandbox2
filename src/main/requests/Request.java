@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Setter @Getter
 public class Request {
-	private int id;
-	private String action;
+	protected int id;
+	protected String action;
 }
