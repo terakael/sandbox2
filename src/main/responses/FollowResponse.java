@@ -18,7 +18,6 @@ public class FollowResponse extends Response {
 		}
 		
 		FollowRequest request = (FollowRequest)req;
-		System.out.println("objectId: " + request.getObjectId());
 		
 		player.setTargetPlayerId(request.getObjectId());
 		player.setState(PlayerState.following);

@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Stack;
 
 import lombok.Getter;
 import lombok.Setter;
 import main.database.SceneryDao;
+import main.utils.Stopwatch;
 
 public class PathFinder {
 	private static PathFinder instance;
@@ -98,8 +100,10 @@ public class PathFinder {
 	}
 	
 	public static Stack<Integer> findPath(int from, int to, boolean includeToTile) {
-		// TODO A* algorithm
+		Stopwatch.start("find path");
 		Stack<Integer> output = new Stack<>();
+		if (from == to)
+			return output;
 		
 		PathNode[] nodes = PathFinder.get().nodes;
 		if (from < 0 || from >= nodes.length || to < 0 || to >= nodes.length)
@@ -174,22 +178,20 @@ public class PathFinder {
 						output.push(successor.getId());
 						successor = successor.getParent();
 					}
+					
+					Stopwatch.end("find path");
+					if (Stopwatch.getMs("find path") > 100) {
+						System.out.println(String.format("WEIRD PATHFIND: ms=%d, open=%d, closed=%d, from=%d, to=%d", Stopwatch.getMs("find path"), open.size(), closed.size(), from, to));
+					}
 					return output;
 				}
-				
-//				if (open.contains(successor)) {
-//					if (successor.getG() < newG)
-//						continue;
-//					open.remove(successor);
-//				}
-//				
-//				successor.setParent(q);
-//				successor.setG(newG);
-//				successor.setH(newH);
-//				open.add(successor);
 			}
 		}
 		
+		Stopwatch.end("find path");
+		if (Stopwatch.getMs("find path") > 100) {
+			System.out.println(String.format("BAD PATHFIND: ms=%d, open=%d, closed=%d, from=%d, to=%d", Stopwatch.getMs("find path"), open.size(), closed.size(), from, to));
+		}
 		return output;
 	}
 	
@@ -204,5 +206,25 @@ public class PathFinder {
 				destTile == srcTile - LENGTH || // above
 				destTile == srcTile + LENGTH || // below
 				destTile == srcTile;// same tile
+	}
+	
+	public static int chooseRandomTileIdInRadius(int tileId, int radius) {
+		
+		int tileX = tileId % LENGTH;
+		int tileY = tileId / LENGTH;
+		
+		int max = radius;
+		int min = -radius;
+		
+		int newTile = 0;
+		do {
+			Random r = new Random();
+			tileX += r.nextInt((max - min) + 1) + min;
+			tileY += r.nextInt((max - min) + 1) + min;
+			
+			newTile = tileX + (tileY * LENGTH);
+		} while (newTile < 0 || newTile >= (LENGTH * LENGTH));
+		
+		return newTile;
 	}
 }

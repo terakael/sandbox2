@@ -11,6 +11,34 @@ import java.util.List;
 public class ItemDao {
 	private ItemDao() {};
 	
+	private static HashMap<Integer, String> itemIdNameMap = new HashMap<>();
+	
+	public static String getNameFromId(int id) {
+		if (itemIdNameMap.containsKey(id))
+			return itemIdNameMap.get(id);
+		return null;
+	}
+	
+	public static void setupCaches() {
+		populateIdNameMap();
+	}
+	
+	private static void populateIdNameMap() {
+		final String query = "select id, name from items";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					itemIdNameMap.put(rs.getInt("id"), rs.getString("name"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static ItemDto getItemById(int id) {
 		final String query = "select id, name, description, sprite_frame_id, leftclick_option, other_options from items where id=?";
 		

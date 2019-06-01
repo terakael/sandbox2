@@ -12,7 +12,6 @@ import main.database.MineableDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
-import main.database.StatsDao;
 import main.requests.AddExpRequest;
 import main.requests.MineRequest;
 import main.requests.Request;

@@ -7,6 +7,7 @@ import javax.websocket.DeploymentException;
 
 import main.database.ItemDao;
 import main.database.MineableDao;
+import main.database.NPCDao;
 import main.database.SceneryDao;
 import main.processing.PathFinder;
 import main.processing.WorldProcessor;

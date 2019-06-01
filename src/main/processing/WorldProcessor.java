@@ -16,6 +16,7 @@ import main.responses.LogonResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
+import main.utils.Stopwatch;
 
 public class WorldProcessor implements Runnable {
 	private Thread thread;
@@ -33,6 +34,8 @@ public class WorldProcessor implements Runnable {
 	
 	@Override
 	public void run() {
+		NPCManager.get().loadNpcs();
+		
 		while (true) {
 			long prevTime = System.nanoTime();
 			
@@ -42,8 +45,10 @@ public class WorldProcessor implements Runnable {
 				// run for 0.6 seconds, minus the processing time so the ticks are always 0.6s.
 				// if the processing time is more than 0.6 seconds then don't sleep at all (this happens when breakpoints are hit)
 				long processTimeMs = (System.nanoTime() - prevTime) / 1000000;
-				if (processTimeMs >= TICK_DURATION_MS / 2)
+				if (processTimeMs >= TICK_DURATION_MS / 2) {
 					System.out.println(String.format("WARNING: process time took %dms (%d%% of total allowed processing time)", processTimeMs, (int)(((float)processTimeMs / TICK_DURATION_MS) * 100)));
+					Stopwatch.dump();
+				}
 				Thread.sleep(Math.max(0, TICK_DURATION_MS - processTimeMs));
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
@@ -53,14 +58,20 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	public void process() {		
+		Stopwatch.reset();
+
+		Stopwatch.start("request map");
 		// pull requestmap contents from Endpoint and clear it so it can collect for the next tick
 		Map<Session, Request> requestMap = new HashMap<>();
 		requestMap.putAll(Endpoint.requestMap);
 		Endpoint.requestMap.clear();
+		Stopwatch.end("request map");
+		
 		
 		// process all requests and add all responses to this object which will be compiled into the response list for each player
 		ResponseMaps responseMaps = new ResponseMaps();
 		
+		Stopwatch.start("player requests");
 		// process player requests for this tick
 		for (Map.Entry<Session, Request> entry : requestMap.entrySet()) {
 			final Request request = entry.getValue();
@@ -74,28 +85,37 @@ public class WorldProcessor implements Runnable {
 				response.process(request, playerSessions.get(entry.getKey()), responseMaps);
 			}
 		}
+		Stopwatch.end("player requests");
 		
+		Stopwatch.start("process players");
 		// process players
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			entry.getValue().process(responseMaps);
 		}
+		Stopwatch.end("process players");
+		
+		Stopwatch.start("process npcs");
+		NPCManager.get().process(responseMaps);
+		Stopwatch.end("process npcs");
 		
 		// process fight manager
+		Stopwatch.start("process fight manager");
 		FightManager.process(responseMaps);
+		Stopwatch.end("process fight manager");
 		
 		// take all the responseMaps and compile the responses to send to each player
+		Stopwatch.start("compile response maps");
 		HashMap<Player, ArrayList<Response>> clientResponses = new HashMap<>();
 		compileBroadcastResponses(clientResponses, responseMaps);
 		compileBroadcastExcludeResponses(clientResponses, responseMaps);
 		compileLocalResponses(clientResponses, responseMaps);
 		compileClientOnlyResponses(clientResponses, responseMaps);
-		
-		// process npcs
-		// TODO
+		Stopwatch.end("compile response maps");
 		
 		ArrayList<Session> sessionsToKill = new ArrayList<>();
 		
 		// go through the clientResponses and send the response array to each player
+		Stopwatch.start("send responses");
 		for (Map.Entry<Player, ArrayList<Response>> responses : clientResponses.entrySet()) {
 			try {
 				responses.getKey().getSession().getBasicRemote().sendText(gson.toJson(responses.getValue()));
@@ -112,7 +132,9 @@ public class WorldProcessor implements Runnable {
 				e.printStackTrace();
 			}
 		}
+		Stopwatch.end("send responses");
 		
+		Stopwatch.start("kill sessions");
 		for (Session session : sessionsToKill) {
 			try {
 				session.close();
@@ -121,6 +143,7 @@ public class WorldProcessor implements Runnable {
 				e.printStackTrace();
 			}
 		}
+		Stopwatch.end("kill sessions");
 	}
 	
 	private void compileBroadcastResponses(HashMap<Player, ArrayList<Response>> clientResponses, ResponseMaps responseMaps) {

@@ -1,7 +1,6 @@
 package main.responses;
 
 import main.database.ItemDao;
-import main.database.ItemDto;
 import main.database.MineableDao;
 import main.database.MineableDto;
 import main.processing.Player;

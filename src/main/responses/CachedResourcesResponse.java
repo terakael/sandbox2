@@ -1,8 +1,6 @@
 package main.responses;
 
 import java.util.List;
-import java.util.Map;
-
 import lombok.Getter;
 import main.database.ContextOptionsDao;
 import main.database.ContextOptionsDto;

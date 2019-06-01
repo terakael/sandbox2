@@ -3,7 +3,6 @@ package main.scenery;
 import main.database.PlayerStorageDao;
 import main.database.SmithableDao;
 import main.processing.Player;
-import main.requests.Request;
 import main.requests.RequestFactory;
 import main.responses.InventoryUpdateResponse;
 import main.responses.ResponseMaps;
