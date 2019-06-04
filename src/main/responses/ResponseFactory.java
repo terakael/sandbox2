@@ -75,6 +75,9 @@ public class ResponseFactory {
 		case "smith":
 			response = new SmithResponse();
 			break;
+		case "attack":
+			response = new AttackResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;

@@ -1,5 +1,6 @@
 package main.responses;
 
+import main.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
@@ -16,18 +17,19 @@ public class AttackResponse extends Response {
 			return;
 		
 		AttackRequest request = (AttackRequest)req;
-		NPC npc = NPCManager.get().getNpcById(request.getId());
+		NPC npc = NPCManager.get().getNpcById(request.getObjectId());// request tileid is the instnace id
 		if (npc == null) {
 			setRecoAndResponseText(0, "you can't attack that.");
 			return;
 		}
 		
 		if (!PathFinder.isNextTo(npc.getTileId(), player.getTileId())) {
-			player.setState(PlayerState.chasing);	
+			player.setTarget(npc);	
 			player.setSavedRequest(request);
 		} else {
 			// start the fight
 			player.setState(PlayerState.fighting);
+			FightManager.addFight(player, npc);
 		}
 		
 		

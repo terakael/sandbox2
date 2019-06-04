@@ -1,5 +1,8 @@
 package main.processing;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import javax.websocket.Session;
@@ -7,16 +10,23 @@ import javax.websocket.Session;
 
 import lombok.Getter;
 import lombok.Setter;
+import main.GroundItemManager;
+import main.database.EquipmentBonusDto;
+import main.database.EquipmentDao;
 import main.database.MineableDao;
 import main.database.MineableDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
+import main.database.StatsDao;
+import main.database.StatsDto;
 import main.requests.AddExpRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.responses.AddExpResponse;
+import main.responses.DeathResponse;
+import main.responses.DropResponse;
 import main.responses.FinishMiningResponse;
 import main.responses.InventoryUpdateResponse;
 import main.responses.MineResponse;
@@ -25,7 +35,7 @@ import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
 
-public class Player {
+public class Player extends Attackable {
 	public enum PlayerState {
 		idle,
 		walking,
@@ -40,11 +50,11 @@ public class Player {
 	@Setter private Stack<Integer> path = new Stack<>();// stack of tile_ids
 	@Setter private PlayerState state = PlayerState.idle;
 	@Setter private Request savedRequest = null;
-	@Setter private int targetPlayerId;// used for following or chasing a player
 	@Setter private int tickCounter = 0;
 	
 	public Player(PlayerDto dto, Session session) {
 		this.dto = dto;
+		tileId = dto.getTileId();
 		this.session = session;
 	}
 	
@@ -83,20 +93,37 @@ public class Player {
 				responseMaps.addLocalResponse(this, playerUpdateResponse);
 			}
 
-			Player targetPlayer = WorldProcessor.getPlayerById(targetPlayerId);
-			
 			// maybe the target player logged out
-			if (targetPlayer == null) {
+			if (target == null) {
 				state = PlayerState.idle;
 				break;
 			}
 			
-			if (!PathFinder.isNextTo(dto.getTileId(), targetPlayer.dto.getTileId())) {
-				path = PathFinder.findPath(dto.getTileId(), targetPlayer.dto.getTileId(), false);
+			if (!PathFinder.isNextTo(dto.getTileId(), target.getTileId())) {
+				path = PathFinder.findPath(dto.getTileId(), target.getTileId(), false);
 			}
 			break;
 		}
 		case chasing: {
+			if (target == null) {
+				// player could have logged out/died as they were chasing
+				state = PlayerState.idle;
+				break;
+			}
+			
+			if (!PathFinder.isNextTo(tileId, target.getTileId())) {
+				path = PathFinder.findPath(tileId, target.getTileId(), true);
+			} else {
+				// start the fight
+				if (savedRequest != null) {
+					Response response = ResponseFactory.create(savedRequest.getAction());
+					response.process(savedRequest, this, responseMaps);
+					savedRequest = null;
+				}
+				state = PlayerState.fighting;
+				path.clear();
+			}
+			
 			// similar to walking, but need to recalculate path each tick due to moving target
 			if (!path.isEmpty()) {
 				setTileId(path.pop());
@@ -106,20 +133,6 @@ public class Player {
 				responseMaps.addLocalResponse(this, playerUpdateResponse);
 			}
 
-			Player targetPlayer = WorldProcessor.getPlayerById(targetPlayerId);	
-			if (targetPlayer == null) {
-				// player could have logged out as they were chasing
-				state = PlayerState.idle;
-				break;
-			}
-			
-			if (!PathFinder.isNextTo(dto.getTileId(), targetPlayer.dto.getTileId())) {
-				path = PathFinder.findPath(dto.getTileId(), targetPlayer.dto.getTileId(), false);
-			} else {
-				// start the fight
-				state = PlayerState.fighting;
-				targetPlayer.state = PlayerState.fighting;
-			}
 			break;
 		}
 		case mining:
@@ -178,12 +191,12 @@ public class Player {
 	}
 	
 	public void setTileId(int tileId) {
-		dto.setTileId(tileId);
+		this.tileId = tileId;
 		PlayerDao.updateTileId(dto.getId(), tileId);
 	}
 	
 	public int getTileId() {
-		return dto.getTileId();
+		return tileId;
 	}
 	
 	public boolean isGod() {
@@ -192,5 +205,130 @@ public class Player {
 	
 	public int getId() {
 		return dto.getId();
+	}
+	
+	@Override
+	public void onDeath(ResponseMaps responseMaps) {
+		// unequip and drop all the items in inventory
+		EquipmentDao.clearAllEquppedItems(getId());
+		
+		List<Integer> inventoryList = PlayerStorageDao.getInventoryListByPlayerId(getId());
+		for (int itemId : inventoryList) {
+			if (itemId != 0)
+				GroundItemManager.add(itemId, tileId);
+		}
+		PlayerStorageDao.clearInventoryByPlayerId(getId());
+		
+		// update the player inventory to show there's no more items
+		new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);
+		
+		// let everyone know about all the shit on the floor
+		// TODO don't use dropResponse, use a new ground_update response
+		DropResponse dropResponse = new DropResponse();
+		dropResponse.setGroundItems(GroundItemManager.getGroundItems());
+		responseMaps.addBroadcastResponse(dropResponse);
+		
+		// let everyone know you died lmao
+		DeathResponse deathResponse = new DeathResponse();
+		deathResponse.setId(getId());
+		deathResponse.setCurrentHp(dto.getMaxHp());
+		deathResponse.setTileId(31375);
+		setTileId(31375);
+		
+		responseMaps.addBroadcastResponse(deathResponse);
+		
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), 5, 0);
+		
+		state = PlayerState.idle;
+		
+//		if (fightOver) {
+//		// send the death response to the dead player
+//		FightingPlayer deadPlayer = player1turn ? player2 : player1;
+//		
+//		// clear all equipped items from dead player
+//		EquipmentDao.clearAllEquppedItems(deadPlayer.getId());
+//		
+//		// drop all dead players items on ground
+//		List<Integer> inventoryList = PlayerStorageDao.getInventoryListByPlayerId(deadPlayer.getId());
+//		for (int itemId : inventoryList) {
+//			if (itemId != 0)
+//				GroundItemManager.add(itemId, deadPlayer.getRawPlayer().getTileId());
+//		}
+//		PlayerStorageDao.clearInventoryByPlayerId(deadPlayer.getId());
+//		
+//		Request req = new Request();
+//		req.setId(deadPlayer.getId());
+//		
+//		// this pulls the equipped items and inventory list by playerId (set in the req above)
+//		new InventoryUpdateResponse().process(req, deadPlayer.getRawPlayer(), responseMaps);
+//		
+//		// TODO don't use dropResponse, use a new ground_update response
+//		DropResponse dropResponse = new DropResponse();
+//		dropResponse.setGroundItems(GroundItemManager.getGroundItems());
+//		responseMaps.addBroadcastResponse(dropResponse);
+//		
+//		// broadcast that the player died
+//		DeathResponse deathResponse = new DeathResponse();
+//		deathResponse.setId(deadPlayer.getId());
+//		deathResponse.setCurrentHp(deadPlayer.getMaxHp());
+//		deathResponse.setTileId(31375);
+//		deadPlayer.getRawPlayer().setTileId(31375);
+//		
+//		p1.setState(PlayerState.idle);
+//		p2.setState(PlayerState.idle);
+//		
+//		responseMaps.addBroadcastResponse(deathResponse);
+//	}
+	}
+	
+	@Override
+	public void onKill(Attackable killed, ResponseMaps responseMaps) {
+		state = PlayerState.idle;
+	}
+	
+	@Override
+	public void onHit(int damage, ResponseMaps responseMaps) {
+		currentHp -= damage;
+		if (currentHp < 0)
+			currentHp = 0;
+		
+		// you have 10 hp max, 1hp remaining
+		// relative boost should be -9
+		// therefore: -max + current
+		
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), 5, -this.dto.getMaxHp() + currentHp);
+		PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+		playerUpdateResponse.setId(getId());
+		playerUpdateResponse.setDamage(damage);
+		playerUpdateResponse.setHp(currentHp);
+		responseMaps.addBroadcastResponse(playerUpdateResponse);
+		
+	}
+	
+	@Override
+	public void setTarget(Attackable target) {
+		this.target = target;
+		this.state = PlayerState.chasing;
+	}
+	
+	@Override
+	public void setStatsAndBonuses() {
+		HashMap<String, Integer> stats = new HashMap<>();
+		for (Map.Entry<String, Integer> entry : StatsDao.getStatsByPlayerId(getId()).entrySet())
+			stats.put(entry.getKey(), StatsDao.getLevelFromExp(entry.getValue()));
+		setStats(stats);
+		
+		EquipmentBonusDto equipment = EquipmentDao.getEquipmentBonusesByPlayerId(getId());
+		HashMap<String, Integer> bonuses = new HashMap<>();
+		bonuses.put("strength", equipment.getStr());
+		bonuses.put("accuracy", equipment.getAcc());
+		bonuses.put("defence", equipment.getDef());
+		bonuses.put("agility", equipment.getAgil());
+//		stats.put("hitpoints", dto.getHp());
+		setBonuses(bonuses);
+		setCurrentHp(dto.getCurrentHp());
+		
+		int weaponCooldown = 2;// TODO weapon speed based off equipped weapon
+		setMaxCooldown(weaponCooldown);
 	}
 }

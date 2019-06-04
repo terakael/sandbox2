@@ -11,6 +11,8 @@ public class PlayerUpdateResponse extends Response {
 	@Setter Integer cmb = null;
 	@Setter Integer tile = null;
 	@Setter String state = null;
+	@Setter Integer damage = null;
+	@Setter Integer hp = null;
 	
 	@Setter
 	private class EquipUpdate {

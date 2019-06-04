@@ -179,20 +179,17 @@ public class StatsDao {
 	public static int getCombatLevelByPlayerId(int id) {
 		Map<String, Integer> stats = getStatsByPlayerId(id);
 		
-		int combat = 0;
-		for (Map.Entry<String, Integer> stat : stats.entrySet()) {
-			switch (stat.getKey()) {
-			case "str":
-			case "acc":
-			case "def":
-			case "agil":
-			case "hp":
-				combat += getLevelFromExp(stat.getValue());
-				break;
-			default:
-				break;
-			}
-		}
-		return combat;
+		return getCombatLevelByStats(
+			getLevelFromExp(stats.get("strength")),
+			getLevelFromExp(stats.get("accuracy")),
+			getLevelFromExp(stats.get("defence")),
+			getLevelFromExp(stats.get("agility")),
+			getLevelFromExp(stats.get("hitpoints")),
+			getLevelFromExp(stats.get("magic"))
+		);
+	}
+	
+	public static int getCombatLevelByStats(int str, int att, int def, int agil, int hp, int magic) {
+		return ((str + att) / 2) + ((def + agil) / 3) + ((hp + magic) / 4);
 	}
 }

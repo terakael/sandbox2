@@ -5,8 +5,10 @@ import main.processing.Player;
 import main.requests.Request;
 
 public class NpcUpdateResponse extends Response {
-	@Setter private int instanceId;
-	@Setter private int tileId;
+	@Setter private Integer instanceId = null;
+	@Setter private Integer tileId = null;
+	@Setter private Integer damage = null;
+	@Setter private Integer hp = null;
 	
 	public NpcUpdateResponse() {
 		setAction("npc_update");

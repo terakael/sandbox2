@@ -7,8 +7,7 @@ import main.requests.Request;
 @Setter
 public class DamageResponse extends Response {
 	
-	int id;
-	int otherId;
+	int tileId;
 	int damage;
 
 	public DamageResponse() {

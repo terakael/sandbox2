@@ -40,6 +40,7 @@ public class NPCDao {
 						rs.getInt("attack_id"),
 						rs.getInt("tile_id"),
 						rs.getInt("hp"),
+						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("hp"), 0),
 						rs.getInt("leftclick_option"),
 						rs.getInt("other_options"),
 						rs.getInt("acc"),

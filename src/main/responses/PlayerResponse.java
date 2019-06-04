@@ -60,7 +60,7 @@ public abstract class PlayerResponse extends Response {
 			PlayerRequestManager.removeRequest(playerReq.getId());
 			
 			if (playerReq.getRequestType() == PlayerRequestManager.PlayerRequestType.duel) {
-				FightManager.addFight(playerReq.getId(), playerReq.getObjectId());
+				FightManager.addFight(WorldProcessor.getPlayerById(playerReq.getId()), WorldProcessor.getPlayerById(playerReq.getObjectId()));
 			}
 		}
 		else {

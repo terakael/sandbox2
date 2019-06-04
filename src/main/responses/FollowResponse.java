@@ -1,6 +1,7 @@
 package main.responses;
 
 import main.processing.Player;
+import main.processing.WorldProcessor;
 import main.processing.Player.PlayerState;
 import main.requests.FollowRequest;
 import main.requests.Request;
@@ -19,7 +20,7 @@ public class FollowResponse extends Response {
 		
 		FollowRequest request = (FollowRequest)req;
 		
-		player.setTargetPlayerId(request.getObjectId());
+		player.setTarget(WorldProcessor.getPlayerById(request.getObjectId()));
 		player.setState(PlayerState.following);
 	}
 

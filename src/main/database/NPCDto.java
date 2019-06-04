@@ -15,6 +15,7 @@ public class NPCDto {
 	private int attackId;
 	private int tileId;
 	private int hp;
+	private int cmb;
 	private int leftclickOption;
 	private int otherOptions;
 	
