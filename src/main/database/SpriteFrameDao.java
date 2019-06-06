@@ -11,7 +11,7 @@ public class SpriteFrameDao {
 	private SpriteFrameDao() {};
 	
 	public static SpriteFrameDto getSpriteFrameById(int id) {
-		final String query = "select id, sprite_map_id, x, y, w, h, margin, frame_count, animation_type_id from sprite_frames where id=?";
+		final String query = "select id, sprite_map_id, x, y, w, h, anchor_x, anchor_y, margin, frame_count, animation_type_id from sprite_frames where id=?";
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -27,6 +27,8 @@ public class SpriteFrameDao {
 						rs.getInt("y"),
 						rs.getInt("w"),
 						rs.getInt("h"),
+						rs.getFloat("anchor_x"),
+						rs.getFloat("anchor_y"),
 						rs.getInt("margin"),
 						rs.getInt("frame_count"),
 						rs.getInt("animation_type_id")
@@ -39,7 +41,7 @@ public class SpriteFrameDao {
 	}
 	
 	public static List<SpriteFrameDto> getAllSpriteFrames() {
-		final String query = "select id, sprite_map_id, x, y, w, h, margin, frame_count, animation_type_id from sprite_frames";
+		final String query = "select id, sprite_map_id, x, y, w, h, anchor_x, anchor_y, margin, frame_count, animation_type_id from sprite_frames";
 		List<SpriteFrameDto> spriteFrames = new ArrayList<>();
 		
 		try (
@@ -55,6 +57,8 @@ public class SpriteFrameDao {
 						rs.getInt("y"),
 						rs.getInt("w"),
 						rs.getInt("h"),
+						rs.getFloat("anchor_x"),
+						rs.getFloat("anchor_y"),
 						rs.getInt("margin"),
 						rs.getInt("frame_count"),
 						rs.getInt("animation_type_id")

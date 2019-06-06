@@ -56,7 +56,7 @@ public class Endpoint {
 		if (playerToRemove == null)
 			return;
 		
-		FightManager.cancelFight(playerToRemove);
+		FightManager.cancelFight(playerToRemove, null);
 		
 		WorldProcessor.playerSessions.remove(session);
 		

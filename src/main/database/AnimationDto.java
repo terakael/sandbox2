@@ -8,4 +8,5 @@ public class AnimationDto {
 	private int down;
 	private int left;
 	private int right;
+	private int attack;
 }

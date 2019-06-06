@@ -68,6 +68,10 @@ public class NPC extends Attackable {
 		}
 	}
 	
+	public int getId() {
+		return dto.getTileId();// the spawn tileId is used for the id
+	}
+	
 	@Override
 	public void onDeath(ResponseMaps responseMaps) {
 		// TODO send npc_update broadcast

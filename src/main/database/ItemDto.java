@@ -8,7 +8,6 @@ import lombok.Setter;
 public class ItemDto {
 	private int id;
 	private String name;
-	private String description;
 	private int spriteFrameId;
 	private int leftclickOption;
 	private int otherOptions;

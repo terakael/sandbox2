@@ -23,7 +23,7 @@ public class MoveResponse extends Response {
 		
 		MoveRequest moveReq = (MoveRequest)req;
 
-		FightManager.cancelFight(player);
+		FightManager.cancelFight(player, responseMaps);
 		
 		if (player != null) {
 			player.setState(PlayerState.walking);

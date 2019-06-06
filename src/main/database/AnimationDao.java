@@ -41,7 +41,7 @@ public class AnimationDao {
 		animations.setDown(AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.down));
 		animations.setLeft(AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.left));
 		animations.setRight(AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.right));
-		//animations.setAttack(AnimationDao.getSpriteFrameByPlayerId(playerId, AnimationDao.AnimationType.attack));
+		animations.setAttack(AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.right));// TODO attack animation
 		return animations;
 	}
 }

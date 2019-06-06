@@ -29,7 +29,14 @@ public class AttackResponse extends Response {
 		} else {
 			// start the fight
 			player.setState(PlayerState.fighting);
+			player.setTileId(npc.getTileId());
 			FightManager.addFight(player, npc);
+			
+			PvmStartResponse pvmStart = new PvmStartResponse();
+			pvmStart.setPlayerId(player.getId());
+			pvmStart.setMonsterId(npc.getId());
+			pvmStart.setTileId(npc.getTileId());
+			responseMaps.addBroadcastResponse(pvmStart);
 		}
 		
 		

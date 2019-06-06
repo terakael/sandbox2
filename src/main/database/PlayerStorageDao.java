@@ -50,7 +50,7 @@ public class PlayerStorageDao {
 	}
 
 	public static ItemDto getItemFromPlayerIdAndSlot(int id, int slot) {
-		final String query = "select items.id, items.name, items.description, items.sprite_frame_id, items.leftclick_option, items.other_options from player_storage inner join items on items.id = player_storage.item_id where player_storage.player_id=? and player_storage.storage_id=1 and player_storage.slot=?";
+		final String query = "select items.id, items.name, items.sprite_frame_id, items.leftclick_option, items.other_options from player_storage inner join items on items.id = player_storage.item_id where player_storage.player_id=? and player_storage.storage_id=1 and player_storage.slot=?";
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -61,7 +61,7 @@ public class PlayerStorageDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new ItemDto(rs.getInt("id"), rs.getString("name"), rs.getString("description"), rs.getInt("sprite_frame_id"), rs.getInt("leftclick_option"), rs.getInt("other_options"));
+					return new ItemDto(rs.getInt("id"), rs.getString("name"), rs.getInt("sprite_frame_id"), rs.getInt("leftclick_option"), rs.getInt("other_options"));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
