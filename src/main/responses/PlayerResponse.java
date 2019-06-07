@@ -5,8 +5,10 @@ import lombok.Setter;
 import main.FightManager;
 import main.PlayerRequestManager;
 import main.database.PlayerDao;
+import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.WorldProcessor;
+import main.processing.Player.PlayerState;
 import main.requests.PlayerRequest;
 import main.requests.Request;
 import main.responses.ResponseFactory;
@@ -36,7 +38,15 @@ public abstract class PlayerResponse extends Response {
 			setRecoAndResponseText(0, "Couldn't find opponent.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
-		}		
+		}
+		
+		// you have to be next to the player to process the request
+		if (!PathFinder.isNextTo(player.getTileId(), otherPlayer.getTileId())) {
+			player.setSavedRequest(req);
+			player.setState(PlayerState.chasing);
+			player.setTarget(otherPlayer);
+			return;
+		}
 		
 		boolean exists = PlayerRequestManager.requestExists(playerReq.getObjectId(), playerReq.getId(), playerReq.getRequestType());
 		PlayerResponse otherResponse = (PlayerResponse)ResponseFactory.create(playerReq.getAction());
@@ -46,6 +56,12 @@ public abstract class PlayerResponse extends Response {
 		otherResponse.setOpponentId(playerReq.getId());
 		otherResponse.setOpponentName(PlayerDao.getNameFromId(playerReq.getId()));
 		otherResponse.setAccepted(exists ? 1 : 0);
+		
+		String responseText = exists 
+				? String.format("%s accepted the %s.", player.getDto().getName(), playerReq.getRequestType())
+				: String.format("%s wishes to %s with you.", player.getDto().getName(), playerReq.getRequestType());
+		otherResponse.setRecoAndResponseText(1, responseText);
+		otherResponse.setMessageColour("#f0f");
 
 		responseMaps.addClientOnlyResponse(otherPlayer, otherResponse);
 		
@@ -60,10 +76,22 @@ public abstract class PlayerResponse extends Response {
 			PlayerRequestManager.removeRequest(playerReq.getId());
 			
 			if (playerReq.getRequestType() == PlayerRequestManager.PlayerRequestType.duel) {
-				FightManager.addFight(WorldProcessor.getPlayerById(playerReq.getId()), WorldProcessor.getPlayerById(playerReq.getObjectId()));
+				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
+				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
+				FightManager.addFight(player1, player2);
+				
+				player1.setTileId(player2.getTileId());
+				
+				PvpStartResponse pvpStart = new PvpStartResponse();
+				pvpStart.setPlayer1Id(player1.getId());
+				pvpStart.setPlayer2Id(player2.getId());
+				pvpStart.setTileId(player2.getTileId());
+				responseMaps.addBroadcastResponse(pvpStart);
 			}
 		}
 		else {
+			setRecoAndResponseText(1, String.format("sending %s request...", playerReq.getRequestType()));
+			responseMaps.addClientOnlyResponse(player, this);
 			PlayerRequestManager.addRequest(playerReq.getId(), playerReq.getObjectId(), playerReq.getRequestType());
 		}
 	}

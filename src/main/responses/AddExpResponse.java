@@ -1,5 +1,7 @@
 package main.responses;
 
+import java.util.HashMap;
+
 import lombok.Setter;
 import main.database.StatsDao;
 import main.processing.Player;
@@ -10,9 +12,10 @@ import main.requests.Request;
 public class AddExpResponse extends Response {
 	
 	private int id;
-	private int statId;
-	private String statShortName;
-	private int exp;
+	private boolean relative = true;// are we adding or setting
+	
+	// statShortName,exp
+	HashMap<Integer, Integer> stats = new HashMap<>();
 
 	public AddExpResponse() {
 		setAction("addexp");
@@ -24,14 +27,17 @@ public class AddExpResponse extends Response {
 			return;
 		
 		AddExpRequest request = (AddExpRequest)req;
-		id = request.getId();
-		statId = request.getStatId();
-		exp = request.getExp();
-		statShortName = StatsDao.getStatShortNameByStatId(statId);
-		if (statId != -1)
-			StatsDao.addExpToPlayer(request.getId(), statId, exp);
+		id = request.getId();// unneeded; its obvious that it's the current player
+		if (request.getStatId() != -1)
+			StatsDao.addExpToPlayer(request.getId(), request.getStatId(), request.getExp());
+		
+		addExp(request.getStatId(), request.getExp());
 		
 		responseMaps.addClientOnlyResponse(player, this);
+	}
+	
+	public void addExp(int statId, int exp) {
+		stats.put(statId, exp);
 	}
 
 }

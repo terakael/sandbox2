@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import main.database.ItemDao;
+import main.database.NPCDao;
 import main.database.SceneryDao;
 import main.processing.Player;
 import main.requests.ExamineRequest;
@@ -14,9 +15,11 @@ public class ExamineResponse extends Response {
 	
 	private static Map<Integer, String> sceneryExamineMap = new HashMap<>();
 	private static Map<Integer, String> itemExamineMap = new HashMap<>();
+	private static Map<Integer, String> npcExamineMap = new HashMap<>();
 	public static void initializeExamineMap() {
 		sceneryExamineMap = SceneryDao.getExamineMap();
 		itemExamineMap = ItemDao.getExamineMap();
+		npcExamineMap = NPCDao.getExamineMap();
 	}
 
 	public ExamineResponse() {
@@ -36,6 +39,10 @@ public class ExamineResponse extends Response {
 			break;
 		case "item":
 			examineText = itemExamineMap.get(request.getObjectId());
+			break;
+		case "npc":
+			int npcId = NPCDao.getNpcIdFromInstanceId(request.getObjectId());
+			examineText = npcExamineMap.get(npcId);
 			break;
 		default:
 			break;

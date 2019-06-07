@@ -1,6 +1,8 @@
 package main.responses;
 
 import java.util.List;
+import java.util.Map;
+
 import lombok.Getter;
 import main.database.ContextOptionsDao;
 import main.database.ContextOptionsDto;
@@ -12,6 +14,7 @@ import main.database.SpriteFrameDao;
 import main.database.SpriteFrameDto;
 import main.database.SpriteMapDao;
 import main.database.SpriteMapDto;
+import main.database.StatsDao;
 import main.processing.Player;
 import main.requests.Request;
 
@@ -23,6 +26,7 @@ public class CachedResourcesResponse extends Response {
 	private List<SceneryDto> scenery = null;
 	private List<ContextOptionsDto> contextOptions = null;
 	private static CachedResourcesResponse instance = null;
+	private Map<Integer, String> statMap = null;
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -47,6 +51,7 @@ public class CachedResourcesResponse extends Response {
 		items = ItemDao.getAllItems();
 		scenery = SceneryDao.getAllSceneryByRoom(1);// TODO dynamic based on player room when there's more rooms
 		contextOptions = ContextOptionsDao.getAllContextOptions();
+		statMap = StatsDao.getStats();
 	}
 
 }

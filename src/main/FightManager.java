@@ -23,6 +23,8 @@ import main.responses.DeathResponse;
 import main.responses.DropResponse;
 import main.responses.InventoryUpdateResponse;
 import main.responses.PvmEndResponse;
+import main.responses.PvpEndResponse;
+import main.responses.PvpStartResponse;
 import main.responses.ResponseMaps;
 
 public class FightManager {
@@ -118,7 +120,11 @@ public class FightManager {
 						resp.setTileId(fight.getFighter1().getTileId());
 						responseMaps.addBroadcastResponse(resp);
 					} else {
-//						PvpEndResponse resp = new PvpEndResponse(); TODO
+						PvpEndResponse resp = new PvpEndResponse();
+						resp.setPlayer1Id(((Player)fight.getFighter1()).getId());
+						resp.setPlayer2Id(((Player)fight.getFighter2()).getId());
+						resp.setTileId(fight.getFighter1().getTileId());
+						responseMaps.addBroadcastResponse(resp);
 					}
 				}
 				fights.remove(fight);

@@ -93,6 +93,23 @@ public class EquipmentDao {
 		}
 		return null;
 	}
+	
+	public static int getWeaponIdByPlayerId(int playerId) {
+		final String query = "select equipment_id from view_player_equipment where player_id=? and player_part_id=4";// 4 = onhand
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, playerId);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getInt("equipment_id");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
 
 	public static void clearEquippedItemByPartId(int playerId, int partId) {
 		final String query = 
@@ -152,7 +169,7 @@ public class EquipmentDao {
 	
 	public static EquipmentBonusDto getEquipmentBonusesByPlayerId(int playerId) {
 		final String query = 
-				"select sum(acc) acc, sum(str) str, sum(def) def, sum(agil) agil " + 
+				"select sum(acc) acc, sum(str) str, sum(def) def, sum(agil) agil, sum(mage) mage, sum(hp) hp, sum(speed) speed " + 
 				"from player_equipment " + 
 				"inner join equipment on equipment.item_id = player_equipment.equipment_id " + 
 				"where player_equipment.player_id = ?";
@@ -164,12 +181,12 @@ public class EquipmentDao {
 			ps.setInt(1, playerId);
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new EquipmentBonusDto(rs.getInt("acc"), rs.getInt("str"), rs.getInt("def"), rs.getInt("agil"), 0);
+					return new EquipmentBonusDto(rs.getInt("acc"), rs.getInt("str"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("mage"), rs.getInt("hp"), rs.getInt("speed"));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		
-		return new EquipmentBonusDto(0, 0, 0, 0, 0);
+		return new EquipmentBonusDto(0, 0, 0, 0, 0, 0, 0);
 	}
 } 

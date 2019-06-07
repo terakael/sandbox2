@@ -24,6 +24,7 @@ public class NPCDto {
 	private transient int str;
 	private transient int def;
 	private transient int agil;
+	private transient int magic;
 	private transient int accBonus;
 	private transient int strBonus;
 	private transient int defBonus;

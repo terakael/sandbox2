@@ -28,11 +28,14 @@ public class LogonResponse extends Response {
 	@Getter private int tileId;
 	@Getter private int currentHp;
 	@Getter private int maxHp;
-	private Stats stats;
+	private int attackStyleId;
+//	private Stats stats;
+	private Map<Integer, Integer> stats;
 	private List<PlayerDto> players;
 	private List<Integer> inventory;
 	private List<GroundItemManager.GroundItem> groundItems;
 	private AnimationDto animations;
+	private Map<Integer, String> attackStyles;
 
 	public LogonResponse() {
 		setAction("logon");
@@ -68,14 +71,16 @@ public class LogonResponse extends Response {
 		tileId = dto.getTileId();
 		currentHp = dto.getCurrentHp();
 		maxHp = dto.getMaxHp();
+		attackStyleId = dto.getAttackStyleId();
 		
-		Map<String, Integer> statList = StatsDao.getStatsByPlayerId(dto.getId());
-		stats = new Stats(statList);
+//		Map<String, Integer> statList = StatsDao.getStatsByPlayerId(dto.getId());
+		stats = StatsDao.getAllStatExpByPlayerId(dto.getId());
 		
 		players = PlayerDao.getAllPlayers();
 		inventory = PlayerStorageDao.getInventoryListByPlayerId(dto.getId());
 		groundItems = GroundItemManager.getGroundItems();
 		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
+		attackStyles = PlayerDao.getAttackStyles();
 		
 		WorldProcessor.playerSessions.put(client, player);
 		

@@ -6,6 +6,7 @@ import java.util.Stack;
 
 import lombok.Getter;
 import main.database.NPCDto;
+import main.database.StatsDao;
 import main.processing.Player.PlayerState;
 import main.responses.NpcUpdateResponse;
 import main.responses.ResponseMaps;
@@ -19,6 +20,8 @@ public class NPC extends Attackable {
 	private final transient int minTickCount = 5;
 	private transient int tickCounter = maxTickCount;
 	
+	private int combatLevel = 0;
+	
 	public NPC(NPCDto dto) {
 		this.dto = dto;
 		tileId = dto.getTileId();
@@ -29,8 +32,10 @@ public class NPC extends Attackable {
 		stats.put("defence", dto.getDef());
 		stats.put("agility", dto.getAgil());
 		stats.put("hitpoints", dto.getHp());
-//		stats.put("magic", dto.getMagic());
+		stats.put("magic", dto.getMagic());
 		setStats(stats);
+		
+		combatLevel = StatsDao.getCombatLevelByStats(dto.getStr(), dto.getAcc(), dto.getDef(), dto.getAgil(), dto.getHp(), dto.getMagic());
 		
 		HashMap<String, Integer> bonuses = new HashMap<>();
 		bonuses.put("strength", dto.getStrBonus());
@@ -101,5 +106,10 @@ public class NPC extends Attackable {
 	@Override
 	public void setStatsAndBonuses() {
 		// already set on instantiation
+	}
+	
+	@Override
+	public int getExp() {
+		return combatLevel;
 	}
 }

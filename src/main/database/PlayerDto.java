@@ -13,5 +13,6 @@ public class PlayerDto {
 	private int currentHp;
 	private int maxHp;
 	private int combatLevel;
+	private int attackStyleId;
 	private AnimationDto animations;
 }

@@ -169,10 +169,7 @@ public class MessageResponse extends Response {
 			return;// targetPlayer is valid based on the id check above, but they're not logged in so we can't send them their response
 		
 		AddExpResponse resp = new AddExpResponse();
-		resp.setId(targetPlayerId);
-		resp.setStatId(statId);
-		resp.setStatShortName(msgParts[0]);
-		resp.setExp(exp);
+		resp.addExp(statId, exp);
 		
 		responseMaps.addClientOnlyResponse(targetPlayer, resp);
 		

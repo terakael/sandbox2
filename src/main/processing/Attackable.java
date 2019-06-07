@@ -23,6 +23,7 @@ public abstract class Attackable {
 	public abstract void onKill(Attackable killed, ResponseMaps responseMaps);
 	public abstract void onHit(int damage, ResponseMaps responseMaps);
 	public abstract void setStatsAndBonuses();
+	public abstract int getExp();
 	
 	public boolean readyToHit() {
 		if (cooldown == 0)
@@ -34,12 +35,12 @@ public abstract class Attackable {
 		cooldown = maxCooldown;
 		int str = (int)Math.sqrt(stats.get("strength")) + bonuses.get("strength");
 		//int acc = (int)Math.sqrt(stats.get("accuracy")) + this.bonuses.getAcc();
-		return rand.nextInt((int)(str * 0.15) + 1);
+		return rand.nextInt((int)Math.ceil(str * 0.15) + 1);
 	}
 	
 	public int block() {
 		int def = (int)Math.sqrt(stats.get("defence")) + bonuses.get("defence");
 		//int agil = (int)Math.sqrt(stats.get("agility")) + this.bonuses.getAgil();
-		return rand.nextInt((int)(def * 0.15) + 1);
+		return rand.nextInt((int)Math.ceil(def * 0.15) + 1);
 	}
 }

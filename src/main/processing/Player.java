@@ -13,6 +13,7 @@ import lombok.Setter;
 import main.GroundItemManager;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
+import main.database.ItemDao;
 import main.database.MineableDao;
 import main.database.MineableDto;
 import main.database.PlayerDao;
@@ -112,13 +113,15 @@ public class Player extends Attackable {
 			}
 			
 			if (!PathFinder.isNextTo(tileId, target.getTileId())) {
-				path = PathFinder.findPath(tileId, target.getTileId(), true);
+				path = PathFinder.findPath(tileId, target.getTileId(), false);
 			} else {
 				// start the fight
 				if (savedRequest != null) {
-					Response response = ResponseFactory.create(savedRequest.getAction());
-					response.process(savedRequest, this, responseMaps);
+					Request req = savedRequest;
 					savedRequest = null;
+					
+					Response response = ResponseFactory.create(req.getAction());
+					response.process(req, this, responseMaps);
 				}
 				state = PlayerState.fighting;
 				path.clear();
@@ -240,50 +243,101 @@ public class Player extends Attackable {
 		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), 5, 0);
 		
 		state = PlayerState.idle;
-		
-//		if (fightOver) {
-//		// send the death response to the dead player
-//		FightingPlayer deadPlayer = player1turn ? player2 : player1;
-//		
-//		// clear all equipped items from dead player
-//		EquipmentDao.clearAllEquppedItems(deadPlayer.getId());
-//		
-//		// drop all dead players items on ground
-//		List<Integer> inventoryList = PlayerStorageDao.getInventoryListByPlayerId(deadPlayer.getId());
-//		for (int itemId : inventoryList) {
-//			if (itemId != 0)
-//				GroundItemManager.add(itemId, deadPlayer.getRawPlayer().getTileId());
-//		}
-//		PlayerStorageDao.clearInventoryByPlayerId(deadPlayer.getId());
-//		
-//		Request req = new Request();
-//		req.setId(deadPlayer.getId());
-//		
-//		// this pulls the equipped items and inventory list by playerId (set in the req above)
-//		new InventoryUpdateResponse().process(req, deadPlayer.getRawPlayer(), responseMaps);
-//		
-//		// TODO don't use dropResponse, use a new ground_update response
-//		DropResponse dropResponse = new DropResponse();
-//		dropResponse.setGroundItems(GroundItemManager.getGroundItems());
-//		responseMaps.addBroadcastResponse(dropResponse);
-//		
-//		// broadcast that the player died
-//		DeathResponse deathResponse = new DeathResponse();
-//		deathResponse.setId(deadPlayer.getId());
-//		deathResponse.setCurrentHp(deadPlayer.getMaxHp());
-//		deathResponse.setTileId(31375);
-//		deadPlayer.getRawPlayer().setTileId(31375);
-//		
-//		p1.setState(PlayerState.idle);
-//		p2.setState(PlayerState.idle);
-//		
-//		responseMaps.addBroadcastResponse(deathResponse);
-//	}
 	}
 	
 	@Override
 	public void onKill(Attackable killed, ResponseMaps responseMaps) {
 		state = PlayerState.idle;
+		int totalExp = killed.getExp();
+		float points = (float)totalExp / 5;
+		
+		// exp is doled out based on attackStyle and weapon type.
+		// exp is split into five parts (called points) and the points are stored as follows:
+		int weaponId = EquipmentDao.getWeaponIdByPlayerId(getId());
+		String weaponName = ItemDao.getNameFromId(weaponId);
+		if (weaponName == null) {
+			// error: invalid weaponId (0 is no weapon and returns the string "null")
+			return;
+		}
+		
+		Map<Integer, Integer> expBefore = StatsDao.getAllStatExpByPlayerId(getId());
+		
+		// hammer/aggressive: 4str, 1hp
+		// hammer/defensive: 4def, 1hp
+		// hammer/shared: 2str, 2def, 1hp
+		if (weaponName.contains(" hammer" )) {// TODO add weapon_type enum
+			switch (getDto().getAttackStyleId()) {
+				case 1:// aggressive
+					StatsDao.addExpToPlayer(getId(), 1, points * 4);// 1 == str
+					StatsDao.addExpToPlayer(getId(), 5, points);// 5 == hp
+				break;
+				case 2: // defensive
+					StatsDao.addExpToPlayer(getId(), 3, points * 4);// 3 == def
+					StatsDao.addExpToPlayer(getId(), 5, points);
+					break;
+				default: // shared or other
+					StatsDao.addExpToPlayer(getId(), 1, points * 2);// 1 == str
+					StatsDao.addExpToPlayer(getId(), 3, points * 2);// 3 == def
+					StatsDao.addExpToPlayer(getId(), 5, points);
+					break;
+			}
+		}
+		
+		// daggers/aggressive: 4acc, 1hp
+		// daggers/defensive: 4agil, 1hp
+		// daggers/shared: 2acc, 2agil, 1hp
+		else if (weaponName.contains(" daggers")) {// TODO ad weapon_type enum
+			switch (getDto().getAttackStyleId()) {
+				case 1:// aggressive
+					StatsDao.addExpToPlayer(getId(), 2, points * 4);// 2 == acc
+					StatsDao.addExpToPlayer(getId(), 5, points);// 5 == hp
+				break;
+				case 2: // defensive
+					StatsDao.addExpToPlayer(getId(), 4, points * 4);// 4 == agil
+					StatsDao.addExpToPlayer(getId(), 5, points);
+					break;
+				default: // shared or other
+					StatsDao.addExpToPlayer(getId(), 2, points * 2);
+					StatsDao.addExpToPlayer(getId(), 4, points * 2);
+					StatsDao.addExpToPlayer(getId(), 5, points);
+					break;
+			}
+		}
+		
+		// sword/aggressive: 2str, 2acc, 1hp
+		// sword/defensive: 2def, 2agil, 1hp
+		// sword/shared: 1str, 1acc, 1def, 1agil, 1hp
+		else {
+			switch (getDto().getAttackStyleId()) {
+				case 1:// aggressive
+					StatsDao.addExpToPlayer(getId(), 1, points * 2);// 1 == str
+					StatsDao.addExpToPlayer(getId(), 2, points * 2);// 2 == acc
+					StatsDao.addExpToPlayer(getId(), 5, points);// 5 == hp
+				break;
+				case 2: // defensive
+					StatsDao.addExpToPlayer(getId(), 3, points * 2);// 3 == def
+					StatsDao.addExpToPlayer(getId(), 4, points * 2);// 4 == agil
+					StatsDao.addExpToPlayer(getId(), 5, points);
+					break;
+				default: // shared or other
+					StatsDao.addExpToPlayer(getId(), 1, points);
+					StatsDao.addExpToPlayer(getId(), 2, points);
+					StatsDao.addExpToPlayer(getId(), 3, points);
+					StatsDao.addExpToPlayer(getId(), 4, points);
+					StatsDao.addExpToPlayer(getId(), 5, points);
+					break;
+			}
+		}
+		
+		AddExpResponse response = new AddExpResponse();
+		for (Map.Entry<Integer, Integer> statExp : StatsDao.getAllStatExpByPlayerId(getId()).entrySet()) {
+			int diff = statExp.getValue() - expBefore.get(statExp.getKey()); 
+			if (diff > 0)
+				response.addExp(statExp.getKey(), diff);
+		}
+		
+		responseMaps.addClientOnlyResponse(this, response);
+		
 	}
 	
 	@Override
@@ -324,11 +378,18 @@ public class Player extends Attackable {
 		bonuses.put("accuracy", equipment.getAcc());
 		bonuses.put("defence", equipment.getDef());
 		bonuses.put("agility", equipment.getAgil());
-//		stats.put("hitpoints", dto.getHp());
+		bonuses.put("hitpoints", equipment.getHp());
 		setBonuses(bonuses);
 		setCurrentHp(dto.getCurrentHp());
 		
-		int weaponCooldown = 2;// TODO weapon speed based off equipped weapon
+		int weaponCooldown = equipment.getSpeed();// TODO weapon speed based off equipped weapon
+		if (weaponCooldown == 0)
+			weaponCooldown = 2;// no weapon equipped
 		setMaxCooldown(weaponCooldown);
+	}
+	
+	@Override
+	public int getExp() {
+		return StatsDao.getCombatLevelByPlayerId(getId());
 	}
 }

@@ -34,6 +34,28 @@ public class StatsDao {
 		return null;
 	}
 	
+	public static Map<Integer, Integer> getAllStatExpByPlayerId(int id) {
+		final String query = "select stat_id, exp from player_stats where player_id = ?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, id);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				Map<Integer, Integer> stats = new HashMap<>();
+				while (rs.next())
+					stats.put(rs.getInt("stat_id"), rs.getInt("exp"));
+				return stats;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+	
 	public static int getStatLevelByStatIdPlayerId(int statId, int playerId) {
 		final String query = "select exp from player_stats where stat_id=? and player_id=?";
 		try (
@@ -54,14 +76,14 @@ public class StatsDao {
 		return -1;
 	}
 	
-	public static void addExpToPlayer(int playerId, int statId, int exp) {
+	public static void addExpToPlayer(int playerId, int statId, double exp) {
 		final String query = "update player_stats set exp=exp+? where player_id=? and stat_id=?";
 		
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
-			ps.setInt(1, exp);
+			ps.setDouble(1, exp);
 			ps.setInt(2, playerId);
 			ps.setInt(3, statId);
 			ps.executeUpdate();

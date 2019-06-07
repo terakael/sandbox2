@@ -78,6 +78,9 @@ public class ResponseFactory {
 		case "attack":
 			response = new AttackResponse();
 			break;
+		case "toggle_attack_style":
+			response = new ToggleAttackStyleResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;
