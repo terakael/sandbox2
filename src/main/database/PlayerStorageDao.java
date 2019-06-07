@@ -69,6 +69,26 @@ public class PlayerStorageDao {
 		
 		return null;
 	}
+	
+	public static Integer getItemIdInSlot(int playerId, int inventoryId, int slot) {
+		final String query = "select item_id from player_storage where player_id=? and storage_id=? and slot=?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, playerId);
+			ps.setInt(2, inventoryId);
+			ps.setInt(3, slot);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getInt("item_id");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 	public static boolean setItemFromPlayerIdAndSlot(int playerId, int slot, int itemId) {
 		final String query = "update player_storage set item_id=? where player_id=? and storage_id=1 and slot=?";

@@ -23,11 +23,8 @@ import main.requests.Request;
 
 public class LogonResponse extends Response {
 	
-	@Getter private String id;
-	@Getter private String name;
+	@Getter private int id;
 	@Getter private int tileId;
-	@Getter private int currentHp;
-	@Getter private int maxHp;
 	private int attackStyleId;
 //	private Stats stats;
 	private Map<Integer, Integer> stats;
@@ -65,15 +62,10 @@ public class LogonResponse extends Response {
 			PlayerSessionDao.addPlayer(dto.getId());
 		}
 		
-		id = Integer.toString(dto.getId());
-		name = dto.getName();
-		
+		id = dto.getId();
 		tileId = dto.getTileId();
-		currentHp = dto.getCurrentHp();
-		maxHp = dto.getMaxHp();
 		attackStyleId = dto.getAttackStyleId();
-		
-//		Map<String, Integer> statList = StatsDao.getStatsByPlayerId(dto.getId());
+
 		stats = StatsDao.getAllStatExpByPlayerId(dto.getId());
 		
 		players = PlayerDao.getAllPlayers();

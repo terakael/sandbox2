@@ -7,13 +7,15 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import main.types.Stats;
+
 public class StatsDao {
 	private StatsDao() {}
 	
 	private static Map<Integer, String> cachedStats = null;
 	
-	public static Map<String, Integer> getStatsByPlayerId(int id) {
-		final String query = "select player_id, stat_name, exp from view_player_stats where player_id = ?";
+	public static Map<Integer, Integer> getStatsByPlayerId(int id) {
+		final String query = "select stat_id, exp from player_stats where player_id = ?";
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -22,9 +24,9 @@ public class StatsDao {
 			ps.setInt(1, id);
 			
 			try (ResultSet rs = ps.executeQuery()) {
-				Map<String, Integer> stats = new HashMap<>();
+				Map<Integer, Integer> stats = new HashMap<>();
 				while (rs.next())
-					stats.put(rs.getString("stat_name"), rs.getInt("exp"));
+					stats.put(rs.getInt("stat_id"), rs.getInt("exp"));
 				return stats;
 			}
 		} catch (SQLException e) {
@@ -76,7 +78,7 @@ public class StatsDao {
 		return -1;
 	}
 	
-	public static void addExpToPlayer(int playerId, int statId, double exp) {
+	public static void addExpToPlayer(int playerId, Stats statId, double exp) {
 		final String query = "update player_stats set exp=exp+? where player_id=? and stat_id=?";
 		
 		try (
@@ -85,7 +87,7 @@ public class StatsDao {
 		) {
 			ps.setDouble(1, exp);
 			ps.setInt(2, playerId);
-			ps.setInt(3, statId);
+			ps.setInt(3, statId.getValue());
 			ps.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -155,6 +157,26 @@ public class StatsDao {
 		}
 	}
 	
+	public static HashMap<Integer, Integer> getRelativeBoostsByPlayerId(int playerId) {
+		final String query = "select stat_id, relative_boost from player_stats where player_id=?";
+		HashMap<Integer, Integer> relativeBoosts = new HashMap<>();
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, playerId);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					relativeBoosts.put(rs.getInt("stat_id"), rs.getInt("relative_boost"));
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return relativeBoosts;
+	}
+	
 	public static int getCurrentHpByPlayerId(int id) {
 		int hp = 0;
 		final String query = "select floor(sqrt(exp)) + relative_boost as current_boost from player_stats where player_id = ? and stat_id = 5";
@@ -199,15 +221,15 @@ public class StatsDao {
 	}
 	
 	public static int getCombatLevelByPlayerId(int id) {
-		Map<String, Integer> stats = getStatsByPlayerId(id);
+		Map<Integer, Integer> stats = getStatsByPlayerId(id);
 		
 		return getCombatLevelByStats(
-			getLevelFromExp(stats.get("strength")),
-			getLevelFromExp(stats.get("accuracy")),
-			getLevelFromExp(stats.get("defence")),
-			getLevelFromExp(stats.get("agility")),
-			getLevelFromExp(stats.get("hitpoints")),
-			getLevelFromExp(stats.get("magic"))
+			getLevelFromExp(stats.get(Stats.STRENGTH.getValue())),
+			getLevelFromExp(stats.get(Stats.ACCURACY.getValue())),
+			getLevelFromExp(stats.get(Stats.DEFENCE.getValue())),
+			getLevelFromExp(stats.get(Stats.AGILITY.getValue())),
+			getLevelFromExp(stats.get(Stats.HITPOINTS.getValue())),
+			getLevelFromExp(stats.get(Stats.MAGIC.getValue()))
 		);
 	}
 	

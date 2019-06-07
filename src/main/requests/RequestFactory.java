@@ -28,6 +28,8 @@ public class RequestFactory {
 		map.put("smith", SmithRequest.class);
 		map.put("attack", AttackRequest.class);
 		map.put("toggle_attack_style", ToggleAttackStyleRequest.class);
+		map.put("talk to", TalkToRequest.class);
+		map.put("eat", EatRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

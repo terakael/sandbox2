@@ -1,15 +1,21 @@
 package main.processing;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Stack;
 
 import lombok.Getter;
+import main.GroundItemManager;
+import main.database.NPCDao;
 import main.database.NPCDto;
 import main.database.StatsDao;
-import main.processing.Player.PlayerState;
+import main.responses.DropResponse;
 import main.responses.NpcUpdateResponse;
 import main.responses.ResponseMaps;
+import main.types.Stats;
+import main.utils.RandomUtil;
 
 public class NPC extends Attackable {
 	@Getter private NPCDto dto;
@@ -28,26 +34,27 @@ public class NPC extends Attackable {
 		this.dto = dto;
 		tileId = dto.getTileId();
 		
-		HashMap<String, Integer> stats = new HashMap<>();
-		stats.put("strength", dto.getStr());
-		stats.put("accuracy", dto.getAcc());
-		stats.put("defence", dto.getDef());
-		stats.put("agility", dto.getAgil());
-		stats.put("hitpoints", dto.getHp());
-		stats.put("magic", dto.getMagic());
+		HashMap<Stats, Integer> stats = new HashMap<>();
+		stats.put(Stats.STRENGTH, dto.getStr());
+		stats.put(Stats.ACCURACY, dto.getAcc());
+		stats.put(Stats.DEFENCE, dto.getDef());
+		stats.put(Stats.AGILITY, dto.getAgil());
+		stats.put(Stats.HITPOINTS, dto.getHp());
+		stats.put(Stats.MAGIC, dto.getMagic());
 		setStats(stats);
 		
 		combatLevel = StatsDao.getCombatLevelByStats(dto.getStr(), dto.getAcc(), dto.getDef(), dto.getAgil(), dto.getHp(), dto.getMagic());
 		
-		HashMap<String, Integer> bonuses = new HashMap<>();
-		bonuses.put("strength", dto.getStrBonus());
-		bonuses.put("accuracy", dto.getAccBonus());
-		bonuses.put("defence", dto.getDefBonus());
-		stats.put("agility", dto.getAgilBonus());
-//		stats.put("hitpoints", dto.getHp());
+		HashMap<Stats, Integer> bonuses = new HashMap<>();
+		bonuses.put(Stats.STRENGTH, dto.getStrBonus());
+		bonuses.put(Stats.ACCURACY, dto.getAccBonus());
+		bonuses.put(Stats.DEFENCE, dto.getDefBonus());
+		bonuses.put(Stats.AGILITY, dto.getAgilBonus());
+//		bonuses.put(Stats.HITPOINTS, dto.getHpBonus());
 		setBonuses(bonuses);
 		
 		setCurrentHp(dto.getHp());
+		setMaxCooldown(dto.getAttackSpeed());
 	}
 	
 	public void process(ResponseMaps responseMaps) {
@@ -59,18 +66,18 @@ public class NPC extends Attackable {
 				
 				NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 				updateResponse.setNpc(this);
-				responseMaps.addBroadcastResponse(updateResponse);
+				responseMaps.addLocalResponse(tileId, updateResponse);
 			}
 			
 			return;
 		}
 		
 		if (!path.isEmpty()) {
-			tileId = path.pop();
+			tileId = path.pop();			
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 			updateResponse.setInstanceId(dto.getTileId());
 			updateResponse.setTileId(tileId);
-			responseMaps.addBroadcastResponse(updateResponse);
+			responseMaps.addLocalResponse(tileId, updateResponse);
 		}
 		
 		if (target == null) {
@@ -89,8 +96,12 @@ public class NPC extends Attackable {
 		}
 	}
 	
-	public int getId() {
+	public int getInstanceId() {
 		return dto.getTileId();// the spawn tileId is used for the id
+	}
+	
+	public int getId() {
+		return dto.getId();
 	}
 	
 	@Override
@@ -98,6 +109,17 @@ public class NPC extends Attackable {
 		//currentHp = dto.getHp();
 		deathTimer = respawnTime;
 		// also drop an item
+		
+		ArrayList<Integer> potentialDrops = NPCDao.getDropsByNpcId(dto.getId());
+		if (potentialDrops == null || potentialDrops.isEmpty())
+			return;
+		
+		Integer luckyItemId = potentialDrops.get(RandomUtil.getRandom(0, potentialDrops.size()));
+		
+		GroundItemManager.add(luckyItemId, tileId);
+		DropResponse dropResponse = new DropResponse();
+		dropResponse.setGroundItems(GroundItemManager.getGroundItems());
+		responseMaps.addBroadcastResponse(dropResponse);
 	}
 	
 	@Override
@@ -115,7 +137,7 @@ public class NPC extends Attackable {
 		updateResponse.setInstanceId(dto.getTileId());
 		updateResponse.setDamage(damage);
 		updateResponse.setHp(currentHp);
-		responseMaps.addBroadcastResponse(updateResponse);
+		responseMaps.addLocalResponse(tileId, updateResponse);
 	}
 	
 	@Override

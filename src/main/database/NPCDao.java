@@ -6,19 +6,22 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import lombok.Getter;
 
 public class NPCDao {
 	@Getter private static ArrayList<NPCDto> npcList = null;
+	private static HashMap<Integer, ArrayList<Integer>> npcDrops = null;
 	
 	public static void setupCaches() {
 		npcList = getAllNpcsByRoom(1);// TODO multiple rooms
+		cacheNpcDrops();
 	}
 	
 	public static ArrayList<NPCDto> getAllNpcsByRoom(int roomId) {
 		final String query = 
-			"select id, name, up_id, down_id, left_id, right_id, attack_id, acc, str, def, agil, hp, magic, acc_bonus, str_bonus, def_bonus, agil_bonus, tile_id, leftclick_option, other_options from npcs" + 
+			"select id, name, up_id, down_id, left_id, right_id, attack_id, acc, str, def, agil, hp, magic, acc_bonus, str_bonus, def_bonus, agil_bonus, attack_speed, tile_id, leftclick_option, other_options from npcs" + 
 			" inner join room_npcs on room_npcs.npc_id = id" + 
 			" where room_id=?";
 		
@@ -52,7 +55,8 @@ public class NPCDao {
 						rs.getInt("acc_bonus"),
 						rs.getInt("str_bonus"),
 						rs.getInt("def_bonus"),
-						rs.getInt("agil_bonus")
+						rs.getInt("agil_bonus"),
+						rs.getInt("attack_speed")
 					));
 				}
 			}
@@ -87,5 +91,65 @@ public class NPCDao {
 				return dto.getId();
 		}
 		return -1;
+	}
+	
+	public static HashSet<Integer> getNpcInstanceIds() {
+		final String query = "select tile_id from room_npcs";
+		
+		HashSet<Integer> set = new HashSet<>();
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					set.add(rs.getInt("tile_id"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return set;
+	}
+	
+	public static void addNpcInstance(int roomId, int npcId, int instanceId) {
+		final String query = "insert into room_npcs values (?,?,?)";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			ps.setInt(1, roomId);
+			ps.setInt(2, npcId);
+			ps.setInt(3, instanceId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void cacheNpcDrops() {
+		final String query = "select npc_id, item_id from npc_drops";
+		npcDrops = new HashMap<>();
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					int npcId = rs.getInt("npc_id");
+					if (!npcDrops.containsKey(npcId))
+						npcDrops.put(npcId, new ArrayList<>());
+					npcDrops.get(npcId).add(rs.getInt("item_id"));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static ArrayList<Integer> getDropsByNpcId(int npcId) {
+		if (npcDrops.containsKey(npcId))
+			return npcDrops.get(npcId);
+		return null;
 	}
 }

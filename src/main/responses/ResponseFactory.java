@@ -81,6 +81,12 @@ public class ResponseFactory {
 		case "toggle_attack_style":
 			response = new ToggleAttackStyleResponse();
 			break;
+		case "talk to":
+			response = new TalkToResponse();
+			break;
+		case "eat":
+			response = new EatResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;

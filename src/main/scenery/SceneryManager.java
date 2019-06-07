@@ -7,6 +7,7 @@ public class SceneryManager {
 	private static Map<Integer, Scenery> sceneryMap = new HashMap<>();
 	static {
 		sceneryMap.put(19, new Furnace());
+		sceneryMap.put(20, new Fire());
 	}
 	public static Scenery getScenery(int sceneryId) {
 		if (sceneryMap.containsKey(sceneryId))

@@ -8,6 +8,7 @@ import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.MessageRequest;
 import main.requests.Request;
+import main.types.Stats;
 
 public class MessageResponse extends Response {
 	private String name;
@@ -43,7 +44,7 @@ public class MessageResponse extends Response {
 		name = PlayerDao.getNameFromId(id);
 		message = msg;
 		
-		responseMaps.addLocalResponse(player, this);
+		responseMaps.addLocalResponse(player.getTileId(), this);
 	}
 	
 	private void handleDebugCommand(Player player, String msg, ResponseMaps responseMaps) {
@@ -155,7 +156,7 @@ public class MessageResponse extends Response {
 		int statId = StatsDao.getStatIdByName(msgParts[0]);
 		int exp = Integer.parseInt(msgParts[1]);
 		if (statId != -1)
-			StatsDao.addExpToPlayer(targetPlayerId, statId, exp);
+			StatsDao.addExpToPlayer(targetPlayerId, Stats.withValue(statId), exp);
 		
 		Player targetPlayer = targetPlayerId == player.getDto().getId() ? player : WorldProcessor.getPlayerById(targetPlayerId); 
 		

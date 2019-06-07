@@ -29,7 +29,7 @@ public class NPCManager {
 	}
 	
 	// TODO should probs be a Map<id, NPC>
-	public NPC getNpcById(int id) {
+	public NPC getNpcByInstanceId(int id) {
 		for (NPC npc : npcs) {
 			if (npc.getDto().getTileId() == id)// tileId is the instance id
 				return npc;

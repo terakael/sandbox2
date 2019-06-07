@@ -14,6 +14,8 @@ public class SpriteFrameDto {
 	private int h;
 	private float anchorX;
 	private float anchorY;
+	private float scaleX;
+	private float scaleY;
 	private int margin;
 	private int frame_count;
 	private int animation_type_id;

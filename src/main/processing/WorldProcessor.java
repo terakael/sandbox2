@@ -11,6 +11,8 @@ import com.google.gson.Gson;
 
 import main.Endpoint;
 import main.FightManager;
+import main.database.ConsumableDao;
+import main.database.NpcMessageDao;
 import main.requests.Request;
 import main.responses.LogonResponse;
 import main.responses.Response;
@@ -35,6 +37,8 @@ public class WorldProcessor implements Runnable {
 	@Override
 	public void run() {
 		NPCManager.get().loadNpcs();
+		NpcMessageDao.setupCaches();
+		ConsumableDao.cacheConsumables();
 		
 		while (true) {
 			long prevTime = System.nanoTime();
@@ -173,8 +177,8 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	private void compileLocalResponses(HashMap<Player, ArrayList<Response>> clientResponses, ResponseMaps responseMaps) {
-		for (Map.Entry<Player, ArrayList<Response>> localResponseMap : responseMaps.getLocalResponses().entrySet()) {
-			ArrayList<Player> localPlayers = getPlayersNearTile(localResponseMap.getKey().getTileId(), 15);
+		for (Map.Entry<Integer, ArrayList<Response>> localResponseMap : responseMaps.getLocalResponses().entrySet()) {
+			ArrayList<Player> localPlayers = getPlayersNearTile(localResponseMap.getKey(), 15);
 			for (Player localPlayer : localPlayers) {
 				if (!clientResponses.containsKey(localPlayer))
 					clientResponses.put(localPlayer, new ArrayList<>());

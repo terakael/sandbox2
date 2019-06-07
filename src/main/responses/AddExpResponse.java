@@ -7,14 +7,10 @@ import main.database.StatsDao;
 import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.Request;
+import main.types.Stats;
 
 @Setter
 public class AddExpResponse extends Response {
-	
-	private int id;
-	private boolean relative = true;// are we adding or setting
-	
-	// statShortName,exp
 	HashMap<Integer, Integer> stats = new HashMap<>();
 
 	public AddExpResponse() {
@@ -27,9 +23,8 @@ public class AddExpResponse extends Response {
 			return;
 		
 		AddExpRequest request = (AddExpRequest)req;
-		id = request.getId();// unneeded; its obvious that it's the current player
 		if (request.getStatId() != -1)
-			StatsDao.addExpToPlayer(request.getId(), request.getStatId(), request.getExp());
+			StatsDao.addExpToPlayer(request.getId(), Stats.withValue(request.getStatId()), request.getExp());
 		
 		addExp(request.getStatId(), request.getExp());
 		

@@ -13,6 +13,7 @@ import main.processing.PathFinder;
 import main.processing.WorldProcessor;
 import main.responses.CachedResourcesResponse;
 import main.responses.ExamineResponse;
+import main.utils.RandomUtil;
 
 public class Server {
 
@@ -24,14 +25,28 @@ public class Server {
 			resourceServer.start();
 			server.start();
 			
+//			
+//			
 //			HashSet<Integer> treeLocations = SceneryDao.getImpassableTileIdsByRoomId(1);
-//			for (int i = 0; i < 250*250; ++i) {
-//				if (treeLocations.contains(i))
-//					continue;
+//			HashSet<Integer> npcInstances = NPCDao.getNpcInstanceIds();
+//			
+//			for (int i = 0; i < 100; ++i) {
 //				
-//				int sceneryId = (int) (Math.random() * 5) + 10;
-//				if ((int)(Math.random() * 100) < 10)
-//					SceneryDao.addRoomScenery(1, sceneryId, i);
+//				int potentialTileId = -1;
+//				while (true) {
+//					potentialTileId = RandomUtil.getRandom(0, PathFinder.LENGTH * PathFinder.LENGTH - 1);
+//					
+//					if (treeLocations.contains(potentialTileId))
+//						continue;
+//					
+//					if (npcInstances.contains(potentialTileId))
+//						continue;
+//					
+//					break;
+//				}
+//				
+//				if (potentialTileId != -1)
+//					NPCDao.addNpcInstance(1, 10, potentialTileId);
 //			}
 			
 			CachedResourcesResponse.get();// loads/caches all the sprite maps, scenery etc and gets sent on client load

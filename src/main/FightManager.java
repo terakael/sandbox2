@@ -30,8 +30,6 @@ import main.responses.ResponseMaps;
 public class FightManager {
 	private FightManager() {}
 	
-	private static Random rand = new Random();
-	
 	private static ArrayList<Fight> fights = new ArrayList<>();
 	
 	private static class Fight {
@@ -147,7 +145,7 @@ public class FightManager {
 					if (fight.getFighter2() instanceof NPC) {
 						PvmEndResponse resp = new PvmEndResponse();
 						resp.setPlayerId(((Player)fight.getFighter1()).getId());
-						resp.setMonsterId(((NPC)fight.getFighter2()).getId());
+						resp.setMonsterId(((NPC)fight.getFighter2()).getInstanceId());
 						resp.setTileId(fight.getFighter1().getTileId());
 						responseMaps.addBroadcastResponse(resp);
 					} else {

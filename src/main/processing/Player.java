@@ -35,6 +35,7 @@ import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
+import main.types.Stats;
 
 public class Player extends Attackable {
 	public enum PlayerState {
@@ -53,10 +54,16 @@ public class Player extends Attackable {
 	@Setter private Request savedRequest = null;
 	@Setter private int tickCounter = 0;
 	
+	private HashMap<Integer, Integer> stats = new HashMap<>();// cached so we don't have to keep polling the db
+	
 	public Player(PlayerDto dto, Session session) {
 		this.dto = dto;
 		tileId = dto.getTileId();
 		this.session = session;
+		
+//		stats = StatsDao.get
+		
+		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(5);
 	}
 	
 	public void process(ResponseMaps responseMaps) {
@@ -70,7 +77,7 @@ public class Player extends Attackable {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTile(getTileId());
-				responseMaps.addLocalResponse(this, playerUpdateResponse);
+				responseMaps.addLocalResponse(getTileId(), playerUpdateResponse);
 				
 				if (path.isEmpty()) {
 					if (savedRequest == null) // if not null then reprocess the saved request; this is a walkandaction.
@@ -91,7 +98,7 @@ public class Player extends Attackable {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTile(getTileId());
-				responseMaps.addLocalResponse(this, playerUpdateResponse);
+				responseMaps.addLocalResponse(getTileId(), playerUpdateResponse);
 			}
 
 			// maybe the target player logged out
@@ -133,7 +140,7 @@ public class Player extends Attackable {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTile(getTileId());
-				responseMaps.addLocalResponse(this, playerUpdateResponse);
+				responseMaps.addLocalResponse(getTileId(), playerUpdateResponse);
 			}
 
 			break;
@@ -241,6 +248,7 @@ public class Player extends Attackable {
 		responseMaps.addBroadcastResponse(deathResponse);
 		
 		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), 5, 0);
+		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId());
 		
 		state = PlayerState.idle;
 	}
@@ -268,17 +276,17 @@ public class Player extends Attackable {
 		if (weaponName.contains(" hammer" )) {// TODO add weapon_type enum
 			switch (getDto().getAttackStyleId()) {
 				case 1:// aggressive
-					StatsDao.addExpToPlayer(getId(), 1, points * 4);// 1 == str
-					StatsDao.addExpToPlayer(getId(), 5, points);// 5 == hp
+					StatsDao.addExpToPlayer(getId(), Stats.STRENGTH, points * 4);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 				break;
 				case 2: // defensive
-					StatsDao.addExpToPlayer(getId(), 3, points * 4);// 3 == def
-					StatsDao.addExpToPlayer(getId(), 5, points);
+					StatsDao.addExpToPlayer(getId(), Stats.DEFENCE, points * 4);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 					break;
 				default: // shared or other
-					StatsDao.addExpToPlayer(getId(), 1, points * 2);// 1 == str
-					StatsDao.addExpToPlayer(getId(), 3, points * 2);// 3 == def
-					StatsDao.addExpToPlayer(getId(), 5, points);
+					StatsDao.addExpToPlayer(getId(), Stats.STRENGTH, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.DEFENCE, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 					break;
 			}
 		}
@@ -289,17 +297,17 @@ public class Player extends Attackable {
 		else if (weaponName.contains(" daggers")) {// TODO ad weapon_type enum
 			switch (getDto().getAttackStyleId()) {
 				case 1:// aggressive
-					StatsDao.addExpToPlayer(getId(), 2, points * 4);// 2 == acc
-					StatsDao.addExpToPlayer(getId(), 5, points);// 5 == hp
+					StatsDao.addExpToPlayer(getId(), Stats.ACCURACY, points * 4);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 				break;
 				case 2: // defensive
-					StatsDao.addExpToPlayer(getId(), 4, points * 4);// 4 == agil
-					StatsDao.addExpToPlayer(getId(), 5, points);
+					StatsDao.addExpToPlayer(getId(), Stats.AGILITY, points * 4);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 					break;
 				default: // shared or other
-					StatsDao.addExpToPlayer(getId(), 2, points * 2);
-					StatsDao.addExpToPlayer(getId(), 4, points * 2);
-					StatsDao.addExpToPlayer(getId(), 5, points);
+					StatsDao.addExpToPlayer(getId(), Stats.ACCURACY, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.AGILITY, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 					break;
 			}
 		}
@@ -310,21 +318,21 @@ public class Player extends Attackable {
 		else {
 			switch (getDto().getAttackStyleId()) {
 				case 1:// aggressive
-					StatsDao.addExpToPlayer(getId(), 1, points * 2);// 1 == str
-					StatsDao.addExpToPlayer(getId(), 2, points * 2);// 2 == acc
-					StatsDao.addExpToPlayer(getId(), 5, points);// 5 == hp
+					StatsDao.addExpToPlayer(getId(), Stats.STRENGTH, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.ACCURACY, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 				break;
 				case 2: // defensive
-					StatsDao.addExpToPlayer(getId(), 3, points * 2);// 3 == def
-					StatsDao.addExpToPlayer(getId(), 4, points * 2);// 4 == agil
-					StatsDao.addExpToPlayer(getId(), 5, points);
+					StatsDao.addExpToPlayer(getId(), Stats.DEFENCE, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.AGILITY, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 					break;
 				default: // shared or other
-					StatsDao.addExpToPlayer(getId(), 1, points);
-					StatsDao.addExpToPlayer(getId(), 2, points);
-					StatsDao.addExpToPlayer(getId(), 3, points);
-					StatsDao.addExpToPlayer(getId(), 4, points);
-					StatsDao.addExpToPlayer(getId(), 5, points);
+					StatsDao.addExpToPlayer(getId(), Stats.STRENGTH, points);
+					StatsDao.addExpToPlayer(getId(), Stats.ACCURACY, points);
+					StatsDao.addExpToPlayer(getId(), Stats.DEFENCE, points);
+					StatsDao.addExpToPlayer(getId(), Stats.AGILITY, points);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 					break;
 			}
 		}
@@ -334,9 +342,11 @@ public class Player extends Attackable {
 			int diff = statExp.getValue() - expBefore.get(statExp.getKey()); 
 			if (diff > 0)
 				response.addExp(statExp.getKey(), diff);
-		}
-		
+		}		
 		responseMaps.addClientOnlyResponse(this, response);
+		
+		// TODO update stat cache if the exp gain gives us a level
+		
 		
 	}
 	
@@ -350,7 +360,7 @@ public class Player extends Attackable {
 		// relative boost should be -9
 		// therefore: -max + current
 		
-		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), 5, -this.dto.getMaxHp() + currentHp);
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.HITPOINTS.getValue(), -this.dto.getMaxHp() + currentHp);
 		PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 		playerUpdateResponse.setId(getId());
 		playerUpdateResponse.setDamage(damage);
@@ -367,24 +377,23 @@ public class Player extends Attackable {
 	
 	@Override
 	public void setStatsAndBonuses() {
-		HashMap<String, Integer> stats = new HashMap<>();
-		for (Map.Entry<String, Integer> entry : StatsDao.getStatsByPlayerId(getId()).entrySet())
-			stats.put(entry.getKey(), StatsDao.getLevelFromExp(entry.getValue()));
+		HashMap<Stats, Integer> stats = new HashMap<>();
+		for (Map.Entry<Integer, Integer> entry : StatsDao.getStatsByPlayerId(getId()).entrySet())
+			stats.put(Stats.withValue(entry.getKey()), StatsDao.getLevelFromExp(entry.getValue()));
 		setStats(stats);
 		
 		EquipmentBonusDto equipment = EquipmentDao.getEquipmentBonusesByPlayerId(getId());
-		HashMap<String, Integer> bonuses = new HashMap<>();
-		bonuses.put("strength", equipment.getStr());
-		bonuses.put("accuracy", equipment.getAcc());
-		bonuses.put("defence", equipment.getDef());
-		bonuses.put("agility", equipment.getAgil());
-		bonuses.put("hitpoints", equipment.getHp());
+		HashMap<Stats, Integer> bonuses = new HashMap<>();
+		bonuses.put(Stats.STRENGTH, equipment.getStr());
+		bonuses.put(Stats.ACCURACY, equipment.getAcc());
+		bonuses.put(Stats.DEFENCE, equipment.getDef());
+		bonuses.put(Stats.AGILITY, equipment.getAgil());
+		bonuses.put(Stats.HITPOINTS, equipment.getHp());
 		setBonuses(bonuses);
-		setCurrentHp(dto.getCurrentHp());
 		
-		int weaponCooldown = equipment.getSpeed();// TODO weapon speed based off equipped weapon
+		int weaponCooldown = equipment.getSpeed();
 		if (weaponCooldown == 0)
-			weaponCooldown = 2;// no weapon equipped
+			weaponCooldown = 3;// no weapon equipped
 		setMaxCooldown(weaponCooldown);
 	}
 	

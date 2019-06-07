@@ -1,31 +1,40 @@
 package main.responses;
 
+import java.util.ArrayList;
+
 import main.FightManager;
+import main.database.NpcMessageDao;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
 import main.processing.Player;
-import main.processing.Player.PlayerState;
-import main.requests.AttackRequest;
 import main.requests.Request;
+import main.requests.TalkToRequest;
+import main.utils.RandomUtil;
 
-public class AttackResponse extends Response {
-
+public class TalkToResponse extends Response {
+	private int objectId;
+	private String message;
+	
+	public TalkToResponse() {
+		setAction("talk to");
+	}
+	
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (!(req instanceof AttackRequest))
+		if (!(req instanceof TalkToRequest))
 			return;
 		
 		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you're already fighting!");
+			setRecoAndResponseText(0, "you're too busy fighting!");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		
-		AttackRequest request = (AttackRequest)req;
+		TalkToRequest request = (TalkToRequest)req;
 		NPC npc = NPCManager.get().getNpcByInstanceId(request.getObjectId());// request tileid is the instnace id
 		if (npc == null) {
-			setRecoAndResponseText(0, "you can't attack that.");
+			setRecoAndResponseText(0, "you can't talk to that.");
 			return;
 		}
 		
@@ -33,19 +42,13 @@ public class AttackResponse extends Response {
 			player.setTarget(npc);	
 			player.setSavedRequest(request);
 		} else {
-			// start the fight
-			player.setState(PlayerState.fighting);
-			player.setTileId(npc.getTileId());
-			FightManager.addFight(player, npc);
-			
-			PvmStartResponse pvmStart = new PvmStartResponse();
-			pvmStart.setPlayerId(player.getId());
-			pvmStart.setMonsterId(npc.getInstanceId());
-			pvmStart.setTileId(npc.getTileId());
-			responseMaps.addBroadcastResponse(pvmStart);
+			// talk to it
+			objectId = request.getObjectId();
+			ArrayList<String> messages = NpcMessageDao.getMessagesByNpcId(npc.getId()); 
+			message = messages.get(RandomUtil.getRandom(0, messages.size()));
+			responseMaps.addClientOnlyResponse(player, this);
 		}
 		
-		
 	}
-
+	
 }

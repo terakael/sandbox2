@@ -29,4 +29,5 @@ public class NPCDto {
 	private transient int strBonus;
 	private transient int defBonus;
 	private transient int agilBonus;
+	private transient int attackSpeed;
 }

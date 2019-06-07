@@ -10,7 +10,7 @@ import main.processing.Player;
 @Getter
 public class ResponseMaps {
 	private Map<Player, ArrayList<Response>> clientOnlyResponses = new HashMap<>();
-	private Map<Player, ArrayList<Response>> localResponses = new HashMap<>();
+	private Map<Integer, ArrayList<Response>> localResponses = new HashMap<>();// key is the central tileId
 	private ArrayList<Response> broadcastResponses = new ArrayList<>();
 	private Map<Player, ArrayList<Response>> broadcastExcludeClientResponses = new HashMap<>();
 	
@@ -20,10 +20,10 @@ public class ResponseMaps {
 		clientOnlyResponses.get(player).add(response);
 	}
 	
-	public void addLocalResponse(Player player, Response response) {
-		if (!localResponses.containsKey(player))
-			localResponses.put(player, new ArrayList<>());
-		localResponses.get(player).add(response);
+	public void addLocalResponse(Integer tileId, Response response) {
+		if (!localResponses.containsKey(tileId))
+			localResponses.put(tileId, new ArrayList<>());
+		localResponses.get(tileId).add(response);
 	}
 	
 	public void addBroadcastResponse(Response response, Player playerToExclude) {
