@@ -7,7 +7,6 @@ import javax.websocket.Session;
 
 import lombok.Getter;
 import main.GroundItemManager;
-import main.Stats;
 import main.database.AnimationDao;
 import main.database.AnimationDto;
 import main.database.EquipmentDao;
@@ -20,13 +19,13 @@ import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.LogonRequest;
 import main.requests.Request;
+import main.types.Stats;
 
 public class LogonResponse extends Response {
 	
 	@Getter private int id;
 	@Getter private int tileId;
 	private int attackStyleId;
-//	private Stats stats;
 	private Map<Integer, Integer> stats;
 	private List<PlayerDto> players;
 	private List<Integer> inventory;
@@ -83,8 +82,14 @@ public class LogonResponse extends Response {
 		
 		// broadcast to the rest of the players that this player has logged in
 		PlayerEnterResponse playerEnter = (PlayerEnterResponse)ResponseFactory.create("playerEnter");
-		playerEnter.setPlayer(player.getDto());
+		playerEnter.setId(id);
+		playerEnter.setName(player.getDto().getName());
+		playerEnter.setTileId(tileId);
 		playerEnter.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
+		playerEnter.setMaxHp(player.getStats().get(Stats.HITPOINTS));
+		playerEnter.setCurrentHp(StatsDao.getCurrentHpByPlayerId(player.getId()));
+		playerEnter.setAnimations(AnimationDao.loadAnimationsByPlayerId(dto.getId()));
+		
 		responseMaps.addBroadcastResponse(playerEnter, player);
 	}
 	

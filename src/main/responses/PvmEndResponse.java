@@ -8,7 +8,8 @@ import main.requests.Request;
 public class PvmEndResponse extends Response {
 	private int playerId;
 	private int monsterId;
-	private int tileId;
+	private int playerTileId;
+	private int monsterTileId;
 	
 	public PvmEndResponse() {
 		setAction("pvm_end");

@@ -54,16 +54,22 @@ public class Player extends Attackable {
 	@Setter private Request savedRequest = null;
 	@Setter private int tickCounter = 0;
 	
-	private HashMap<Integer, Integer> stats = new HashMap<>();// cached so we don't have to keep polling the db
+	@Getter private HashMap<Stats, Integer> stats = new HashMap<>();// cached so we don't have to keep polling the db
 	
 	public Player(PlayerDto dto, Session session) {
 		this.dto = dto;
 		tileId = dto.getTileId();
 		this.session = session;
 		
-//		stats = StatsDao.get
+		refreshStats(StatsDao.getAllStatExpByPlayerId(dto.getId()));
+		
 		
 		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(5);
+	}
+	
+	private void refreshStats(Map<Integer, Integer> statExp) {
+		for (Map.Entry<Integer, Integer> stat : statExp.entrySet())
+			stats.put(Stats.withValue(stat.getKey()), StatsDao.getLevelFromExp(stat.getValue()));
 	}
 	
 	public void process(ResponseMaps responseMaps) {
@@ -85,7 +91,6 @@ public class Player extends Attackable {
 					else {
 						Response response = ResponseFactory.create(savedRequest.getAction());
 						response.process(savedRequest, this, responseMaps);
-//						savedRequest = null;
 					}
 				}
 			}
@@ -96,7 +101,7 @@ public class Player extends Attackable {
 			if (!path.isEmpty()) {
 				setTileId(path.pop());
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
-				playerUpdateResponse.setId(dto.getId());
+				playerUpdateResponse.setId(getId());
 				playerUpdateResponse.setTile(getTileId());
 				responseMaps.addLocalResponse(getTileId(), playerUpdateResponse);
 			}
@@ -107,8 +112,8 @@ public class Player extends Attackable {
 				break;
 			}
 			
-			if (!PathFinder.isNextTo(dto.getTileId(), target.getTileId())) {
-				path = PathFinder.findPath(dto.getTileId(), target.getTileId(), false);
+			if (!PathFinder.isNextTo(tileId, target.getTileId())) {
+				path = PathFinder.findPath(tileId, target.getTileId(), false);
 			}
 			break;
 		}
@@ -238,17 +243,16 @@ public class Player extends Attackable {
 		dropResponse.setGroundItems(GroundItemManager.getGroundItems());
 		responseMaps.addBroadcastResponse(dropResponse);
 		
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), 5, 0);
+		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId());
+		
 		// let everyone know you died lmao
 		DeathResponse deathResponse = new DeathResponse();
 		deathResponse.setId(getId());
-		deathResponse.setCurrentHp(dto.getMaxHp());
+		deathResponse.setCurrentHp(currentHp);
 		deathResponse.setTileId(31375);
 		setTileId(31375);
-		
 		responseMaps.addBroadcastResponse(deathResponse);
-		
-		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), 5, 0);
-		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId());
 		
 		state = PlayerState.idle;
 	}
@@ -337,8 +341,10 @@ public class Player extends Attackable {
 			}
 		}
 		
+		Map<Integer, Integer> currentStatExp = StatsDao.getAllStatExpByPlayerId(getId());
+		
 		AddExpResponse response = new AddExpResponse();
-		for (Map.Entry<Integer, Integer> statExp : StatsDao.getAllStatExpByPlayerId(getId()).entrySet()) {
+		for (Map.Entry<Integer, Integer> statExp : currentStatExp.entrySet()) {
 			int diff = statExp.getValue() - expBefore.get(statExp.getKey()); 
 			if (diff > 0)
 				response.addExp(statExp.getKey(), diff);
@@ -346,8 +352,11 @@ public class Player extends Attackable {
 		responseMaps.addClientOnlyResponse(this, response);
 		
 		// TODO update stat cache if the exp gain gives us a level
-		
-		
+		refreshStats(currentStatExp);
+		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+		playerUpdate.setId(getId());
+		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(getId()));
+		responseMaps.addBroadcastResponse(playerUpdate);// should be local
 	}
 	
 	@Override

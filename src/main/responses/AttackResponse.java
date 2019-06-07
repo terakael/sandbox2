@@ -29,6 +29,12 @@ public class AttackResponse extends Response {
 			return;
 		}
 		
+		if (FightManager.fightWithFighterExists(npc)) {
+			setRecoAndResponseText(0, "someone is already fighting that.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		
 		if (!PathFinder.isNextTo(npc.getTileId(), player.getTileId())) {
 			player.setTarget(npc);	
 			player.setSavedRequest(request);

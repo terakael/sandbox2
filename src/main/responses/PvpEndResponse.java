@@ -8,7 +8,8 @@ import main.requests.Request;
 public class PvpEndResponse extends Response {
 	private int player1Id;
 	private int player2Id;
-	private int tileId;
+	private int player1TileId;
+	private int player2TileId;
 	
 	public PvpEndResponse() {
 		setAction("pvp_end");

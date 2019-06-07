@@ -46,7 +46,7 @@ public class TalkToResponse extends Response {
 			objectId = request.getObjectId();
 			ArrayList<String> messages = NpcMessageDao.getMessagesByNpcId(npc.getId()); 
 			message = messages.get(RandomUtil.getRandom(0, messages.size()));
-			responseMaps.addClientOnlyResponse(player, this);
+			responseMaps.addLocalResponse(player.getTileId(), this);
 		}
 		
 	}

@@ -8,7 +8,10 @@ public enum Stats {
 	DEFENCE(3), 
 	AGILITY(4), 
 	HITPOINTS(5), 
-	MAGIC(6);
+	MINING(6),
+	SMITHING(7),
+	MAGIC(8),
+	HERBLORE(9);
 	
 	@Getter private int value;
 	Stats(int value) {

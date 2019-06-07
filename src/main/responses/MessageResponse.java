@@ -155,7 +155,7 @@ public class MessageResponse extends Response {
 		
 		int statId = StatsDao.getStatIdByName(msgParts[0]);
 		int exp = Integer.parseInt(msgParts[1]);
-		if (statId != -1)
+		if (Stats.withValue(statId) != null)
 			StatsDao.addExpToPlayer(targetPlayerId, Stats.withValue(statId), exp);
 		
 		Player targetPlayer = targetPlayerId == player.getDto().getId() ? player : WorldProcessor.getPlayerById(targetPlayerId); 
@@ -171,11 +171,15 @@ public class MessageResponse extends Response {
 		
 		AddExpResponse resp = new AddExpResponse();
 		resp.addExp(statId, exp);
-		
 		responseMaps.addClientOnlyResponse(targetPlayer, resp);
 		
 		MessageResponse messageResponse = new MessageResponse();
 		messageResponse.setRecoAndResponseText(0, String.format("Your god has granted you %dexp in %s; %s him!", exp, msgParts[0], exp <= 0 ? "fear" : "praise"));
 		responseMaps.addClientOnlyResponse(targetPlayer, messageResponse);
+		
+		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+		playerUpdate.setId(targetPlayer.getId());
+		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(targetPlayer.getId()));
+		responseMaps.addBroadcastResponse(playerUpdate);// should be local
 	}
 }

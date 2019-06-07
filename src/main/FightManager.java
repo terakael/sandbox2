@@ -146,13 +146,15 @@ public class FightManager {
 						PvmEndResponse resp = new PvmEndResponse();
 						resp.setPlayerId(((Player)fight.getFighter1()).getId());
 						resp.setMonsterId(((NPC)fight.getFighter2()).getInstanceId());
-						resp.setTileId(fight.getFighter1().getTileId());
+						resp.setPlayerTileId(fight.getFighter1().getTileId());
+						resp.setMonsterTileId(fight.getFighter2().getTileId());
 						responseMaps.addBroadcastResponse(resp);
 					} else {
 						PvpEndResponse resp = new PvpEndResponse();
 						resp.setPlayer1Id(((Player)fight.getFighter1()).getId());
 						resp.setPlayer2Id(((Player)fight.getFighter2()).getId());
-						resp.setTileId(fight.getFighter1().getTileId());
+						resp.setPlayer1TileId(fight.getFighter1().getTileId());
+						resp.setPlayer2TileId(fight.getFighter2().getTileId());
 						responseMaps.addBroadcastResponse(resp);
 					}
 				}

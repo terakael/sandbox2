@@ -10,28 +10,9 @@ import java.util.List;
 
 public class PlayerDao {
 	private PlayerDao() {}
-	
-	public static PlayerDto getPlayerById(int id) {
-		final String query = "select id, name, password, tile_id, current_hp, max_hp, combat_lvl, attack_style_id from view_player where id = ?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, id);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("tile_id"), rs.getInt("current_hp"), rs.getInt("max_hp"), rs.getInt("combat_lvl"), rs.getInt("attack_style_id"), AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 		
-		return null;
-	}
-	
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
-		final String query = "select id, name, password, tile_id, current_hp, max_hp, combat_lvl, attack_style_id from view_player where name = ? and password = ?";
+		final String query = "select id, name, password, tile_id, current_hp, max_hp, attack_style_id from view_player where name = ? and password = ?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -41,7 +22,17 @@ public class PlayerDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return new PlayerDto(rs.getInt("id"), rs.getString("name"), rs.getString("password"), rs.getInt("tile_id"), rs.getInt("current_hp"), rs.getInt("max_hp"), rs.getInt("combat_lvl"), rs.getInt("attack_style_id"), AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
+					return new PlayerDto(
+							rs.getInt("id"), 
+							rs.getString("name"), 
+							rs.getString("password"), 
+							rs.getInt("tile_id"), 
+							rs.getInt("current_hp"), 
+							rs.getInt("max_hp"), 
+							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
+							rs.getInt("attack_style_id"), 
+							AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
+				
 				return null;
 			}
 		} catch (SQLException e) {
@@ -112,7 +103,16 @@ public class PlayerDao {
 		) {
 			while (rs.next()) {
 				int playerId = rs.getInt("id");
-				playerList.add(new PlayerDto(playerId, rs.getString("name"), null, rs.getInt("tile_id"), rs.getInt("current_hp"), rs.getInt("max_hp"), rs.getInt("combat_lvl"), rs.getInt("attack_style_id"), AnimationDao.loadAnimationsByPlayerId(playerId)));
+				playerList.add(new PlayerDto(
+						playerId, 
+						rs.getString("name"), 
+						null, 
+						rs.getInt("tile_id"), 
+						rs.getInt("current_hp"), 
+						rs.getInt("max_hp"), 
+						StatsDao.getCombatLevelByPlayerId(playerId),
+						rs.getInt("attack_style_id"), 
+						AnimationDao.loadAnimationsByPlayerId(playerId)));
 			}
 				
 		} catch (SQLException e) {
