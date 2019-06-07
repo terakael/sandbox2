@@ -1,6 +1,8 @@
 package main.responses;
 
 import java.util.List;
+
+import main.FightManager;
 import main.GroundItemManager;
 import main.database.PlayerStorageDao;
 import main.processing.PathFinder;
@@ -21,6 +23,12 @@ public class TakeResponse extends Response {
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof TakeRequest)) {
 			setRecoAndResponseText(0, "funny business");
+			return;
+		}
+		
+		if (FightManager.fightWithFighterExists(player)) {
+			setRecoAndResponseText(0, "you can't do that during combat.");
+			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		

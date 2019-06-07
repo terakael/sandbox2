@@ -1,5 +1,6 @@
 package main.responses;
 
+import main.FightManager;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.processing.Player.PlayerState;
@@ -17,6 +18,10 @@ public class FollowResponse extends Response {
 		if (!(req instanceof FollowRequest)) {
 			return;
 		}
+		
+		if (FightManager.fightWithFighterIsBattleLocked(player))
+			return;
+		FightManager.cancelFight(player, responseMaps);
 		
 		FollowRequest request = (FollowRequest)req;
 		

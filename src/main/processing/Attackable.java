@@ -33,14 +33,16 @@ public abstract class Attackable {
 	
 	public int hit() {
 		cooldown = maxCooldown;
-		int str = (int)Math.sqrt(stats.get("strength")) + bonuses.get("strength");
+		int maxHit = (int)Math.ceil(stats.get("strength") * 0.15) + (int)Math.ceil(bonuses.get("strength") * 0.15) + 1;
+		System.out.println("str: " + stats.get("strength") + ", max: " + maxHit);
 		//int acc = (int)Math.sqrt(stats.get("accuracy")) + this.bonuses.getAcc();
-		return rand.nextInt((int)Math.ceil(str * 0.15) + 1);
+		
+		return rand.nextInt(maxHit);
 	}
 	
 	public int block() {
-		int def = (int)Math.sqrt(stats.get("defence")) + bonuses.get("defence");
+		int maxBlock = (int)Math.ceil(stats.get("defence") * 0.15) + (int)Math.ceil(bonuses.get("defence") * 0.15) + 1;
 		//int agil = (int)Math.sqrt(stats.get("agility")) + this.bonuses.getAgil();
-		return rand.nextInt((int)Math.ceil(def * 0.15) + 1);
+		return rand.nextInt(maxBlock);
 	}
 }

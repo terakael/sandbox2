@@ -1,5 +1,6 @@
 package main.responses;
 
+import main.FightManager;
 import main.database.MineableDao;
 import main.database.MineableDto;
 import main.database.PlayerStorageDao;
@@ -19,6 +20,13 @@ public class MineResponse extends Response {
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof MineRequest))
 			return;
+		
+		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+			setRecoAndResponseText(0, "you can't do that during combat.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		FightManager.cancelFight(player, responseMaps);
 		
 		MineRequest request = (MineRequest)req;
 		

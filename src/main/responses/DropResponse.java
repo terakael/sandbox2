@@ -2,6 +2,7 @@ package main.responses;
 
 import java.util.List;
 import lombok.Setter;
+import main.FightManager;
 import main.GroundItemManager;
 import main.database.EquipmentDao;
 import main.database.ItemDto;
@@ -21,6 +22,12 @@ public class DropResponse extends Response {
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof DropRequest)) {
 			setRecoAndResponseText(0, "funny business");
+			return;
+		}
+		
+		if (FightManager.fightWithFighterExists(player)) {
+			setRecoAndResponseText(0, "you can't drop anything during combat.");
+			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		

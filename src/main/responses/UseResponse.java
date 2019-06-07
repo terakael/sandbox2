@@ -1,5 +1,6 @@
 package main.responses;
 
+import main.FightManager;
 import main.database.SceneryDao;
 import main.processing.PathFinder;
 import main.processing.Player;
@@ -35,6 +36,12 @@ public class UseResponse extends Response {
 	}
 	
 	private boolean handleUseOnScenery(UseRequest request, Player player, ResponseMaps responseMaps) {
+		if (FightManager.fightWithFighterExists(player)) {
+			setRecoAndResponseText(0, "you can't do that during combat.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return true;
+		}
+		
 		if (!PathFinder.isNextTo(player.getTileId(), request.getDest())) {
 			player.setPath(PathFinder.findPath(player.getTileId(), request.getDest(), false));
 			player.setState(PlayerState.walking);

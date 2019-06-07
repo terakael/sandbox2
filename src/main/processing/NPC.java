@@ -19,6 +19,8 @@ public class NPC extends Attackable {
 	private final transient int maxTickCount = 15;
 	private final transient int minTickCount = 5;
 	private transient int tickCounter = maxTickCount;
+	private int respawnTime = 10;
+	private int deathTimer = 0;
 	
 	private int combatLevel = 0;
 	
@@ -49,6 +51,20 @@ public class NPC extends Attackable {
 	}
 	
 	public void process(ResponseMaps responseMaps) {
+		if (currentHp == 0) {
+			if (--deathTimer <= 0) {
+				deathTimer = 0;
+				currentHp = dto.getHp();
+				tileId = dto.getTileId();
+				
+				NpcUpdateResponse updateResponse = new NpcUpdateResponse();
+				updateResponse.setNpc(this);
+				responseMaps.addBroadcastResponse(updateResponse);
+			}
+			
+			return;
+		}
+		
 		if (!path.isEmpty()) {
 			tileId = path.pop();
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
@@ -79,9 +95,8 @@ public class NPC extends Attackable {
 	
 	@Override
 	public void onDeath(ResponseMaps responseMaps) {
-		// TODO send npc_update broadcast
-		currentHp = dto.getHp();
-		
+		//currentHp = dto.getHp();
+		deathTimer = respawnTime;
 		// also drop an item
 	}
 	

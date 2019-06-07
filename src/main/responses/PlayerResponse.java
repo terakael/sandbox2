@@ -30,6 +30,12 @@ public abstract class PlayerResponse extends Response {
 			setRecoAndResponseText(0, "funny business");
 			return;
 		}
+		
+		if (FightManager.fightWithFighterExists(player)) {
+			setRecoAndResponseText(0, "you can't do that during combat.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
 
 		PlayerRequest playerReq = (PlayerRequest)req;
 		

@@ -2,6 +2,7 @@ package main.responses;
 
 import java.util.ArrayList;
 
+import main.FightManager;
 import main.database.ItemDao;
 import main.database.MineableDao;
 import main.database.PlayerStorageDao;
@@ -20,6 +21,13 @@ public class SmithResponse extends Response {
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof SmithRequest))
 			return;
+		
+		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+			setRecoAndResponseText(0, "you can't do that during combat.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		FightManager.cancelFight(player, responseMaps);
 		
 		SmithRequest smithRequest = (SmithRequest)req;
 		

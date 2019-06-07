@@ -22,6 +22,12 @@ public class MoveResponse extends Response {
 			return;
 		
 		MoveRequest moveReq = (MoveRequest)req;
+		
+		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+			setRecoAndResponseText(0, "you can't retreat yet!");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
 
 		FightManager.cancelFight(player, responseMaps);
 		

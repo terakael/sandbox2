@@ -16,6 +16,12 @@ public class AttackResponse extends Response {
 		if (!(req instanceof AttackRequest))
 			return;
 		
+		if (FightManager.fightWithFighterExists(player)) {
+			setRecoAndResponseText(0, "you're already fighting!");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		
 		AttackRequest request = (AttackRequest)req;
 		NPC npc = NPCManager.get().getNpcById(request.getObjectId());// request tileid is the instnace id
 		if (npc == null) {

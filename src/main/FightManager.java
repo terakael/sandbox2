@@ -37,8 +37,11 @@ public class FightManager {
 	private static class Fight {
 		@Getter private Attackable fighter1;
 		@Getter private Attackable fighter2;
+		@Getter private int battleLockTicks;
 		
 		Fight(Attackable fighter1, Attackable fighter2) {
+			battleLockTicks = 10;
+			
 			this.fighter1 = fighter1;
 			this.fighter2 = fighter2;
 			
@@ -49,10 +52,19 @@ public class FightManager {
 			this.fighter2.setCooldown(3);
 		}
 		
+		public boolean isBattleLocked() {
+			return battleLockTicks > 0;
+		}
+		
 		public boolean process(ResponseMaps responseMaps) {
 			// if the players aren't on the same tile then they are still closing in on eachother
 			if (!PathFinder.isNextTo(fighter1.getTileId(), fighter2.getTileId())) {
 				return false;
+			}
+			
+			if (battleLockTicks > 0) {
+				if (--battleLockTicks < 0)
+					battleLockTicks = 0;
 			}
 			
 			if (fighter1.readyToHit()) {
@@ -98,6 +110,25 @@ public class FightManager {
 		for (Fight fight : finishedFights) {
 			cancelFight(fight.getFighter1(), responseMaps);
 		}
+	}
+	
+	private static Fight getFightWithFighter(Attackable fighter) {
+		for (Fight fight : fights) {
+			if (fight.getFighter1() == fighter || fight.getFighter2() == fighter)
+				return fight;
+		}
+		return null;
+	}
+	
+	public static boolean fightWithFighterExists(Attackable fighter) {
+		return getFightWithFighter(fighter) != null;
+	}
+	
+	public static boolean fightWithFighterIsBattleLocked(Attackable fighter) {
+		Fight fight = getFightWithFighter(fighter);
+		if (fight == null)
+			return false;
+		return fight.isBattleLocked();
 	}
 	
 	public static void addFight(Attackable fighter1, Attackable fighter2) {
