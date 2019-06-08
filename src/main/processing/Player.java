@@ -61,15 +61,18 @@ public class Player extends Attackable {
 		tileId = dto.getTileId();
 		this.session = session;
 		
-		refreshStats(StatsDao.getAllStatExpByPlayerId(dto.getId()));
-		
+		refreshStats();
 		
 		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(5);
 	}
 	
-	private void refreshStats(Map<Integer, Integer> statExp) {
+	public void refreshStats(Map<Integer, Integer> statExp) {
 		for (Map.Entry<Integer, Integer> stat : statExp.entrySet())
 			stats.put(Stats.withValue(stat.getKey()), StatsDao.getLevelFromExp(stat.getValue()));
+	}
+	
+	public void refreshStats() {
+		refreshStats(StatsDao.getAllStatExpByPlayerId(dto.getId()));
 	}
 	
 	public void process(ResponseMaps responseMaps) {
@@ -402,7 +405,7 @@ public class Player extends Attackable {
 		
 		int weaponCooldown = equipment.getSpeed();
 		if (weaponCooldown == 0)
-			weaponCooldown = 3;// no weapon equipped
+			weaponCooldown = 3;// no weapon equipped, default to speed between sword/daggers
 		setMaxCooldown(weaponCooldown);
 	}
 	

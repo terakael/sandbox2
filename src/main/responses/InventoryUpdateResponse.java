@@ -1,6 +1,7 @@
 package main.responses;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import lombok.Setter;
 import main.database.EquipmentDao;
@@ -13,7 +14,7 @@ import main.requests.Request;
 @Setter
 public class InventoryUpdateResponse extends Response {	
 	private List<Integer> inventory = new ArrayList<>();
-	private List<Integer> equippedSlots = new ArrayList<>();
+	private HashSet<Integer> equippedSlots = new HashSet<>();
 
 	public InventoryUpdateResponse() {
 		setAction("invupdate");

@@ -1,5 +1,6 @@
 package main.responses;
 
+import java.util.HashSet;
 import java.util.List;
 import lombok.Setter;
 import main.FightManager;
@@ -40,7 +41,7 @@ public class DropResponse extends Response {
 		}
 		
 		// check if the item is equipped
-		List<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getDto().getId());
+		HashSet<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getDto().getId());
 		if (equippedSlots.contains(dropReq.getSlot())) {
 			// the slot is equipped, we can't drop it
 			setRecoAndResponseText(0, "you can't drop it while it's equipped.");

@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import main.Endpoint;
 import main.FightManager;
 import main.database.ConsumableDao;
+import main.database.EquipmentDao;
 import main.database.NpcMessageDao;
 import main.requests.Request;
 import main.responses.LogonResponse;
@@ -39,6 +40,7 @@ public class WorldProcessor implements Runnable {
 		NPCManager.get().loadNpcs();
 		NpcMessageDao.setupCaches();
 		ConsumableDao.cacheConsumables();
+		EquipmentDao.setupCaches();
 		
 		while (true) {
 			long prevTime = System.nanoTime();

@@ -1,9 +1,6 @@
 package main.responses;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
+import java.util.HashSet;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.EquipmentDto;
@@ -12,9 +9,11 @@ import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.EquipRequest;
 import main.requests.Request;
+import main.types.EquipmentTypes;
+import main.types.Stats;
 
 public class EquipResponse extends Response {
-	private List<Integer> equippedSlots = new ArrayList<>();
+	private HashSet<Integer> equippedSlots = new HashSet<>();
 	private EquipmentBonusDto bonuses = null;
 
 	public EquipResponse() {
@@ -31,16 +30,26 @@ public class EquipResponse extends Response {
 			EquipmentDto equip = EquipmentDao.getEquipmentByItemId(item.getId());
 			if (equip == null) {
 				// item isn't equippable.
-				setRecoAndResponseText(0, "item not equippable");
+				setRecoAndResponseText(0, "you can't equip that.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
 			}
+			
+			if (!playerHasRequirements(player, equip, responseMaps))
+				return;
 			
 			// we also handle the unequipping here too, so if it's already equipped then unequip it.
 			if (EquipmentDao.isItemEquippedByItemIdAndSlot(player.getId(), item.getId(), equipReq.getSlot())) {
 				EquipmentDao.clearEquippedItem(player.getId(), equipReq.getSlot());
 			} else {
 				// if we are already wearing this part (e.g. helmet) then unequip it before equipping the new item
+				if (equip.getType() == EquipmentTypes.DAGGERS || equip.getType() == EquipmentTypes.HAMMER) {// two-handed weapon; unequip shield as well
+					EquipmentDao.clearEquippedItemByPartId(player.getId(), 5);// 5 == shield
+				} else if (equip.getType() == EquipmentTypes.SHIELD) {
+					EquipmentTypes weaponType = EquipmentDao.getEquipmentTypeByEquipmentId((EquipmentDao.getWeaponIdByPlayerId(player.getId())));
+					if (weaponType == EquipmentTypes.DAGGERS || weaponType == EquipmentTypes.HAMMER)
+						EquipmentDao.clearEquippedItemByPartId(player.getId(), 4);// 4 == onhand
+				}
 				EquipmentDao.clearEquippedItemByPartId(player.getId(), equip.getPartId());
 				EquipmentDao.setEquippedItem(player.getId(), equipReq.getSlot(), equip.getItemId());
 			}
@@ -50,6 +59,49 @@ public class EquipResponse extends Response {
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(player.getId());
 		
 		responseMaps.addClientOnlyResponse(player, this);
+	}
+	
+	private boolean playerHasRequirements(Player player, EquipmentDto equip, ResponseMaps responseMaps) {
+		switch (equip.getType()) {
+		case HELMET:
+		case BODY:
+		case LEGS:
+		case SHIELD:
+			if (player.getStats().get(Stats.DEFENCE) < equip.getRequirement()) {
+				setRecoAndResponseText(0, String.format("you need %d defence to equip that.", equip.getRequirement()));
+				responseMaps.addClientOnlyResponse(player, this);
+				return false;
+			}
+			
+			break;
+			
+		case DAGGERS:
+			if (player.getStats().get(Stats.ACCURACY) < equip.getRequirement()) {
+				setRecoAndResponseText(0, String.format("you need %d accuracy to equip that.", equip.getRequirement()));
+				responseMaps.addClientOnlyResponse(player, this);
+				return false;
+			}
+			break;
+		case HAMMER:
+			if (player.getStats().get(Stats.STRENGTH) < equip.getRequirement()) {
+				setRecoAndResponseText(0, String.format("you need %d strength to equip that.", equip.getRequirement()));
+				responseMaps.addClientOnlyResponse(player, this);
+				return false;
+			}
+			break;
+		case SWORD:
+			if (player.getStats().get(Stats.ACCURACY) < equip.getRequirement() || player.getStats().get(Stats.STRENGTH) < equip.getRequirement()) {
+				setRecoAndResponseText(0, String.format("you need %d accuracy and strength to equip that.", equip.getRequirement()));
+				responseMaps.addClientOnlyResponse(player, this);
+				return false;
+			}
+			break;
+			
+		default:
+			break;
+		}
+		
+		return true;
 	}
 	
 }

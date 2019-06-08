@@ -1,12 +1,15 @@
 package main.scenery;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
+import main.database.EquipmentDao;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.RequestFactory;
 import main.responses.InventoryUpdateResponse;
+import main.responses.MessageResponse;
 import main.responses.ResponseMaps;
 import main.types.Items;
 import main.utils.RandomUtil;
@@ -24,9 +27,15 @@ public abstract class Obelisk extends Scenery{
 			}
 		}
 		
-		// TODO check if item is equipped
-		
 		if (slot < invItemIds.size()) {
+			HashSet<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
+			if (equippedSlots.contains(slot)) {
+				MessageResponse resp = new MessageResponse();
+				resp.setRecoAndResponseText(0, "you need to unequip it first.");
+				responseMaps.addClientOnlyResponse(player, resp);
+				return false;
+			}
+			
 			boolean success = RandomUtil.getRandom(0,  100) <= enchantChance;
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, success ? dest.getValue() : 0);
 			
@@ -38,9 +47,9 @@ public abstract class Obelisk extends Scenery{
 					? String.format("you successfully enchant the %s.", itemName)
 					: String.format("the %s fails to enchant, and is destroyed in the process.", itemName);
 			updateResponse.setRecoAndResponseText(1, responseText);
+			return true;
 		}
 		
-		
-		return true;
+		return false;
 	}
 }

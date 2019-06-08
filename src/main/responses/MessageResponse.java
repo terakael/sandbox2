@@ -198,6 +198,8 @@ public class MessageResponse extends Response {
 		playerUpdate.setId(targetPlayer.getId());
 		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(targetPlayer.getId()));
 		responseMaps.addBroadcastResponse(playerUpdate);// should be local
+		
+		targetPlayer.refreshStats();
 	}
 	
 	private void handleGive(Player player, String[] msgParts, ResponseMaps responseMaps) {

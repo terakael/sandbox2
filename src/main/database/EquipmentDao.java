@@ -5,13 +5,69 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+
+import main.types.EquipmentTypes;
 
 public class EquipmentDao {
 	private EquipmentDao() {};
 	
-	public static List<Integer> getEquippedSlotsByPlayerId(int id) {
-		List<Integer> equippedSlots = new ArrayList<>();
+	private static HashMap<Integer, EquipmentTypes> equipmentByType = new HashMap<>();
+	private static HashMap<Integer, EquipmentDto> equipment = new HashMap<>();
+	
+	public static void setupCaches() {
+		cacheEquipmentByType();
+		cacheEquipment();
+	}
+	
+	private static void cacheEquipment() {
+		final String query = "select item_id, player_part_id, requirement from equipment";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					int itemId = rs.getInt("item_id");
+					equipment.put(itemId, new EquipmentDto(itemId, rs.getInt("player_part_id"), rs.getInt("requirement"), getEquipmentTypeByEquipmentId(itemId)));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void cacheEquipmentByType() {
+		final String query = 
+				"select equipment_types.id, equipment.item_id from equipment" + 
+				" inner join equipment_types on equipment.equipment_type_id = equipment_types.id";
+		
+		try (
+				Connection connection = DbConnection.get();
+				PreparedStatement ps = connection.prepareStatement(query)
+			) {
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						EquipmentTypes type = EquipmentTypes.withValue(rs.getInt("id"));
+						if (type != null)
+							equipmentByType.put(rs.getInt("item_id"), type);
+					}
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+	}
+	
+	public static EquipmentTypes getEquipmentTypeByEquipmentId(int equipmentId) {
+		if (equipmentByType.containsKey(equipmentId))
+			return equipmentByType.get(equipmentId);
+		return null;
+	}
+	
+	public static HashSet<Integer> getEquippedSlotsByPlayerId(int id) {
+		HashSet<Integer> equippedSlots = new HashSet<>();
 		final String query = "select slot from player_equipment where player_id=? order by slot";
 		try (
 			Connection connection = DbConnection.get();
@@ -78,19 +134,8 @@ public class EquipmentDao {
 	}
 	
 	public static EquipmentDto getEquipmentByItemId(int itemId) {
-		final String query = "select item_id, player_part_id from equipment where item_id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, itemId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return new EquipmentDto(rs.getInt("item_id"), rs.getInt("player_part_id"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		if (equipment.containsKey(itemId))
+			return equipment.get(itemId);
 		return null;
 	}
 	
@@ -110,7 +155,7 @@ public class EquipmentDao {
 		}
 		return 0;
 	}
-
+	
 	public static void clearEquippedItemByPartId(int playerId, int partId) {
 		final String query = 
 				"delete player_equipment from player_equipment " + 
