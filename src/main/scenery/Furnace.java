@@ -11,7 +11,7 @@ import main.responses.ShowSmithingTableResponse;
 public class Furnace extends Scenery {
 
 	@Override
-	public boolean use(int srcItemId, Player player, ResponseMaps responseMaps) {
+	public boolean use(int srcItemId, int slot, Player player, ResponseMaps responseMaps) {
 		switch (srcItemId) {
 		case 3: // copper
 		case 4: // iron

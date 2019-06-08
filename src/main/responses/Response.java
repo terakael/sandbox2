@@ -25,7 +25,7 @@ public abstract class Response {
 	
 	@Setter private String responseText = "";
 	@Setter private String action;
-	@Setter private String messageColour = null;
+	@Setter private String colour = null;
 
 	public void setRecoAndResponseText(int success, String responseText) {
 		this.success = success;

@@ -1,23 +1,29 @@
 package main.responses;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import lombok.Setter;
+import main.database.ItemDao;
 import main.database.PlayerDao;
+import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.MessageRequest;
 import main.requests.Request;
+import main.requests.RequestFactory;
 import main.types.Stats;
 
 public class MessageResponse extends Response {
 	private String name;
 	private int id;
 	@Setter private String message;
-	@Setter private String colour = "yellow";
 
 	public MessageResponse() {
 		setAction("message");
+		setColour("yellow");
 	}
 
 	@Override
@@ -49,7 +55,7 @@ public class MessageResponse extends Response {
 	
 	private void handleDebugCommand(Player player, String msg, ResponseMaps responseMaps) {
 		
-		String[] msgParts = msg.split(" ");// the :: prefix should already be removed here
+		String[] msgParts = msg.split(" (?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");// the :: prefix should already be removed here
 		if (msgParts[0].equals("tele")) {
 			handleDebugTele(player, msgParts, responseMaps);
 			return;
@@ -72,6 +78,16 @@ public class MessageResponse extends Response {
 				return;
 			}
 		}
+		
+		if (msgParts[0].equals("give")) {
+			handleGive(player, msgParts, responseMaps);
+			return;
+		}
+		
+		if (msgParts[0].equals("heal")) {
+			handleHeal(player, msgParts, responseMaps);
+			return;
+		}
 	}
 	
 	private void handleDebugTele(Player player, String[] msgParts, ResponseMaps responseMaps) {
@@ -84,7 +100,7 @@ public class MessageResponse extends Response {
 		}
 		
 		int destTileId = -1;
-		int destPlayerId = PlayerDao.getIdFromName(msgParts[1]);
+		int destPlayerId = PlayerDao.getIdFromName(msgParts[1].replaceAll("\"", ""));
 		if (destPlayerId == -1) {
 			// no player exists, maybe it's a tileId
 			try {
@@ -162,7 +178,7 @@ public class MessageResponse extends Response {
 		
 		// inform god that the target player has received the exp
 		if (targetPlayer != player) {
-			setRecoAndResponseText(0, String.format("%s has been granted %dexp in %s, my lord.", msgParts[2], exp, msgParts[0]));
+			setRecoAndResponseText(1, String.format("%s has been granted %dexp in %s, my lord.", msgParts[2], exp, msgParts[0]));
 			responseMaps.addClientOnlyResponse(player, this);
 		}
 		
@@ -174,12 +190,93 @@ public class MessageResponse extends Response {
 		responseMaps.addClientOnlyResponse(targetPlayer, resp);
 		
 		MessageResponse messageResponse = new MessageResponse();
-		messageResponse.setRecoAndResponseText(0, String.format("Your god has granted you %dexp in %s; %s him!", exp, msgParts[0], exp <= 0 ? "fear" : "praise"));
+		messageResponse.setRecoAndResponseText(1, String.format("Your god has granted you %dexp in %s; %s him!", exp, msgParts[0], exp <= 0 ? "fear" : "praise"));
+		messageResponse.setColour("red");
 		responseMaps.addClientOnlyResponse(targetPlayer, messageResponse);
 		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(targetPlayer.getId());
 		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(targetPlayer.getId()));
 		responseMaps.addBroadcastResponse(playerUpdate);// should be local
+	}
+	
+	private void handleGive(Player player, String[] msgParts, ResponseMaps responseMaps) {
+		// ::give [itemId|itemName] ([count])
+		if (msgParts.length < 2)
+			return;
+		
+		Integer itemId;
+		try {
+			itemId = Integer.parseInt(msgParts[1]);
+		} catch (NumberFormatException e) {
+			// not a number, maybe its the name?
+			itemId = ItemDao.getIdFromName(msgParts[1].replaceAll("\"", ""));
+			if (itemId == null) {
+				setRecoAndResponseText(0, "invalid item.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return;	
+			}
+		}
+		
+		if (ItemDao.getNameFromId(itemId) == null) {
+			setRecoAndResponseText(0, "invalid itemId.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		
+		int count = 1;
+		if (msgParts.length > 2) {
+			try {
+				count = Integer.parseInt(msgParts[2]);
+			} catch (NumberFormatException e) {}
+		}
+		
+		ArrayList<Integer> invItemIds = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+		int numFreeSlots = Collections.frequency(invItemIds, 0);
+		if (count > numFreeSlots)
+			count = numFreeSlots;
+		
+		for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
+			if (invItemIds.get(i) == 0) {
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), i, itemId);
+				--count;
+			}
+		}
+		
+		
+		new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
+	}
+	
+	private void handleHeal(Player player, String[] msgParts, ResponseMaps responseMaps) {
+		// ::heal
+		
+		Player targetPlayer = player;
+		if (msgParts.length == 2) {
+			targetPlayer = WorldProcessor.getPlayerById(PlayerDao.getIdFromName(msgParts[1].replaceAll("\"", "")));
+			if (targetPlayer == null) {
+				setRecoAndResponseText(0, "invalid player.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
+		}
+		
+		StatsDao.setRelativeBoostByPlayerIdStatId(targetPlayer.getId(), Stats.HITPOINTS.getValue(), 0);
+		int maxHp = StatsDao.getMaxHpByPlayerId(targetPlayer.getId());
+		targetPlayer.setCurrentHp(maxHp);
+		
+		PlayerUpdateResponse updateResponse = new PlayerUpdateResponse();
+		updateResponse.setId(targetPlayer.getId());
+		updateResponse.setHp(maxHp);
+		responseMaps.addLocalResponse(targetPlayer.getTileId(), updateResponse);
+		
+		if (targetPlayer != player) {
+			setRecoAndResponseText(1, "your god has given you life.");
+			setColour("red");
+			responseMaps.addClientOnlyResponse(targetPlayer, this);
+			
+			MessageResponse godResponse = new MessageResponse();
+			godResponse.setRecoAndResponseText(1, String.format("you have given %s new life, my lord.", targetPlayer.getDto().getName()));
+			responseMaps.addClientOnlyResponse(player, godResponse);
+		}
 	}
 }

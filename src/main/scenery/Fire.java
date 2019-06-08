@@ -11,15 +11,16 @@ import main.responses.ResponseMaps;
 public class Fire extends Scenery {
 
 	@Override
-	public boolean use(int srcItemId, Player player, ResponseMaps responseMaps) {
+	public boolean use(int srcItemId, int slot, Player player, ResponseMaps responseMaps) {
 		switch (srcItemId) {
 		case 49:// chicken
 			ArrayList<Integer> inv = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
 			
-			int slot;
-			for (slot = 0; slot < inv.size(); ++slot) {
-				if (inv.get(slot) == srcItemId)
-					break;
+			if (inv.get(slot) != srcItemId) {// the passed-in slot doesn't have the correct item?  check other slots
+				for (slot = 0; slot < inv.size(); ++slot) {
+					if (inv.get(slot) == srcItemId)
+						break;
+				}
 			}
 			
 			if (slot < inv.size()) {

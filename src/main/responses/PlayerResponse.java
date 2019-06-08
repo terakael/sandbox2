@@ -67,7 +67,7 @@ public abstract class PlayerResponse extends Response {
 				? String.format("%s accepted the %s.", player.getDto().getName(), playerReq.getRequestType())
 				: String.format("%s wishes to %s with you.", player.getDto().getName(), playerReq.getRequestType());
 		otherResponse.setRecoAndResponseText(1, responseText);
-		otherResponse.setMessageColour("#f0f");
+		otherResponse.setColour("#f0f");
 
 		responseMaps.addClientOnlyResponse(otherPlayer, otherResponse);
 		

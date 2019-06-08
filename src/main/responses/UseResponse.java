@@ -54,7 +54,7 @@ public class UseResponse extends Response {
 		if (scenery == null)
 			return false;
 		
-		if (!scenery.use(request.getSrc(), player, responseMaps))
+		if (!scenery.use(request.getSrc(), request.getSlot(), player, responseMaps))
 			return false;
 		
 		return true;

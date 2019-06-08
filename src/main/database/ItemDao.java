@@ -19,6 +19,14 @@ public class ItemDao {
 		return null;
 	}
 	
+	public static Integer getIdFromName(String name) {
+		for (HashMap.Entry<Integer, String> entry : itemIdNameMap.entrySet()) {
+			if (entry.getValue().equals(name))
+				return entry.getKey();
+		}
+		return null;
+	}
+	
 	public static void setupCaches() {
 		populateIdNameMap();
 	}
