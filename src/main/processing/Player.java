@@ -16,6 +16,7 @@ import main.database.EquipmentDao;
 import main.database.ItemDao;
 import main.database.MineableDao;
 import main.database.MineableDto;
+import main.database.NpcDialogueDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
@@ -53,6 +54,7 @@ public class Player extends Attackable {
 	@Setter private PlayerState state = PlayerState.idle;
 	@Setter private Request savedRequest = null;
 	@Setter private int tickCounter = 0;
+	@Setter @Getter private NpcDialogueDto currentDialogue = null;
 	
 	@Getter private HashMap<Stats, Integer> stats = new HashMap<>();// cached so we don't have to keep polling the db
 	
@@ -253,8 +255,8 @@ public class Player extends Attackable {
 		DeathResponse deathResponse = new DeathResponse();
 		deathResponse.setId(getId());
 		deathResponse.setCurrentHp(currentHp);
-		deathResponse.setTileId(31375);
-		setTileId(31375);
+		deathResponse.setTileId(37611);
+		setTileId(37611);
 		responseMaps.addBroadcastResponse(deathResponse);
 		
 		state = PlayerState.idle;

@@ -20,10 +20,10 @@ public class NPCManager {
 	}
 	
 	public void loadNpcs() {
-		if (NPCDao.getNpcList() == null)
+		if (NPCDao.getNpcInstanceList() == null)
 			NPCDao.setupCaches();
 		
-		for (NPCDto dto : NPCDao.getNpcList()) {
+		for (NPCDto dto : NPCDao.getNpcInstanceList()) {
 			npcs.add(new NPC(dto));
 		}
 	}
@@ -41,5 +41,28 @@ public class NPCManager {
 		for (NPC npc : npcs) {
 			npc.process(responseMaps);
 		}
+	}
+	
+	public ArrayList<NPC> getNpcsNearTile(int tileId, int radius) {
+		final int tileX = tileId % PathFinder.LENGTH;
+		final int tileY = tileId / PathFinder.LENGTH;
+		
+		final int minX = tileX - radius;
+		final int maxX = tileX + radius;
+		final int minY = tileY - radius;
+		final int maxY = tileY + radius;
+		ArrayList<NPC> localNpcs = new ArrayList<>();
+		for (NPC npc : npcs) {
+			if (npc.isDead())
+				continue;
+			
+			final int npcTileX = npc.getTileId() % PathFinder.LENGTH;
+			final int npcTileY = npc.getTileId() / PathFinder.LENGTH;
+			
+			if (npcTileX >= minX && npcTileX <= maxX && npcTileY >= minY && npcTileY <= maxY)
+				localNpcs.add(npc);
+		}
+		
+		return localNpcs;
 	}
 }

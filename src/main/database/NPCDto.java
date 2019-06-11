@@ -13,6 +13,8 @@ public class NPCDto {
 	private int leftId;
 	private int rightId;
 	private int attackId;
+	private float scaleX;
+	private float scaleY;
 	private int tileId;
 	private int hp;
 	private int cmb;
@@ -30,4 +32,5 @@ public class NPCDto {
 	private transient int defBonus;
 	private transient int agilBonus;
 	private transient int attackSpeed;
+	private transient int roamRadius;
 }

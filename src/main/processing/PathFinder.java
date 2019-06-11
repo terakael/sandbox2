@@ -170,6 +170,21 @@ public class PathFinder {
 				}
 				
 				if (successor == nodes[to]) {
+					if (isDiagonal) {
+						// quick hack to fix the stuck diagonal issue
+						switch (i) {
+						case 0:
+						case 2:
+							output.push(q.getSibling(1).getId());
+							break;
+						case 5:
+						case 7:
+							output.push(q.getSibling(6).getId());
+							break;
+						default:
+						}
+					}
+					
 					// found it
 					if (!includeToTile)
 						successor = successor.getParent();

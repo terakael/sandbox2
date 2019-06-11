@@ -8,6 +8,8 @@ import main.database.ContextOptionsDao;
 import main.database.ContextOptionsDto;
 import main.database.ItemDao;
 import main.database.ItemDto;
+import main.database.NPCDao;
+import main.database.NPCDto;
 import main.database.SceneryDao;
 import main.database.SceneryDto;
 import main.database.SpriteFrameDao;
@@ -27,6 +29,7 @@ public class CachedResourcesResponse extends Response {
 	private List<ContextOptionsDto> contextOptions = null;
 	private static CachedResourcesResponse instance = null;
 	private Map<Integer, String> statMap = null;
+	private List<NPCDto> npcs = null;
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -52,6 +55,7 @@ public class CachedResourcesResponse extends Response {
 		scenery = SceneryDao.getAllSceneryByRoom(1);// TODO dynamic based on player room when there's more rooms
 		contextOptions = ContextOptionsDao.getAllContextOptions();
 		statMap = StatsDao.getStats();
+		npcs = NPCDao.getNpcList();
 	}
 
 }

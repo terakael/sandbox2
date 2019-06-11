@@ -77,7 +77,6 @@ public class LogonResponse extends Response {
 		
 		responseMaps.addClientOnlyResponse(player, this);
 		
-		new NpcFullUpdateResponse().process(null, player, responseMaps);
 		new EquipResponse().process(null, player, responseMaps);
 		
 		// broadcast to the rest of the players that this player has logged in

@@ -87,6 +87,12 @@ public class ResponseFactory {
 		case "eat":
 			response = new EatResponse();
 			break;
+		case "dialogue":
+			response = new DialogueResponse();
+			break;
+		case "dialogue_option":
+			response = new DialogueOptionResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;

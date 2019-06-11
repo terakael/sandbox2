@@ -72,20 +72,15 @@ public class NPC extends Attackable {
 			return;
 		}
 		
-		if (!path.isEmpty()) {
-			tileId = path.pop();			
-			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-			updateResponse.setInstanceId(dto.getTileId());
-			updateResponse.setTileId(tileId);
-			responseMaps.addLocalResponse(tileId, updateResponse);
-		}
+		if (!path.isEmpty())
+			tileId = path.pop();
 		
 		if (target == null) {
 			if (--tickCounter < 0) {
 				Random r = new Random();
 				tickCounter = r.nextInt((maxTickCount - minTickCount) + 1) + minTickCount;
 				
-				int destTile = PathFinder.chooseRandomTileIdInRadius(tileId, 3);
+				int destTile = PathFinder.chooseRandomTileIdInRadius(dto.getTileId(), dto.getRoamRadius());
 				path = PathFinder.findPath(tileId, destTile, true);
 			}
 		} else {
@@ -148,5 +143,9 @@ public class NPC extends Attackable {
 	@Override
 	public int getExp() {
 		return combatLevel;
+	}
+	
+	public boolean isDead() {
+		return deathTimer > 0;
 	}
 }

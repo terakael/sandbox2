@@ -16,6 +16,7 @@ import main.database.EquipmentDao;
 import main.database.NpcMessageDao;
 import main.requests.Request;
 import main.responses.LogonResponse;
+import main.responses.NpcLocationRefreshResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
@@ -36,12 +37,7 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	@Override
-	public void run() {
-		NPCManager.get().loadNpcs();
-		NpcMessageDao.setupCaches();
-		ConsumableDao.cacheConsumables();
-		EquipmentDao.setupCaches();
-		
+	public void run() {		
 		while (true) {
 			long prevTime = System.nanoTime();
 			
@@ -108,6 +104,18 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("process fight manager");
 		FightManager.process(responseMaps);
 		Stopwatch.end("process fight manager");
+		
+		Stopwatch.start("refresh npc locations");
+		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
+			ArrayList<NPC> localNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getTileId(), 15);
+			
+			NpcLocationRefreshResponse npcRefresh = new NpcLocationRefreshResponse();
+			for (NPC npc : localNpcs)
+				npcRefresh.add(npc.getId(), npc.getInstanceId(), npc.getTileId());
+			
+			responseMaps.addClientOnlyResponse(entry.getValue(), npcRefresh);
+		}
+		Stopwatch.end("refresh npc locations");
 		
 		// take all the responseMaps and compile the responses to send to each player
 		Stopwatch.start("compile response maps");
