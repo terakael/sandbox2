@@ -11,4 +11,5 @@ public class ItemDto {
 	private int spriteFrameId;
 	private int leftclickOption;
 	private int otherOptions;
+	private int attributes;
 }

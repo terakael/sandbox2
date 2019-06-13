@@ -69,7 +69,7 @@ public class FightManager {
 				boolean fighter2Dead = processHit(fighter1, fighter2, responseMaps);
 				if (fighter2Dead) {
 					fighter1.onKill(fighter2, responseMaps);
-					fighter2.onDeath(responseMaps);
+					fighter2.onDeath(fighter1, responseMaps);
 					return true;
 				}
 			}
@@ -78,7 +78,7 @@ public class FightManager {
 				boolean fighter1Dead = processHit(fighter2, fighter1, responseMaps);
 				if (fighter1Dead) {
 					fighter2.onKill(fighter1, responseMaps);
-					fighter1.onDeath(responseMaps);
+					fighter1.onDeath(fighter2, responseMaps);
 					return true;
 				}
 			}

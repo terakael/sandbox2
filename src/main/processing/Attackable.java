@@ -20,7 +20,7 @@ public abstract class Attackable {
 	@Setter protected int maxCooldown = 5;
 	@Setter @Getter protected int cooldown = maxCooldown;
 	
-	public abstract void onDeath(ResponseMaps responseMaps);
+	public abstract void onDeath(Attackable killer, ResponseMaps responseMaps);
 	public abstract void onKill(Attackable killed, ResponseMaps responseMaps);
 	public abstract void onHit(int damage, ResponseMaps responseMaps);
 	public abstract void setStatsAndBonuses();

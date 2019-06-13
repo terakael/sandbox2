@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import lombok.Setter;
 import main.database.DialogueDao;
+import main.database.NPCDao;
 import main.database.NpcDialogueDto;
 import main.database.NpcDialogueOptionDto;
 import main.database.PlayerStorageDao;
@@ -13,6 +14,7 @@ import main.requests.Request;
 @Setter
 public class DialogueResponse extends Response {
 	private String dialogue = "";
+	private String speaker = "";
 	
 	public DialogueResponse() {
 		setAction("dialogue");
@@ -54,6 +56,7 @@ public class DialogueResponse extends Response {
 		
 		player.setCurrentDialogue(nextDialogue);
 		dialogue = nextDialogue.getDialogue();
+		speaker = NPCDao.getNpcNameById(nextDialogue.getNpcId());
 		responseMaps.addClientOnlyResponse(player, this);
 	}
 

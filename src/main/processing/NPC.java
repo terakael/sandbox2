@@ -3,17 +3,22 @@ package main.processing;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.GroundItemManager;
+import main.database.ItemDao;
 import main.database.NPCDao;
 import main.database.NPCDto;
+import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.responses.DropResponse;
 import main.responses.NpcUpdateResponse;
 import main.responses.ResponseMaps;
+import main.types.ItemAttributes;
 import main.types.Stats;
 import main.utils.RandomUtil;
 
@@ -100,21 +105,30 @@ public class NPC extends Attackable {
 	}
 	
 	@Override
-	public void onDeath(ResponseMaps responseMaps) {
+	public void onDeath(Attackable killer, ResponseMaps responseMaps) {
 		//currentHp = dto.getHp();
 		deathTimer = respawnTime;
 		// also drop an item
 		
-		ArrayList<Integer> potentialDrops = NPCDao.getDropsByNpcId(dto.getId());
-		if (potentialDrops == null || potentialDrops.isEmpty())
-			return;
+		List<Integer> potentialDrops = NPCDao.getDropsByNpcId(dto.getId())
+				.stream()
+				.filter(itemId -> {
+					if (ItemDao.itemHasAttribute(itemId, ItemAttributes.UNIQUE)) {
+						int playerId = ((Player)killer).getId();
+						if (PlayerStorageDao.itemExistsInPlayerStorage(playerId, itemId))
+							return false;
+						
+						if (GroundItemManager.itemIsOnGround(playerId, itemId))
+							return false;
+					}
+					return true;
+				})
+				.collect(Collectors.toList());
 		
-		Integer luckyItemId = potentialDrops.get(RandomUtil.getRandom(0, potentialDrops.size()));
-		
-		GroundItemManager.add(luckyItemId, tileId);
-		DropResponse dropResponse = new DropResponse();
-		dropResponse.setGroundItems(GroundItemManager.getGroundItems());
-		responseMaps.addBroadcastResponse(dropResponse);
+		if (potentialDrops.size() > 0) {
+			Integer luckyItemId = potentialDrops.get(RandomUtil.getRandom(0, potentialDrops.size()));
+			GroundItemManager.add(((Player)killer).getId(), luckyItemId, tileId);
+		}
 	}
 	
 	@Override

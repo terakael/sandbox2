@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import main.FightManager;
 import main.database.DialogueDao;
+import main.database.NPCDao;
 import main.database.NpcDialogueDto;
 import main.database.NpcMessageDao;
 import main.processing.NPC;
@@ -70,6 +71,7 @@ public class TalkToResponse extends Response {
 		
 		DialogueResponse dialogue = new DialogueResponse();
 		dialogue.setDialogue(initialDialogue.getDialogue());
+		dialogue.setSpeaker(NPCDao.getNpcNameById(npc.getId()));
 		responseMaps.addClientOnlyResponse(player, dialogue);
 	}
 	

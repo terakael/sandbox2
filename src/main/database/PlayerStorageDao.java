@@ -49,35 +49,18 @@ public class PlayerStorageDao {
 		return 0;
 	}
 
-	public static ItemDto getItemFromPlayerIdAndSlot(int id, int slot) {
-		final String query = "select items.id, items.name, items.sprite_frame_id, items.leftclick_option, items.other_options from player_storage inner join items on items.id = player_storage.item_id where player_storage.player_id=? and player_storage.storage_id=1 and player_storage.slot=?";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, id);
-			ps.setInt(2, slot);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return new ItemDto(rs.getInt("id"), rs.getString("name"), rs.getInt("sprite_frame_id"), rs.getInt("leftclick_option"), rs.getInt("other_options"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		return null;
+	public static ItemDto getItemFromPlayerIdAndSlot(int playerId, int slot) {
+		return ItemDao.getItem(getItemIdInSlot(playerId, 1, slot));
 	}
 	
-	public static Integer getItemIdInSlot(int playerId, int inventoryId, int slot) {
+	public static Integer getItemIdInSlot(int playerId, int storageId, int slot) {
 		final String query = "select item_id from player_storage where player_id=? and storage_id=? and slot=?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
 			ps.setInt(1, playerId);
-			ps.setInt(2, inventoryId);
+			ps.setInt(2, storageId);
 			ps.setInt(3, slot);
 			
 			try (ResultSet rs = ps.executeQuery()) {
@@ -107,7 +90,7 @@ public class PlayerStorageDao {
 		return false;
 	}
 
-	public static boolean addItemByItemIdPlayerId(int playerId, int itemId) {
+	public static boolean addItemByPlayerIdItemId(int playerId, int itemId) {
 		
 		int freeSlot = getFreeSlotByPlayerId(playerId);
 		if (freeSlot == -1) {
@@ -223,6 +206,25 @@ public class PlayerStorageDao {
 			ps.setInt(1, playerId);
 			ps.setInt(2, itemId);
 			return ps.executeUpdate() == 1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	public static boolean itemExistsInPlayerStorage(int playerId, int itemId) {
+		// check inventory, bank, furnace
+		final String query = "select item_id from player_storage where player_id=? and item_id=?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, playerId);
+			ps.setInt(2, itemId);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return true;
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

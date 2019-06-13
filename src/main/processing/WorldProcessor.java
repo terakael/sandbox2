@@ -11,10 +11,12 @@ import com.google.gson.Gson;
 
 import main.Endpoint;
 import main.FightManager;
+import main.GroundItemManager;
 import main.database.ConsumableDao;
 import main.database.EquipmentDao;
 import main.database.NpcMessageDao;
 import main.requests.Request;
+import main.responses.GroundItemRefreshResponse;
 import main.responses.LogonResponse;
 import main.responses.NpcLocationRefreshResponse;
 import main.responses.Response;
@@ -105,15 +107,24 @@ public class WorldProcessor implements Runnable {
 		FightManager.process(responseMaps);
 		Stopwatch.end("process fight manager");
 		
+		Stopwatch.start("ground item manager");
+		GroundItemManager.process();
+		Stopwatch.end("ground item manager");
+		
 		Stopwatch.start("refresh npc locations");
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
+			// npc stuff
 			ArrayList<NPC> localNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getTileId(), 15);
-			
 			NpcLocationRefreshResponse npcRefresh = new NpcLocationRefreshResponse();
 			for (NPC npc : localNpcs)
 				npcRefresh.add(npc.getId(), npc.getInstanceId(), npc.getTileId());
-			
 			responseMaps.addClientOnlyResponse(entry.getValue(), npcRefresh);
+			
+			// ground item stuff
+			HashMap<Integer, ArrayList<Integer>> localItemIds = GroundItemManager.getItemIdsNearTile(entry.getValue().getId(), entry.getValue().getTileId(), 15);
+			GroundItemRefreshResponse groundItemRefresh = new GroundItemRefreshResponse();
+			groundItemRefresh.setGroundItems(localItemIds);
+			responseMaps.addClientOnlyResponse(entry.getValue(), groundItemRefresh);
 		}
 		Stopwatch.end("refresh npc locations");
 		

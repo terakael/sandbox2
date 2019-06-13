@@ -202,6 +202,14 @@ public class NPCDao {
 	public static ArrayList<Integer> getDropsByNpcId(int npcId) {
 		if (npcDrops.containsKey(npcId))
 			return npcDrops.get(npcId);
+		return new ArrayList<Integer>();
+	}
+	
+	public static String getNpcNameById(int npcId) {
+		for (NPCDto dto : npcList) {
+			if (dto.getId() == npcId)
+				return dto.getName();
+		}
 		return null;
 	}
 }

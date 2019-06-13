@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import lombok.Setter;
 import main.database.DialogueDao;
+import main.database.NPCDao;
 import main.database.NpcDialogueDto;
 import main.database.NpcDialogueOptionDto;
 import main.processing.Player;
@@ -42,6 +43,7 @@ public class DialogueOptionResponse extends Response {
 		player.setCurrentDialogue(newDialogue);
 		DialogueResponse dialogueResponse = new DialogueResponse();
 		dialogueResponse.setDialogue(newDialogue.getDialogue());
+		dialogueResponse.setSpeaker(NPCDao.getNpcNameById(newDialogue.getNpcId()));
 		responseMaps.addClientOnlyResponse(player, dialogueResponse);
 	}
 }

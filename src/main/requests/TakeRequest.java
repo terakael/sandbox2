@@ -3,5 +3,6 @@ package main.requests;
 import lombok.Getter;
 
 public class TakeRequest extends Request {
-	@Getter private int groundItemId;
+	@Getter private int itemId;
+	@Getter private int tileId;
 }

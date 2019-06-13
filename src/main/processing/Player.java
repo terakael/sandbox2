@@ -183,7 +183,7 @@ public class Player extends Attackable {
 					responseMaps.addClientOnlyResponse(this, mineResponse);
 					return;
 				}
-				PlayerStorageDao.addItemByItemIdPlayerId(getId(), mineable.getItemId());
+				PlayerStorageDao.addItemByPlayerIdItemId(getId(), mineable.getItemId());
 				
 				AddExpRequest addExpReq = new AddExpRequest();
 				addExpReq.setId(getId());
@@ -228,25 +228,19 @@ public class Player extends Attackable {
 	}
 	
 	@Override
-	public void onDeath(ResponseMaps responseMaps) {
+	public void onDeath(Attackable killer, ResponseMaps responseMaps) {
 		// unequip and drop all the items in inventory
 		EquipmentDao.clearAllEquppedItems(getId());
 		
 		List<Integer> inventoryList = PlayerStorageDao.getInventoryListByPlayerId(getId());
 		for (int itemId : inventoryList) {
 			if (itemId != 0)
-				GroundItemManager.add(itemId, tileId);
+				GroundItemManager.add(getId(), itemId, tileId);
 		}
 		PlayerStorageDao.clearInventoryByPlayerId(getId());
 		
 		// update the player inventory to show there's no more items
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);
-		
-		// let everyone know about all the shit on the floor
-		// TODO don't use dropResponse, use a new ground_update response
-		DropResponse dropResponse = new DropResponse();
-		dropResponse.setGroundItems(GroundItemManager.getGroundItems());
-		responseMaps.addBroadcastResponse(dropResponse);
 		
 		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), 5, 0);
 		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId());

@@ -9,7 +9,8 @@ public enum EquipmentTypes {
 	SHIELD(4),
 	SWORD(5),
 	HAMMER(6),
-	DAGGERS(7);
+	DAGGERS(7),
+	RING(8);
 	
 	@Getter private int value;
 	EquipmentTypes(int value) {

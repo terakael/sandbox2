@@ -6,15 +6,15 @@ import lombok.Setter;
 import main.FightManager;
 import main.GroundItemManager;
 import main.database.EquipmentDao;
+import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.DropRequest;
 import main.requests.Request;
+import main.types.ItemAttributes;
 
-public class DropResponse extends Response {
-	@Setter private List<GroundItemManager.GroundItem> groundItems;
-	
+public class DropResponse extends Response {	
 	public DropResponse() {
 		setAction("drop");
 	}
@@ -49,19 +49,18 @@ public class DropResponse extends Response {
 			return;
 		}
 		
-		GroundItemManager.add(itemToDrop.getId(), player.getTileId());
+
+		GroundItemManager.add(player.getId(), itemToDrop.getId(), player.getTileId());
+//		groundItems = GroundItemManager.getGlobalGroundItems();
+//		responseMaps.addBroadcastResponse(this);
+
 		PlayerStorageDao.setItemFromPlayerIdAndSlot(dropReq.getId(), dropReq.getSlot(), 0);
-		
-		groundItems = GroundItemManager.getGroundItems();
 		
 		// update the player inventory/equipped items and only send it to the player
 		InventoryUpdateResponse resp = (InventoryUpdateResponse)ResponseFactory.create("invupdate");
 		resp.setInventory(PlayerStorageDao.getInventoryListByPlayerId(player.getDto().getId()));
 		resp.setEquippedSlots(EquipmentDao.getEquippedSlotsByPlayerId(player.getDto().getId()));
-		
-		responseMaps.addClientOnlyResponse(player, resp);
-	
-		responseMaps.addBroadcastResponse(this);
+		responseMaps.addClientOnlyResponse(player, resp);	
 	}
 
 }

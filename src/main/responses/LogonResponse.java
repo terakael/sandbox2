@@ -29,7 +29,6 @@ public class LogonResponse extends Response {
 	private Map<Integer, Integer> stats;
 	private List<PlayerDto> players;
 	private List<Integer> inventory;
-	private List<GroundItemManager.GroundItem> groundItems;
 	private AnimationDto animations;
 	private Map<Integer, String> attackStyles;
 
@@ -69,7 +68,6 @@ public class LogonResponse extends Response {
 		
 		players = PlayerDao.getAllPlayers();
 		inventory = PlayerStorageDao.getInventoryListByPlayerId(dto.getId());
-		groundItems = GroundItemManager.getGroundItems();
 		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
 		attackStyles = PlayerDao.getAttackStyles();
 		

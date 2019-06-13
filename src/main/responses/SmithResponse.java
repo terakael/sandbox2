@@ -83,7 +83,7 @@ public class SmithResponse extends Response {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount3() - material3Slots.size()));
 		}
 		
-		PlayerStorageDao.addItemByItemIdPlayerId(player.getId(), dto.getItemId());
+		PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), dto.getItemId());
 		
 		// update the inventory for the client
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);

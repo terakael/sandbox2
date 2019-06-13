@@ -8,39 +8,42 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import main.types.ItemAttributes;
+
 public class ItemDao {
 	private ItemDao() {};
 	
-	private static HashMap<Integer, String> itemIdNameMap = new HashMap<>();
+	private static HashMap<Integer, ItemDto> itemMap = new HashMap<>();
 	
 	public static String getNameFromId(int id) {
-		if (itemIdNameMap.containsKey(id))
-			return itemIdNameMap.get(id);
+		if (itemMap.containsKey(id))
+			return itemMap.get(id).getName();
 		return null;
 	}
 	
 	public static Integer getIdFromName(String name) {
-		for (HashMap.Entry<Integer, String> entry : itemIdNameMap.entrySet()) {
-			if (entry.getValue().equals(name))
+		for (HashMap.Entry<Integer, ItemDto> entry : itemMap.entrySet()) {
+			if (entry.getValue().getName().equals(name))
 				return entry.getKey();
 		}
 		return null;
 	}
 	
 	public static void setupCaches() {
-		populateIdNameMap();
+		populateItemCache();
 	}
 	
-	private static void populateIdNameMap() {
-		final String query = "select id, name from items";
+	private static void populateItemCache() {
+		final String query = "select id, name, sprite_frame_id, leftclick_option, other_options, attributes from items";
 		
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					itemIdNameMap.put(rs.getInt("id"), rs.getString("name"));
+				while (rs.next()) {
+					itemMap.put(rs.getInt("id"), new ItemDto(rs.getInt("id"), rs.getString("name"), rs.getInt("sprite_frame_id"), rs.getInt("leftclick_option"), rs.getInt("other_options"), rs.getInt("attributes")));
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -48,22 +51,7 @@ public class ItemDao {
 	}
 
 	public static List<ItemDto> getAllItems() {
-		final String query = "select id, name, sprite_frame_id, leftclick_option, other_options from items";
-		List<ItemDto> items = new ArrayList<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					items.add(new ItemDto(rs.getInt("id"), rs.getString("name"), rs.getInt("sprite_frame_id"), rs.getInt("leftclick_option"), rs.getInt("other_options")));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		return items;
+		return new ArrayList<>(itemMap.values());
 	}
 	
 	public static HashMap<Integer, String> getExamineMap() {
@@ -83,5 +71,17 @@ public class ItemDao {
 		}
 		
 		return examineMap;
+	}
+	
+	public static boolean itemHasAttribute(int itemId, ItemAttributes attribute) {
+		if (itemMap.containsKey(itemId))
+			return (itemMap.get(itemId).getAttributes() & attribute.getValue()) == attribute.getValue();
+		return false;
+	}
+	
+	public static ItemDto getItem(int itemId) {
+		if (itemMap.containsKey(itemId))
+			return itemMap.get(itemId);
+		return null;
 	}
 }
