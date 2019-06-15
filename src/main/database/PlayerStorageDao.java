@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class PlayerStorageDao {
@@ -30,6 +31,26 @@ public class PlayerStorageDao {
 		return inventoryList;
 	}
 	
+	public static HashMap<Integer, InventoryItemDto> getInventoryDtoMapByPlayerId(int playerId) {
+		HashMap<Integer, InventoryItemDto> dtos = new HashMap<>();
+		final String query = "select item_id, slot, count from player_storage where player_id=? and storage_id=1 order by slot";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, playerId);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					dtos.put(rs.getInt("slot"), new InventoryItemDto(rs.getInt("item_id"), rs.getInt("slot"), rs.getInt("count")));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return dtos;
+	}
+	
 	public static Integer getStoredCoalByPlayerId(int id) {
 		final String query = "select count from player_storage where player_id=? and storage_id=3";
 		
@@ -53,6 +74,26 @@ public class PlayerStorageDao {
 		return ItemDao.getItem(getItemIdInSlot(playerId, 1, slot));
 	}
 	
+	public static InventoryItemDto getInventoryItemFromPlayerIdAndSlot(int playerId, int slot) {
+		final String query = "select item_id, slot, count from player_storage where storage_id=1 and player_id=? and slot=?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, playerId);
+			ps.setInt(2, slot);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next())
+					return new InventoryItemDto(rs.getInt("item_id"), rs.getInt("slot"), rs.getInt("count"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	public static Integer getItemIdInSlot(int playerId, int storageId, int slot) {
 		final String query = "select item_id from player_storage where player_id=? and storage_id=? and slot=?";
 		try (
@@ -73,15 +114,16 @@ public class PlayerStorageDao {
 		return null;
 	}
 
-	public static boolean setItemFromPlayerIdAndSlot(int playerId, int slot, int itemId) {
-		final String query = "update player_storage set item_id=? where player_id=? and storage_id=1 and slot=?";
+	public static boolean setItemFromPlayerIdAndSlot(int playerId, int slot, int itemId, int count) {
+		final String query = "update player_storage set item_id=?, count=? where player_id=? and storage_id=1 and slot=?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
 			ps.setInt(1, itemId);
-			ps.setInt(2, playerId);
-			ps.setInt(3, slot);
+			ps.setInt(2, count);
+			ps.setInt(3, playerId);
+			ps.setInt(4, slot);
 			return ps.executeUpdate() == 1;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -90,7 +132,7 @@ public class PlayerStorageDao {
 		return false;
 	}
 
-	public static boolean addItemByPlayerIdItemId(int playerId, int itemId) {
+	public static boolean addItemByPlayerIdItemId(int playerId, int itemId, int count) {
 		
 		int freeSlot = getFreeSlotByPlayerId(playerId);
 		if (freeSlot == -1) {
@@ -98,7 +140,7 @@ public class PlayerStorageDao {
 			return false;
 		}
 		
-		return setItemFromPlayerIdAndSlot(playerId, freeSlot, itemId);
+		return setItemFromPlayerIdAndSlot(playerId, freeSlot, itemId, count);
 	}
 	
 	public static int getFreeSlotByPlayerId(int playerId) {
@@ -229,5 +271,43 @@ public class PlayerStorageDao {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	public static void addCountToInventoryItemSlot(int playerId, int slot, int count) {
+		final String query = "update player_storage set count = count + ? where player_id=? and storage_id=1 and slot=?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, count);
+			ps.setInt(2, playerId);
+			ps.setInt(3, slot);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void setCountOnInventorySlot(int playerId, int slot, int count) {
+		if (count == 0) {
+			// should never have a 0-count item; remove it entirely.
+			setItemFromPlayerIdAndSlot(playerId, slot, 0, 1);
+			return;
+		}
+			
+		final String query = "update player_storage set count = ? where player_id=? and storage_id=1 and slot=?";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, count);
+			ps.setInt(2, playerId);
+			ps.setInt(3, slot);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 }

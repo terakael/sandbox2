@@ -6,12 +6,14 @@ import lombok.Setter;
 import main.FightManager;
 import main.GroundItemManager;
 import main.database.EquipmentDao;
+import main.database.InventoryItemDto;
 import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.DropRequest;
 import main.requests.Request;
+import main.requests.RequestFactory;
 import main.types.ItemAttributes;
 
 public class DropResponse extends Response {	
@@ -33,7 +35,7 @@ public class DropResponse extends Response {
 		}
 		
 		DropRequest dropReq = (DropRequest)req;
-		ItemDto itemToDrop = PlayerStorageDao.getItemFromPlayerIdAndSlot(player.getDto().getId(), dropReq.getSlot());
+		InventoryItemDto itemToDrop = PlayerStorageDao.getInventoryItemFromPlayerIdAndSlot(player.getDto().getId(), dropReq.getSlot());
 		if (itemToDrop == null) {
 			setRecoAndResponseText(0, "you can't drop an item that doesn't exist.");
 			responseMaps.addClientOnlyResponse(player, this);
@@ -50,17 +52,11 @@ public class DropResponse extends Response {
 		}
 		
 
-		GroundItemManager.add(player.getId(), itemToDrop.getId(), player.getTileId());
-//		groundItems = GroundItemManager.getGlobalGroundItems();
-//		responseMaps.addBroadcastResponse(this);
-
-		PlayerStorageDao.setItemFromPlayerIdAndSlot(dropReq.getId(), dropReq.getSlot(), 0);
+		GroundItemManager.add(player.getId(), itemToDrop.getItemId(), player.getTileId(), itemToDrop.getCount());
+		PlayerStorageDao.setItemFromPlayerIdAndSlot(dropReq.getId(), dropReq.getSlot(), 0, 1);
 		
 		// update the player inventory/equipped items and only send it to the player
-		InventoryUpdateResponse resp = (InventoryUpdateResponse)ResponseFactory.create("invupdate");
-		resp.setInventory(PlayerStorageDao.getInventoryListByPlayerId(player.getDto().getId()));
-		resp.setEquippedSlots(EquipmentDao.getEquippedSlotsByPlayerId(player.getDto().getId()));
-		responseMaps.addClientOnlyResponse(player, resp);	
+		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);
 	}
 
 }

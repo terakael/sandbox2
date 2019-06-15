@@ -8,15 +8,18 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import main.database.ItemDao;
 import main.processing.PathFinder;
+import main.types.ItemAttributes;
 
 public class GroundItemManager {	
-	private static final int LIFETIME = 10;
+	private static final int LIFETIME = 100;
 	
 	@Setter @Getter @AllArgsConstructor
 	public static class GroundItem {
 		private int id;
 		private int lifetime;
+		private int count;
 	}
 	
 	// a map containing a list of ground items per tileId: Map<TileId, ItemList>
@@ -50,7 +53,10 @@ public class GroundItemManager {
 			for (HashMap.Entry<Integer, List<GroundItem>> tileEntry : playerEntry.getValue().entrySet()) {
 				List<GroundItem> entriesToMove = tileEntry.getValue()
 						.stream()
-						.filter(groundItem -> --groundItem.lifetime <= 0)
+						.filter(groundItem -> {
+							return --groundItem.lifetime <= 0 &&
+									ItemDao.itemHasAttribute(groundItem.getId(), ItemAttributes.TRADEABLE);
+						})
 						.collect(Collectors.toList());
 				
 				// reset the lifetime now that the're on the global list
@@ -60,8 +66,16 @@ public class GroundItemManager {
 				if (!globalGroundItems.containsKey(tileEntry.getKey()))
 					globalGroundItems.put(tileEntry.getKey(), new ArrayList<>());
 				globalGroundItems.get(tileEntry.getKey()).addAll(entriesToMove);
-				
+
+				// all the tradeable items are now in the globalGroundItems list so remove them from the player list.
 				tileEntry.getValue().removeAll(entriesToMove);
+				
+				// untradeables don't get moved to the globalGroundItem list so they're still in the player list.
+				tileEntry.getValue().removeAll(tileEntry.getValue()
+						.stream()
+						.filter(groundItem -> groundItem.lifetime == 0)
+						.collect(Collectors.toList()));
+				
 				if (tileEntry.getValue().isEmpty())
 					emptyTiles.add(tileEntry.getKey());
 			}
@@ -72,18 +86,34 @@ public class GroundItemManager {
 		}
 	}
 
-	public static void add(int playerId, int itemId, int tileId) {
+	public static void add(int playerId, int itemId, int tileId, int count) {
 		if (!playerGroundItems.containsKey(playerId))
 			playerGroundItems.put(playerId, new HashMap<>());
 		
 		if (!playerGroundItems.get(playerId).containsKey(tileId))
 			playerGroundItems.get(playerId).put(tileId, new ArrayList<>());
 		
-		playerGroundItems.get(playerId).get(tileId).add(new GroundItem(itemId, LIFETIME));
+		if (ItemDao.itemHasAttribute(itemId, ItemAttributes.STACKABLE)) {
+			// if there's already an item then combine it
+			List<GroundItem> items = playerGroundItems.get(playerId).get(tileId);
+			for (GroundItem item : items) {
+				if (item.id == itemId) {
+					item.count += count;
+					item.lifetime = LIFETIME;
+					return;
+				}
+			}
+			
+			// otherwise add it as usual
+			playerGroundItems.get(playerId).get(tileId).add(new GroundItem(itemId, LIFETIME, count));
+		} else {
+			for (int i = 0; i < count; ++i)
+				playerGroundItems.get(playerId).get(tileId).add(new GroundItem(itemId, LIFETIME, 1));
+		}
 	}
 
-	public static void remove(int playerId, int tileId, int itemId) {
-		if (removeFromPlayerGroundItems(playerId, tileId, itemId))
+	public static void remove(int playerId, int tileId, int itemId, int count) {
+		if (removeFromPlayerGroundItems(playerId, tileId, itemId, count))
 			return;
 		
 		if (!globalGroundItems.containsKey(tileId))
@@ -91,7 +121,7 @@ public class GroundItemManager {
 		
 		GroundItem toRemove = null;
 		for (GroundItem item : globalGroundItems.get(tileId)) {
-			if (item.id == itemId) {
+			if (item.id == itemId && item.count == count) {
 				toRemove = item;
 				break;
 			}
@@ -101,7 +131,7 @@ public class GroundItemManager {
 			globalGroundItems.get(tileId).remove(toRemove);
 	}
 	
-	private static boolean removeFromPlayerGroundItems(int playerId, int tileId, int itemId) {
+	private static boolean removeFromPlayerGroundItems(int playerId, int tileId, int itemId, int count) {
 		if (!playerGroundItems.containsKey(playerId))
 			return false;
 		
@@ -110,7 +140,7 @@ public class GroundItemManager {
 		
 		GroundItem toRemove = null;
 		for (GroundItem item : playerGroundItems.get(playerId).get(tileId)) {
-			if (item.id == itemId) {
+			if (item.id == itemId && item.count == count) {
 				toRemove = item;
 				break;
 			}
@@ -197,23 +227,23 @@ public class GroundItemManager {
 		return localTiles;
 	}
 	
-	public static boolean itemExistsAtTileId(int playerId, int itemId, int tileId) {
+	public static GroundItem getItemAtTileId(int playerId, int itemId, int tileId) {
 		if (playerGroundItems.containsKey(playerId)) {
 			if (playerGroundItems.get(playerId).containsKey(tileId)) {
 				for (GroundItem item : playerGroundItems.get(playerId).get(tileId)) {
 					if (item.id == itemId)
-						return true;
+						return item;
 				}
 			}
 		}
 		
-		if (globalGroundItems.containsKey(tileId))
+		if (globalGroundItems.containsKey(tileId)) {
 			for (GroundItem item : globalGroundItems.get(tileId)) {
 				if (item.id == itemId)
-					return true;
+					return item;
 			}
+		}
 				
-		
-		return false;
+		return null;
 	}
 }

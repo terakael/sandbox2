@@ -10,6 +10,7 @@ import main.GroundItemManager;
 import main.database.AnimationDao;
 import main.database.AnimationDto;
 import main.database.EquipmentDao;
+import main.database.InventoryItemDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerSessionDao;
@@ -28,7 +29,7 @@ public class LogonResponse extends Response {
 	private int attackStyleId;
 	private Map<Integer, Integer> stats;
 	private List<PlayerDto> players;
-	private List<Integer> inventory;
+	private Map<Integer, InventoryItemDto> inventory;
 	private AnimationDto animations;
 	private Map<Integer, String> attackStyles;
 
@@ -67,13 +68,18 @@ public class LogonResponse extends Response {
 		stats = StatsDao.getAllStatExpByPlayerId(dto.getId());
 		
 		players = PlayerDao.getAllPlayers();
-		inventory = PlayerStorageDao.getInventoryListByPlayerId(dto.getId());
+		inventory = PlayerStorageDao.getInventoryDtoMapByPlayerId(dto.getId());
 		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
 		attackStyles = PlayerDao.getAttackStyles();
 		
 		WorldProcessor.playerSessions.put(client, player);
 		
 		responseMaps.addClientOnlyResponse(player, this);
+		
+		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+		playerUpdate.setId(player.getId());
+		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(player.getId()));
+		responseMaps.addClientOnlyResponse(player, playerUpdate);
 		
 		new EquipResponse().process(null, player, responseMaps);
 		

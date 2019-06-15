@@ -32,6 +32,10 @@ public class RequestFactory {
 		map.put("eat", EatRequest.class);
 		map.put("dialogue", DialogueRequest.class);
 		map.put("dialogue_option", DialogueOptionRequest.class);
+		map.put("shop", ShopRequest.class);
+		map.put("value", ShopValueRequest.class);
+		map.put("buy", ShopBuyRequest.class);
+		map.put("sell", ShopSellRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

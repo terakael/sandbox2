@@ -202,7 +202,10 @@ public enum Items {
 	ADDY_HAMMER_VIII(155),
 	RUNE_SWORD_VIII(162),
 	RUNE_DAGGERS_VIII(169),
-	RUNE_HAMMER_VIII(176);
+	RUNE_HAMMER_VIII(176),
+	
+	STEVES_BABY(177),
+	COINS(178);
 
 	@Getter private int value;
 	Items(int value) {

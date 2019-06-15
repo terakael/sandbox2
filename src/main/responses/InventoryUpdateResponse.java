@@ -1,10 +1,12 @@
 package main.responses;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import lombok.Setter;
 import main.database.EquipmentDao;
+import main.database.InventoryItemDto;
 import main.database.ItemDto;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
@@ -13,7 +15,7 @@ import main.requests.Request;
 
 @Setter
 public class InventoryUpdateResponse extends Response {	
-	private List<Integer> inventory = new ArrayList<>();
+	private HashMap<Integer, InventoryItemDto> inventory = new HashMap<>();
 	private HashSet<Integer> equippedSlots = new HashSet<>();
 
 	public InventoryUpdateResponse() {
@@ -25,16 +27,20 @@ public class InventoryUpdateResponse extends Response {
 		if (req instanceof InventoryMoveRequest)
 			processInventoryMoveRequest((InventoryMoveRequest)req, player);
 		
-		inventory = PlayerStorageDao.getInventoryListByPlayerId(req.getId());
+		inventory = PlayerStorageDao.getInventoryDtoMapByPlayerId(req.getId());
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(req.getId());
 		
 		responseMaps.addClientOnlyResponse(player, this);
 	}
 	
 	private void processInventoryMoveRequest(InventoryMoveRequest req, Player player) {
+		HashMap<Integer, InventoryItemDto> items = PlayerStorageDao.getInventoryDtoMapByPlayerId(player.getId());
+		InventoryItemDto destItem = items.get(req.getDest());
+		InventoryItemDto srcItem = items.get(req.getSrc());
+		
 		// check if there's already an item in the slot we're trying to move the src item to
-		ItemDto destItem = PlayerStorageDao.getItemFromPlayerIdAndSlot(req.getId(), req.getDest());
-		ItemDto srcItem = PlayerStorageDao.getItemFromPlayerIdAndSlot(req.getId(), req.getSrc());
+//		ItemDto destItem = PlayerStorageDao.getItemFromPlayerIdAndSlot(req.getId(), req.getDest());
+//		ItemDto srcItem = PlayerStorageDao.getItemFromPlayerIdAndSlot(req.getId(), req.getSrc());
 		
 		boolean destItemEquipped = EquipmentDao.isSlotEquipped(req.getId(), req.getDest());
 		boolean srcItemEquipped = EquipmentDao.isSlotEquipped(req.getId(), req.getSrc());
@@ -47,16 +53,16 @@ public class InventoryUpdateResponse extends Response {
 			EquipmentDao.clearEquippedItem(req.getId(), req.getSrc());
 		
 		if (destItem != null) {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), req.getSrc(), destItem.getId());
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), req.getSrc(), destItem.getItemId(), destItem.getCount());
 			if (destItemEquipped) {
 				// create entry in player_equipment to update slot and item, then remove old entry
-				EquipmentDao.setEquippedItem(req.getId(), req.getSrc(), destItem.getId());
+				EquipmentDao.setEquippedItem(req.getId(), req.getSrc(), destItem.getItemId());
 			}
 		}
 		
-		PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), req.getDest(), srcItem.getId());
+		PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), req.getDest(), srcItem.getItemId(), srcItem.getCount());
 		if (srcItemEquipped) {
-			EquipmentDao.setEquippedItem(req.getId(), req.getDest(), srcItem.getId());
+			EquipmentDao.setEquippedItem(req.getId(), req.getDest(), srcItem.getItemId());
 		}
 	}
 

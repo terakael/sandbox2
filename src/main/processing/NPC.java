@@ -13,6 +13,7 @@ import main.GroundItemManager;
 import main.database.ItemDao;
 import main.database.NPCDao;
 import main.database.NPCDto;
+import main.database.NpcDropDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.responses.DropResponse;
@@ -110,24 +111,24 @@ public class NPC extends Attackable {
 		deathTimer = respawnTime;
 		// also drop an item
 		
-		List<Integer> potentialDrops = NPCDao.getDropsByNpcId(dto.getId())
+		List<NpcDropDto> potentialDrops = NPCDao.getDropsByNpcId(dto.getId())
 				.stream()
-				.filter(itemId -> {
-					if (ItemDao.itemHasAttribute(itemId, ItemAttributes.UNIQUE)) {
+				.filter(dto -> {
+					if (ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.UNIQUE)) {
 						int playerId = ((Player)killer).getId();
-						if (PlayerStorageDao.itemExistsInPlayerStorage(playerId, itemId))
+						if (PlayerStorageDao.itemExistsInPlayerStorage(playerId, dto.getItemId()))
 							return false;
 						
-						if (GroundItemManager.itemIsOnGround(playerId, itemId))
+						if (GroundItemManager.itemIsOnGround(playerId, dto.getItemId()))
 							return false;
 					}
 					return true;
 				})
 				.collect(Collectors.toList());
 		
-		if (potentialDrops.size() > 0) {
-			Integer luckyItemId = potentialDrops.get(RandomUtil.getRandom(0, potentialDrops.size()));
-			GroundItemManager.add(((Player)killer).getId(), luckyItemId, tileId);
+		for (NpcDropDto dto : potentialDrops) {
+			if (RandomUtil.getRandom(0, dto.getRate()) == 0)
+				GroundItemManager.add(((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount());
 		}
 	}
 	

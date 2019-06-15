@@ -66,24 +66,24 @@ public class SmithResponse extends Response {
 		ArrayList<Integer> material3Slots = getAffectedSlots(inventoryList, dto.getMaterial3(), dto.getCount3());
 		
 		for (Integer slot : material1Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0, 1);
 		if (dto.getMaterial1() == 5 && material1Slots.size() < dto.getCount1()) {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount1() - material1Slots.size()));
 		}
 		
 		for (Integer slot : material2Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0, 1);
 		if (dto.getMaterial2() == 5 && material2Slots.size() < dto.getCount2()) {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount2() - material2Slots.size()));
 		}
 		
 		for (Integer slot : material3Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0, 1);
 		if (dto.getMaterial3() == 5 && material3Slots.size() < dto.getCount3()) {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount3() - material3Slots.size()));
 		}
 		
-		PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), dto.getItemId());
+		PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), dto.getItemId(), 1);
 		
 		// update the inventory for the client
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);

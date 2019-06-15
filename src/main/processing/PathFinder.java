@@ -100,6 +100,11 @@ public class PathFinder {
 	}
 	
 	public static Stack<Integer> findPath(int from, int to, boolean includeToTile) {
+		// TODO
+		// there's a thing causing lags where you can click on an impassable tile
+		// which is surrounded by other impassable tiles, which causes you not to find any path.
+		// need to check not only if you cannot get to "to", but if you cannot get to "to"s siblings
+		
 		Stopwatch.start("find path");
 		Stack<Integer> output = new Stack<>();
 		if (from == to)

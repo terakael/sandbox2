@@ -37,7 +37,7 @@ public abstract class Obelisk extends Scenery{
 			}
 			
 			boolean success = RandomUtil.getRandom(0,  100) <= enchantChance;
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, success ? dest.getValue() : 0);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, success ? dest.getValue() : 0, 1);
 			
 			InventoryUpdateResponse updateResponse = new InventoryUpdateResponse();
 			updateResponse.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);

@@ -13,6 +13,7 @@ import lombok.Setter;
 import main.GroundItemManager;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
+import main.database.InventoryItemDto;
 import main.database.ItemDao;
 import main.database.MineableDao;
 import main.database.MineableDto;
@@ -55,6 +56,7 @@ public class Player extends Attackable {
 	@Setter private Request savedRequest = null;
 	@Setter private int tickCounter = 0;
 	@Setter @Getter private NpcDialogueDto currentDialogue = null;
+	@Setter @Getter private int shopId;// if the player is currently in a shop, this is the id
 	
 	@Getter private HashMap<Stats, Integer> stats = new HashMap<>();// cached so we don't have to keep polling the db
 	
@@ -183,7 +185,7 @@ public class Player extends Attackable {
 					responseMaps.addClientOnlyResponse(this, mineResponse);
 					return;
 				}
-				PlayerStorageDao.addItemByPlayerIdItemId(getId(), mineable.getItemId());
+				PlayerStorageDao.addItemByPlayerIdItemId(getId(), mineable.getItemId(), 1);
 				
 				AddExpRequest addExpReq = new AddExpRequest();
 				addExpReq.setId(getId());
@@ -232,10 +234,10 @@ public class Player extends Attackable {
 		// unequip and drop all the items in inventory
 		EquipmentDao.clearAllEquppedItems(getId());
 		
-		List<Integer> inventoryList = PlayerStorageDao.getInventoryListByPlayerId(getId());
-		for (int itemId : inventoryList) {
-			if (itemId != 0)
-				GroundItemManager.add(getId(), itemId, tileId);
+		HashMap<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getInventoryDtoMapByPlayerId(getId());
+		for (InventoryItemDto dto : inventoryList.values()) {
+			if (dto.getItemId() != 0)
+				GroundItemManager.add(getId(), dto.getItemId(), tileId, dto.getCount());
 		}
 		PlayerStorageDao.clearInventoryByPlayerId(getId());
 		

@@ -14,6 +14,7 @@ import main.processing.WorldProcessor;
 import main.requests.MessageRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.types.ItemAttributes;
 import main.types.Stats;
 
 public class MessageResponse extends Response {
@@ -234,14 +235,24 @@ public class MessageResponse extends Response {
 		}
 		
 		ArrayList<Integer> invItemIds = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
-		int numFreeSlots = Collections.frequency(invItemIds, 0);
-		if (count > numFreeSlots)
-			count = numFreeSlots;
 		
-		for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
-			if (invItemIds.get(i) == 0) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), i, itemId);
-				--count;
+		if (ItemDao.itemHasAttribute(itemId, ItemAttributes.STACKABLE)) {
+			int invItemIndex = invItemIds.indexOf(itemId);
+			if (invItemIndex >= 0) {
+				PlayerStorageDao.addCountToInventoryItemSlot(player.getId(), invItemIndex, count);
+			} else {
+				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), itemId, count);
+			}
+		} else {
+			int numFreeSlots = Collections.frequency(invItemIds, 0);
+			if (count > numFreeSlots)
+				count = numFreeSlots;
+			
+			for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
+				if (invItemIds.get(i) == 0) {
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), i, itemId, 1);
+					--count;
+				}
 			}
 		}
 		

@@ -13,7 +13,7 @@ import lombok.Getter;
 public class NPCDao {
 	@Getter private static ArrayList<NPCDto> npcInstanceList = null;
 	@Getter private static ArrayList<NPCDto> npcList = null;
-	private static HashMap<Integer, ArrayList<Integer>> npcDrops = null;
+	private static HashMap<Integer, ArrayList<NpcDropDto>> npcDrops = null;
 	
 	public static void setupCaches() {
 		npcList = getNpcs();
@@ -180,7 +180,7 @@ public class NPCDao {
 	}
 	
 	public static void cacheNpcDrops() {
-		final String query = "select npc_id, item_id from npc_drops";
+		final String query = "select npc_id, item_id, count, rate from npc_drops";
 		npcDrops = new HashMap<>();
 		try (
 			Connection connection = DbConnection.get();
@@ -191,7 +191,7 @@ public class NPCDao {
 					int npcId = rs.getInt("npc_id");
 					if (!npcDrops.containsKey(npcId))
 						npcDrops.put(npcId, new ArrayList<>());
-					npcDrops.get(npcId).add(rs.getInt("item_id"));
+					npcDrops.get(npcId).add(new NpcDropDto(rs.getInt("npc_id"), rs.getInt("item_id"), rs.getInt("count"), rs.getInt("rate")));
 				}
 			}
 		} catch (SQLException e) {
@@ -199,10 +199,10 @@ public class NPCDao {
 		}
 	}
 	
-	public static ArrayList<Integer> getDropsByNpcId(int npcId) {
+	public static ArrayList<NpcDropDto> getDropsByNpcId(int npcId) {
 		if (npcDrops.containsKey(npcId))
 			return npcDrops.get(npcId);
-		return new ArrayList<Integer>();
+		return new ArrayList<>();
 	}
 	
 	public static String getNpcNameById(int npcId) {

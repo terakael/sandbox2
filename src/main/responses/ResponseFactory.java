@@ -93,6 +93,18 @@ public class ResponseFactory {
 		case "dialogue_option":
 			response = new DialogueOptionResponse();
 			break;
+		case "shop":
+			response = new ShopResponse();
+			break;
+		case "value":
+			response = new ShopValueResponse();
+			break;
+		case "buy":
+			response = new ShopBuyResponse();
+			break;
+		case "sell":
+			response = new ShopSellResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;

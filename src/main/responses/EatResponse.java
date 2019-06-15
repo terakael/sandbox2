@@ -41,7 +41,7 @@ public class EatResponse extends Response {
 		
 		Integer itemId = PlayerStorageDao.getItemIdInSlot(player.getId(), 1, request.getSlot());
 		if (itemId == request.getObjectId()) {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), request.getSlot(), 0);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), request.getSlot(), 0, 1);
 		} else {// the slot didn't have the correct item? check other slots instead.
 			ArrayList<Integer> itemIds = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
 			int slot;
@@ -50,7 +50,7 @@ public class EatResponse extends Response {
 					break;
 			}
 			
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0);// remove the consumable from the inventory
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0, 1);// remove the consumable from the inventory
 		}
 		boolean hpModified = false;
 		HashMap<Integer, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());
