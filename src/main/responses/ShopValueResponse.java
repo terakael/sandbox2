@@ -1,11 +1,15 @@
 package main.responses;
 
 import main.database.ItemDao;
+import main.database.ItemDto;
 import main.database.ShopDao;
 import main.database.ShopDto;
 import main.processing.Player;
+import main.processing.ShopManager;
+import main.processing.Store;
 import main.requests.Request;
 import main.requests.ShopValueRequest;
+import main.types.ItemAttributes;
 
 public class ShopValueResponse extends Response {
 	public ShopValueResponse() {
@@ -19,16 +23,25 @@ public class ShopValueResponse extends Response {
 		
 		ShopValueRequest request = (ShopValueRequest)req;
 		
-		ShopDto item = null;
-		for (ShopDto dto : ShopDao.getShopStockById(player.getShopId())) {
-			if (dto.getItemId() == request.getObjectId()) {
-				item = dto;
-				break;
-			}
-		}
+//		ShopDto item = null;
+//		for (ShopDto dto : ShopDao.getShopStockById(player.getShopId())) {
+//			if (dto.getItemId() == request.getObjectId()) {
+//				item = dto;
+//				break;
+//			}
+//		}
 		
-		if (item == null) {
-			setRecoAndResponseText(1, "you can't sell that here.");
+		Store shop = ShopManager.getShopByShopId(player.getShopId());
+		if (shop == null)
+			return;
+		
+		ItemDto item = ItemDao.getItem(request.getObjectId());
+		
+		if (item == null 
+				|| !ItemDao.itemHasAttribute(item.getId(), ItemAttributes.TRADEABLE) 
+				|| ItemDao.itemHasAttribute(item.getId(), ItemAttributes.UNIQUE)
+				|| !shop.buysItem(item.getId())) {
+			setRecoAndResponseText(1, "you can't sell that.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
@@ -38,7 +51,7 @@ public class ShopValueResponse extends Response {
 			value = (int)((double)value * 0.8);
 		
 		setRecoAndResponseText(1, String.format("%s is %s for %d coin%s.", 
-				ItemDao.getNameFromId(item.getItemId()), 
+				ItemDao.getNameFromId(item.getId()), 
 				request.getValueTypeId() == 0 ? "sold" : "bought",
 				value, 
 				value == 1 ? "" : "s"));

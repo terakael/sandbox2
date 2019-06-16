@@ -2,19 +2,24 @@ package main.responses;
 
 import java.util.HashMap;
 
+import lombok.Setter;
 import main.FightManager;
 import main.database.ShopDao;
 import main.database.ShopDto;
+import main.processing.GeneralStore;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
+import main.processing.ShopManager;
+import main.processing.Store;
 import main.requests.Request;
 import main.requests.ShopRequest;
 
 public class ShopResponse extends Response {
-	private HashMap<Integer, ShopDto> shopStock = new HashMap<>();
+	@Setter private HashMap<Integer, ShopDto> shopStock = new HashMap<>();
+	@Setter private String shopName;
 	
 	public ShopResponse() {
 		setAction("shop");
@@ -45,9 +50,13 @@ public class ShopResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {
-			player.setShopId(ShopDao.getShopIdByOwnerId(npc.getId()));
-			shopStock = ShopDao.getShopStockByOwnerId(npc.getId());
-			responseMaps.addClientOnlyResponse(player, this);
+			Store shop = ShopManager.getShopByOwnerId(npc.getId());
+			if (shop != null) {
+				player.setShopId(shop.getShopId());
+				shopStock = shop.getStock();
+				shopName = ShopDao.getShopNameById(shop.getShopId());
+				responseMaps.addClientOnlyResponse(player, this);
+			}
 		}
 	}
 }

@@ -34,7 +34,7 @@ public class ItemDao {
 	}
 	
 	private static void populateItemCache() {
-		final String query = "select id, name, sprite_frame_id, leftclick_option, other_options, attributes from items";
+		final String query = "select id, name, sprite_frame_id, leftclick_option, other_options, attributes, price from items";
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -42,7 +42,13 @@ public class ItemDao {
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					itemMap.put(rs.getInt("id"), new ItemDto(rs.getInt("id"), rs.getString("name"), rs.getInt("sprite_frame_id"), rs.getInt("leftclick_option"), rs.getInt("other_options"), rs.getInt("attributes")));
+					itemMap.put(rs.getInt("id"), new ItemDto(rs.getInt("id"), 
+							rs.getString("name"), 
+							rs.getInt("sprite_frame_id"), 
+							rs.getInt("leftclick_option"), 
+							rs.getInt("other_options"), 
+							rs.getInt("attributes"),
+							rs.getInt("price")));
 				}
 			}
 		} catch (SQLException e) {

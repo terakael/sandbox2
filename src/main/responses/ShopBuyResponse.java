@@ -11,7 +11,10 @@ import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.database.ShopDao;
 import main.database.ShopDto;
+import main.processing.GeneralStore;
 import main.processing.Player;
+import main.processing.ShopManager;
+import main.processing.Store;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.ShopBuyRequest;
@@ -30,13 +33,20 @@ public class ShopBuyResponse extends Response {
 		
 		ShopBuyRequest request = (ShopBuyRequest)req;
 		
-		ShopDto item = null;
-		for (ShopDto dto : ShopDao.getShopStockById(player.getShopId())) {
-			if (dto.getItemId() == request.getObjectId()) {
-				item = dto;
-				break;
-			}
+		Store shop = ShopManager.getShopByShopId(player.getShopId());
+		if (shop == null) {
+			return;
 		}
+		
+		ShopDto item = shop.getStockByItemId(request.getObjectId());
+		
+//		ShopDto item = null;
+//		for (ShopDto dto : ShopDao.getShopStockById(player.getShopId())) {
+//			if (dto.getItemId() == request.getObjectId()) {
+//				item = dto;
+//				break;
+//			}
+//		}
 		
 		if (item == null) {
 			setRecoAndResponseText(0, "you can't buy that here.");
@@ -59,17 +69,22 @@ public class ShopBuyResponse extends Response {
 		}
 		
 		// if you can buy at least one, but not necessarily the amount requested
-		int amountPlayerCanAfford = Math.min(request.getAmount(), coins.getCount() / item.getPrice());
+		int amountPlayerCanAfford = Math.min(request.getAmount(), item.getPrice() == 0 ? request.getAmount() : coins.getCount() / item.getPrice());
 		if (ItemDao.itemHasAttribute(item.getItemId(), ItemAttributes.STACKABLE)) {
-			PlayerStorageDao.setCountOnInventorySlot(player.getId(), coins.getSlot(), coins.getCount() - (amountPlayerCanAfford * item.getPrice()));
+			int actualAmount = Math.min(amountPlayerCanAfford, item.getCurrentStock());
+			PlayerStorageDao.setCountOnInventorySlot(player.getId(), coins.getSlot(), coins.getCount() - (actualAmount * item.getPrice()));
 			if (invItemIds.contains(item.getItemId())) {
-				PlayerStorageDao.addCountToInventoryItemSlot(player.getId(), invItemIds.indexOf(item.getItemId()), amountPlayerCanAfford);
+				PlayerStorageDao.addCountToInventoryItemSlot(player.getId(), invItemIds.indexOf(item.getItemId()), actualAmount);
 			} else {
-				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), item.getItemId(), amountPlayerCanAfford);
+				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), item.getItemId(), actualAmount);
 			}
+			shop.decreaseItemStock(item.getItemId(), actualAmount);
 		} else {
 			int count = Math.min(Collections.frequency(invItemIds, 0), amountPlayerCanAfford);
+			count = Math.min(count, item.getCurrentStock());
+			
 			PlayerStorageDao.setCountOnInventorySlot(player.getId(), coins.getSlot(), coins.getCount() - (count * item.getPrice()));
+			shop.decreaseItemStock(item.getItemId(), count);
 			
 			for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
 				if (invItemIds.get(i) == 0) {

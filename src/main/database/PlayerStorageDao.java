@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import main.utils.Utils;
+
 public class PlayerStorageDao {
 	private PlayerStorageDao() {}
 	
@@ -41,8 +43,11 @@ public class PlayerStorageDao {
 		) {
 			ps.setInt(1, playerId);
 			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					dtos.put(rs.getInt("slot"), new InventoryItemDto(rs.getInt("item_id"), rs.getInt("slot"), rs.getInt("count")));
+				while (rs.next()) {
+					int count = rs.getInt("count");
+					String friendlyCount = Utils.getFriendlyCount(count);
+					dtos.put(rs.getInt("slot"), new InventoryItemDto(rs.getInt("item_id"), rs.getInt("slot"), count, friendlyCount));
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -84,8 +89,11 @@ public class PlayerStorageDao {
 			ps.setInt(1, playerId);
 			ps.setInt(2, slot);
 			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return new InventoryItemDto(rs.getInt("item_id"), rs.getInt("slot"), rs.getInt("count"));
+				if (rs.next()) {
+					int count = rs.getInt("count");
+					String friendlyCount = Utils.getFriendlyCount(count);
+					return new InventoryItemDto(rs.getInt("item_id"), rs.getInt("slot"), count, friendlyCount);
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

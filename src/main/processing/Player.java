@@ -52,7 +52,7 @@ public class Player extends Attackable {
 	@Getter private PlayerDto dto;
 	@Getter private Session session;
 	@Setter private Stack<Integer> path = new Stack<>();// stack of tile_ids
-	@Setter private PlayerState state = PlayerState.idle;
+	private PlayerState state = PlayerState.idle;
 	@Setter private Request savedRequest = null;
 	@Setter private int tickCounter = 0;
 	@Setter @Getter private NpcDialogueDto currentDialogue = null;
@@ -210,6 +210,11 @@ public class Player extends Attackable {
 		default:
 			break;
 		}
+	}
+	
+	public void setState(PlayerState state) {
+		this.state = state;
+		this.shopId = 0;
 	}
 	
 	public void setTileId(int tileId) {

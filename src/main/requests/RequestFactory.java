@@ -36,6 +36,7 @@ public class RequestFactory {
 		map.put("value", ShopValueRequest.class);
 		map.put("buy", ShopBuyRequest.class);
 		map.put("sell", ShopSellRequest.class);
+		map.put("close_shop", CloseShopRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

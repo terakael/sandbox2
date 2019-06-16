@@ -105,6 +105,9 @@ public class ResponseFactory {
 		case "sell":
 			response = new ShopSellResponse();
 			break;
+		case "close_shop":
+			response = new CloseShopResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;

@@ -9,4 +9,5 @@ public class InventoryItemDto {
 	private int itemId;
 	private int slot;
 	private int count;
+	private String friendlyCount;
 }

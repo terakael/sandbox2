@@ -15,6 +15,7 @@ import main.database.SceneryDao;
 import main.database.ShopDao;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
+import main.processing.ShopManager;
 import main.processing.WorldProcessor;
 import main.responses.CachedResourcesResponse;
 import main.responses.ExamineResponse;
@@ -63,6 +64,7 @@ public class Server {
 			ConsumableDao.cacheConsumables();
 			EquipmentDao.setupCaches();
 			ShopDao.setupCaches();
+			ShopManager.setupShops();
 			
 			// should be last after all the other caches are set up
 			CachedResourcesResponse.get();// loads/caches all the sprite maps, scenery etc and gets sent on client load

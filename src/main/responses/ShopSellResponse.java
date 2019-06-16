@@ -2,13 +2,20 @@ package main.responses;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 
+import main.database.EquipmentDao;
+import main.database.EquipmentDto;
 import main.database.InventoryItemDto;
 import main.database.ItemDao;
+import main.database.ItemDto;
 import main.database.PlayerStorageDao;
 import main.database.ShopDao;
 import main.database.ShopDto;
+import main.processing.GeneralStore;
 import main.processing.Player;
+import main.processing.ShopManager;
+import main.processing.Store;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.ShopSellRequest;
@@ -28,21 +35,15 @@ public class ShopSellResponse extends Response {
 		if (!invItemIds.contains(request.getObjectId()))
 			return; // player doesn't have it.
 		
-		ShopDto item = null;
-		for (ShopDto dto : ShopDao.getShopStockById(player.getShopId())) {
-			if (dto.getItemId() == request.getObjectId()) {
-				item = dto;
-				break;
-			}
-		}
+		ItemDto item = ItemDao.getItem(request.getObjectId());
 		
-		if (item == null) {
-			setRecoAndResponseText(0, "you can't sell that here.");
-			responseMaps.addClientOnlyResponse(player, this);
+		Store shop = ShopManager.getShopByShopId(player.getShopId());
+		if (shop.isFull() && !shop.hasStock(item.getId())) {
+			setRecoAndResponseText(0, "the shop has no room for your wares.");
 			return;
 		}
 		
-		if (item.getItemId() == Items.COINS.getValue()) {
+		if (item.getId() == Items.COINS.getValue()) {
 			// trying to sell your coins lmfao?
 			setRecoAndResponseText(0, "just what do you expect in return for selling your coins?  more coins?");
 			responseMaps.addClientOnlyResponse(player, this);
@@ -50,8 +51,9 @@ public class ShopSellResponse extends Response {
 		}
 		
 		// you can't sell untradeable or unique items
-		if (!ItemDao.itemHasAttribute(item.getItemId(), ItemAttributes.TRADEABLE) ||
-				ItemDao.itemHasAttribute(item.getItemId(), ItemAttributes.UNIQUE)) {
+		if (!ItemDao.itemHasAttribute(item.getId(), ItemAttributes.TRADEABLE) ||
+				ItemDao.itemHasAttribute(item.getId(), ItemAttributes.UNIQUE) ||
+				!shop.buysItem(item.getId())) {
 			setRecoAndResponseText(0, "you can't sell that.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
@@ -60,10 +62,10 @@ public class ShopSellResponse extends Response {
 		// item passed all the checks, they can sell it
 		int sellPrice = (int)((double)item.getPrice() * 0.8);// sell price is always 80% of buy price
 		int numCoins = 0;
-		if (ItemDao.itemHasAttribute(item.getItemId(), ItemAttributes.STACKABLE)) {
+		if (ItemDao.itemHasAttribute(item.getId(), ItemAttributes.STACKABLE)) {
 			// if the inventory is full and we don't have coins, but we're selling the whole stack
 			// then we can replace the stack with the coins.
-			InventoryItemDto invItem = PlayerStorageDao.getInventoryItemFromPlayerIdAndSlot(player.getId(), invItemIds.indexOf(item.getItemId()));
+			InventoryItemDto invItem = PlayerStorageDao.getInventoryItemFromPlayerIdAndSlot(player.getId(), invItemIds.indexOf(item.getId()));
 			int sellCount = Math.min(invItem.getCount(), request.getAmount());
 			if (sellCount < invItem.getCount() 
 					&& PlayerStorageDao.getFreeSlotByPlayerId(player.getId()) == -1 
@@ -76,15 +78,26 @@ public class ShopSellResponse extends Response {
 			
 			// we have room to accept the coins
 			numCoins = sellCount * sellPrice;
-			PlayerStorageDao.setCountOnInventorySlot(player.getId(), invItemIds.indexOf(item.getItemId()), invItem.getCount() - sellCount);
-			
+			PlayerStorageDao.setCountOnInventorySlot(player.getId(), invItemIds.indexOf(item.getId()), invItem.getCount() - sellCount);
+			shop.addItem(item.getId(), sellCount);
 					
 		} else {
-			int sellCount = Math.min(Collections.frequency(invItemIds, item.getItemId()), request.getAmount());
+			
+			// exclude equipped items from the sale
+			HashSet<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
+			for (Integer slot : equippedSlots) {
+				if (invItemIds.get(slot) == item.getId()) {
+					invItemIds.set(slot, 0);// exclude the equipped item from the list
+				}
+			}
+			
+			int sellCount = Math.min(Collections.frequency(invItemIds, item.getId()), request.getAmount());
+			
+			shop.addItem(item.getId(), sellCount);
 			numCoins = sellCount * sellPrice;
 			
 			for (int i = 0; i < invItemIds.size() && sellCount > 0; ++i) {
-				if (invItemIds.get(i) == item.getItemId()) {
+				if (invItemIds.get(i) == item.getId()) {				
 					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), i, 0, 1);
 					--sellCount;
 				}

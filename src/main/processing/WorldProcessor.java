@@ -15,6 +15,7 @@ import main.GroundItemManager;
 import main.database.ConsumableDao;
 import main.database.EquipmentDao;
 import main.database.NpcMessageDao;
+import main.database.ShopDao;
 import main.requests.Request;
 import main.responses.GroundItemRefreshResponse;
 import main.responses.LogonResponse;
@@ -22,6 +23,7 @@ import main.responses.NpcLocationRefreshResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
+import main.responses.ShopResponse;
 import main.utils.Stopwatch;
 
 public class WorldProcessor implements Runnable {
@@ -111,6 +113,10 @@ public class WorldProcessor implements Runnable {
 		GroundItemManager.process();
 		Stopwatch.end("ground item manager");
 		
+		Stopwatch.start("shops");
+		ShopManager.process(responseMaps);
+		Stopwatch.end("shops");
+		
 		Stopwatch.start("refresh npc locations");
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			// npc stuff
@@ -127,6 +133,24 @@ public class WorldProcessor implements Runnable {
 			responseMaps.addClientOnlyResponse(entry.getValue(), groundItemRefresh);
 		}
 		Stopwatch.end("refresh npc locations");
+		
+		Stopwatch.start("update shop stock");
+		for (Store store : ShopManager.getShops()) {
+			if (store.isDirty()) {
+				ShopResponse shopResponse = new ShopResponse();
+				shopResponse.setShopStock(store.getStock());
+				shopResponse.setShopName(ShopDao.getShopNameById(store.getShopId()));
+				
+				for (Player player : playerSessions.values()) {
+					if (player.getShopId() == store.getShopId()) {
+						responseMaps.addClientOnlyResponse(player, shopResponse);
+					}
+				}
+				
+				store.setDirty(false);
+			}
+		}
+		Stopwatch.end("update shop stock");
 		
 		// take all the responseMaps and compile the responses to send to each player
 		Stopwatch.start("compile response maps");
