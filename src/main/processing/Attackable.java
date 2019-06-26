@@ -5,13 +5,14 @@ import java.util.Random;
 
 import lombok.Getter;
 import lombok.Setter;
+import main.FightManager;
 import main.responses.ResponseMaps;
 import main.types.Stats;
 
 public abstract class Attackable {
 	private static Random rand = new Random();
 	
-	@Setter private HashMap<Stats, Integer> stats = null;
+	@Setter @Getter protected HashMap<Stats, Integer> stats = new HashMap<>();
 	@Setter private HashMap<Stats, Integer> bonuses = null;
 	@Setter @Getter protected int currentHp;
 	@Setter @Getter protected int tileId;
@@ -45,5 +46,9 @@ public abstract class Attackable {
 		int maxBlock = (int)Math.ceil(stats.get(Stats.DEFENCE) * 0.15) + (int)Math.ceil(bonuses.get(Stats.DEFENCE) * 0.15) + 1;
 		//int agil = (int)Math.sqrt(stats.get("agility")) + this.bonuses.getAgil();
 		return rand.nextInt(maxBlock);
+	}
+	
+	public boolean isInCombat() {
+		return FightManager.fightWithFighterExists(this);
 	}
 }

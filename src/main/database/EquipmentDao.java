@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import main.types.EquipmentTypes;
+import main.types.PlayerPartType;
 
 public class EquipmentDao {
 	private EquipmentDao() {};

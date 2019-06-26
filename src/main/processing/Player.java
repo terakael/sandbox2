@@ -52,13 +52,14 @@ public class Player extends Attackable {
 	@Getter private PlayerDto dto;
 	@Getter private Session session;
 	@Setter private Stack<Integer> path = new Stack<>();// stack of tile_ids
-	private PlayerState state = PlayerState.idle;
+	@Getter private PlayerState state = PlayerState.idle;
 	@Setter private Request savedRequest = null;
 	@Setter private int tickCounter = 0;
 	@Setter @Getter private NpcDialogueDto currentDialogue = null;
 	@Setter @Getter private int shopId;// if the player is currently in a shop, this is the id
+	private int postFightCooldown = 0;
 	
-	@Getter private HashMap<Stats, Integer> stats = new HashMap<>();// cached so we don't have to keep polling the db
+//	@Getter private HashMap<Stats, Integer> stats = new HashMap<>();// cached so we don't have to keep polling the db
 	
 	public Player(PlayerDto dto, Session session) {
 		this.dto = dto;
@@ -68,6 +69,7 @@ public class Player extends Attackable {
 		refreshStats();
 		
 		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(5);
+		setPostFightCooldown();
 	}
 	
 	public void refreshStats(Map<Integer, Integer> statExp) {
@@ -81,6 +83,9 @@ public class Player extends Attackable {
 	
 	public void process(ResponseMaps responseMaps) {
 		// called each tick; build a response where necessary
+		if (postFightCooldown > 0)
+			--postFightCooldown;
+		
 		switch (state) {
 		case walking: {
 			// if the player path stack isn't empty, then pop one off and create a player_updates response entry.
@@ -266,6 +271,7 @@ public class Player extends Attackable {
 	@Override
 	public void onKill(Attackable killed, ResponseMaps responseMaps) {
 		state = PlayerState.idle;
+		setPostFightCooldown();
 		int totalExp = killed.getExp();
 		float points = (float)totalExp / 5;
 		
@@ -387,7 +393,10 @@ public class Player extends Attackable {
 	@Override
 	public void setTarget(Attackable target) {
 		this.target = target;
-		this.state = PlayerState.chasing;
+		this.state = target == null ? PlayerState.idle : PlayerState.chasing;
+		if (target == null) {
+			setPostFightCooldown();
+		}
 	}
 	
 	@Override
@@ -415,5 +424,14 @@ public class Player extends Attackable {
 	@Override
 	public int getExp() {
 		return StatsDao.getCombatLevelByPlayerId(getId());
+	}
+	
+	@Override
+	public boolean isInCombat() {
+		return super.isInCombat() || postFightCooldown > 0;
+	}
+	
+	public void setPostFightCooldown() {
+		postFightCooldown = 5;
 	}
 }

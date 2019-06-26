@@ -1,11 +1,11 @@
 package main.processing;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-
 import lombok.Getter;
 import main.database.ShopDao;
+import main.database.ShopDto;
 import main.responses.ResponseMaps;
+import main.types.ShopTypes;
 
 public class ShopManager {
 	private static int UPDATE_TIMER = 100;
@@ -13,11 +13,27 @@ public class ShopManager {
 	@Getter private static ArrayList<Store> shops = new ArrayList<>();
 	
 	public static void setupShops() {
-		for (HashMap.Entry<Integer, Integer> entry : ShopDao.getShopIdsByOwnerId().entrySet()) {
-			if (entry.getValue() == 1) // storeid 1 is general store, the rest are specialty. todo pull store type from stores table
-				shops.add(new GeneralStore(entry.getValue(), entry.getKey(), ShopDao.getShopStockById(entry.getValue())));
-			else
-				shops.add(new SpecialtyStore(entry.getValue(), entry.getKey(), ShopDao.getShopStockById(entry.getValue())));
+		ArrayList<ShopDto> shopDtos = ShopDao.getShopsAndItems();
+		
+		for (ShopDto dto : shopDtos) {
+			ShopTypes type = ShopTypes.withValue(dto.getShopType());
+			if (type == null)
+				continue;
+			
+			switch (type) {
+			case GENERAL: {//general
+				shops.add(new GeneralStore(dto));
+				break;
+			}
+			
+			case SPECIALTY: {//specialty
+				shops.add(new SpecialtyStore(dto));
+				break;
+			}
+			
+			default:
+				break;
+			}
 		}
 	}
 	

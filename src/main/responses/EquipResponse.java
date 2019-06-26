@@ -1,6 +1,11 @@
 package main.responses;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+
+import main.database.AnimationDao;
+import main.database.AnimationDto;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.EquipmentDto;
@@ -10,10 +15,12 @@ import main.processing.Player;
 import main.requests.EquipRequest;
 import main.requests.Request;
 import main.types.EquipmentTypes;
+import main.types.PlayerPartType;
 import main.types.Stats;
 
 public class EquipResponse extends Response {
 	private HashSet<Integer> equippedSlots = new HashSet<>();
+	private Map<PlayerPartType, AnimationDto> equipAnimations = new HashMap<>();
 	private EquipmentBonusDto bonuses = null;
 
 	public EquipResponse() {
@@ -56,9 +63,15 @@ public class EquipResponse extends Response {
 		}
 		
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
+		equipAnimations = AnimationDao.getEquipmentAnimationsByPlayerId(player.getId());
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(player.getId());
 		
 		responseMaps.addClientOnlyResponse(player, this);
+		
+		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+		playerUpdate.setId(player.getId());
+		playerUpdate.setEquipAnimations(equipAnimations);
+		responseMaps.addBroadcastResponse(playerUpdate);
 	}
 	
 	private boolean playerHasRequirements(Player player, EquipmentDto equip, ResponseMaps responseMaps) {

@@ -1,8 +1,13 @@
 package main.responses;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.Setter;
+import main.database.AnimationDto;
 import main.processing.Player;
 import main.requests.Request;
+import main.types.PlayerPartType;
 
 
 public class PlayerUpdateResponse extends Response {
@@ -13,15 +18,7 @@ public class PlayerUpdateResponse extends Response {
 	@Setter String state = null;
 	@Setter Integer damage = null;
 	@Setter Integer hp = null;
-	
-	@Setter
-	private class EquipUpdate {
-		Integer head = null;
-		Integer body = null;
-		Integer legs = null;
-		Integer shield = null;
-		Integer sword = null;
-	}
+	@Setter private Map<PlayerPartType, AnimationDto> equipAnimations = null;
 
 	public PlayerUpdateResponse() {
 		setAction("player_update");

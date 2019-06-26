@@ -1,7 +1,10 @@
 package main.database;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import main.types.PlayerPartType;
 
 @Data
 @AllArgsConstructor
@@ -14,5 +17,6 @@ public class PlayerDto {
 	private int maxHp;
 	private int combatLevel;
 	private int attackStyleId;
-	private AnimationDto animations;
+	private Map<PlayerPartType, AnimationDto> baseAnimations;
+	private Map<PlayerPartType, AnimationDto> equipAnimations;
 }

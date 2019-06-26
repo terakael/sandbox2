@@ -5,14 +5,10 @@ import java.util.Collections;
 import java.util.HashSet;
 
 import main.database.EquipmentDao;
-import main.database.EquipmentDto;
 import main.database.InventoryItemDto;
 import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.PlayerStorageDao;
-import main.database.ShopDao;
-import main.database.ShopDto;
-import main.processing.GeneralStore;
 import main.processing.Player;
 import main.processing.ShopManager;
 import main.processing.Store;
@@ -92,14 +88,15 @@ public class ShopSellResponse extends Response {
 			}
 			
 			int sellCount = Math.min(Collections.frequency(invItemIds, item.getId()), request.getAmount());
-			
-			shop.addItem(item.getId(), sellCount);
-			numCoins = sellCount * sellPrice;
-			
-			for (int i = 0; i < invItemIds.size() && sellCount > 0; ++i) {
-				if (invItemIds.get(i) == item.getId()) {				
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), i, 0, 1);
-					--sellCount;
+			if (sellCount > 0) {
+				shop.addItem(item.getId(), sellCount);
+				numCoins = sellCount * sellPrice;
+				
+				for (int i = 0; i < invItemIds.size() && sellCount > 0; ++i) {
+					if (invItemIds.get(i) == item.getId()) {				
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), i, 0, 1);
+						--sellCount;
+					}
 				}
 			}
 		}

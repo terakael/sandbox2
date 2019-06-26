@@ -238,4 +238,15 @@ public class StatsDao {
 				+ (int)Math.ceil(((double)def + agil) / 5) 
 				+ (int)Math.ceil(((double)hp + magic) / 6);
 	}
+	
+	public static int getCombatLevelByStats(HashMap<Stats, Integer> stats) {
+		return getCombatLevelByStats(
+				stats.get(Stats.STRENGTH),
+				stats.get(Stats.ACCURACY),
+				stats.get(Stats.DEFENCE),
+				stats.get(Stats.AGILITY),
+				stats.get(Stats.HITPOINTS),
+				stats.get(Stats.MAGIC)
+			);
+	}
 }

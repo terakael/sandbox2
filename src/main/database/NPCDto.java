@@ -33,4 +33,5 @@ public class NPCDto {
 	private transient int agilBonus;
 	private transient int attackSpeed;
 	private transient int roamRadius;
+	private transient int attributes;
 }

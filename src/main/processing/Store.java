@@ -8,23 +8,26 @@ import lombok.Setter;
 import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.ShopDto;
+import main.database.ShopItemDto;
 import main.responses.ResponseMaps;
 
 public abstract class Store {
+	@Getter protected ShopDto dto;
 	@Getter protected int shopId;
 	@Getter protected int ownerId;
-	protected ArrayList<ShopDto> baseItems = new ArrayList<>();
+	protected ArrayList<ShopItemDto> baseItems = new ArrayList<>();
 	@Getter @Setter protected boolean dirty = false;
 	protected final int maxStock = 16;
 	
-	public Store(int shopId, int ownerId, ArrayList<ShopDto> baseItems) {
-		this.shopId = shopId;
-		this.ownerId = ownerId;
-		this.baseItems = baseItems;
+	public Store(ShopDto dto) {
+		this.dto = dto;
+		this.shopId = dto.getId();
+		this.ownerId = dto.getOwnerId();
+		this.baseItems = dto.getItems();
 	}
 	
 	public void process(ResponseMaps responseMaps) {
-		for (ShopDto item : baseItems) {
+		for (ShopItemDto item : baseItems) {
 			if (item.getCurrentStock() < item.getMaxStock())
 				addItem(item.getItemId(), 1);
 			else if (item.getCurrentStock() > item.getMaxStock())
@@ -32,8 +35,8 @@ public abstract class Store {
 		}
 	}
 	
-	public HashMap<Integer, ShopDto> getStock() {
-		HashMap<Integer, ShopDto> stock = new HashMap<>();
+	public HashMap<Integer, ShopItemDto> getStock() {
+		HashMap<Integer, ShopItemDto> stock = new HashMap<>();
 		int slot = 0;
 		for (int i = 0; i < baseItems.size(); ++i)
 			stock.put(slot++, baseItems.get(i));
@@ -49,7 +52,7 @@ public abstract class Store {
 		dirty = true;
 		
 		// check base items first
-		for (ShopDto stock : baseItems) {
+		for (ShopItemDto stock : baseItems) {
 			if (stock.getItemId() == itemId) {
 				stock.setCurrentStock(stock.getCurrentStock() + count);
 				return;
@@ -58,15 +61,15 @@ public abstract class Store {
 	}
 	
 	public void decreaseItemStock(int itemId, int amount) {
-		ShopDto item = getStockByItemId(itemId);
+		ShopItemDto item = getStockByItemId(itemId);
 		if (item != null) {
 			item.setCurrentStock(item.getCurrentStock() - amount);
 			dirty = true;
 		}
 	}
 	
-	public ShopDto getStockByItemId(int itemId) {
-		for (ShopDto stock : baseItems) {
+	public ShopItemDto getStockByItemId(int itemId) {
+		for (ShopItemDto stock : baseItems) {
 			if (stock.getItemId() == itemId)
 				return stock;
 		}	

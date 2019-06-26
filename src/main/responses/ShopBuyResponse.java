@@ -10,7 +10,7 @@ import main.database.InventoryItemDto;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.database.ShopDao;
-import main.database.ShopDto;
+import main.database.ShopItemDto;
 import main.processing.GeneralStore;
 import main.processing.Player;
 import main.processing.ShopManager;
@@ -38,7 +38,7 @@ public class ShopBuyResponse extends Response {
 			return;
 		}
 		
-		ShopDto item = shop.getStockByItemId(request.getObjectId());
+		ShopItemDto item = shop.getStockByItemId(request.getObjectId());
 		
 //		ShopDto item = null;
 //		for (ShopDto dto : ShopDao.getShopStockById(player.getShopId())) {

@@ -6,16 +6,14 @@ import java.util.HashMap;
 import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.ShopDto;
+import main.database.ShopItemDto;
 import main.responses.ResponseMaps;
 
 public class GeneralStore extends Store {
-	private ArrayList<ShopDto> playerItems = new ArrayList<>();
+	private ArrayList<ShopItemDto> playerItems = new ArrayList<>();
 	
-	public GeneralStore(int id, int ownerId, ArrayList<ShopDto> baseItems) {
-		super(id, ownerId, baseItems);
-		this.shopId = id;
-		this.ownerId = ownerId;
-		this.baseItems = baseItems;
+	public GeneralStore(ShopDto dto) {
+		super(dto);
 	}
 	
 	@Override
@@ -24,7 +22,7 @@ public class GeneralStore extends Store {
 		
 		// iterate backwards to handle potential removal of items when stock hits 0
 		for (int i = playerItems.size() - 1; i >= 0; --i) {
-			ShopDto item = playerItems.get(i);
+			ShopItemDto item = playerItems.get(i);
 			if (item.getCurrentStock() < item.getMaxStock())
 				addItem(item.getItemId(), 1);
 			else if (item.getCurrentStock() > item.getMaxStock())
@@ -41,7 +39,7 @@ public class GeneralStore extends Store {
 		dirty = true;
 		
 		// check base items first
-		for (ShopDto stock : baseItems) {
+		for (ShopItemDto stock : baseItems) {
 			if (stock.getItemId() == itemId) {
 				stock.setCurrentStock(stock.getCurrentStock() + count);
 				return;
@@ -49,7 +47,7 @@ public class GeneralStore extends Store {
 		}
 		
 		// check if it exists in player items
-		for (ShopDto stock: playerItems) {
+		for (ShopItemDto stock: playerItems) {
 			if (stock.getItemId() == itemId) {
 				stock.setCurrentStock(stock.getCurrentStock() + count);
 				return;
@@ -57,12 +55,12 @@ public class GeneralStore extends Store {
 		}
 		
 		// new item, add new playerItem entry
-		playerItems.add(new ShopDto(itemId, count, 0, item.getPrice()));
+		playerItems.add(new ShopItemDto(itemId, count, 0, item.getPrice()));
 	}
 	
 	@Override
-	public HashMap<Integer, ShopDto> getStock() {
-		HashMap<Integer, ShopDto> stock = new HashMap<>();
+	public HashMap<Integer, ShopItemDto> getStock() {
+		HashMap<Integer, ShopItemDto> stock = new HashMap<>();
 		int slot = 0;
 		for (int i = 0; i < baseItems.size(); ++i)
 			stock.put(slot++, baseItems.get(i));
@@ -74,21 +72,21 @@ public class GeneralStore extends Store {
 	}
 	
 	@Override
-	public ShopDto getStockByItemId(int itemId) {
-		ShopDto item = super.getStockByItemId(itemId);
+	public ShopItemDto getStockByItemId(int itemId) {
+		ShopItemDto item = super.getStockByItemId(itemId);
 		if (item == null) {
-			for (ShopDto stock : playerItems) {
+			for (ShopItemDto stock : playerItems) {
 				if (stock.getItemId() == itemId)
 					return stock;
 			}
 		}
 		
-		return null;
+		return item;
 	}
 	
 	@Override
 	public void decreaseItemStock(int itemId, int amount) {
-		ShopDto item = getStockByItemId(itemId);
+		ShopItemDto item = getStockByItemId(itemId);
 		item.setCurrentStock(item.getCurrentStock() - amount);
 		
 		if (item.getCurrentStock() <= 0) {

@@ -5,8 +5,7 @@ import java.util.HashMap;
 import lombok.Setter;
 import main.FightManager;
 import main.database.ShopDao;
-import main.database.ShopDto;
-import main.processing.GeneralStore;
+import main.database.ShopItemDto;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
@@ -18,7 +17,7 @@ import main.requests.Request;
 import main.requests.ShopRequest;
 
 public class ShopResponse extends Response {
-	@Setter private HashMap<Integer, ShopDto> shopStock = new HashMap<>();
+	@Setter private HashMap<Integer, ShopItemDto> shopStock = new HashMap<>();
 	@Setter private String shopName;
 	
 	public ShopResponse() {

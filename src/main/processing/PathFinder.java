@@ -175,7 +175,7 @@ public class PathFinder {
 				}
 				
 				if (successor == nodes[to]) {
-					if (isDiagonal) {
+					if (isDiagonal && successor.getWeight() == -1) {
 						// quick hack to fix the stuck diagonal issue
 						switch (i) {
 						case 0:

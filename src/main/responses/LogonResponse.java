@@ -20,6 +20,7 @@ import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.LogonRequest;
 import main.requests.Request;
+import main.types.PlayerPartType;
 import main.types.Stats;
 
 public class LogonResponse extends Response {
@@ -30,7 +31,8 @@ public class LogonResponse extends Response {
 	private Map<Integer, Integer> stats;
 	private List<PlayerDto> players;
 	private Map<Integer, InventoryItemDto> inventory;
-	private AnimationDto animations;
+	private Map<PlayerPartType, AnimationDto> baseAnimations;
+	private Map<PlayerPartType, AnimationDto> equipAnimations;
 	private Map<Integer, String> attackStyles;
 
 	public LogonResponse() {
@@ -69,7 +71,8 @@ public class LogonResponse extends Response {
 		
 		players = PlayerDao.getAllPlayers();
 		inventory = PlayerStorageDao.getInventoryDtoMapByPlayerId(dto.getId());
-		animations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
+		baseAnimations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
+		equipAnimations = AnimationDao.getEquipmentAnimationsByPlayerId(player.getId());
 		attackStyles = PlayerDao.getAttackStyles();
 		
 		WorldProcessor.playerSessions.put(client, player);
@@ -79,6 +82,7 @@ public class LogonResponse extends Response {
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
 		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(player.getId()));
+		playerUpdate.setEquipAnimations(equipAnimations);
 		responseMaps.addClientOnlyResponse(player, playerUpdate);
 		
 		new EquipResponse().process(null, player, responseMaps);
@@ -91,7 +95,8 @@ public class LogonResponse extends Response {
 		playerEnter.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
 		playerEnter.setMaxHp(player.getStats().get(Stats.HITPOINTS));
 		playerEnter.setCurrentHp(StatsDao.getCurrentHpByPlayerId(player.getId()));
-		playerEnter.setAnimations(AnimationDao.loadAnimationsByPlayerId(dto.getId()));
+		playerEnter.setBaseAnimations(baseAnimations);
+		playerEnter.setEquipAnimations(equipAnimations);
 		
 		responseMaps.addBroadcastResponse(playerEnter, player);
 	}

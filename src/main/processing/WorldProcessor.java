@@ -245,7 +245,7 @@ public class WorldProcessor implements Runnable {
 		}
 	}
 	
-	private ArrayList<Player> getPlayersNearTile(int tileId, int radius) {
+	public static ArrayList<Player> getPlayersNearTile(int tileId, int radius) {
 		ArrayList<Player> localPlayers = new ArrayList<>();
 		
 		int tileX = tileId % PathFinder.LENGTH;

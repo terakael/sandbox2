@@ -21,7 +21,7 @@ public class PlayerDao {
 			ps.setString(2, password);
 			
 			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
+				if (rs.next())					
 					return new PlayerDto(
 							rs.getInt("id"), 
 							rs.getString("name"), 
@@ -31,7 +31,8 @@ public class PlayerDao {
 							rs.getInt("max_hp"), 
 							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
 							rs.getInt("attack_style_id"), 
-							AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")));
+							AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")),
+							AnimationDao.getEquipmentAnimationsByPlayerId(rs.getInt("id")));
 				
 				return null;
 			}
@@ -112,7 +113,8 @@ public class PlayerDao {
 						rs.getInt("max_hp"), 
 						StatsDao.getCombatLevelByPlayerId(playerId),
 						rs.getInt("attack_style_id"), 
-						AnimationDao.loadAnimationsByPlayerId(playerId)));
+						AnimationDao.loadAnimationsByPlayerId(playerId),
+						AnimationDao.getEquipmentAnimationsByPlayerId(playerId)));
 			}
 				
 		} catch (SQLException e) {
