@@ -100,11 +100,6 @@ public class PathFinder {
 	}
 	
 	public static Stack<Integer> findPath(int from, int to, boolean includeToTile) {
-		// TODO
-		// there's a thing causing lags where you can click on an impassable tile
-		// which is surrounded by other impassable tiles, which causes you not to find any path.
-		// need to check not only if you cannot get to "to", but if you cannot get to "to"s siblings
-		
 		Stopwatch.start("find path");
 		Stack<Integer> output = new Stack<>();
 		if (from == to)
@@ -130,8 +125,11 @@ public class PathFinder {
 
 			open.remove(q);
 			closed.add(q);
-			
-			//q.setAsParent();
+			if (closed.size() > 500) {
+				// if we hit 500 checked tiles then bail, thats way too many and its probably an impossible path
+				//System.out.println(String.format("500+ closed: ms=%d, open=%d, closed=%d, from=%d, to=%d", Stopwatch.getMs("find path"), open.size(), closed.size(), from, to));
+				return output;
+			}
 			
 			for (int i = 0; i < q.getSiblings().length; ++i) {
 				PathNode successor = q.getSibling(i);
@@ -165,7 +163,7 @@ public class PathFinder {
 				double newH = calculateManhattan(successor.getId(), to);
 				double newF = newG + newH;
 
-				if (newF < successor.getF() || !open.contains(successor)) {
+				if ((newF < successor.getF() || !open.contains(successor)) && (!(successor == nodes[to] && isDiagonal))) {
 					successor.setG(newG);
 					successor.setH(newH);
 					successor.setParent(q);
@@ -175,20 +173,8 @@ public class PathFinder {
 				}
 				
 				if (successor == nodes[to]) {
-					if (isDiagonal && successor.getWeight() == -1) {
-						// quick hack to fix the stuck diagonal issue
-						switch (i) {
-						case 0:
-						case 2:
-							output.push(q.getSibling(1).getId());
-							break;
-						case 5:
-						case 7:
-							output.push(q.getSibling(6).getId());
-							break;
-						default:
-						}
-					}
+					if (isDiagonal)
+						continue;
 					
 					// found it
 					if (!includeToTile)
