@@ -3,9 +3,9 @@ package main.responses;
 import java.util.HashMap;
 
 import lombok.Setter;
-import main.FightManager;
 import main.database.ShopDao;
 import main.database.ShopItemDto;
+import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;

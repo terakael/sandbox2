@@ -20,6 +20,7 @@ import main.requests.RequestFactory;
 import main.requests.ShopBuyRequest;
 import main.types.ItemAttributes;
 import main.types.Items;
+import main.types.StorageTypes;
 
 public class ShopBuyResponse extends Response {
 	public ShopBuyResponse() {
@@ -54,14 +55,14 @@ public class ShopBuyResponse extends Response {
 			return;
 		}
 		
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 		if (!invItemIds.contains(Items.COINS.getValue())) { // coins
 			setRecoAndResponseText(0, "you need coins to buy items.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		
-		InventoryItemDto coins = PlayerStorageDao.getInventoryItemFromPlayerIdAndSlot(player.getId(), invItemIds.indexOf(Items.COINS.getValue()));
+		InventoryItemDto coins = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(Items.COINS.getValue()));
 		if (coins.getCount() < item.getPrice()) {// if you can't buy a single item, return this message
 			setRecoAndResponseText(0, "you don't have enough to buy that.");
 			responseMaps.addClientOnlyResponse(player, this);
@@ -74,9 +75,10 @@ public class ShopBuyResponse extends Response {
 			int actualAmount = Math.min(amountPlayerCanAfford, item.getCurrentStock());
 			PlayerStorageDao.setCountOnInventorySlot(player.getId(), coins.getSlot(), coins.getCount() - (actualAmount * item.getPrice()));
 			if (invItemIds.contains(item.getItemId())) {
-				PlayerStorageDao.addCountToInventoryItemSlot(player.getId(), invItemIds.indexOf(item.getItemId()), actualAmount);
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(item.getItemId()), actualAmount);
 			} else {
-				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), item.getItemId(), actualAmount);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), actualAmount);
+//				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), item.getItemId(), actualAmount);
 			}
 			shop.decreaseItemStock(item.getItemId(), actualAmount);
 		} else {
@@ -88,7 +90,7 @@ public class ShopBuyResponse extends Response {
 			
 			for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
 				if (invItemIds.get(i) == 0) {
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), i, item.getItemId(), 1);
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, item.getItemId(), 1);
 					--count;
 				}
 			}

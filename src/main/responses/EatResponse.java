@@ -3,17 +3,18 @@ package main.responses;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import main.FightManager;
 import main.database.ConsumableDao;
 import main.database.ConsumableDto;
 import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
+import main.processing.FightManager;
 import main.processing.Player;
 import main.requests.EatRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.types.StorageTypes;
 
 public class EatResponse extends Response {
 	public EatResponse() {
@@ -41,16 +42,16 @@ public class EatResponse extends Response {
 		
 		Integer itemId = PlayerStorageDao.getItemIdInSlot(player.getId(), 1, request.getSlot());
 		if (itemId == request.getObjectId()) {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), request.getSlot(), 0, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), 0, 1);
 		} else {// the slot didn't have the correct item? check other slots instead.
-			ArrayList<Integer> itemIds = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+			ArrayList<Integer> itemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			int slot;
 			for (slot = 0; slot < itemIds.size(); ++slot) {
 				if (itemIds.get(slot) == request.getObjectId())
 					break;
 			}
 			
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0, 1);// remove the consumable from the inventory
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);// remove the consumable from the inventory
 		}
 		boolean hpModified = false;
 		HashMap<Integer, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());

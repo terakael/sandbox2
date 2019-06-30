@@ -1,10 +1,10 @@
 package main.responses;
 
-import main.FightManager;
 import main.database.MineableDao;
 import main.database.MineableDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
+import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;

@@ -1,5 +1,6 @@
 package main.responses;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ import main.requests.LogonRequest;
 import main.requests.Request;
 import main.types.PlayerPartType;
 import main.types.Stats;
+import main.types.StorageTypes;
 
 public class LogonResponse extends Response {
 	
@@ -69,8 +71,15 @@ public class LogonResponse extends Response {
 
 		stats = StatsDao.getAllStatExpByPlayerId(dto.getId());
 		
+		// if there was a bad disconnection (server crash etc) and the player was mid-trade, put the items back into the player's inventory.
+		HashMap<Integer, InventoryItemDto> itemsInTrade = PlayerStorageDao.getStorageDtoMapByPlayerId(id, StorageTypes.TRADE.getValue());
+		for (InventoryItemDto itemInTrade : itemsInTrade.values()) {
+			PlayerStorageDao.addItemToFirstFreeSlot(id, StorageTypes.INVENTORY.getValue(), itemInTrade.getItemId(), itemInTrade.getCount());
+		}
+		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(id, StorageTypes.TRADE.getValue());
+		
 		players = PlayerDao.getAllPlayers();
-		inventory = PlayerStorageDao.getInventoryDtoMapByPlayerId(dto.getId());
+		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(dto.getId(), StorageTypes.INVENTORY.getValue());
 		baseAnimations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
 		equipAnimations = AnimationDao.getEquipmentAnimationsByPlayerId(player.getId());
 		attackStyles = PlayerDao.getAttackStyles();

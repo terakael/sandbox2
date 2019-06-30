@@ -2,7 +2,7 @@ package main.responses;
 
 import java.util.Stack;
 
-import main.FightManager;
+import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;

@@ -1,7 +1,7 @@
 package main.responses;
 
-import main.FightManager;
 import main.database.SceneryDao;
+import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;

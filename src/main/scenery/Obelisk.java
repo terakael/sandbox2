@@ -12,13 +12,14 @@ import main.responses.InventoryUpdateResponse;
 import main.responses.MessageResponse;
 import main.responses.ResponseMaps;
 import main.types.Items;
+import main.types.StorageTypes;
 import main.utils.RandomUtil;
 
 public abstract class Obelisk extends Scenery{
 	protected int enchantChance = 0;
 	
 	protected boolean attemptToEnchant(Items src, Items dest, int slot, Player player, ResponseMaps responseMaps) {
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 		
 		if (invItemIds.get(slot) != src.getValue()) {// mismatching slot/itemId, find first slot with correct itemId
 			for (slot = 0; slot < invItemIds.size(); ++slot) {
@@ -37,7 +38,7 @@ public abstract class Obelisk extends Scenery{
 			}
 			
 			boolean success = RandomUtil.getRandom(0,  100) <= enchantChance;
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, success ? dest.getValue() : 0, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, success ? dest.getValue() : 0, 1);
 			
 			InventoryUpdateResponse updateResponse = new InventoryUpdateResponse();
 			updateResponse.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);

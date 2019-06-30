@@ -1,4 +1,4 @@
-package main;
+package main.processing;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,13 +11,7 @@ import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
-import main.processing.Attackable;
-import main.processing.NPC;
-import main.processing.PathFinder;
-import main.processing.Player;
-import main.processing.WorldProcessor;
 import main.requests.Request;
-import main.processing.Player.PlayerState;
 import main.responses.DamageResponse;
 import main.responses.DeathResponse;
 import main.responses.DropResponse;

@@ -38,6 +38,7 @@ import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
 import main.types.Stats;
+import main.types.StorageTypes;
 
 public class Player extends Attackable {
 	public enum PlayerState {
@@ -190,7 +191,7 @@ public class Player extends Attackable {
 					responseMaps.addClientOnlyResponse(this, mineResponse);
 					return;
 				}
-				PlayerStorageDao.addItemByPlayerIdItemId(getId(), mineable.getItemId(), 1);
+				PlayerStorageDao.addItemToFirstFreeSlot(getId(), StorageTypes.INVENTORY.getValue(), mineable.getItemId(), 1);
 				
 				AddExpRequest addExpReq = new AddExpRequest();
 				addExpReq.setId(getId());
@@ -244,12 +245,12 @@ public class Player extends Attackable {
 		// unequip and drop all the items in inventory
 		EquipmentDao.clearAllEquppedItems(getId());
 		
-		HashMap<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getInventoryDtoMapByPlayerId(getId());
+		HashMap<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.INVENTORY.getValue());
 		for (InventoryItemDto dto : inventoryList.values()) {
 			if (dto.getItemId() != 0)
 				GroundItemManager.add(getId(), dto.getItemId(), tileId, dto.getCount());
 		}
-		PlayerStorageDao.clearInventoryByPlayerId(getId());
+		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(getId(), StorageTypes.INVENTORY.getValue());
 		
 		// update the player inventory to show there's no more items
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);

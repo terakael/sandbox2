@@ -5,7 +5,6 @@ import java.util.Random;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.FightManager;
 import main.responses.ResponseMaps;
 import main.types.Stats;
 

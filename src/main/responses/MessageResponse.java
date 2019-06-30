@@ -16,6 +16,7 @@ import main.requests.Request;
 import main.requests.RequestFactory;
 import main.types.ItemAttributes;
 import main.types.Stats;
+import main.types.StorageTypes;
 
 public class MessageResponse extends Response {
 	private String name;
@@ -234,14 +235,15 @@ public class MessageResponse extends Response {
 			} catch (NumberFormatException e) {}
 		}
 		
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 		
 		if (ItemDao.itemHasAttribute(itemId, ItemAttributes.STACKABLE)) {
 			int invItemIndex = invItemIds.indexOf(itemId);
 			if (invItemIndex >= 0) {
-				PlayerStorageDao.addCountToInventoryItemSlot(player.getId(), invItemIndex, count);
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIndex, count);
 			} else {
-				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), itemId, count);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, count);
+//				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), itemId, count);
 			}
 		} else {
 			int numFreeSlots = Collections.frequency(invItemIds, 0);
@@ -250,7 +252,7 @@ public class MessageResponse extends Response {
 			
 			for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
 				if (invItemIds.get(i) == 0) {
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), i, itemId, 1);
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, itemId, 1);
 					--count;
 				}
 			}

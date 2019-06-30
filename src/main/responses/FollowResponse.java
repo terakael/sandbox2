@@ -1,6 +1,6 @@
 package main.responses;
 
-import main.FightManager;
+import main.processing.FightManager;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.processing.Player.PlayerState;

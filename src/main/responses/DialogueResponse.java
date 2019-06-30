@@ -10,6 +10,7 @@ import main.database.NpcDialogueOptionDto;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.Request;
+import main.types.StorageTypes;
 
 @Setter
 public class DialogueResponse extends Response {
@@ -35,7 +36,7 @@ public class DialogueResponse extends Response {
 			// send ShowDialogueOptionResponse
 			
 			ArrayList<NpcDialogueOptionDto> validOptions = new ArrayList<>();// inventory checks etc
-			ArrayList<Integer> inv = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+			ArrayList<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			for (NpcDialogueOptionDto option : options) {
 				if (option.getRequiredItem1() == 0 || inv.contains(option.getRequiredItem1()))
 					validOptions.add(option);

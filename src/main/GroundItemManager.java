@@ -25,7 +25,7 @@ public class GroundItemManager {
 	// a map containing a list of ground items per tileId: Map<TileId, ItemList>
 	@Getter private static HashMap<Integer, List<GroundItem>> globalGroundItems = new HashMap<>();
 	
-	// similar to the map above, but grouped by player: Map<PlayerId, GlobalGroundItemsMitaiMap>
+	// similar to the map above, but grouped by player: Map<PlayerId, AboveMap>
 	private static HashMap<Integer, HashMap<Integer, List<GroundItem>>> playerGroundItems = new HashMap<>();
 	
 	public static void process() {

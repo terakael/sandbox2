@@ -4,7 +4,9 @@ import javax.websocket.server.ServerEndpoint;
 
 import com.google.gson.Gson;
 import main.database.PlayerSessionDao;
+import main.processing.FightManager;
 import main.processing.Player;
+import main.processing.TradeManager;
 import main.processing.WorldProcessor;
 import main.requests.PlayerLeaveRequest;
 import main.requests.Request;
@@ -57,6 +59,7 @@ public class Endpoint {
 			return;
 		
 		FightManager.cancelFight(playerToRemove, null);
+		TradeManager.cancelTrade(playerToRemove);
 		
 		WorldProcessor.playerSessions.remove(session);
 		

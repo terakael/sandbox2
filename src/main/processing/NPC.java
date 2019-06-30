@@ -9,7 +9,6 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
-import main.FightManager;
 import main.GroundItemManager;
 import main.database.ItemDao;
 import main.database.NPCDao;

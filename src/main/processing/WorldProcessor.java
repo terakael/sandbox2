@@ -10,7 +10,6 @@ import javax.websocket.Session;
 import com.google.gson.Gson;
 
 import main.Endpoint;
-import main.FightManager;
 import main.GroundItemManager;
 import main.database.ConsumableDao;
 import main.database.EquipmentDao;

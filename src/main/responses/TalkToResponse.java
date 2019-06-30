@@ -2,11 +2,11 @@ package main.responses;
 
 import java.util.ArrayList;
 
-import main.FightManager;
 import main.database.DialogueDao;
 import main.database.NPCDao;
 import main.database.NpcDialogueDto;
 import main.database.NpcMessageDao;
+import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;

@@ -108,6 +108,18 @@ public class ResponseFactory {
 		case "close_shop":
 			response = new CloseShopResponse();
 			break;
+		case "cancel_trade":
+			response = new CancelTradeResponse();
+			break;
+		case "offer":
+			response = new OfferResponse();
+			break;
+		case "rescind":
+			response = new RescindResponse();
+			break;
+		case "accept_trade_offer":
+			response = new AcceptTradeOfferResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;

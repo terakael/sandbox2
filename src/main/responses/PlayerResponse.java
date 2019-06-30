@@ -2,11 +2,12 @@ package main.responses;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.FightManager;
 import main.PlayerRequestManager;
 import main.database.PlayerDao;
+import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
+import main.processing.TradeManager;
 import main.processing.WorldProcessor;
 import main.processing.Player.PlayerState;
 import main.requests.PlayerRequest;
@@ -81,7 +82,8 @@ public abstract class PlayerResponse extends Response {
 			PlayerRequestManager.removeRequest(playerReq.getObjectId());
 			PlayerRequestManager.removeRequest(playerReq.getId());
 			
-			if (playerReq.getRequestType() == PlayerRequestManager.PlayerRequestType.duel) {
+			switch (playerReq.getRequestType()) {
+			case duel: {
 				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
 				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
 				FightManager.addFight(player1, player2);
@@ -93,6 +95,28 @@ public abstract class PlayerResponse extends Response {
 				pvpStart.setPlayer2Id(player2.getId());
 				pvpStart.setTileId(player2.getTileId());
 				responseMaps.addBroadcastResponse(pvpStart);
+				break;
+			}
+			
+			case trade: {
+				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
+				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
+				
+				AcceptTradeResponse player1TradeResponse = new AcceptTradeResponse();
+				player1TradeResponse.setOtherPlayerId(player2.getId());
+				responseMaps.addClientOnlyResponse(player1, player1TradeResponse);
+				
+				AcceptTradeResponse player2TradeResponse = new AcceptTradeResponse();
+				player2TradeResponse.setOtherPlayerId(player1.getId());
+				responseMaps.addClientOnlyResponse(player2, player2TradeResponse);
+				
+				TradeManager.addTrade(player1, player2);
+				break;
+			}
+			
+			default:
+				break;
+			
 			}
 		}
 		else {

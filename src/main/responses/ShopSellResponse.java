@@ -17,6 +17,7 @@ import main.requests.RequestFactory;
 import main.requests.ShopSellRequest;
 import main.types.ItemAttributes;
 import main.types.Items;
+import main.types.StorageTypes;
 
 public class ShopSellResponse extends Response {
 
@@ -27,7 +28,7 @@ public class ShopSellResponse extends Response {
 		
 		ShopSellRequest request = (ShopSellRequest)req;
 		
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 		if (!invItemIds.contains(request.getObjectId()))
 			return; // player doesn't have it.
 		
@@ -61,7 +62,7 @@ public class ShopSellResponse extends Response {
 		if (ItemDao.itemHasAttribute(item.getId(), ItemAttributes.STACKABLE)) {
 			// if the inventory is full and we don't have coins, but we're selling the whole stack
 			// then we can replace the stack with the coins.
-			InventoryItemDto invItem = PlayerStorageDao.getInventoryItemFromPlayerIdAndSlot(player.getId(), invItemIds.indexOf(item.getId()));
+			InventoryItemDto invItem = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(item.getId()));
 			int sellCount = Math.min(invItem.getCount(), request.getAmount());
 			if (sellCount < invItem.getCount() 
 					&& PlayerStorageDao.getFreeSlotByPlayerId(player.getId()) == -1 
@@ -94,7 +95,7 @@ public class ShopSellResponse extends Response {
 				
 				for (int i = 0; i < invItemIds.size() && sellCount > 0; ++i) {
 					if (invItemIds.get(i) == item.getId()) {				
-						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), i, 0, 1);
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, 0, 1);
 						--sellCount;
 					}
 				}
@@ -103,9 +104,10 @@ public class ShopSellResponse extends Response {
 		
 		// items were sold, now give the player the coins
 		if (invItemIds.contains(Items.COINS.getValue()))
-			PlayerStorageDao.addCountToInventoryItemSlot(player.getId(), invItemIds.indexOf(Items.COINS.getValue()), numCoins);
+			PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(Items.COINS.getValue()), numCoins);
 		else
-			PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), Items.COINS.getValue(), numCoins);
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), Items.COINS.getValue(), numCoins);
+//			PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), Items.COINS.getValue(), numCoins);
 		
 		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);
 	}

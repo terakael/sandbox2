@@ -8,6 +8,7 @@ import main.requests.RequestFactory;
 import main.responses.InventoryUpdateResponse;
 import main.responses.ResponseMaps;
 import main.types.Items;
+import main.types.StorageTypes;
 
 public class Fire extends Scenery {
 
@@ -19,7 +20,7 @@ public class Fire extends Scenery {
 		
 		switch (item) {
 		case RAW_CHICKEN:
-			ArrayList<Integer> inv = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+			ArrayList<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			
 			if (inv.get(slot) != srcItemId) {// the passed-in slot doesn't have the correct item?  check other slots
 				for (slot = 0; slot < inv.size(); ++slot) {
@@ -29,7 +30,7 @@ public class Fire extends Scenery {
 			}
 			
 			if (slot < inv.size()) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, Items.COOKED_CHICKEN.getValue(), 1);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, Items.COOKED_CHICKEN.getValue(), 1);
 				InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
 				invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 				invUpdate.setResponseText("you cook the chicken.");

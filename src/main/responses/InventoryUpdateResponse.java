@@ -12,6 +12,7 @@ import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.InventoryMoveRequest;
 import main.requests.Request;
+import main.types.StorageTypes;
 
 @Setter
 public class InventoryUpdateResponse extends Response {	
@@ -27,14 +28,14 @@ public class InventoryUpdateResponse extends Response {
 		if (req instanceof InventoryMoveRequest)
 			processInventoryMoveRequest((InventoryMoveRequest)req, player);
 		
-		inventory = PlayerStorageDao.getInventoryDtoMapByPlayerId(req.getId());
+		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(req.getId(), StorageTypes.INVENTORY.getValue());
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(req.getId());
 		
 		responseMaps.addClientOnlyResponse(player, this);
 	}
 	
 	private void processInventoryMoveRequest(InventoryMoveRequest req, Player player) {
-		HashMap<Integer, InventoryItemDto> items = PlayerStorageDao.getInventoryDtoMapByPlayerId(player.getId());
+		HashMap<Integer, InventoryItemDto> items = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 		InventoryItemDto destItem = items.get(req.getDest());
 		InventoryItemDto srcItem = items.get(req.getSrc());
 		
@@ -53,14 +54,14 @@ public class InventoryUpdateResponse extends Response {
 			EquipmentDao.clearEquippedItem(req.getId(), req.getSrc());
 		
 		if (destItem != null) {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), req.getSrc(), destItem.getItemId(), destItem.getCount());
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), StorageTypes.INVENTORY.getValue(), req.getSrc(), destItem.getItemId(), destItem.getCount());
 			if (destItemEquipped) {
 				// create entry in player_equipment to update slot and item, then remove old entry
 				EquipmentDao.setEquippedItem(req.getId(), req.getSrc(), destItem.getItemId());
 			}
 		}
 		
-		PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), req.getDest(), srcItem.getItemId(), srcItem.getCount());
+		PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), StorageTypes.INVENTORY.getValue(), req.getDest(), srcItem.getItemId(), srcItem.getCount());
 		if (srcItemEquipped) {
 			EquipmentDao.setEquippedItem(req.getId(), req.getDest(), srcItem.getItemId());
 		}

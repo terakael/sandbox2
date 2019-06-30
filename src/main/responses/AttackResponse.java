@@ -1,6 +1,6 @@
 package main.responses;
 
-import main.FightManager;
+import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;

@@ -2,18 +2,19 @@ package main.responses;
 
 import java.util.ArrayList;
 
-import main.FightManager;
 import main.database.ItemDao;
 import main.database.MineableDao;
 import main.database.PlayerStorageDao;
 import main.database.SmithableDao;
 import main.database.SmithableDto;
 import main.database.StatsDao;
+import main.processing.FightManager;
 import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.SmithRequest;
+import main.types.StorageTypes;
 
 public class SmithResponse extends Response {
 
@@ -60,30 +61,30 @@ public class SmithResponse extends Response {
 		}
 		
 		// player has the correct materials, remove the materials and add the smithed item
-		ArrayList<Integer> inventoryList = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+		ArrayList<Integer> inventoryList = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 		ArrayList<Integer> material1Slots = getAffectedSlots(inventoryList, dto.getMaterial1(), dto.getCount1());
 		ArrayList<Integer> material2Slots = getAffectedSlots(inventoryList, dto.getMaterial2(), dto.getCount2());
 		ArrayList<Integer> material3Slots = getAffectedSlots(inventoryList, dto.getMaterial3(), dto.getCount3());
 		
 		for (Integer slot : material1Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
 		if (dto.getMaterial1() == 5 && material1Slots.size() < dto.getCount1()) {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount1() - material1Slots.size()));
 		}
 		
 		for (Integer slot : material2Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
 		if (dto.getMaterial2() == 5 && material2Slots.size() < dto.getCount2()) {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount2() - material2Slots.size()));
 		}
 		
 		for (Integer slot : material3Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), slot, 0, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
 		if (dto.getMaterial3() == 5 && material3Slots.size() < dto.getCount3()) {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount3() - material3Slots.size()));
 		}
 		
-		PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), dto.getItemId(), 1);
+		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), dto.getItemId(), 1);
 		
 		// update the inventory for the client
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);

@@ -4,16 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Setter;
-import main.FightManager;
 import main.GroundItemManager;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
+import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.Request;
 import main.requests.TakeRequest;
 import main.types.ItemAttributes;
+import main.types.StorageTypes;
 
 public class TakeResponse extends Response {
 	//@Setter private List<GroundItemManager.GroundItem> groundItems;
@@ -55,15 +56,15 @@ public class TakeResponse extends Response {
 		}
 		
 		if (ItemDao.itemHasAttribute(groundItem.getId(), ItemAttributes.STACKABLE)) {
-			ArrayList<Integer> invItems = PlayerStorageDao.getInventoryListByPlayerId(player.getId());
+			ArrayList<Integer> invItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			int invItemIndex = invItems.indexOf(groundItem.getId());
 			if (invItemIndex >= 0) {
-				PlayerStorageDao.addCountToInventoryItemSlot(player.getId(), invItemIndex, groundItem.getCount());
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIndex, groundItem.getCount());
 			} else {
-				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), takeReq.getItemId(), groundItem.getCount());
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCount());
 			}
 		} else {
-			PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), takeReq.getItemId(), groundItem.getCount());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCount());
 		}
 		
 		GroundItemManager.remove(player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount());
