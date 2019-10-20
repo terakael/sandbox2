@@ -116,6 +116,10 @@ public class WorldProcessor implements Runnable {
 		ShopManager.process(responseMaps);
 		Stopwatch.end("shops");
 		
+		Stopwatch.start("rocks");
+		RockManager.process(responseMaps);
+		Stopwatch.end("rocks");
+		
 		Stopwatch.start("refresh npc locations");
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			// npc stuff

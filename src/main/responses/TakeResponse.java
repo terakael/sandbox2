@@ -64,10 +64,10 @@ public class TakeResponse extends Response {
 				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCount());
 			}
 		} else {
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCount());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCharges());
 		}
 		
-		GroundItemManager.remove(player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount());
+		GroundItemManager.remove(player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount(), groundItem.getCharges());
 		
 		// update the player inventory/equipped items and only send it to the player
 		Response resp = ResponseFactory.create("invupdate");

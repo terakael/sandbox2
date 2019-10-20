@@ -163,8 +163,10 @@ public class NPC extends Attackable {
 				.collect(Collectors.toList());
 		
 		for (NpcDropDto dto : potentialDrops) {
-			if (RandomUtil.getRandom(0, dto.getRate()) == 0)
-				GroundItemManager.add(((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount());
+			if (RandomUtil.getRandom(0, dto.getRate()) == 0) {
+				int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? ItemDao.getMaxCharges(dto.getItemId()) : 1;
+				GroundItemManager.add(((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount(), charges);
+			}
 		}
 	}
 	

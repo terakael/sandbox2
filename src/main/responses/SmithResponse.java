@@ -14,6 +14,8 @@ import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.SmithRequest;
+import main.types.Items;
+import main.types.Stats;
 import main.types.StorageTypes;
 
 public class SmithResponse extends Response {
@@ -44,7 +46,7 @@ public class SmithResponse extends Response {
 		}
 		
 		// does player have level to smith
-		int smithingLevel = StatsDao.getStatLevelByStatIdPlayerId(7, player.getId());// 7 is smithing
+		int smithingLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.SMITHING.getValue(), player.getId());
 		if (smithingLevel < dto.getLevel()) {
 			setRecoAndResponseText(0, String.format("you need %d smithing to smith that.", dto.getLevel()));
 			responseMaps.addClientOnlyResponse(player, this);
@@ -68,20 +70,20 @@ public class SmithResponse extends Response {
 		
 		for (Integer slot : material1Slots)
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
-		if (dto.getMaterial1() == 5 && material1Slots.size() < dto.getCount1()) {
-			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount1() - material1Slots.size()));
+		if (dto.getMaterial1() == Items.COAL_ORE.getValue() && material1Slots.size() < dto.getCount1()) {
+			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount1() - material1Slots.size()));
 		}
 		
 		for (Integer slot : material2Slots)
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
-		if (dto.getMaterial2() == 5 && material2Slots.size() < dto.getCount2()) {
-			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount2() - material2Slots.size()));
+		if (dto.getMaterial2() == Items.COAL_ORE.getValue() && material2Slots.size() < dto.getCount2()) {
+			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount2() - material2Slots.size()));
 		}
 		
 		for (Integer slot : material3Slots)
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
-		if (dto.getMaterial3() == 5 && material3Slots.size() < dto.getCount3()) {
-			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, -(dto.getCount3() - material3Slots.size()));
+		if (dto.getMaterial3() == Items.COAL_ORE.getValue() && material3Slots.size() < dto.getCount3()) {
+			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount3() - material3Slots.size()));
 		}
 		
 		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), dto.getItemId(), 1);
@@ -92,14 +94,14 @@ public class SmithResponse extends Response {
 		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId())));
 		responseMaps.addClientOnlyResponse(player, this);
 		
-		// TODO add smithing experience
+		// smithing exp is half of the sum of all the materials' mining exp (because mining has a chance to fail, but smithing does not)
 		int exp = MineableDao.getMineableExpByItemId(dto.getMaterial1()) * dto.getCount1();
 		if (dto.getMaterial2() != 0)
 			exp += MineableDao.getMineableExpByItemId(dto.getMaterial2()) * dto.getCount2();
 		if (dto.getMaterial3() != 0)
 			exp += MineableDao.getMineableExpByItemId(dto.getMaterial3()) * dto.getCount3();
 		
-		new AddExpResponse().process(new AddExpRequest(player.getId(), 7, exp), player, responseMaps);
+		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING.getValue(), exp/2), player, responseMaps);
 	}
 
 	private boolean playerHasItemsInInventory(int playerId, int materialId, int count) {
@@ -107,10 +109,8 @@ public class SmithResponse extends Response {
 			return true;// item doesn't require this material
 		
 		int itemsInInventory = PlayerStorageDao.getNumStorageItemsByPlayerIdItemIdStorageTypeId(playerId, materialId, 1);
-		if (itemsInInventory < count && materialId == 5) {// coal is a special case; check coal storage
-			// itemId 5 is coal
-			// storageTypeId 3 is furnace
-			itemsInInventory += PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(playerId, 5, 3);
+		if (itemsInInventory < count && materialId == Items.COAL_ORE.getValue()) {// coal is a special case; check coal storage
+			itemsInInventory += PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(playerId, Items.COAL_ORE.getValue(), StorageTypes.FURNACE.getValue());
 		}
 		return itemsInInventory >= count;
 	}

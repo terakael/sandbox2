@@ -1,5 +1,8 @@
 package main.responses;
 
+import java.util.ArrayList;
+
+import main.database.InventoryItemDto;
 import main.database.MineableDao;
 import main.database.MineableDto;
 import main.database.PlayerStorageDao;
@@ -8,8 +11,11 @@ import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
+import main.processing.RockManager;
 import main.requests.MineRequest;
 import main.requests.Request;
+import main.types.Items;
+import main.types.StorageTypes;
 
 public class MineResponse extends Response {
 	public MineResponse() {
@@ -44,7 +50,23 @@ public class MineResponse extends Response {
 				return;
 			}
 			
-			// TODO does player have a pickaxe in their inventory?
+			// does player have a pickaxe in their inventory?
+			ArrayList<Integer> inventoryItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			if (!inventoryItemIds.contains(Items.PICKAXE.getValue()) 
+				&& !inventoryItemIds.contains(Items.GOLDEN_PICKAXE.getValue())
+				&& !inventoryItemIds.contains(Items.MAGIC_PICKAXE.getValue())
+				&& !inventoryItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue())) {
+				setRecoAndResponseText(0, "you need a pickaxe in order to mine the rock.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
+			
+			// does the rock currently have ore in it?
+			if (RockManager.rockIsDepleted(request.getTileId())) {
+				setRecoAndResponseText(0, "the rock currently contains no ore.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
 			
 			// does the player have the level to mine this?
 			if (StatsDao.getStatLevelByStatIdPlayerId(6, player.getId()) < mineable.getLevel()) {
@@ -64,7 +86,19 @@ public class MineResponse extends Response {
 			
 			player.setState(PlayerState.mining);
 			player.setSavedRequest(req);
-			player.setTickCounter(5);
+			
+			// we check like this because if, for example, the player had both a magic pickaxe and golden pickaxe
+			// in their inventory, they would be using charges from the magic pickaxe but getting the speed
+			// of the golden pickaxe.  Therefore we check each tier using else ifs.
+			if (inventoryItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue())) {
+				player.setTickCounter(3);
+			} else if (inventoryItemIds.contains(Items.MAGIC_PICKAXE.getValue())) {
+				player.setTickCounter(5);
+			} else if (inventoryItemIds.contains(Items.GOLDEN_PICKAXE.getValue())) {
+				player.setTickCounter(3);
+			} else {
+				player.setTickCounter(5);
+			}
 		}
 	}
 

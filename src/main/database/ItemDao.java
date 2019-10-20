@@ -14,6 +14,7 @@ public class ItemDao {
 	private ItemDao() {};
 	
 	private static HashMap<Integer, ItemDto> itemMap = new HashMap<>();
+	private static HashMap<Integer, Integer> itemMaxCharges = new HashMap<>();
 	
 	public static String getNameFromId(int id) {
 		if (itemMap.containsKey(id))
@@ -31,6 +32,7 @@ public class ItemDao {
 	
 	public static void setupCaches() {
 		populateItemCache();
+		populateMaxChargesCache();
 	}
 	
 	private static void populateItemCache() {
@@ -54,6 +56,29 @@ public class ItemDao {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private static void populateMaxChargesCache() {
+		final String query = "select item_id, max_charges from item_charges";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					itemMaxCharges.put(rs.getInt("item_id"), rs.getInt("max_charges"));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static int getMaxCharges(int itemId) {
+		if (itemMaxCharges.containsKey(itemId))
+			return itemMaxCharges.get(itemId);
+		return 1;
 	}
 
 	public static List<ItemDto> getAllItems() {

@@ -205,7 +205,18 @@ public enum Items {
 	RUNE_HAMMER_VIII(176),
 	
 	STEVES_BABY(177),
-	COINS(178);
+	COINS(178),
+	
+	ADAMANTITE_ORE(179),
+	RUNITE_ORE(180),
+	
+	WIZARD_HAT(181),
+	WIZARD_ROBE(182),
+	
+	PICKAXE(183),
+	GOLDEN_PICKAXE(184),
+	MAGIC_PICKAXE(185),
+	MAGIC_GOLDEN_PICKAXE(186);
 
 	@Getter private int value;
 	Items(int value) {

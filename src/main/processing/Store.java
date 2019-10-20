@@ -87,4 +87,28 @@ public abstract class Store {
 	public boolean buysItem(int itemId) {
 		return hasStock(itemId);
 	}
+	
+	public int getShopSellPriceAt(ShopItemDto item, int currentStock) {
+		double price = (double)item.getPrice();
+		for (int i = 0; i <= currentStock; ++i)
+			price *= 0.95;
+		
+		return (int)price;
+	}
+	
+	public int getShopSellPrice(ShopItemDto item) {
+		return getShopSellPriceAt(item, item.getCurrentStock());	
+	}
+	
+	public int getShopBuyPriceAt(ShopItemDto item, int currentStock) {
+		double price = (double)item.getPrice();
+		for (int i = 0; i <= currentStock; ++i)
+			price *= 0.85;
+		
+		return (int)price;
+	}
+	
+	public int getShopBuyPrice(ShopItemDto item) {
+		return getShopBuyPriceAt(item, item.getCurrentStock());
+	}
 }

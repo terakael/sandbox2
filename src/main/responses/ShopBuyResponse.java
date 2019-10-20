@@ -33,6 +33,7 @@ public class ShopBuyResponse extends Response {
 			return;
 		
 		ShopBuyRequest request = (ShopBuyRequest)req;
+		int requestAmount = Math.min(request.getAmount(), 10);// caps at 10, so they cant inject any other values from the client
 		
 		Store shop = ShopManager.getShopByShopId(player.getShopId());
 		if (shop == null) {
@@ -62,41 +63,71 @@ public class ShopBuyResponse extends Response {
 			return;
 		}
 		
+		int price = shop.getShopSellPrice(item);
+		
 		InventoryItemDto coins = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(Items.COINS.getValue()));
-		if (coins.getCount() < item.getPrice()) {// if you can't buy a single item, return this message
+		if (coins.getCount() < price) {// if you can't buy a single item, return this message
 			setRecoAndResponseText(0, "you don't have enough to buy that.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		
-		// if you can buy at least one, but not necessarily the amount requested
-		int amountPlayerCanAfford = Math.min(request.getAmount(), item.getPrice() == 0 ? request.getAmount() : coins.getCount() / item.getPrice());
+				
+//		int amountPlayerCanAfford = Math.min(request.getAmount(), item.getPrice() == 0 ? request.getAmount() : coins.getCount() / item.getPrice());
 		if (ItemDao.itemHasAttribute(item.getItemId(), ItemAttributes.STACKABLE)) {
-			int actualAmount = Math.min(amountPlayerCanAfford, item.getCurrentStock());
-			PlayerStorageDao.setCountOnInventorySlot(player.getId(), coins.getSlot(), coins.getCount() - (actualAmount * item.getPrice()));
+			int[] out = {0, 0};
+			calculateWhatPlayerCanAfford(requestAmount, coins.getCount(), shop, item, out);
+			int amountPlayerCanAfford = out[1];
+			int coinsToSpend = out[0];
+			
+//			int actualAmount = Math.min(amountPlayerCanAfford, item.getCurrentStock());
+			PlayerStorageDao.setCountOnInventorySlot(player.getId(), coins.getSlot(), coins.getCount() - coinsToSpend);
 			if (invItemIds.contains(item.getItemId())) {
-				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(item.getItemId()), actualAmount);
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(item.getItemId()), amountPlayerCanAfford);
 			} else {
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), actualAmount);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), amountPlayerCanAfford);
 //				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), item.getItemId(), actualAmount);
 			}
-			shop.decreaseItemStock(item.getItemId(), actualAmount);
+			shop.decreaseItemStock(item.getItemId(), amountPlayerCanAfford);
 		} else {
-			int count = Math.min(Collections.frequency(invItemIds, 0), amountPlayerCanAfford);
+			int count = Math.min(Collections.frequency(invItemIds, 0), requestAmount);
 			count = Math.min(count, item.getCurrentStock());
 			
-			PlayerStorageDao.setCountOnInventorySlot(player.getId(), coins.getSlot(), coins.getCount() - (count * item.getPrice()));
-			shop.decreaseItemStock(item.getItemId(), count);
+			int[] out = {0, 0};
+			calculateWhatPlayerCanAfford(count, coins.getCount(), shop, item, out);
+			int amountPlayerCanAfford = out[1];
+			int coinsToSpend = out[0];
 			
-			for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
+			
+			
+			PlayerStorageDao.setCountOnInventorySlot(player.getId(), coins.getSlot(), coins.getCount() - coinsToSpend);
+			shop.decreaseItemStock(item.getItemId(), amountPlayerCanAfford);
+			
+			for (int i = 0; i < invItemIds.size() && amountPlayerCanAfford > 0; ++i) {
 				if (invItemIds.get(i) == 0) {
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, item.getItemId(), 1);
-					--count;
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, item.getItemId(), ItemDao.getMaxCharges(item.getItemId()));
+					--amountPlayerCanAfford;
 				}
 			}
 		}
 		
 		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);
+	}
+	
+	private void calculateWhatPlayerCanAfford(int requestAmount, int coinCount, Store shop, ShopItemDto item, int[] output) {
+		// pretty dirty hack for the output but basically i need two things returned:
+		// [0] how many coins i'll spend
+		// [1] how many items i'll purchase
+		requestAmount = Math.min(requestAmount, item.getCurrentStock());// can't buy more than the max stock
+		
+		for (int i = 0; i < requestAmount; ++i, ++output[1]) {
+			int currentPrice = shop.getShopSellPriceAt(item, item.getCurrentStock() - i); 
+			if (coinCount - currentPrice < 0)
+				break;
+			
+			coinCount -= currentPrice;
+			output[0] += currentPrice;
+		}
 	}
 
 }

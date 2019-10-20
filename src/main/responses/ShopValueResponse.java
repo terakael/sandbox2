@@ -2,12 +2,14 @@ package main.responses;
 
 import main.database.ItemDao;
 import main.database.ItemDto;
+import main.database.ShopItemDto;
 import main.processing.Player;
 import main.processing.ShopManager;
 import main.processing.Store;
 import main.requests.Request;
 import main.requests.ShopValueRequest;
 import main.types.ItemAttributes;
+import main.types.Items;
 
 public class ShopValueResponse extends Response {
 	public ShopValueResponse() {
@@ -36,6 +38,7 @@ public class ShopValueResponse extends Response {
 		ItemDto item = ItemDao.getItem(request.getObjectId());
 		
 		if (item == null 
+				|| item.getId() == Items.COINS.getValue()
 				|| !ItemDao.itemHasAttribute(item.getId(), ItemAttributes.TRADEABLE) 
 				|| ItemDao.itemHasAttribute(item.getId(), ItemAttributes.UNIQUE)
 				|| !shop.buysItem(item.getId())) {
@@ -44,9 +47,13 @@ public class ShopValueResponse extends Response {
 			return;
 		}
 		
-		int value = item.getPrice();
+		ShopItemDto shopItem = shop.getStockByItemId(item.getId());
+		if (shopItem == null)
+			shopItem = new ShopItemDto(item.getId(), 0, 0, item.getPrice());// default; a general store with no stock
+		
+		int value = shop.getShopSellPrice(shopItem);
 		if (request.getValueTypeId() == 1)
-			value = (int)((double)value * 0.8);
+			value = shop.getShopBuyPrice(shopItem);
 		
 		setRecoAndResponseText(1, String.format("%s is %s for %d coin%s.", 
 				ItemDao.getNameFromId(item.getId()), 

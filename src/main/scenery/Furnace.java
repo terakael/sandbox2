@@ -16,6 +16,8 @@ public class Furnace extends Scenery {
 		case 3: // copper
 		case 4: // iron
 		case 6: // mithril
+		case 179: // addy
+		case 180: // runite
 			// note that coal isn't in this list as you cannot use coal with the furnace.
 			// you need to use a primary ore; coal is used as a secondary ore for the other ores.
 			ShowSmithingTableResponse response = new ShowSmithingTableResponse();

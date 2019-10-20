@@ -37,8 +37,11 @@ import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
+import main.types.ItemAttributes;
 import main.types.Stats;
 import main.types.StorageTypes;
+import main.utils.RandomUtil;
+import main.utils.Utils;
 
 public class Player extends Attackable {
 	public enum PlayerState {
@@ -183,25 +186,8 @@ public class Player extends Attackable {
 					return;
 				}
 				
-				MineRequest mineRequest = (MineRequest)savedRequest;
-				MineableDto mineable = MineableDao.getMineableDtoByTileId(mineRequest.getTileId());
-				if (mineable == null) {
-					MineResponse mineResponse = new MineResponse();
-					mineResponse.setRecoAndResponseText(0, "you can't mine that.");
-					responseMaps.addClientOnlyResponse(this, mineResponse);
-					return;
-				}
-				PlayerStorageDao.addItemToFirstFreeSlot(getId(), StorageTypes.INVENTORY.getValue(), mineable.getItemId(), 1);
-				
-				AddExpRequest addExpReq = new AddExpRequest();
-				addExpReq.setId(getId());
-				addExpReq.setStatId(6);// mining
-				addExpReq.setExp(mineable.getExp());
-				
-				new AddExpResponse().process(addExpReq, this, responseMaps);
 				new FinishMiningResponse().process(savedRequest, this, responseMaps);
-				new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);
-				
+
 				savedRequest = null;
 				state = PlayerState.idle;
 			}
@@ -247,8 +233,13 @@ public class Player extends Attackable {
 		
 		HashMap<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.INVENTORY.getValue());
 		for (InventoryItemDto dto : inventoryList.values()) {
-			if (dto.getItemId() != 0)
-				GroundItemManager.add(getId(), dto.getItemId(), tileId, dto.getCount());
+			if (dto.getItemId() != 0) {
+				// stack and charges are mutually exclusive; you cannot have a stackable charged item.
+				// both use the same "count" parameter so it's impossible anyway.
+				int stack = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.STACKABLE) ? dto.getCount() : 1;
+				int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? dto.getCount() : 1;
+				GroundItemManager.add(getId(), dto.getItemId(), tileId, stack, charges);
+			}
 		}
 		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(getId(), StorageTypes.INVENTORY.getValue());
 		

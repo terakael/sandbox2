@@ -56,7 +56,6 @@ public class MessageResponse extends Response {
 	}
 	
 	private void handleDebugCommand(Player player, String msg, ResponseMaps responseMaps) {
-		
 		String[] msgParts = msg.split(" (?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");// the :: prefix should already be removed here
 		if (msgParts[0].equals("tele")) {
 			handleDebugTele(player, msgParts, responseMaps);
@@ -252,7 +251,7 @@ public class MessageResponse extends Response {
 			
 			for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
 				if (invItemIds.get(i) == 0) {
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, itemId, 1);
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, itemId, ItemDao.getMaxCharges(itemId));
 					--count;
 				}
 			}

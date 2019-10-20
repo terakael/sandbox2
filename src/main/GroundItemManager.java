@@ -20,6 +20,7 @@ public class GroundItemManager {
 		private int id;
 		private int lifetime;
 		private int count;
+		private int charges;
 	}
 	
 	// a map containing a list of ground items per tileId: Map<TileId, ItemList>
@@ -86,7 +87,7 @@ public class GroundItemManager {
 		}
 	}
 
-	public static void add(int playerId, int itemId, int tileId, int count) {
+	public static void add(int playerId, int itemId, int tileId, int count, int charges) {
 		if (!playerGroundItems.containsKey(playerId))
 			playerGroundItems.put(playerId, new HashMap<>());
 		
@@ -105,15 +106,15 @@ public class GroundItemManager {
 			}
 			
 			// otherwise add it as usual
-			playerGroundItems.get(playerId).get(tileId).add(new GroundItem(itemId, LIFETIME, count));
+			playerGroundItems.get(playerId).get(tileId).add(new GroundItem(itemId, LIFETIME, count, charges));
 		} else {
 			for (int i = 0; i < count; ++i)
-				playerGroundItems.get(playerId).get(tileId).add(new GroundItem(itemId, LIFETIME, 1));
+				playerGroundItems.get(playerId).get(tileId).add(new GroundItem(itemId, LIFETIME, 1, charges));
 		}
 	}
 
-	public static void remove(int playerId, int tileId, int itemId, int count) {
-		if (removeFromPlayerGroundItems(playerId, tileId, itemId, count))
+	public static void remove(int playerId, int tileId, int itemId, int count, int charges) {
+		if (removeFromPlayerGroundItems(playerId, tileId, itemId, count, charges))
 			return;
 		
 		if (!globalGroundItems.containsKey(tileId))
@@ -121,7 +122,7 @@ public class GroundItemManager {
 		
 		GroundItem toRemove = null;
 		for (GroundItem item : globalGroundItems.get(tileId)) {
-			if (item.id == itemId && item.count == count) {
+			if (item.id == itemId && item.count == count && item.charges == charges) {
 				toRemove = item;
 				break;
 			}
@@ -131,7 +132,7 @@ public class GroundItemManager {
 			globalGroundItems.get(tileId).remove(toRemove);
 	}
 	
-	private static boolean removeFromPlayerGroundItems(int playerId, int tileId, int itemId, int count) {
+	private static boolean removeFromPlayerGroundItems(int playerId, int tileId, int itemId, int count, int charges) {
 		if (!playerGroundItems.containsKey(playerId))
 			return false;
 		
@@ -140,7 +141,7 @@ public class GroundItemManager {
 		
 		GroundItem toRemove = null;
 		for (GroundItem item : playerGroundItems.get(playerId).get(tileId)) {
-			if (item.id == itemId && item.count == count) {
+			if (item.id == itemId && item.count == count && item.charges == charges) {
 				toRemove = item;
 				break;
 			}
