@@ -1,6 +1,7 @@
 package main.processing;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -11,8 +12,10 @@ import javax.websocket.Session;
 import lombok.Getter;
 import lombok.Setter;
 import main.GroundItemManager;
+import main.database.AnimationDao;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
+import main.database.EquipmentDto;
 import main.database.InventoryItemDto;
 import main.database.ItemDao;
 import main.database.MineableDao;
@@ -30,13 +33,16 @@ import main.requests.RequestFactory;
 import main.responses.AddExpResponse;
 import main.responses.DeathResponse;
 import main.responses.DropResponse;
+import main.responses.EquipResponse;
 import main.responses.FinishMiningResponse;
 import main.responses.InventoryUpdateResponse;
+import main.responses.MessageResponse;
 import main.responses.MineResponse;
 import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
+import main.responses.StatBoostResponse;
 import main.types.ItemAttributes;
 import main.types.Stats;
 import main.types.StorageTypes;
@@ -62,9 +68,17 @@ public class Player extends Attackable {
 	@Setter @Getter private NpcDialogueDto currentDialogue = null;
 	@Setter @Getter private int shopId;// if the player is currently in a shop, this is the id
 	private int postFightCooldown = 0;
+	private HashMap<Integer, Integer> equippedSlotsByItemId = new HashMap<>();// itemId, slot
+	
+	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
+	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
+	
+	@Setter private int restorationBuffRemainingTicks = 0;
+	private final int restorationBuffTriggerTicks = 3;
+	private int restorationBuffCurrentTriggerTicks = restorationBuffTriggerTicks;
 	
 //	@Getter private HashMap<Stats, Integer> stats = new HashMap<>();// cached so we don't have to keep polling the db
-	
+		
 	public Player(PlayerDto dto, Session session) {
 		this.dto = dto;
 		tileId = dto.getTileId();
@@ -89,6 +103,25 @@ public class Player extends Attackable {
 		// called each tick; build a response where necessary
 		if (postFightCooldown > 0)
 			--postFightCooldown;
+		
+		if (--statRestoreTicks <= 0) {
+			statRestoreTicks = MAX_STAT_RESTORE_TICKS;
+			restoreStats(responseMaps);
+		}
+		
+		if (restorationBuffRemainingTicks > 0) {
+			--restorationBuffRemainingTicks;
+			if (--restorationBuffCurrentTriggerTicks <= 0) {
+				restorationBuffCurrentTriggerTicks = restorationBuffTriggerTicks;
+				restoreNegativeStats(responseMaps);
+			}
+			
+			if (restorationBuffRemainingTicks == 0) {
+				MessageResponse resp = new MessageResponse();
+				resp.setResponseText("your buff has expired.");
+				responseMaps.addClientOnlyResponse(this, resp);
+			}
+		}
 		
 		switch (state) {
 		case walking: {
@@ -204,6 +237,34 @@ public class Player extends Attackable {
 		}
 	}
 	
+	private void restoreStats(ResponseMaps responseMaps) {
+		HashMap<Integer, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
+		
+		for (Map.Entry<Integer, Integer> entry : boosts.entrySet()) {
+			int relativeBoost = entry.getValue();
+			if (relativeBoost > 0)
+				--relativeBoost;
+			else if (relativeBoost < 0)
+				++relativeBoost;
+			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
+		}
+		
+		new StatBoostResponse().process(null, this, responseMaps);
+	}
+	
+	private void restoreNegativeStats(ResponseMaps responseMaps) {
+		HashMap<Integer, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
+		
+		for (Map.Entry<Integer, Integer> entry : boosts.entrySet()) {
+			int relativeBoost = entry.getValue();
+			if (relativeBoost < 0)
+				++relativeBoost;
+			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
+		}
+		
+		new StatBoostResponse().process(null, this, responseMaps);
+	}
+	
 	public void setState(PlayerState state) {
 		this.state = state;
 		this.shopId = 0;
@@ -265,7 +326,7 @@ public class Player extends Attackable {
 		state = PlayerState.idle;
 		setPostFightCooldown();
 		int totalExp = killed.getExp();
-		float points = (float)totalExp / 5;
+		float points = ((float)totalExp / 5) * 4;
 		
 		// exp is doled out based on attackStyle and weapon type.
 		// exp is split into five parts (called points) and the points are stored as follows:
@@ -365,9 +426,16 @@ public class Player extends Attackable {
 	
 	@Override
 	public void onHit(int damage, ResponseMaps responseMaps) {
+		// remove any buffs that don't work in combat
+		if (restorationBuffRemainingTicks > 1)
+			restorationBuffRemainingTicks = 1;
+		
+		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(5);
 		currentHp -= damage;
 		if (currentHp < 0)
 			currentHp = 0;
+		
+		handleReinforcedItemDegradation(responseMaps);
 		
 		// you have 10 hp max, 1hp remaining
 		// relative boost should be -9
@@ -378,8 +446,55 @@ public class Player extends Attackable {
 		playerUpdateResponse.setId(getId());
 		playerUpdateResponse.setDamage(damage);
 		playerUpdateResponse.setHp(currentHp);
-		responseMaps.addBroadcastResponse(playerUpdateResponse);
+		responseMaps.addBroadcastResponse(playerUpdateResponse);	
 		
+		new StatBoostResponse().process(null, this, responseMaps);
+	}
+	
+	private void handleReinforcedItemDegradation(ResponseMaps responseMaps) {
+		boolean itemUpdated = false;
+		boolean itemCleared = false;
+		for (Map.Entry<Integer, Integer> entry : equippedSlotsByItemId.entrySet()) {
+			int degradedItemId = EquipmentDao.getBaseItemFromReinforcedItem(entry.getKey());
+			if (degradedItemId > 0) {
+				InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY.getValue(), entry.getValue());
+				if (item.getCharges() > 1) {
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(
+							getId(), 
+							StorageTypes.INVENTORY.getValue(), 
+							entry.getValue(), 
+							entry.getKey(), item.getCharges() - 1);
+				} else {
+					// ran out of charges; degrade to the base item
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY.getValue(), entry.getValue(), degradedItemId, 1);
+					
+					// clear the equipped item first then reset it with the degraded base item
+					EquipmentDao.clearEquippedItem(getId(), entry.getValue());
+					EquipmentDao.setEquippedItem(getId(), entry.getValue(), degradedItemId);
+					itemCleared = true;
+					
+					// it degraded so throw up a message
+					MessageResponse messageResponse = new MessageResponse();
+					messageResponse.setRecoAndResponseText(0, String.format("Your %s degraded!", ItemDao.getNameFromId(item.getItemId())));
+					messageResponse.setColour("white");
+					responseMaps.addClientOnlyResponse(this, messageResponse);
+				}
+				itemUpdated = true;
+			}
+		}
+		
+		if (itemUpdated) {
+			recacheEquippedItems();
+			new InventoryUpdateResponse().process(RequestFactory.create("", getId()), this, responseMaps);
+			if (itemCleared) {
+				PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+				playerUpdate.setId(getId());
+				playerUpdate.setEquipAnimations(AnimationDao.getEquipmentAnimationsByPlayerId(getId()));
+				responseMaps.addBroadcastResponse(playerUpdate);
+				
+				new EquipResponse().process(null, WorldProcessor.getPlayerById(getId()), responseMaps);
+			}
+		}
 	}
 	
 	@Override
@@ -425,5 +540,9 @@ public class Player extends Attackable {
 	
 	public void setPostFightCooldown() {
 		postFightCooldown = 5;
+	}
+	
+	public void recacheEquippedItems() {
+		equippedSlotsByItemId = EquipmentDao.getEquippedSlotsAndItemIdsByPlayerId(this.getId());
 	}
 }

@@ -42,7 +42,7 @@ public class ShopValueResponse extends Response {
 				|| !ItemDao.itemHasAttribute(item.getId(), ItemAttributes.TRADEABLE) 
 				|| ItemDao.itemHasAttribute(item.getId(), ItemAttributes.UNIQUE)
 				|| !shop.buysItem(item.getId())) {
-			setRecoAndResponseText(1, "you can't sell that.");
+			setRecoAndResponseText(1, "you can't sell that here.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}

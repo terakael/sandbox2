@@ -70,6 +70,9 @@ public class GuiltObelisk extends Obelisk {
 		case RUNE_HAMMER_II:
 			attemptToEnchant(Items.RUNE_HAMMER_II, Items.RUNE_HAMMER_III, slot, player, responseMaps);
 			return true;
+		case DRAGON_SWORD_II:
+			attemptToEnchant(Items.DRAGON_SWORD_II, Items.DRAGON_SWORD_III, slot, player, responseMaps);
+			return true;
 		default:
 			break;
 		}

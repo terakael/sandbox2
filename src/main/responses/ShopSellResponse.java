@@ -53,7 +53,7 @@ public class ShopSellResponse extends Response {
 		if (!ItemDao.itemHasAttribute(item.getId(), ItemAttributes.TRADEABLE) ||
 				ItemDao.itemHasAttribute(item.getId(), ItemAttributes.UNIQUE) ||
 				!shop.buysItem(item.getId())) {
-			setRecoAndResponseText(0, "you can't sell that.");
+			setRecoAndResponseText(0, "you can't sell that here.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}

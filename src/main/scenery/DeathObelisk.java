@@ -70,6 +70,9 @@ public class DeathObelisk extends Obelisk{
 		case RUNE_HAMMER_VII:
 			attemptToEnchant(Items.RUNE_HAMMER_VII, Items.RUNE_HAMMER_VIII, slot, player, responseMaps);
 			return true;
+		case DRAGON_SWORD_VII:
+			attemptToEnchant(Items.DRAGON_SWORD_VII, Items.DRAGON_SWORD_VIII, slot, player, responseMaps);
+			return true;
 		default:
 			break;
 		}

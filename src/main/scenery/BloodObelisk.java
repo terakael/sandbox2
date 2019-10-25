@@ -70,6 +70,9 @@ public class BloodObelisk extends Obelisk {
 		case RUNE_HAMMER_VI:
 			attemptToEnchant(Items.RUNE_HAMMER_VI, Items.RUNE_HAMMER_VII, slot, player, responseMaps);
 			return true;
+		case DRAGON_SWORD_VI:
+			attemptToEnchant(Items.DRAGON_SWORD_VI, Items.DRAGON_SWORD_VII, slot, player, responseMaps);
+			return true;
 		default:
 			break;
 		}

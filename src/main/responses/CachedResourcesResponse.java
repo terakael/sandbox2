@@ -30,6 +30,7 @@ public class CachedResourcesResponse extends Response {
 	private static CachedResourcesResponse instance = null;
 	private Map<Integer, String> statMap = null;
 	private List<NPCDto> npcs = null;
+	private Map<Integer, Integer> expMap = null;
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -56,6 +57,7 @@ public class CachedResourcesResponse extends Response {
 		contextOptions = ContextOptionsDao.getAllContextOptions();
 		statMap = StatsDao.getStats();
 		npcs = NPCDao.getNpcList();
+		expMap = StatsDao.getExpMap();
 	}
 
 }

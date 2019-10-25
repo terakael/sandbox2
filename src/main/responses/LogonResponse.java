@@ -31,6 +31,7 @@ public class LogonResponse extends Response {
 	@Getter private int tileId;
 	private int attackStyleId;
 	private Map<Integer, Integer> stats;
+	private Map<Integer, Integer> boosts;
 	private List<PlayerDto> players;
 	private Map<Integer, InventoryItemDto> inventory;
 	private Map<PlayerPartType, AnimationDto> baseAnimations;
@@ -70,6 +71,7 @@ public class LogonResponse extends Response {
 		attackStyleId = dto.getAttackStyleId();
 
 		stats = StatsDao.getAllStatExpByPlayerId(dto.getId());
+		boosts = StatsDao.getRelativeBoostsByPlayerId(dto.getId());
 		
 		// if there was a bad disconnection (server crash etc) and the player was mid-trade, put the items back into the player's inventory.
 		HashMap<Integer, InventoryItemDto> itemsInTrade = PlayerStorageDao.getStorageDtoMapByPlayerId(id, StorageTypes.TRADE.getValue());

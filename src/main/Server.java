@@ -5,7 +5,9 @@ import java.util.Scanner;
 
 import javax.websocket.DeploymentException;
 
+import main.database.CatchableDao;
 import main.database.ConsumableDao;
+import main.database.CookableDao;
 import main.database.EquipmentDao;
 import main.database.ItemDao;
 import main.database.MineableDao;
@@ -13,6 +15,7 @@ import main.database.NPCDao;
 import main.database.NpcMessageDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
+import main.database.UseItemOnItemDao;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
 import main.processing.ShopManager;
@@ -62,6 +65,10 @@ public class Server {
 			NPCManager.get().loadNpcs();
 			NpcMessageDao.setupCaches();
 			ConsumableDao.cacheConsumables();
+			ConsumableDao.cacheConsumableEffects();
+			CookableDao.cacheCookables();
+			CatchableDao.cacheCatchables();
+			UseItemOnItemDao.cacheData();
 			EquipmentDao.setupCaches();
 			ShopDao.setupCaches();
 			ShopManager.setupShops();

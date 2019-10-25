@@ -70,6 +70,9 @@ public class FearObelisk extends Obelisk {
 		case RUNE_HAMMER_IV:
 			attemptToEnchant(Items.RUNE_HAMMER_IV, Items.RUNE_HAMMER_V, slot, player, responseMaps);
 			return true;
+		case DRAGON_SWORD_IV:
+			attemptToEnchant(Items.DRAGON_SWORD_IV, Items.DRAGON_SWORD_V, slot, player, responseMaps);
+			return true;
 		default:
 			break;
 		}

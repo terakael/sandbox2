@@ -12,7 +12,7 @@ public class PlayerDao {
 	private PlayerDao() {}
 		
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
-		final String query = "select id, name, password, tile_id, current_hp, max_hp, attack_style_id from view_player where name = ? and password = ?";
+		final String query = "select id, name, password, tile_id, attack_style_id from player where name = ? and password = ?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -27,8 +27,8 @@ public class PlayerDao {
 							rs.getString("name"), 
 							rs.getString("password"), 
 							rs.getInt("tile_id"), 
-							rs.getInt("current_hp"), 
-							rs.getInt("max_hp"), 
+							StatsDao.getCurrentHpByPlayerId(rs.getInt("id")), 
+							StatsDao.getMaxHpByPlayerId(rs.getInt("id")), 
 							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
 							rs.getInt("attack_style_id"), 
 							AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")),
@@ -96,7 +96,7 @@ public class PlayerDao {
 	
 	public static List<PlayerDto> getAllPlayers() {
 		List<PlayerDto> playerList = new ArrayList<>();
-		final String query = "select id, name, tile_id, current_hp, max_hp, combat_lvl, attack_style_id from view_player inner join player_session on player_session.player_id = view_player.id";
+		final String query = "select id, name, tile_id, attack_style_id from player inner join player_session on player_session.player_id = player.id";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
@@ -109,8 +109,8 @@ public class PlayerDao {
 						rs.getString("name"), 
 						null, 
 						rs.getInt("tile_id"), 
-						rs.getInt("current_hp"), 
-						rs.getInt("max_hp"), 
+						StatsDao.getCurrentHpByPlayerId(playerId), 
+						StatsDao.getMaxHpByPlayerId(playerId), 
 						StatsDao.getCombatLevelByPlayerId(playerId),
 						rs.getInt("attack_style_id"), 
 						AnimationDao.loadAnimationsByPlayerId(playerId),

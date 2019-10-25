@@ -12,6 +12,7 @@ import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.InventoryMoveRequest;
 import main.requests.Request;
+import main.requests.RequestFactory;
 import main.types.StorageTypes;
 
 @Setter
@@ -21,6 +22,10 @@ public class InventoryUpdateResponse extends Response {
 
 	public InventoryUpdateResponse() {
 		setAction("invupdate");
+	}
+	
+	public static void sendUpdate(Player player, ResponseMaps responseMaps) {
+		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);
 	}
 
 	@Override
@@ -65,6 +70,8 @@ public class InventoryUpdateResponse extends Response {
 		if (srcItemEquipped) {
 			EquipmentDao.setEquippedItem(req.getId(), req.getDest(), srcItem.getItemId());
 		}
+		
+		player.recacheEquippedItems();
 	}
 
 }

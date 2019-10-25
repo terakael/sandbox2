@@ -66,6 +66,8 @@ public class EquipResponse extends Response {
 		equipAnimations = AnimationDao.getEquipmentAnimationsByPlayerId(player.getId());
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(player.getId());
 		
+		player.recacheEquippedItems();
+		
 		responseMaps.addClientOnlyResponse(player, this);
 		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
@@ -103,8 +105,8 @@ public class EquipResponse extends Response {
 			}
 			break;
 		case SWORD:
-			if (player.getStats().get(Stats.ACCURACY) < equip.getRequirement() || player.getStats().get(Stats.STRENGTH) < equip.getRequirement()) {
-				setRecoAndResponseText(0, String.format("you need %d accuracy and strength to equip that.", equip.getRequirement()));
+			if (player.getStats().get(Stats.ACCURACY) < equip.getRequirement() && player.getStats().get(Stats.STRENGTH) < equip.getRequirement()) {
+				setRecoAndResponseText(0, String.format("you need %d strength or accuracy to equip that.", equip.getRequirement()));
 				responseMaps.addClientOnlyResponse(player, this);
 				return false;
 			}

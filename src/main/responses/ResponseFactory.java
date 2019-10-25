@@ -87,6 +87,9 @@ public class ResponseFactory {
 		case "eat":
 			response = new EatResponse();
 			break;
+		case "drink":
+			response = new DrinkResponse();
+			break;
 		case "dialogue":
 			response = new DialogueResponse();
 			break;
@@ -119,6 +122,9 @@ public class ResponseFactory {
 			break;
 		case "accept_trade_offer":
 			response = new AcceptTradeOfferResponse();
+			break;
+		case "catch":
+			response = new CatchResponse();
 			break;
 		default:
 			response = new UnknownResponse();

@@ -70,6 +70,9 @@ public class DoubtObelisk extends Obelisk {
 		case RUNE_HAMMER:
 			attemptToEnchant(Items.RUNE_HAMMER, Items.RUNE_HAMMER_II, slot, player, responseMaps);
 			return true;
+		case DRAGON_SWORD:
+			attemptToEnchant(Items.DRAGON_SWORD, Items.DRAGON_SWORD_II, slot, player, responseMaps);
+			return true;
 		default:
 			break;
 		}

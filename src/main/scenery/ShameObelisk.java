@@ -70,6 +70,9 @@ public class ShameObelisk extends Obelisk {
 		case RUNE_HAMMER_III:
 			attemptToEnchant(Items.RUNE_HAMMER_III, Items.RUNE_HAMMER_IV, slot, player, responseMaps);
 			return true;
+		case DRAGON_SWORD_III:
+			attemptToEnchant(Items.DRAGON_SWORD_III, Items.DRAGON_SWORD_IV, slot, player, responseMaps);
+			return true;
 		default:
 			break;
 		}

@@ -55,8 +55,14 @@ public class TakeResponse extends Response {
 			return;
 		}
 		
+		ArrayList<Integer> invItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 		if (ItemDao.itemHasAttribute(groundItem.getId(), ItemAttributes.STACKABLE)) {
-			ArrayList<Integer> invItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			if (!invItems.contains(0) && !invItems.contains(takeReq.getItemId())) {
+				setRecoAndResponseText(0, "you don't have enough space to take that.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
+			
 			int invItemIndex = invItems.indexOf(groundItem.getId());
 			if (invItemIndex >= 0) {
 				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIndex, groundItem.getCount());
@@ -64,6 +70,11 @@ public class TakeResponse extends Response {
 				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCount());
 			}
 		} else {
+			if (!invItems.contains(0)) {
+				setRecoAndResponseText(0, "you don't have enough space to take that.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
 			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCharges());
 		}
 		

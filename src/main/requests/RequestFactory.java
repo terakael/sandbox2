@@ -41,6 +41,8 @@ public class RequestFactory {
 		map.put("offer", OfferRequest.class);
 		map.put("rescind", RescindRequest.class);
 		map.put("accept_trade_offer", AcceptTradeOfferRequest.class);
+		map.put("drink", DrinkRequest.class);
+		map.put("catch", CatchRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

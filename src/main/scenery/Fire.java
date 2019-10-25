@@ -2,6 +2,9 @@ package main.scenery;
 
 import java.util.ArrayList;
 
+import main.database.CookableDao;
+import main.database.CookableDto;
+import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.RequestFactory;
@@ -18,29 +21,27 @@ public class Fire extends Scenery {
 		if (item == null)
 			return false;
 		
-		switch (item) {
-		case RAW_CHICKEN:
+		CookableDto cookable = CookableDao.getCookable(srcItemId);
+		if (cookable != null) {
 			ArrayList<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			
-			if (inv.get(slot) != srcItemId) {// the passed-in slot doesn't have the correct item?  check other slots
+			if (inv.get(slot) != cookable.getRawItemId()) {// the passed-in slot doesn't have the correct item?  check other slots
 				for (slot = 0; slot < inv.size(); ++slot) {
-					if (inv.get(slot) == srcItemId)
+					if (inv.get(slot) == cookable.getRawItemId())
 						break;
 				}
 			}
 			
 			if (slot < inv.size()) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, Items.COOKED_CHICKEN.getValue(), 1);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, cookable.getCookedItemId(), 1);
 				InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
 				invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
-				invUpdate.setResponseText("you cook the chicken.");
-				return true;
+				invUpdate.setResponseText(String.format("you cook the %s.", ItemDao.getNameFromId(cookable.getCookedItemId())));
 			}
 			
-			break;
-		default:
-			break;
+			return true;
 		}
+		
 		return false;
 	}
 

@@ -7,12 +7,25 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Getter;
 import main.types.Stats;
 
 public class StatsDao {
 	private StatsDao() {}
 	
 	private static Map<Integer, String> cachedStats = null;
+	@Getter private static HashMap<Integer, Integer> expMap = null;
+	
+	static {
+		expMap = new HashMap<>();
+		expMap.put(1,  0);
+
+		int cumulativeExp = 0;
+		for (int i = 2; i <= 99; ++i) {
+			cumulativeExp += (int)(i - 1 + 300 * Math.pow(2, (i - 1) / 7) / 4);
+			expMap.put(i, cumulativeExp);
+		}
+	}
 	
 	public static Map<Integer, Integer> getStatsByPlayerId(int id) {
 		final String query = "select stat_id, exp from player_stats where player_id = ?";
@@ -179,7 +192,7 @@ public class StatsDao {
 	
 	public static int getCurrentHpByPlayerId(int id) {
 		int hp = 0;
-		final String query = "select floor(sqrt(exp)) + relative_boost as current_boost from player_stats where player_id = ? and stat_id = 5";
+		final String query = "select exp, relative_boost as current_boost from player_stats where player_id = ? and stat_id = 5";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -188,7 +201,7 @@ public class StatsDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next())
-					return rs.getInt("current_boost");
+					return getLevelFromExp(rs.getInt("exp")) + rs.getInt("current_boost");
 			}
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
@@ -198,7 +211,11 @@ public class StatsDao {
 	}
 	
 	public static int getLevelFromExp(int exp) {
-		return (int)Math.sqrt(exp);
+		for (Map.Entry<Integer, Integer> entry : expMap.entrySet()) {
+			if (exp < entry.getValue())
+				return entry.getKey() - 1;
+		}
+		return 99;
 	}
 
 	public static int getMaxHpByPlayerId(int id) {

@@ -70,6 +70,9 @@ public class GriefObelisk extends Obelisk {
 		case RUNE_HAMMER_V:
 			attemptToEnchant(Items.RUNE_HAMMER_V, Items.RUNE_HAMMER_VI, slot, player, responseMaps);
 			return true;
+		case DRAGON_SWORD_V:
+			attemptToEnchant(Items.DRAGON_SWORD_V, Items.DRAGON_SWORD_VI, slot, player, responseMaps);
+			return true;
 		default:
 			break;
 		}

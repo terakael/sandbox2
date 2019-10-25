@@ -7,6 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class ConsumableDto {
 	private int itemId;
-	private int statId;
-	private int amount;
+	private int becomesId;// itemId it turns into on consumption (e.g. goblin stank (4) -> goblin stank (3))
 }

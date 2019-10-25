@@ -94,14 +94,13 @@ public class SmithResponse extends Response {
 		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId())));
 		responseMaps.addClientOnlyResponse(player, this);
 		
-		// smithing exp is half of the sum of all the materials' mining exp (because mining has a chance to fail, but smithing does not)
 		int exp = MineableDao.getMineableExpByItemId(dto.getMaterial1()) * dto.getCount1();
 		if (dto.getMaterial2() != 0)
 			exp += MineableDao.getMineableExpByItemId(dto.getMaterial2()) * dto.getCount2();
 		if (dto.getMaterial3() != 0)
 			exp += MineableDao.getMineableExpByItemId(dto.getMaterial3()) * dto.getCount3();
 		
-		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING.getValue(), exp/2), player, responseMaps);
+		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING.getValue(), exp), player, responseMaps);
 	}
 
 	private boolean playerHasItemsInInventory(int playerId, int materialId, int count) {
