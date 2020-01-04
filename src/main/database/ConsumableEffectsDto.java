@@ -9,4 +9,5 @@ public class ConsumableEffectsDto {
 	private int itemId;
 	private int statId;
 	private int amount;
+	private int pct;
 }

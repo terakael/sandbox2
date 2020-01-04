@@ -274,7 +274,7 @@ public class MessageResponse extends Response {
 			}
 		}
 		
-		StatsDao.setRelativeBoostByPlayerIdStatId(targetPlayer.getId(), Stats.HITPOINTS.getValue(), 0);
+		StatsDao.setRelativeBoostByPlayerIdStatId(targetPlayer.getId(), Stats.HITPOINTS, 0);
 		int maxHp = StatsDao.getMaxHpByPlayerId(targetPlayer.getId());
 		targetPlayer.setCurrentHp(maxHp);
 		

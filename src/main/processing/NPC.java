@@ -21,6 +21,7 @@ import main.responses.DropResponse;
 import main.responses.NpcUpdateResponse;
 import main.responses.PvmStartResponse;
 import main.responses.ResponseMaps;
+import main.types.Buffs;
 import main.types.ItemAttributes;
 import main.types.NpcAttributes;
 import main.types.Stats;
@@ -64,6 +65,14 @@ public class NPC extends Attackable {
 //		bonuses.put(Stats.HITPOINTS, dto.getHpBonus());
 		setBonuses(bonuses);
 		
+		HashMap<Stats, Integer> boosts = new HashMap<>();
+		boosts.put(Stats.STRENGTH, 0);
+		boosts.put(Stats.ACCURACY, 0);
+		boosts.put(Stats.DEFENCE, 0);
+		boosts.put(Stats.AGILITY, 0);
+		boosts.put(Stats.MAGIC, 0);
+		setBoosts(boosts);
+		
 		setCurrentHp(dto.getHp());
 		setMaxCooldown(dto.getAttackSpeed());
 		
@@ -79,7 +88,12 @@ public class NPC extends Attackable {
 		if ((dto.getAttributes() & NpcAttributes.AGGRESSIVE.getValue()) == NpcAttributes.AGGRESSIVE.getValue() && !isInCombat()) {
 			// aggressive monster; look for targets
 			if (--huntTimer <= 0) {
-				ArrayList<Player> closePlayers = WorldProcessor.getPlayersNearTile(dto.getTileId(), dto.getRoamRadius());
+				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(dto.getTileId(), dto.getRoamRadius());
+				
+				if (dto.getId() == 18 || dto.getId() == 22) { // goblins won't attack anyone with the goblin stank buff
+					closePlayers = closePlayers.stream().filter(player -> !player.hasBuff(Buffs.GOBLIN_STANK)).collect(Collectors.toList());
+				}
+				
 				if (target != null && !closePlayers.contains(target))
 					target = null;
 				
@@ -106,7 +120,7 @@ public class NPC extends Attackable {
 				tickCounter = r.nextInt((maxTickCount - minTickCount) + 1) + minTickCount;
 				
 				int destTile = PathFinder.chooseRandomTileIdInRadius(dto.getTileId(), dto.getRoamRadius());
-				path = PathFinder.findPath(tileId, destTile, true);
+				path = PathFinder.findPath(tileId, destTile, true, dto.getTileId(), dto.getRoamRadius());
 			}
 		} else {
 			// chase the target if not next to it

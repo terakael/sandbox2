@@ -71,13 +71,13 @@ public class StatsDao {
 		return null;
 	}
 	
-	public static int getStatLevelByStatIdPlayerId(int statId, int playerId) {
+	public static int getStatLevelByStatIdPlayerId(Stats statId, int playerId) {
 		final String query = "select exp from player_stats where stat_id=? and player_id=?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
-			ps.setInt(1, statId);
+			ps.setInt(1, statId.getValue());
 			ps.setInt(2, playerId);
 			
 			try (ResultSet rs = ps.executeQuery()) {
@@ -153,7 +153,7 @@ public class StatsDao {
 		return null;
 	}
 	
-	public static void setRelativeBoostByPlayerIdStatId(int playerId, int statId, int relativeBoost) {
+	public static void setRelativeBoostByPlayerIdStatId(int playerId, Stats statId, int relativeBoost) {
 		final String query = "update player_stats set relative_boost=? where player_id=? and stat_id=?";
 		
 		try (
@@ -162,7 +162,7 @@ public class StatsDao {
 		) {
 			ps.setInt(1, relativeBoost);
 			ps.setInt(2, playerId);
-			ps.setInt(3, statId);
+			ps.setInt(3, statId.getValue());
 			
 			ps.executeUpdate();
 		} catch (SQLException e) {
@@ -170,9 +170,9 @@ public class StatsDao {
 		}
 	}
 	
-	public static HashMap<Integer, Integer> getRelativeBoostsByPlayerId(int playerId) {
+	public static HashMap<Stats, Integer> getRelativeBoostsByPlayerId(int playerId) {
 		final String query = "select stat_id, relative_boost from player_stats where player_id=?";
-		HashMap<Integer, Integer> relativeBoosts = new HashMap<>();
+		HashMap<Stats, Integer> relativeBoosts = new HashMap<>();
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -181,7 +181,7 @@ public class StatsDao {
 			
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
-					relativeBoosts.put(rs.getInt("stat_id"), rs.getInt("relative_boost"));
+					relativeBoosts.put(Stats.withValue(rs.getInt("stat_id")), rs.getInt("relative_boost"));
 			}
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());

@@ -1,5 +1,7 @@
 package main.database;
 
+import java.io.InputStream;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,10 +41,29 @@ public class SpriteMapDao {
 			ResultSet rs = ps.executeQuery();
 		) {
 			while (rs.next())
-				spriteMaps.add(new SpriteMapDto(rs.getInt("id"), rs.getString("name"), rs.getString("data")));
+				spriteMaps.add(new SpriteMapDto(rs.getInt("id"), rs.getString("name"), rs.getString("data").replace("\n", "")));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return spriteMaps;
+	}
+	
+	public static InputStream getSpriteMapImageBinaryStreamById(int id) {
+		final String query = "select data from sprite_maps where id=?";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, id);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					Blob blob = rs.getBlob("data");
+					return blob.getBinaryStream();
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

@@ -6,6 +6,8 @@ import java.util.Map;
 import lombok.Getter;
 import main.database.ContextOptionsDao;
 import main.database.ContextOptionsDto;
+import main.database.GroundTextureDao;
+import main.database.GroundTextureDto;
 import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.NPCDao;
@@ -17,6 +19,7 @@ import main.database.SpriteFrameDto;
 import main.database.SpriteMapDao;
 import main.database.SpriteMapDto;
 import main.database.StatsDao;
+import main.processing.MinimapGenerator;
 import main.processing.Player;
 import main.requests.Request;
 
@@ -31,6 +34,8 @@ public class CachedResourcesResponse extends Response {
 	private Map<Integer, String> statMap = null;
 	private List<NPCDto> npcs = null;
 	private Map<Integer, Integer> expMap = null;
+	private List<GroundTextureDto> groundTextures = null;
+	private String minimap;
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -54,10 +59,12 @@ public class CachedResourcesResponse extends Response {
 		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
 		items = ItemDao.getAllItems();
 		scenery = SceneryDao.getAllSceneryByRoom(1);// TODO dynamic based on player room when there's more rooms
+		groundTextures = GroundTextureDao.getAllGroundTexturesByRoom(1);
 		contextOptions = ContextOptionsDao.getAllContextOptions();
 		statMap = StatsDao.getStats();
 		npcs = NPCDao.getNpcList();
 		expMap = StatsDao.getExpMap();
+		minimap = MinimapGenerator.getImage();
 	}
 
 }

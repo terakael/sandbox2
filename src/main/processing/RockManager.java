@@ -1,12 +1,9 @@
 package main.processing;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import main.requests.RequestFactory;
 import main.responses.ResponseMaps;
 import main.responses.RockRespawnResponse;
 

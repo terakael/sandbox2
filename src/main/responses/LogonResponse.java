@@ -1,8 +1,10 @@
 package main.responses;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.websocket.Session;
 
@@ -11,6 +13,7 @@ import main.GroundItemManager;
 import main.database.AnimationDao;
 import main.database.AnimationDto;
 import main.database.EquipmentDao;
+import main.database.GroundTextureDto;
 import main.database.InventoryItemDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
@@ -71,7 +74,10 @@ public class LogonResponse extends Response {
 		attackStyleId = dto.getAttackStyleId();
 
 		stats = StatsDao.getAllStatExpByPlayerId(dto.getId());
-		boosts = StatsDao.getRelativeBoostsByPlayerId(dto.getId());
+		boosts = StatsDao.getRelativeBoostsByPlayerId(dto.getId())
+				.entrySet()
+				.stream()
+				.collect(Collectors.toMap(e -> e.getKey().getValue(), Map.Entry::getValue));
 		
 		// if there was a bad disconnection (server crash etc) and the player was mid-trade, put the items back into the player's inventory.
 		HashMap<Integer, InventoryItemDto> itemsInTrade = PlayerStorageDao.getStorageDtoMapByPlayerId(id, StorageTypes.TRADE.getValue());

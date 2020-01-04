@@ -15,6 +15,7 @@ import main.processing.RockManager;
 import main.requests.MineRequest;
 import main.requests.Request;
 import main.types.Items;
+import main.types.Stats;
 import main.types.StorageTypes;
 
 public class MineResponse extends Response {
@@ -69,7 +70,7 @@ public class MineResponse extends Response {
 			}
 			
 			// does the player have the level to mine this?
-			if (StatsDao.getStatLevelByStatIdPlayerId(6, player.getId()) < mineable.getLevel()) {
+			if (StatsDao.getStatLevelByStatIdPlayerId(Stats.MINING, player.getId()) < mineable.getLevel()) {
 				setRecoAndResponseText(0, String.format("you need %d mining to mine this.", mineable.getLevel()));
 				responseMaps.addClientOnlyResponse(player, this);
 				return;

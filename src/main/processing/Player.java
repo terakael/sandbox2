@@ -1,8 +1,6 @@
 package main.processing;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -15,39 +13,35 @@ import main.GroundItemManager;
 import main.database.AnimationDao;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
-import main.database.EquipmentDto;
 import main.database.InventoryItemDto;
 import main.database.ItemDao;
-import main.database.MineableDao;
-import main.database.MineableDto;
 import main.database.NpcDialogueDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
-import main.database.StatsDto;
-import main.requests.AddExpRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.requests.SmithRequest;
 import main.responses.AddExpResponse;
 import main.responses.DeathResponse;
-import main.responses.DropResponse;
 import main.responses.EquipResponse;
+import main.responses.FinishClimbResponse;
 import main.responses.FinishMiningResponse;
+import main.responses.FinishSmithResponse;
+import main.responses.FinishUseResponse;
 import main.responses.InventoryUpdateResponse;
 import main.responses.MessageResponse;
-import main.responses.MineResponse;
 import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
 import main.responses.StatBoostResponse;
+import main.types.Buffs;
 import main.types.ItemAttributes;
 import main.types.Stats;
 import main.types.StorageTypes;
-import main.utils.RandomUtil;
-import main.utils.Utils;
 
 public class Player extends Attackable {
 	public enum PlayerState {
@@ -56,7 +50,10 @@ public class Player extends Attackable {
 		chasing,// used for walking to a moving target (following, moving to attack something etc)
 		following,
 		mining,
-		fighting
+		smithing,
+		fighting,
+		using,
+		climbing // ladders etc, give a tick or so duration (like for climbing animation in the future)
 	};
 	
 	@Getter private PlayerDto dto;
@@ -69,11 +66,11 @@ public class Player extends Attackable {
 	@Setter @Getter private int shopId;// if the player is currently in a shop, this is the id
 	private int postFightCooldown = 0;
 	private HashMap<Integer, Integer> equippedSlotsByItemId = new HashMap<>();// itemId, slot
+	private HashMap<Buffs, Integer> activeBuffs = new HashMap<>(); // buff, remaining ticks
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
 	
-	@Setter private int restorationBuffRemainingTicks = 0;
 	private final int restorationBuffTriggerTicks = 3;
 	private int restorationBuffCurrentTriggerTicks = restorationBuffTriggerTicks;
 	
@@ -85,9 +82,18 @@ public class Player extends Attackable {
 		this.session = session;
 		
 		refreshStats();
+		refreshBoosts();
 		
-		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(5);
+		currentHp = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(Stats.HITPOINTS);
 		setPostFightCooldown();
+	}
+	
+	public void addBuff(Buffs buff) {
+		activeBuffs.put(buff, buff.getMaxTicks());
+	}
+	
+	public boolean hasBuff(Buffs buff) {
+		return activeBuffs.containsKey(buff);
 	}
 	
 	public void refreshStats(Map<Integer, Integer> statExp) {
@@ -97,6 +103,10 @@ public class Player extends Attackable {
 	
 	public void refreshStats() {
 		refreshStats(StatsDao.getAllStatExpByPlayerId(dto.getId()));
+	}
+	
+	public void refreshBoosts() {
+		setBoosts(StatsDao.getRelativeBoostsByPlayerId(getId()));
 	}
 	
 	public void process(ResponseMaps responseMaps) {
@@ -109,17 +119,22 @@ public class Player extends Attackable {
 			restoreStats(responseMaps);
 		}
 		
-		if (restorationBuffRemainingTicks > 0) {
-			--restorationBuffRemainingTicks;
+		// decrement the remaining ticks on every active buff
+		activeBuffs.replaceAll((k, v) -> v -= 1);
+		
+		// remove all the buffs that just hit 0 ticks
+		boolean buffsExpired = activeBuffs.entrySet().removeIf(e -> e.getValue() <= 0);
+		if (buffsExpired) {
+			MessageResponse resp = new MessageResponse();
+			resp.setColour("white");
+			resp.setResponseText("your buff has expired.");
+			responseMaps.addClientOnlyResponse(this, resp);
+		}
+		
+		if (activeBuffs.containsKey(Buffs.RESTORATION)) {
 			if (--restorationBuffCurrentTriggerTicks <= 0) {
 				restorationBuffCurrentTriggerTicks = restorationBuffTriggerTicks;
 				restoreNegativeStats(responseMaps);
-			}
-			
-			if (restorationBuffRemainingTicks == 0) {
-				MessageResponse resp = new MessageResponse();
-				resp.setResponseText("your buff has expired.");
-				responseMaps.addClientOnlyResponse(this, resp);
 			}
 		}
 		
@@ -225,12 +240,40 @@ public class Player extends Attackable {
 				state = PlayerState.idle;
 			}
 			break;
+		case smithing:
+			if (--tickCounter <= 0) {
+				if (!(savedRequest instanceof SmithRequest)) {
+					savedRequest = null;
+					state = PlayerState.idle;
+					return;
+				}
+				
+				new FinishSmithResponse().process(savedRequest, this, responseMaps);
+				
+				savedRequest = null;
+				state = PlayerState.idle;
+			}
+			break;
 		case fighting:
 			if (--tickCounter <= 0) {
 				// calculate the actual attack, create hitspat_update response, reset tickCounter.
 			}
 			break;
+		case climbing: {
+			if (--tickCounter <= 0) {
+				new FinishClimbResponse().process(savedRequest, this, responseMaps);
+				savedRequest = null;
+			}
+			break;
+		}
 			
+		case using:
+			if (--tickCounter <= 0) {
+				new FinishUseResponse().process(savedRequest, this, responseMaps);
+				savedRequest = null;
+				state = PlayerState.idle;
+			}
+			break;
 		case idle:// fall through
 		default:
 			break;
@@ -238,9 +281,9 @@ public class Player extends Attackable {
 	}
 	
 	private void restoreStats(ResponseMaps responseMaps) {
-		HashMap<Integer, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
+		HashMap<Stats, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
 		
-		for (Map.Entry<Integer, Integer> entry : boosts.entrySet()) {
+		for (Map.Entry<Stats, Integer> entry : boosts.entrySet()) {
 			int relativeBoost = entry.getValue();
 			if (relativeBoost > 0)
 				--relativeBoost;
@@ -249,18 +292,22 @@ public class Player extends Attackable {
 			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
 		}
 		
+		setBoosts(boosts);
+		
 		new StatBoostResponse().process(null, this, responseMaps);
 	}
 	
 	private void restoreNegativeStats(ResponseMaps responseMaps) {
-		HashMap<Integer, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
+		HashMap<Stats, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
 		
-		for (Map.Entry<Integer, Integer> entry : boosts.entrySet()) {
+		for (Map.Entry<Stats, Integer> entry : boosts.entrySet()) {
 			int relativeBoost = entry.getValue();
 			if (relativeBoost < 0)
 				++relativeBoost;
 			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
 		}
+		
+		setBoosts(boosts);
 		
 		new StatBoostResponse().process(null, this, responseMaps);
 	}
@@ -307,8 +354,8 @@ public class Player extends Attackable {
 		// update the player inventory to show there's no more items
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);
 		
-		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), 5, 0);
-		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId());
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.HITPOINTS, 0);
+		currentHp = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId());
 		
 		// let everyone know you died lmao
 		DeathResponse deathResponse = new DeathResponse();
@@ -427,13 +474,16 @@ public class Player extends Attackable {
 	@Override
 	public void onHit(int damage, ResponseMaps responseMaps) {
 		// remove any buffs that don't work in combat
-		if (restorationBuffRemainingTicks > 1)
-			restorationBuffRemainingTicks = 1;
+		if (activeBuffs.containsKey(Buffs.RESTORATION))
+			activeBuffs.put(Buffs.RESTORATION, 1);// kill it next tick
 		
-		currentHp = StatsDao.getStatLevelByStatIdPlayerId(5, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(5);
-		currentHp -= damage;
-		if (currentHp < 0)
-			currentHp = 0;
+		int hpLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId());
+		int hpBoost = StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(Stats.HITPOINTS);
+		hpBoost -= damage;
+		if (hpBoost < -hpLevel)
+			hpBoost = -hpLevel;
+		
+		currentHp = hpLevel + hpBoost;
 		
 		handleReinforcedItemDegradation(responseMaps);
 		
@@ -441,7 +491,7 @@ public class Player extends Attackable {
 		// relative boost should be -9
 		// therefore: -max + current
 		
-		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.HITPOINTS.getValue(), -this.dto.getMaxHp() + currentHp);
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.HITPOINTS, hpBoost);
 		PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 		playerUpdateResponse.setId(getId());
 		playerUpdateResponse.setDamage(damage);

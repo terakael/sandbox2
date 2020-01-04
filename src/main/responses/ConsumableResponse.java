@@ -12,6 +12,7 @@ import main.processing.Player;
 import main.requests.ConsumableRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.types.Buffs;
 import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
@@ -47,16 +48,16 @@ public abstract class ConsumableResponse extends Response {
 		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, ConsumableDao.getBecomesItemId(itemId), 1);
 		
 		boolean hpModified = false;
-		HashMap<Integer, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());
+		HashMap<Stats, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());
 		
 		for (ConsumableEffectsDto dto : ConsumableDao.getConsumableEffects(itemId)) {
-			if (!relativeBoosts.containsKey(dto.getStatId()))
+			Stats stat = Stats.withValue(dto.getStatId());
+			if (!relativeBoosts.containsKey(stat))
 				continue;
-			
 			
 			int newRelativeBoost;
 			if (dto.getStatId() == Stats.HITPOINTS.getValue()) {
-				newRelativeBoost = relativeBoosts.get(dto.getStatId()) + dto.getAmount();
+				newRelativeBoost = relativeBoosts.get(stat) + dto.getAmount();
 				if (newRelativeBoost > 0)// the hp relative boost is negative for how many hp lost
 					newRelativeBoost = 0;
 				hpModified = true;
@@ -67,20 +68,24 @@ public abstract class ConsumableResponse extends Response {
 				// if you're currently somehow boosted to 70 strength, then the strength pot should take no effect.
 				// conversely, if you're drinking some negative strength pot, it should keep draining your
 				// stat until you get to -60 boost; therefore 60 strength + -60 boost = 0 strength, and no less than that.
-				newRelativeBoost = relativeBoosts.get(dto.getStatId());
-				if (newRelativeBoost < dto.getAmount()) {
-					newRelativeBoost += dto.getAmount();
-					if (newRelativeBoost > dto.getAmount())
-						newRelativeBoost = dto.getAmount();
+				// 99 * (10 / 100)
+				// = 99 * 0.1
+				// = 
+				newRelativeBoost = relativeBoosts.get(stat);
+				int proposedBoost = (int)(dto.getAmount() + player.getStats().get(stat) * ((float)dto.getPct() / 100));
+				if (newRelativeBoost < proposedBoost) {
+					newRelativeBoost += proposedBoost;
+					if (newRelativeBoost > proposedBoost)
+						newRelativeBoost = proposedBoost;
 				}
 				
 				// min cap at -statLevel i.e. bringing your stat down to 0.
-				int statLevel = StatsDao.getStatLevelByStatIdPlayerId(dto.getStatId(), player.getId());
+				int statLevel = StatsDao.getStatLevelByStatIdPlayerId(stat, player.getId());
 				if (statLevel + newRelativeBoost < 0)
 					newRelativeBoost = -statLevel;
 			}
 			
-			StatsDao.setRelativeBoostByPlayerIdStatId(player.getId(), dto.getStatId(), newRelativeBoost);
+			StatsDao.setRelativeBoostByPlayerIdStatId(player.getId(), stat, newRelativeBoost);
 		}
 		
 		if (hpModified) {
@@ -90,6 +95,7 @@ public abstract class ConsumableResponse extends Response {
 			responseMaps.addBroadcastResponse(playerUpdateResponse);
 		}
 		
+		player.refreshBoosts();
 		new StatBoostResponse().process(null, player, responseMaps);
 		
 		InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
@@ -104,14 +110,28 @@ public abstract class ConsumableResponse extends Response {
 		case RESTORATION_POTION_4:
 		case RESTORATION_POTION_3:
 		case RESTORATION_POTION_2:
-		case RESTORATION_POTION_1:
-			player.setRestorationBuffRemainingTicks(50);// 30 seconds
+		case RESTORATION_POTION_1: {
+			player.addBuff(Buffs.RESTORATION);
 			
 			MessageResponse resp = new MessageResponse();
+			resp.setColour("white");
 			resp.setResponseText("your stats will restore much faster for the next 30 seconds.");
 			responseMaps.addClientOnlyResponse(player, resp);
 			break;
+		}
 			
+		case GOBLIN_STANK_4:
+		case GOBLIN_STANK_3:
+		case GOBLIN_STANK_2:
+		case GOBLIN_STANK_1: {
+			player.addBuff(Buffs.GOBLIN_STANK);
+			
+			MessageResponse resp = new MessageResponse();
+			resp.setColour("white");
+			resp.setResponseText("goblin scent starts coming out of your pores...");
+			responseMaps.addClientOnlyResponse(player, resp);
+			break;
+		}
 		default:
 			break;
 		}

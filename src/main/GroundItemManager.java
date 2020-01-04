@@ -2,6 +2,7 @@ package main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import main.database.ItemDao;
+import main.database.RespawnableDao;
+import main.database.RespawnableDto;
 import main.processing.PathFinder;
 import main.types.ItemAttributes;
 
@@ -23,18 +26,46 @@ public class GroundItemManager {
 		private int charges;
 	}
 	
+	@Setter @Getter @AllArgsConstructor
+	public static class RespawnableGroundItem {
+		private int id;
+		private int lifetime;
+		private int count;
+		private int tileId;
+	}
+	
 	// a map containing a list of ground items per tileId: Map<TileId, ItemList>
 	@Getter private static HashMap<Integer, List<GroundItem>> globalGroundItems = new HashMap<>();
 	
 	// similar to the map above, but grouped by player: Map<PlayerId, AboveMap>
 	private static HashMap<Integer, HashMap<Integer, List<GroundItem>>> playerGroundItems = new HashMap<>();
 	
+	private static HashSet<RespawnableGroundItem> respawnableGroundItems = new HashSet<>();
+	
+	public static void setupRespawnables() {
+		for (RespawnableDto dto : RespawnableDao.getCachedRespawnables()) {
+			respawnableGroundItems.add(new RespawnableGroundItem(dto.getItemId(), 0, dto.getCount(), dto.getTileId()));
+			
+			if (!globalGroundItems.containsKey(dto.getTileId()))
+				globalGroundItems.put(dto.getTileId(), new ArrayList<>());
+			globalGroundItems.get(dto.getTileId()).add(new GroundItem(dto.getItemId(), 0, dto.getCount(), ItemDao.getMaxCharges(dto.getItemId())));
+		}
+	}
+	
+	public static boolean itemIsRespawnable(int tileId, int itemId) {
+		for (RespawnableGroundItem item : respawnableGroundItems) {
+			if (item.getTileId() == tileId && item.getId() == itemId && item.lifetime == 0)
+				return true;
+		}
+		return false;
+	}
+	
 	public static void process() {
 		List<Integer> emptyTiles = new ArrayList<>();
 		for (HashMap.Entry<Integer, List<GroundItem>> entry : globalGroundItems.entrySet()) {
 			List<GroundItem> updated = entry.getValue()
 					.stream()
-					.filter(groundItem -> --groundItem.lifetime > 0)
+					.filter(groundItem -> itemIsRespawnable(entry.getKey(), groundItem.id) || --groundItem.lifetime > 0)
 					.collect(Collectors.toList());
 			
 			entry.getValue().clear();
@@ -47,6 +78,18 @@ public class GroundItemManager {
 		for (Integer emptyTile : emptyTiles)
 			globalGroundItems.remove(emptyTile);
 		emptyTiles.clear();
+		
+		List<RespawnableGroundItem> itemsToRespawn = respawnableGroundItems
+			.stream()
+			.filter(groundItem -> groundItem.lifetime > 0)
+			.filter(groundItem -> --groundItem.lifetime == 0)
+			.collect(Collectors.toList());
+		
+		for (RespawnableGroundItem toRespawn : itemsToRespawn) {
+			if (!globalGroundItems.containsKey(toRespawn.getTileId()))
+				globalGroundItems.put(toRespawn.getTileId(), new ArrayList<>());
+			globalGroundItems.get(toRespawn.getTileId()).add(new GroundItem(toRespawn.getId(), toRespawn.getLifetime(), toRespawn.getCount(), ItemDao.getMaxCharges(toRespawn.getId())));
+		}
 		
 		// loop through all the players
 		for (HashMap.Entry<Integer, HashMap<Integer, List<GroundItem>>> playerEntry : playerGroundItems.entrySet()) {
@@ -117,8 +160,15 @@ public class GroundItemManager {
 		if (removeFromPlayerGroundItems(playerId, tileId, itemId, count, charges))
 			return;
 		
-		if (!globalGroundItems.containsKey(tileId))
+		if (removeFromGlobalGroundItems(playerId, tileId, itemId, count, charges))
 			return;
+		
+		
+	}
+	
+	private static boolean removeFromGlobalGroundItems(int playerId, int tileId, int itemId, int count, int charges) {
+		if (!globalGroundItems.containsKey(tileId))
+			return false;
 		
 		GroundItem toRemove = null;
 		for (GroundItem item : globalGroundItems.get(tileId)) {
@@ -128,8 +178,19 @@ public class GroundItemManager {
 			}
 		}
 		
-		if (toRemove != null)
+		if (toRemove != null) {
 			globalGroundItems.get(tileId).remove(toRemove);
+			
+			for (RespawnableGroundItem item : respawnableGroundItems) {
+				if (item.tileId == tileId && item.id == toRemove.id && item.lifetime == 0) {
+					item.lifetime = RespawnableDao.getCachedRespawnableByRoomIdTileId(1, tileId).getRespawnTicks();
+					break;
+				}
+			}
+			return true;
+		}
+		
+		return false;
 	}
 	
 	private static boolean removeFromPlayerGroundItems(int playerId, int tileId, int itemId, int count, int charges) {

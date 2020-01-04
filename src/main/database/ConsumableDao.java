@@ -29,7 +29,7 @@ public class ConsumableDao {
 	}
 	
 	public static void cacheConsumableEffects() {
-		final String query = "select item_id, stat_id, amount from consumable_effects";
+		final String query = "select item_id, stat_id, amount, pct from consumable_effects";
 		
 		consumableEffects = new HashMap<>();
 		try (
@@ -41,7 +41,7 @@ public class ConsumableDao {
 					int itemId = rs.getInt("item_id");
 					if (!consumableEffects.containsKey(itemId))
 						consumableEffects.put(itemId, new ArrayList<>());
-					consumableEffects.get(itemId).add(new ConsumableEffectsDto(itemId, rs.getInt("stat_id"), rs.getInt("amount")));
+					consumableEffects.get(itemId).add(new ConsumableEffectsDto(itemId, rs.getInt("stat_id"), rs.getInt("amount"), rs.getInt("pct")));
 				}
 			}
 		} catch (SQLException e) {

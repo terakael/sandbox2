@@ -1,8 +1,8 @@
 package main.responses;
 
-import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Getter;
 import lombok.Setter;
 import main.database.AnimationDto;
 import main.processing.Player;
@@ -11,7 +11,7 @@ import main.types.PlayerPartType;
 
 
 public class PlayerUpdateResponse extends Response {
-	@Setter Integer id = null;
+	@Getter @Setter Integer id = null;
 	@Setter String name = null;
 	@Setter Integer cmb = null;
 	@Setter Integer tile = null;

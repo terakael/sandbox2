@@ -1,21 +1,28 @@
 package main;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Scanner;
 
 import javax.websocket.DeploymentException;
 
+import main.database.BrewableDao;
 import main.database.CatchableDao;
 import main.database.ConsumableDao;
 import main.database.CookableDao;
 import main.database.EquipmentDao;
+import main.database.GroundTextureDao;
 import main.database.ItemDao;
+import main.database.LadderConnectionDao;
 import main.database.MineableDao;
 import main.database.NPCDao;
 import main.database.NpcMessageDao;
+import main.database.PickableDao;
+import main.database.RespawnableDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
 import main.database.UseItemOnItemDao;
+import main.processing.MinimapGenerator;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
 import main.processing.ShopManager;
@@ -32,36 +39,13 @@ public class Server {
 		
 		try {
 			resourceServer.start();
-			server.start();			
-			
-//			HashSet<Integer> treeLocations = SceneryDao.getImpassableTileIdsByRoomId(1);
-//			HashSet<Integer> npcInstances = NPCDao.getNpcInstanceIds();
-//			
-//			for (int i = 0; i < 50; ++i) {
-//				
-//				int potentialTileId = -1;
-//				while (true) {
-//					potentialTileId = RandomUtil.getRandom(0, PathFinder.LENGTH * PathFinder.LENGTH - 1);
-//					
-//					if (treeLocations.contains(potentialTileId))
-//						continue;
-//					
-//					if (npcInstances.contains(potentialTileId))
-//						continue;
-//					
-//					break;
-//				}
-//				
-//				if (potentialTileId != -1) {
-//					NPCDao.addNpcInstance(1, 3, potentialTileId);
-//					npcInstances.add(potentialTileId);
-//				}
-//			}
+			server.start();
 			
 			PathFinder.get();// init the path nodes and relationships
 			ExamineResponse.initializeExamineMap();// all the scenery examine
 			MineableDao.setupCaches();// mineable tiles, mineable objects
 			ItemDao.setupCaches();
+			GroundTextureDao.cacheTextures();
 			NPCManager.get().loadNpcs();
 			NpcMessageDao.setupCaches();
 			ConsumableDao.cacheConsumables();
@@ -70,8 +54,19 @@ public class Server {
 			CatchableDao.cacheCatchables();
 			UseItemOnItemDao.cacheData();
 			EquipmentDao.setupCaches();
+			BrewableDao.cacheBrewables();
 			ShopDao.setupCaches();
 			ShopManager.setupShops();
+			RespawnableDao.setupCaches();// ground items that respawn once picked up
+			GroundItemManager.setupRespawnables();
+			LadderConnectionDao.setupCaches();
+			PickableDao.setupCaches();
+			try {
+				MinimapGenerator.createImage();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			// should be last after all the other caches are set up
 			CachedResourcesResponse.get();// loads/caches all the sprite maps, scenery etc and gets sent on client load

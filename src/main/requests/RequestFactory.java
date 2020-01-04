@@ -43,6 +43,8 @@ public class RequestFactory {
 		map.put("accept_trade_offer", AcceptTradeOfferRequest.class);
 		map.put("drink", DrinkRequest.class);
 		map.put("catch", CatchRequest.class);
+		map.put("climb", ClimbRequest.class);
+		map.put("pick", PickRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

@@ -3,10 +3,12 @@ package main.responses;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import main.database.BrewableDao;
 import main.database.EquipmentDao;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.database.SceneryDao;
+import main.database.StatsDao;
 import main.database.UseItemOnItemDao;
 import main.database.UseItemOnItemDto;
 import main.processing.FightManager;
@@ -19,6 +21,7 @@ import main.requests.UseRequest;
 import main.scenery.Scenery;
 import main.scenery.SceneryManager;
 import main.types.Items;
+import main.types.Stats;
 import main.types.StorageTypes;
 
 public class UseResponse extends Response {
@@ -40,6 +43,14 @@ public class UseResponse extends Response {
 			break;
 		case "item":
 			if (handleUseOnItem(request, player, responseMaps))
+				return;
+			break;
+		case "npc":
+			if (handleUseOnNpc(request, player, responseMaps))
+				return;
+			break;
+		case "player":
+			if (handleUseOnPlayer(request, player, responseMaps))
 				return;
 			break;
 		default:
@@ -98,9 +109,38 @@ public class UseResponse extends Response {
 		
 		// slot check
 		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		if (invItemIds.get(srcSlot) != src) {
+			srcSlot = invItemIds.indexOf(src);
+			if (srcSlot == -1) {
+				setRecoAndResponseText(0, "you don't have the materials to make that.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return true;
+			}
+		}
+		
+		if (invItemIds.get(destSlot) != dest) {
+			destSlot = invItemIds.indexOf(dest);
+			if (destSlot == -1) {
+				setRecoAndResponseText(0, "you don't have the materials to make that.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return true;
+			}
+		}
+		
 		if (invItemIds.get(srcSlot) != src || invItemIds.get(destSlot) != dest) {
 			// user-input slots don't match what's actually in the slots; bail with a "nothing interesting happens" message
 			return false;
+		}
+		
+		// level check by resulting item id
+		if (BrewableDao.isBrewable(dto.getResultingItemId())) {
+			int playerLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.HERBLORE, player.getId());
+			int requiredLevel = BrewableDao.getRequiredLevelById(dto.getResultingItemId());
+			if (playerLevel < requiredLevel) {
+				setRecoAndResponseText(0, String.format("you need %d herblore to make that.", requiredLevel));
+				responseMaps.addClientOnlyResponse(player, this);
+				return true;
+			}
 		}
 		
 		// you can't use things on equipped items (or use equipped items on things)
@@ -111,36 +151,20 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
-		int srcItemsInInv = Collections.frequency(invItemIds, src);
-		if (srcItemsInInv >= dto.getRequiredSrcCount()) {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), destSlot, dto.getResultingItemId(), ItemDao.getMaxCharges(dto.getResultingItemId()));
-			
-			if (!dto.isKeepSrcItem()) {// sometimes you'll have src items like hammers, knives etc that don't get used up
-				int usedSrcItems = 1;
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), srcSlot, 0, 0);
-				invItemIds.set(srcSlot, 0);// just so we don't hit the same slot twice 
-				
-				for (int i = 0; i < invItemIds.size() && usedSrcItems < dto.getRequiredSrcCount(); ++i) {
-					if (invItemIds.get(i) == src) {
-						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, 0, 0);
-						++usedSrcItems;
-					}
-				}
-			}
-			
-			setRecoAndResponseText(1, String.format("you create your %s.", ItemDao.getNameFromId(dto.getResultingItemId())));
-			responseMaps.addClientOnlyResponse(player, this);
-		} else {
-			String itemName = ItemDao.getNameFromId(src);
-			if (!itemName.endsWith("s"))
-				itemName += "s";
-			
-			setRecoAndResponseText(0, String.format("you need %d %s to do that.", dto.getRequiredSrcCount(), itemName));
-			responseMaps.addClientOnlyResponse(player, this);
-		}
-		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);
-		
-		
+		new StartUseResponse().process(request, player, responseMaps);		
+		player.setState(PlayerState.using);
+		player.setSavedRequest(request);
+		player.setTickCounter(3);
 		return true;
+	}
+
+	private boolean handleUseOnNpc(UseRequest request, Player player, ResponseMaps responseMaps) {
+		// for now you can only use poison on enemies, which requires you to be in combat.
+		return false;
+	}
+	
+	private boolean handleUseOnPlayer(UseRequest request, Player player, ResponseMaps responseMaps) {
+		// for now you can only use poison on enemies, which requires you to be in combat.
+		return false;
 	}
 }

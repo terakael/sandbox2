@@ -3,6 +3,7 @@ package main.processing;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Stack;
@@ -10,6 +11,7 @@ import java.util.Stack;
 import lombok.Getter;
 import lombok.Setter;
 import main.database.SceneryDao;
+import main.types.ImpassableTypes;
 import main.utils.Stopwatch;
 
 public class PathFinder {
@@ -21,7 +23,7 @@ public class PathFinder {
 	
 	
 	private PathFinder() {
-		HashSet<Integer> impassableTileIds = SceneryDao.getImpassableTileIdsByRoomId(1);
+		HashMap<Integer, Integer> impassableTileIds = SceneryDao.getImpassableTileIdsByRoomId(1);
 		
 		for (int i = 0; i < nodes.length; ++i) {
 			nodes[i] = new PathNode();
@@ -40,7 +42,7 @@ public class PathFinder {
 			};
 			
 			nodes[i].setId(i);
-			nodes[i].setWeight(impassableTileIds.contains(i) ? -1 : 1);
+			nodes[i].setImpassableTypes(impassableTileIds.containsKey(i) ? impassableTileIds.get(i) : 0);
 			nodes[i].setSiblings(siblings);
 		}
 	}
@@ -55,6 +57,7 @@ public class PathFinder {
 	@Setter @Getter
 	public class PathNode {
 		private PathNode[] siblings;
+		int impassableTypes = 0;
 		int weight = 1;
 		int id = 0;
 		
@@ -78,7 +81,127 @@ public class PathFinder {
 		
 		public boolean isSiblingPassable(int elementId) {
 			PathNode sibling = getSibling(elementId);
-			return sibling != null && sibling.getWeight() != -1;
+			if (sibling == null)
+				return false;// if it doesn't exist then it's obviously not passable
+			
+			switch (elementId) {
+			case 0: {
+				// sibling is upper-left
+				if (ImpassableTypes.isImpassable(ImpassableTypes.TOP, impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.LEFT, impassableTypes)) {
+					return false;
+				}
+				
+				if (ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, sibling.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, sibling.impassableTypes)) {
+					return false;
+				}
+				PathNode upper = getSibling(1);
+				if (upper == null || ImpassableTypes.isImpassable(ImpassableTypes.LEFT, upper.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, upper.impassableTypes)) {
+					return false;
+				}
+				PathNode left = getSibling(3);
+				if (left == null || ImpassableTypes.isImpassable(ImpassableTypes.TOP, left.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, left.impassableTypes)) {
+					return false;
+				}
+				return true;
+			}
+			case 1: {
+				// sibling is above
+				return !ImpassableTypes.isImpassable(ImpassableTypes.TOP, impassableTypes) &&
+					   !ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, sibling.impassableTypes);
+			}
+			case 2: {
+				// sibling is upper-right
+				if (ImpassableTypes.isImpassable(ImpassableTypes.TOP, impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, impassableTypes)) {
+					return false;
+				}
+				
+				if (ImpassableTypes.isImpassable(ImpassableTypes.LEFT, sibling.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, sibling.impassableTypes)) {
+					return false;
+				}
+				PathNode upper = getSibling(1);
+				if (upper == null || ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, upper.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, upper.impassableTypes)) {
+					return false;
+				}
+				PathNode right = getSibling(4);
+				if (right == null || ImpassableTypes.isImpassable(ImpassableTypes.TOP, right.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.LEFT, right.impassableTypes)) {
+					return false;
+				}
+				return true;
+			}
+			case 3: {
+				// sibling is to the left
+				return !ImpassableTypes.isImpassable(ImpassableTypes.LEFT, impassableTypes) &&
+					   !ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, sibling.impassableTypes);
+			}
+			case 4: {
+				// sibling is to the right
+				return !ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, impassableTypes) &&
+					   !ImpassableTypes.isImpassable(ImpassableTypes.LEFT, sibling.impassableTypes);
+			}
+			case 5: {
+				// sibling is lower-left
+				if (ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.LEFT, impassableTypes)) {
+					return false;
+				}
+				
+				if (ImpassableTypes.isImpassable(ImpassableTypes.TOP, sibling.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, sibling.impassableTypes)) {
+					return false;
+				}
+				PathNode lower = getSibling(6);
+				if (lower == null || ImpassableTypes.isImpassable(ImpassableTypes.LEFT, lower.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.TOP, lower.impassableTypes)) {
+					return false;
+				}
+				PathNode left = getSibling(3);
+				if (left == null || ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, left.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, left.impassableTypes)) {
+					return false;
+				}
+				return true;
+			}
+			case 6: {
+				// siblings is below:
+				return !ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, impassableTypes) &&
+					   !ImpassableTypes.isImpassable(ImpassableTypes.TOP, sibling.impassableTypes);
+			}
+			case 7: {
+				// sibling is lower-right
+				if (ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, impassableTypes)) {
+					return false;
+				}
+				
+				if (ImpassableTypes.isImpassable(ImpassableTypes.LEFT, sibling.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.TOP, sibling.impassableTypes)) {
+					return false;
+				}
+				PathNode lower = getSibling(6);
+				if (lower == null || ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, lower.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.TOP, lower.impassableTypes)) {
+					return false;
+				}
+				PathNode right = getSibling(4);
+				if (right == null || ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, right.impassableTypes) ||
+					ImpassableTypes.isImpassable(ImpassableTypes.LEFT, right.impassableTypes)) {
+					return false;
+				}
+				return true;
+			}
+			default:
+				return false;
+			}
+			
+//			return sibling != null && sibling.getWeight() != -1;
 		}
 		
 		public double getF() {
@@ -100,6 +223,10 @@ public class PathFinder {
 	}
 	
 	public static Stack<Integer> findPath(int from, int to, boolean includeToTile) {
+		return findPath(from, to, includeToTile, 0, 0);
+	}
+	
+	public static Stack<Integer> findPath(int from, int to, boolean includeToTile, int spawnTileId, int maxRadius) {
 		Stopwatch.start("find path");
 		Stack<Integer> output = new Stack<>();
 		if (from == to)
@@ -110,7 +237,7 @@ public class PathFinder {
 			return output;
 		
 		// cannot move to an impassable tile.
-		if (nodes[to].getWeight() == -1)
+		if (nodes[to].getImpassableTypes() == 15) // TODO inaccurate
 			includeToTile = false;
 		
 		ArrayList<PathNode> open = new ArrayList<>();
@@ -125,38 +252,39 @@ public class PathFinder {
 
 			open.remove(q);
 			closed.add(q);
-			if (closed.size() > 500) {
+			if (closed.size() > 100) {
 				// if we hit 500 checked tiles then bail, thats way too many and its probably an impossible path
 				//System.out.println(String.format("500+ closed: ms=%d, open=%d, closed=%d, from=%d, to=%d", Stopwatch.getMs("find path"), open.size(), closed.size(), from, to));
 				return output;
 			}
 			
 			for (int i = 0; i < q.getSiblings().length; ++i) {
+				// sometimes the sibling isn't passable, but the sibling happens to be the destination node.
+				// we obviously want to find the destination node so we cannot "continue" in this case.
+				if (!q.isSiblingPassable(i) && q.getSibling(i) != nodes[to])
+					continue;
+				
 				PathNode successor = q.getSibling(i);
 				if (successor == null || (successor.getWeight() == -1 && successor != nodes[to]))// corner and edge nodes have some null siblings
 					continue;
 				
+				if (spawnTileId > 0 && maxRadius > 0) {
+					int tileX = successor.getId() % LENGTH;
+					int tileY = successor.getId() / LENGTH;
+					
+					int spawnTileX = spawnTileId % LENGTH;
+					int spawnTileY = spawnTileId / LENGTH;
+					
+					if (tileX < spawnTileX - maxRadius || tileX > spawnTileX + maxRadius)
+						continue;
+					
+					if (tileY < spawnTileY - maxRadius || tileY > spawnTileY + maxRadius)
+						continue;
+				}
+				
 				if (closed.contains(successor))
 					continue;
 
-				// 0   1   2
-				// 3   q   4
-				// 5   6   7
-				
-				// don't cut corners
-				if (i == 0 && (!q.isSiblingPassable(1) || !q.isSiblingPassable(3))) {
-					continue;
-				} 
-				if (i == 2 && (!q.isSiblingPassable(1) || !q.isSiblingPassable(4))) {
-					continue;
-				} 
-				if (i == 5 && (!q.isSiblingPassable(3) || !q.isSiblingPassable(6))) {
-					continue;
-				} 
-				if (i == 7 && (!q.isSiblingPassable(4) || !q.isSiblingPassable(6))) {
-					continue;
-				}
-				
 				boolean isDiagonal = i == 0 || i == 2 || i == 5 || i == 7;
 				
 				double newG = q.getG() + (isDiagonal ? 1.414 : 1.0);
@@ -207,6 +335,7 @@ public class PathFinder {
 	
 	public static boolean isNextTo(int srcTile, int destTile) {
 		// returns true if srcTile and destTile are touching horizontally or vertically (or are the same tile)
+		// TODO not "next to" if there's a barrier in between the tiles
 		return  destTile == srcTile - 1 || // left
 				destTile == srcTile + 1 || // right
 				destTile == srcTile - LENGTH || // above

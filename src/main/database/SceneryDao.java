@@ -17,7 +17,7 @@ public class SceneryDao {
 		// TODO query is wrong
 		final String query = 
 				"select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, leftclick_option, other_options from scenery " +
-				" where id in (select distinct scenery_id from room_scenery where room_id=?)";
+				" where id in (select distinct scenery_id from room_scenery where room_id=? and id != 49)"; // 49 is impassable tile, don't send this to client (used in world builder tool and pathfinding)
 		
 		List<SceneryDto> sceneryList = new ArrayList<>();
 		
@@ -89,12 +89,12 @@ public class SceneryDao {
 			}
 	}
 	
-	public static HashSet<Integer> getImpassableTileIdsByRoomId(int roomId) {
-		String query = "select tile_id from room_scenery ";
-		query += " inner join scenery on room_scenery.scenery_id=scenery.id and impassable=1";
+	public static HashMap<Integer, Integer> getImpassableTileIdsByRoomId(int roomId) {
+		String query = "select tile_id, impassable from room_scenery ";
+		query += " inner join scenery on room_scenery.scenery_id=scenery.id and impassable > 0";
 		query += " where room_id=?";
 		
-		HashSet<Integer> tileIds = new HashSet<>();
+		HashMap<Integer, Integer> tileIds = new HashMap<>();
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -103,7 +103,7 @@ public class SceneryDao {
 			ps.setInt(1, roomId);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					tileIds.add(rs.getInt("tile_id"));
+					tileIds.put(rs.getInt("tile_id"), rs.getInt("impassable"));
 				}
 			}
 		} catch (SQLException e) {

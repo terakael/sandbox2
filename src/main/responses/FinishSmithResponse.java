@@ -1,0 +1,98 @@
+package main.responses;
+
+import java.util.ArrayList;
+
+import main.database.ItemDao;
+import main.database.MineableDao;
+import main.database.PlayerStorageDao;
+import main.database.SmithableDao;
+import main.database.SmithableDto;
+import main.processing.Player;
+import main.requests.AddExpRequest;
+import main.requests.Request;
+import main.requests.RequestFactory;
+import main.requests.SmithRequest;
+import main.types.Items;
+import main.types.Stats;
+import main.types.StorageTypes;
+
+public class FinishSmithResponse extends Response {
+	private int itemId;
+	
+	public FinishSmithResponse() {
+		setAction("finish_smith");
+	}
+
+	@Override
+	public void process(Request req, Player player, ResponseMaps responseMaps) {
+		if (!(req instanceof SmithRequest)) {
+			return;
+		}
+		
+		SmithRequest smithRequest = (SmithRequest)req;
+		itemId = smithRequest.getItemId();
+		
+		SmithableDto dto = SmithableDao.getSmithableItemByItemId(smithRequest.getItemId());
+		if (dto == null) {
+			setRecoAndResponseText(0, "you can't smith that.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		
+		// player has the correct materials, remove the materials and add the smithed item
+		ArrayList<Integer> inventoryList = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		ArrayList<Integer> material1Slots = getAffectedSlots(inventoryList, dto.getMaterial1(), dto.getCount1());
+		ArrayList<Integer> material2Slots = getAffectedSlots(inventoryList, dto.getMaterial2(), dto.getCount2());
+		ArrayList<Integer> material3Slots = getAffectedSlots(inventoryList, dto.getMaterial3(), dto.getCount3());
+		
+		for (Integer slot : material1Slots)
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
+		if (dto.getMaterial1() == Items.COAL_ORE.getValue() && material1Slots.size() < dto.getCount1()) {
+			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount1() - material1Slots.size()));
+		}
+		
+		for (Integer slot : material2Slots)
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
+		if (dto.getMaterial2() == Items.COAL_ORE.getValue() && material2Slots.size() < dto.getCount2()) {
+			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount2() - material2Slots.size()));
+		}
+		
+		for (Integer slot : material3Slots)
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
+		if (dto.getMaterial3() == Items.COAL_ORE.getValue() && material3Slots.size() < dto.getCount3()) {
+			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount3() - material3Slots.size()));
+		}
+		
+		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), dto.getItemId(), 1);
+		
+		
+		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId())));
+		responseMaps.addClientOnlyResponse(player, this);
+		
+		int exp = MineableDao.getMineableExpByItemId(dto.getMaterial1()) * dto.getCount1();
+		if (dto.getMaterial2() != 0)
+			exp += MineableDao.getMineableExpByItemId(dto.getMaterial2()) * dto.getCount2();
+		if (dto.getMaterial3() != 0)
+			exp += MineableDao.getMineableExpByItemId(dto.getMaterial3()) * dto.getCount3();
+		
+		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING.getValue(), exp), player, responseMaps);
+		
+		// update the inventory for the client
+		InventoryUpdateResponse.sendUpdate(player, responseMaps);
+	}
+
+	ArrayList<Integer> getAffectedSlots(ArrayList<Integer> inventoryList, int itemId, int count) {
+		ArrayList<Integer> affectedSlots = new ArrayList<>();
+		if (count == 0)
+			return affectedSlots;
+		for (int i = 0; i < inventoryList.size(); ++i) {
+			if (inventoryList.get(i) == itemId) {
+				affectedSlots.add(i);
+				if (affectedSlots.size() == count)
+					break;
+			}
+		}
+		return affectedSlots;
+	}
+	
+}

@@ -126,6 +126,18 @@ public class ResponseFactory {
 		case "catch":
 			response = new CatchResponse();
 			break;
+		case "climb":
+			response = new ClimbResponse();
+			break;
+		case "pick":
+			response = new PickResponse();
+			break;
+		case "flower_deplete":
+			response = new FlowerDepleteResponse();
+			break;
+		case "flower_respawn":
+			response = new FlowerRespawnResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;
