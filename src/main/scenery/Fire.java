@@ -7,16 +7,23 @@ import main.database.CookableDto;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
+import main.processing.Player.PlayerState;
 import main.requests.RequestFactory;
+import main.requests.UseRequest;
+import main.responses.FinishCookingResponse;
 import main.responses.InventoryUpdateResponse;
 import main.responses.ResponseMaps;
+import main.responses.StartCookingResponse;
 import main.types.Items;
 import main.types.StorageTypes;
 
 public class Fire extends Scenery {
 
 	@Override
-	public boolean use(int srcItemId, int slot, Player player, ResponseMaps responseMaps) {
+	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {
+		int srcItemId = request.getSrc();
+		int slot = request.getSlot();
+		
 		Items item = Items.withValue(srcItemId);
 		if (item == null)
 			return false;
@@ -33,10 +40,13 @@ public class Fire extends Scenery {
 			}
 			
 			if (slot < inv.size()) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, cookable.getCookedItemId(), 1);
-				InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
-				invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
-				invUpdate.setResponseText(String.format("you cook the %s.", ItemDao.getNameFromId(cookable.getCookedItemId())));
+				StartCookingResponse startCookingResponse = new StartCookingResponse();
+				startCookingResponse.setIconId(ItemDao.getItem(cookable.getCookedItemId()).getSpriteFrameId());
+				responseMaps.addClientOnlyResponse(player, startCookingResponse);
+
+				player.setSavedRequest(request);
+				player.setState(PlayerState.cooking);
+				player.setTickCounter(5);
 			}
 			
 			return true;

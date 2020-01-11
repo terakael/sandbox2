@@ -77,7 +77,7 @@ public class ShopSellResponse extends Response {
 			int[] out = {0, 0};
 			ShopItemDto shopItem = shop.getStockByItemId(item.getId());
 			if (shopItem == null)
-				shopItem = new ShopItemDto(item.getId(), 0, 0, item.getPrice());
+				shopItem = new ShopItemDto(item.getId(), 0, 0, item.getPrice(), 100);
 			calculatePlayerTotalSalePrice(sellCount, shop, shopItem, out);
 			
 			// we have room to accept the coins
@@ -111,7 +111,7 @@ public class ShopSellResponse extends Response {
 			int[] out = {0, 0};
 			ShopItemDto shopItem = shop.getStockByItemId(item.getId());
 			if (shopItem == null)
-				shopItem = new ShopItemDto(item.getId(), 0, 0, item.getPrice());
+				shopItem = new ShopItemDto(item.getId(), 0, 0, item.getPrice(), 100);
 			calculatePlayerTotalSalePrice(sellCount, shop, shopItem, out);
 			sellCount = out[1];
 			
@@ -121,7 +121,7 @@ public class ShopSellResponse extends Response {
 				
 				for (int i = 0; i < invItemIds.size() && sellCount > 0; ++i) {
 					if (invItemIds.get(i) == item.getId()) {				
-						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, 0, 1);
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, 0, 1, 0);
 						--sellCount;
 					}
 				}
@@ -139,7 +139,7 @@ public class ShopSellResponse extends Response {
 			if (invItemIds.contains(Items.COINS.getValue()))
 				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(Items.COINS.getValue()), numCoins);
 			else
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), Items.COINS.getValue(), numCoins);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), Items.COINS.getValue(), numCoins, 0);
 	//			PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), Items.COINS.getValue(), numCoins);
 		}
 		

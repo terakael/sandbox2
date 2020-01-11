@@ -3,7 +3,11 @@ package main.processing;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.websocket.Session;
 
@@ -11,14 +15,12 @@ import com.google.gson.Gson;
 
 import main.Endpoint;
 import main.GroundItemManager;
-import main.database.ConsumableDao;
-import main.database.EquipmentDao;
-import main.database.NpcMessageDao;
 import main.database.ShopDao;
 import main.requests.Request;
 import main.responses.GroundItemRefreshResponse;
 import main.responses.LogonResponse;
 import main.responses.NpcLocationRefreshResponse;
+import main.responses.NpcOutOfRangeResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
@@ -127,11 +129,36 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("refresh npc locations");
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			// npc stuff
-			ArrayList<NPC> localNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getTileId(), 15);
-			NpcLocationRefreshResponse npcRefresh = new NpcLocationRefreshResponse();
-			for (NPC npc : localNpcs)
-				npcRefresh.add(npc.getId(), npc.getInstanceId(), npc.getTileId());
-			responseMaps.addClientOnlyResponse(entry.getValue(), npcRefresh);
+			List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getTileId(), 15);
+//			localNpcs = localNpcs.stream().filter(e -> !e.isDead()).collect(Collectors.toList());// don't refresh locations of dead npcs
+			
+			Set<Integer> localNpcInstanceIds = localNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
+			
+			// get the previous in-range npcs so we know which ones are new and which ones already existed
+			HashSet<Integer> previousInRangeNpcs = entry.getValue().getInRangeNpcs();
+			HashSet<Integer> outOfRangeNpcInstanceIds = entry.getValue().updateInRangeNpcs(localNpcInstanceIds);
+			
+			ArrayList<NpcLocationRefreshResponse.NpcLocation> npcLocations = new ArrayList<>();
+			for (NPC npc : localNpcs) {
+				if (npc.isDead())
+					continue;// don't refresh locations of dead npcs
+				
+				// if newly added to players local npc set (walked into range) OR npc moved locations then add to npcRefresh list
+				if (!previousInRangeNpcs.contains(npc.getInstanceId()) || npc.isMoving())
+					npcLocations.add(new NpcLocationRefreshResponse.NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId()));
+			}
+			
+			if (!npcLocations.isEmpty()) {
+				NpcLocationRefreshResponse npcRefresh = new NpcLocationRefreshResponse();
+				npcRefresh.setNpcs(npcLocations);
+				responseMaps.addClientOnlyResponse(entry.getValue(), npcRefresh);
+			}
+			
+			if (!outOfRangeNpcInstanceIds.isEmpty()) {
+				NpcOutOfRangeResponse outOfRangeResponse = new NpcOutOfRangeResponse();
+				outOfRangeResponse.setInstances(outOfRangeNpcInstanceIds);
+				responseMaps.addClientOnlyResponse(entry.getValue(), outOfRangeResponse);
+			}
 			
 			// ground item stuff
 			HashMap<Integer, ArrayList<Integer>> localItemIds = GroundItemManager.getItemIdsNearTile(entry.getValue().getId(), entry.getValue().getTileId(), 15);

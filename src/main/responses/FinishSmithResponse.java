@@ -46,24 +46,24 @@ public class FinishSmithResponse extends Response {
 		ArrayList<Integer> material3Slots = getAffectedSlots(inventoryList, dto.getMaterial3(), dto.getCount3());
 		
 		for (Integer slot : material1Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1, 0);
 		if (dto.getMaterial1() == Items.COAL_ORE.getValue() && material1Slots.size() < dto.getCount1()) {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount1() - material1Slots.size()));
 		}
 		
 		for (Integer slot : material2Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1, 0);
 		if (dto.getMaterial2() == Items.COAL_ORE.getValue() && material2Slots.size() < dto.getCount2()) {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount2() - material2Slots.size()));
 		}
 		
 		for (Integer slot : material3Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1, 0);
 		if (dto.getMaterial3() == Items.COAL_ORE.getValue() && material3Slots.size() < dto.getCount3()) {
 			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount3() - material3Slots.size()));
 		}
 		
-		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), dto.getItemId(), 1);
+		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), dto.getItemId(), 1, ItemDao.getMaxCharges(dto.getItemId()));
 		
 		
 		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId())));

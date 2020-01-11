@@ -8,10 +8,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+
+import lombok.Getter;
 import main.responses.CachedResourcesResponse;
 
 public class SceneryDao {
 	private SceneryDao() {};
+	
+	@Getter private static HashMap<Integer, Integer> impassableTileIds;// tile_id, impassable_type
 
 	public static List<SceneryDto> getAllSceneryByRoom(int roomId) {
 		// TODO query is wrong
@@ -94,7 +98,7 @@ public class SceneryDao {
 		query += " inner join scenery on room_scenery.scenery_id=scenery.id and impassable > 0";
 		query += " where room_id=?";
 		
-		HashMap<Integer, Integer> tileIds = new HashMap<>();
+		impassableTileIds = new HashMap<>();
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -103,14 +107,14 @@ public class SceneryDao {
 			ps.setInt(1, roomId);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					tileIds.put(rs.getInt("tile_id"), rs.getInt("impassable"));
+					impassableTileIds.put(rs.getInt("tile_id"), rs.getInt("impassable"));
 				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		
-		return tileIds;
+		return impassableTileIds;
 	}
 	
 	public static HashMap<Integer, String> getExamineMap() {
@@ -140,5 +144,11 @@ public class SceneryDao {
 				return dto.getId();
 		}
 		return -1;
+	}
+	
+	public static int getImpassableTypeByTileId(int tileId) {
+		if (impassableTileIds.containsKey(tileId))
+			return impassableTileIds.get(tileId);
+		return 0;
 	}
 }

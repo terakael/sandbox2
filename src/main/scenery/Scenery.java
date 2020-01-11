@@ -1,8 +1,9 @@
 package main.scenery;
 
 import main.processing.Player;
+import main.requests.UseRequest;
 import main.responses.ResponseMaps;
 
 public abstract class Scenery {
-	abstract public boolean use(int srcItemId, int slot, Player player, ResponseMaps responseMaps);
+	abstract public boolean use(UseRequest request, Player player, ResponseMaps responseMaps);
 }

@@ -35,6 +35,8 @@ public class ExamineResponse extends Response {
 			return;
 		
 		ExamineRequest request = (ExamineRequest)req;
+		if (request.getType() == null)
+			return;
 		
 		switch (request.getType()) {
 		case "scenery": {

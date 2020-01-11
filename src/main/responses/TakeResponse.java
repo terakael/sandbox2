@@ -67,7 +67,7 @@ public class TakeResponse extends Response {
 			if (invItemIndex >= 0) {
 				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIndex, groundItem.getCount());
 			} else {
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCount());
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCount(), 0);
 			}
 		} else {
 			if (!invItems.contains(0)) {
@@ -75,7 +75,7 @@ public class TakeResponse extends Response {
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
 			}
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCharges());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), 1, groundItem.getCharges());
 		}
 		
 		GroundItemManager.remove(player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount(), groundItem.getCharges());

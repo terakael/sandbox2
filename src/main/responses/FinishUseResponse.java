@@ -67,16 +67,16 @@ public class FinishUseResponse extends Response {
 		
 		int srcItemsInInv = Collections.frequency(invItemIds, src);
 		if (srcItemsInInv >= dto.getRequiredSrcCount()) {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), destSlot, dto.getResultingItemId(), ItemDao.getMaxCharges(dto.getResultingItemId()));
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), destSlot, dto.getResultingItemId(), 1, ItemDao.getMaxCharges(dto.getResultingItemId()));
 			
 			if (!dto.isKeepSrcItem()) {// sometimes you'll have src items like hammers, knives etc that don't get used up
 				int usedSrcItems = 1;
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), srcSlot, 0, 0);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), srcSlot, 0, 1, 0);
 				invItemIds.set(srcSlot, 0);// just so we don't hit the same slot twice 
 				
 				for (int i = 0; i < invItemIds.size() && usedSrcItems < dto.getRequiredSrcCount(); ++i) {
 					if (invItemIds.get(i) == src) {
-						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, 0, 0);
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, 0, 1, 0);
 						++usedSrcItems;
 					}
 				}

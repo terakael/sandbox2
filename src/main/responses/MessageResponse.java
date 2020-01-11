@@ -241,8 +241,7 @@ public class MessageResponse extends Response {
 			if (invItemIndex >= 0) {
 				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIndex, count);
 			} else {
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, count);
-//				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), itemId, count);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, count, 0);
 			}
 		} else {
 			int numFreeSlots = Collections.frequency(invItemIds, 0);
@@ -251,7 +250,7 @@ public class MessageResponse extends Response {
 			
 			for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
 				if (invItemIds.get(i) == 0) {
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, itemId, ItemDao.getMaxCharges(itemId));
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, itemId, 1, ItemDao.getMaxCharges(itemId));
 					--count;
 				}
 			}

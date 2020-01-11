@@ -59,14 +59,14 @@ public class InventoryUpdateResponse extends Response {
 			EquipmentDao.clearEquippedItem(req.getId(), req.getSrc());
 		
 		if (destItem != null) {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), StorageTypes.INVENTORY.getValue(), req.getSrc(), destItem.getItemId(), destItem.getCount());
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), StorageTypes.INVENTORY.getValue(), req.getSrc(), destItem.getItemId(), destItem.getCount(), destItem.getCharges());
 			if (destItemEquipped) {
 				// create entry in player_equipment to update slot and item, then remove old entry
 				EquipmentDao.setEquippedItem(req.getId(), req.getSrc(), destItem.getItemId());
 			}
 		}
 		
-		PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), StorageTypes.INVENTORY.getValue(), req.getDest(), srcItem.getItemId(), srcItem.getCount());
+		PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), StorageTypes.INVENTORY.getValue(), req.getDest(), srcItem.getItemId(), srcItem.getCount(), srcItem.getCharges());
 		if (srcItemEquipped) {
 			EquipmentDao.setEquippedItem(req.getId(), req.getDest(), srcItem.getItemId());
 		}

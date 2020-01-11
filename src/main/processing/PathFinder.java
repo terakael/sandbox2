@@ -11,6 +11,7 @@ import java.util.Stack;
 import lombok.Getter;
 import lombok.Setter;
 import main.database.SceneryDao;
+import main.database.SceneryDto;
 import main.types.ImpassableTypes;
 import main.utils.Stopwatch;
 
@@ -264,8 +265,13 @@ public class PathFinder {
 				if (!q.isSiblingPassable(i) && q.getSibling(i) != nodes[to])
 					continue;
 				
-				PathNode successor = q.getSibling(i);
+				PathNode successor = q.getSibling(i);				
 				if (successor == null || (successor.getWeight() == -1 && successor != nodes[to]))// corner and edge nodes have some null siblings
+					continue;
+				
+				// we're at the final step - if the final step is completely impassable we want to keep processing
+				// but if there is some passable way and we're not actually next to it then continue.
+				if (successor == nodes[to] && successor.impassableTypes != 15 && !isNextTo(q.id, successor.id))
 					continue;
 				
 				if (spawnTileId > 0 && maxRadius > 0) {
@@ -335,12 +341,35 @@ public class PathFinder {
 	
 	public static boolean isNextTo(int srcTile, int destTile) {
 		// returns true if srcTile and destTile are touching horizontally or vertically (or are the same tile)
-		// TODO not "next to" if there's a barrier in between the tiles
-		return  destTile == srcTile - 1 || // left
-				destTile == srcTile + 1 || // right
-				destTile == srcTile - LENGTH || // above
-				destTile == srcTile + LENGTH || // below
-				destTile == srcTile;// same tile
+		// if the tiles are next to eachother but there's a barrier between them (non-zero impassableType)
+		// then they are not technically next to eachother (i.e. there's a wall between the tiles).
+		// the exception to this is if the dest tile is completely impassable i.e. impassableType 15 like a rock etc
+		// in this case we are next to it, as there's no way to get any closer.
+		int srcImpassableType = SceneryDao.getImpassableTypeByTileId(srcTile);		
+		int destImpassableType = SceneryDao.getImpassableTypeByTileId(destTile);
+		
+		return  
+			// destTile is to the left, destTile doesn't have a right-facing wall, srcTile doesn't have a left-facing wall
+			(destTile == srcTile - 1 && 
+				((!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, destImpassableType) && 
+					!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, srcImpassableType)) || destImpassableType == 15)) ||
+			
+			// destTile is to the right; destTile doesn't have a left-facing wall, srcTile doesn't have a right-facing wall
+			(destTile == srcTile + 1 && 
+				((!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, destImpassableType) && 
+					!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, srcImpassableType)) || destImpassableType == 15)) ||
+			
+			// destTile is above; destTile doesn't have a bottom-facing wall, srcTile doesn't have a top-facing wall
+			(destTile == srcTile - LENGTH && 
+				((!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, destImpassableType) && 
+					!ImpassableTypes.isImpassable(ImpassableTypes.TOP, srcImpassableType)) || destImpassableType == 15)) ||
+			
+			// destTile is below; destTile doesn't have a top-facing wall, srcTile doesn't have a bottom-facing wall
+			(destTile == srcTile + LENGTH &&
+				((!ImpassableTypes.isImpassable(ImpassableTypes.TOP, destImpassableType) && 
+					!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, srcImpassableType)) || destImpassableType == 15))
+			
+			|| destTile == srcTile;// same tile
 	}
 	
 	public static int chooseRandomTileIdInRadius(int tileId, int radius) {

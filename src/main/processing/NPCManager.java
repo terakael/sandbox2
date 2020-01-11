@@ -52,10 +52,7 @@ public class NPCManager {
 		final int minY = tileY - radius;
 		final int maxY = tileY + radius;
 		ArrayList<NPC> localNpcs = new ArrayList<>();
-		for (NPC npc : npcs) {
-			if (npc.isDead())
-				continue;
-			
+		for (NPC npc : npcs) {			
 			final int npcTileX = npc.getTileId() % PathFinder.LENGTH;
 			final int npcTileY = npc.getTileId() / PathFinder.LENGTH;
 			

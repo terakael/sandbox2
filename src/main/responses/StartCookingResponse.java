@@ -4,16 +4,15 @@ import lombok.Setter;
 import main.processing.Player;
 import main.requests.Request;
 
-public class StartUseResponse extends Response {
+public class StartCookingResponse extends Response {
 	@Setter private int iconId;
-	
-	public StartUseResponse() {
-		setAction("start_use");
+	public StartCookingResponse() {
+		setAction("start_cooking");
 	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		setResponseText("you use the item...");
+		setRecoAndResponseText(0, "you start cooking over the fire...");
 		responseMaps.addClientOnlyResponse(player, this);
 	}
 

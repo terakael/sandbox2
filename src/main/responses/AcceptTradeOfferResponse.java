@@ -78,11 +78,11 @@ public class AcceptTradeOfferResponse extends Response {
 		}
 		
 		for (InventoryItemDto item : p1tradeItems.values())
-			PlayerStorageDao.addItemToFirstFreeSlot(otherPlayer.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), item.getCount());
+			PlayerStorageDao.addItemToFirstFreeSlot(otherPlayer.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), item.getCount(), item.getCharges());
 		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.TRADE.getValue());
 		
 		for (InventoryItemDto item : p2tradeItems.values())
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), item.getCount());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), item.getCount(), item.getCharges());
 		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(otherPlayer.getId(), StorageTypes.TRADE.getValue());
 		
 		TradeManager.cancelTrade(trade);

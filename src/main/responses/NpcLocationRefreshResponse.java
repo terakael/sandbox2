@@ -3,18 +3,19 @@ package main.responses;
 import java.util.ArrayList;
 
 import lombok.AllArgsConstructor;
+import lombok.Setter;
 import main.processing.Player;
 import main.requests.Request;
 
 public class NpcLocationRefreshResponse extends Response {	
 	@AllArgsConstructor
-	private static class NpcLocation {
+	public static class NpcLocation {
 		private int npcId;
 		private int instanceId;
 		private int tileId;
 	}
 	
-	private ArrayList<NpcLocation> npcs = new ArrayList<>();
+	@Setter private ArrayList<NpcLocation> npcs = new ArrayList<>();
 	
 	public NpcLocationRefreshResponse() {
 		setAction("npc_location_refresh");
@@ -25,7 +26,7 @@ public class NpcLocationRefreshResponse extends Response {
 		
 	}
 
-	public void add(int npcId, int instanceId, int tileId) {
-		npcs.add(new NpcLocation(npcId, instanceId, tileId));
-	}
+//	public void add(int npcId, int instanceId, int tileId) {
+//		npcs.add(new NpcLocation(npcId, instanceId, tileId));
+//	}
 }

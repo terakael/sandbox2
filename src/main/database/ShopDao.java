@@ -88,7 +88,7 @@ public class ShopDao {
 	}
 	
 	public static ArrayList<ShopItemDto> getShopStockById(int shopId) {
-		final String query = "select shop_id, item_id, default_stock from shop_stock where shop_id = ? order by item_id";
+		final String query = "select shop_id, item_id, default_stock, respawn_ticks from shop_stock where shop_id = ? order by item_id";
 		
 		ArrayList<ShopItemDto> list = new ArrayList<>();
 		
@@ -99,7 +99,12 @@ public class ShopDao {
 			ps.setInt(1, shopId);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
-					list.add(new ShopItemDto(rs.getInt("item_id"), rs.getInt("default_stock"), rs.getInt("default_stock"), ItemDao.getItem(rs.getInt("item_id")).getPrice()));
+					list.add(new ShopItemDto(
+								rs.getInt("item_id"), 
+								rs.getInt("default_stock"), 
+								rs.getInt("default_stock"), 
+								ItemDao.getItem(rs.getInt("item_id")).getPrice(), 
+								rs.getInt("respawn_ticks")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

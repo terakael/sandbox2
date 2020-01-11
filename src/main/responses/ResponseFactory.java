@@ -138,6 +138,18 @@ public class ResponseFactory {
 		case "flower_respawn":
 			response = new FlowerRespawnResponse();
 			break;
+		case "bank":
+			response = new BankResponse();
+			break;
+		case "deposit":
+			response = new BankDepositResponse();
+			break;
+		case "withdraw":
+			response = new BankWithdrawResponse();
+			break;
+		case "show_stat_window":
+			response = new ShowStatWindowResponse();
+			break;
 		default:
 			response = new UnknownResponse();
 			break;

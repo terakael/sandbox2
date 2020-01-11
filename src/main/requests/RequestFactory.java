@@ -45,6 +45,10 @@ public class RequestFactory {
 		map.put("catch", CatchRequest.class);
 		map.put("climb", ClimbRequest.class);
 		map.put("pick", PickRequest.class);
+		map.put("bank", BankRequest.class);
+		map.put("deposit", BankDepositRequest.class);
+		map.put("withdraw", BankWithdrawRequest.class);
+		map.put("show_stat_window", ShowStatWindowRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

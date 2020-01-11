@@ -55,7 +55,7 @@ public class GeneralStore extends Store {
 		}
 		
 		// new item, add new playerItem entry
-		playerItems.add(new ShopItemDto(itemId, count, 0, item.getPrice()));
+		playerItems.add(new ShopItemDto(itemId, count, 0, item.getPrice(), 100));
 	}
 	
 	@Override

@@ -1,11 +1,12 @@
 package main.processing;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import javax.websocket.Session;
-
 
 import lombok.Getter;
 import lombok.Setter;
@@ -28,6 +29,7 @@ import main.responses.AddExpResponse;
 import main.responses.DeathResponse;
 import main.responses.EquipResponse;
 import main.responses.FinishClimbResponse;
+import main.responses.FinishCookingResponse;
 import main.responses.FinishMiningResponse;
 import main.responses.FinishSmithResponse;
 import main.responses.FinishUseResponse;
@@ -53,7 +55,8 @@ public class Player extends Attackable {
 		smithing,
 		fighting,
 		using,
-		climbing // ladders etc, give a tick or so duration (like for climbing animation in the future)
+		climbing, // ladders etc, give a tick or so duration (like for climbing animation in the future)
+		cooking
 	};
 	
 	@Getter private PlayerDto dto;
@@ -67,6 +70,7 @@ public class Player extends Attackable {
 	private int postFightCooldown = 0;
 	private HashMap<Integer, Integer> equippedSlotsByItemId = new HashMap<>();// itemId, slot
 	private HashMap<Buffs, Integer> activeBuffs = new HashMap<>(); // buff, remaining ticks
+	@Getter private HashSet<Integer> inRangeNpcs = new HashSet<>();
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
@@ -74,8 +78,6 @@ public class Player extends Attackable {
 	private final int restorationBuffTriggerTicks = 3;
 	private int restorationBuffCurrentTriggerTicks = restorationBuffTriggerTicks;
 	
-//	@Getter private HashMap<Stats, Integer> stats = new HashMap<>();// cached so we don't have to keep polling the db
-		
 	public Player(PlayerDto dto, Session session) {
 		this.dto = dto;
 		tileId = dto.getTileId();
@@ -270,6 +272,14 @@ public class Player extends Attackable {
 		case using:
 			if (--tickCounter <= 0) {
 				new FinishUseResponse().process(savedRequest, this, responseMaps);
+				savedRequest = null;
+				state = PlayerState.idle;
+			}
+			break;
+			
+		case cooking:
+			if (--tickCounter <= 0) {
+				new FinishCookingResponse().process(savedRequest, this, responseMaps);
 				savedRequest = null;
 				state = PlayerState.idle;
 			}
@@ -513,10 +523,10 @@ public class Player extends Attackable {
 							getId(), 
 							StorageTypes.INVENTORY.getValue(), 
 							entry.getValue(), 
-							entry.getKey(), item.getCharges() - 1);
+							entry.getKey(), 1, item.getCharges() - 1);
 				} else {
 					// ran out of charges; degrade to the base item
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY.getValue(), entry.getValue(), degradedItemId, 1);
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY.getValue(), entry.getValue(), degradedItemId, 1, ItemDao.getMaxCharges(degradedItemId));
 					
 					// clear the equipped item first then reset it with the degraded base item
 					EquipmentDao.clearEquippedItem(getId(), entry.getValue());
@@ -594,5 +604,23 @@ public class Player extends Attackable {
 	
 	public void recacheEquippedItems() {
 		equippedSlotsByItemId = EquipmentDao.getEquippedSlotsAndItemIdsByPlayerId(this.getId());
+	}
+	
+	public HashSet<Integer> updateInRangeNpcs(Set<Integer> upToDateNpcs) {
+		HashSet<Integer> outOfRangeNpcs = new HashSet<>();
+		for (int instanceId : inRangeNpcs) {
+			if (!upToDateNpcs.contains(instanceId)) {
+				outOfRangeNpcs.add(instanceId);
+			}
+		}
+		
+		inRangeNpcs.clear();
+		inRangeNpcs.addAll(upToDateNpcs);
+		
+		return outOfRangeNpcs;
+	}
+	
+	public void clearPath() {
+		path.clear();
 	}
 }

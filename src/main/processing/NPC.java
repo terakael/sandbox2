@@ -1,8 +1,6 @@
 package main.processing;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
@@ -17,7 +15,6 @@ import main.database.NpcDropDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.processing.Player.PlayerState;
-import main.responses.DropResponse;
 import main.responses.NpcUpdateResponse;
 import main.responses.PvmStartResponse;
 import main.responses.ResponseMaps;
@@ -39,6 +36,7 @@ public class NPC extends Attackable {
 	private int deathTimer = 0;
 	private final transient int MAX_HUNT_TIMER = 5;
 	private transient int huntTimer = 0;
+	@Getter private boolean moving = false;
 		
 	private int combatLevel = 0;
 	
@@ -111,8 +109,11 @@ public class NPC extends Attackable {
 			}
 		}
 		
-		if (!path.isEmpty())
+		moving = false;
+		if (!path.isEmpty()) {
 			tileId = path.pop();
+			moving = true;
+		}
 		
 		if (target == null) {
 			if (--tickCounter < 0) {
@@ -134,6 +135,8 @@ public class NPC extends Attackable {
 					Player p = (Player)target;
 					p.setState(PlayerState.fighting);
 					setTileId(p.getTileId());// npc is attacking the player so move to the player's tile
+					p.clearPath();
+					clearPath();
 					FightManager.addFight(p, this);
 					
 					PvmStartResponse pvmStart = new PvmStartResponse();
@@ -178,8 +181,7 @@ public class NPC extends Attackable {
 		
 		for (NpcDropDto dto : potentialDrops) {
 			if (RandomUtil.getRandom(0, dto.getRate()) == 0) {
-				int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? ItemDao.getMaxCharges(dto.getItemId()) : 1;
-				GroundItemManager.add(((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount(), charges);
+				GroundItemManager.add(((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount(), ItemDao.getMaxCharges(dto.getItemId()));
 			}
 		}
 	}
@@ -223,8 +225,14 @@ public class NPC extends Attackable {
 			tileId = dto.getTileId();
 			
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-			updateResponse.setNpc(this);
+			updateResponse.setInstanceId(getInstanceId());
+			updateResponse.setHp(currentHp);
+			updateResponse.setTileId(tileId);
 			responseMaps.addLocalResponse(tileId, updateResponse);
 		}
+	}
+	
+	public void clearPath() {
+		path.clear();
 	}
 }

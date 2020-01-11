@@ -38,10 +38,10 @@ public class ShopManager {
 	}
 	
 	public static void process(ResponseMaps responseMaps) {
-		if (--updateTime > 0)
-			return;
-		
-		updateTime = UPDATE_TIMER;
+//		if (--updateTime > 0)
+//			return;
+//		
+//		updateTime = UPDATE_TIMER;
 		
 		for (Store shop : shops) {
 			shop.process(responseMaps);

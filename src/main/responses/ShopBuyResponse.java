@@ -85,7 +85,7 @@ public class ShopBuyResponse extends Response {
 			if (invItemIds.contains(item.getItemId())) {
 				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(item.getItemId()), amountPlayerCanAfford);
 			} else {
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), amountPlayerCanAfford);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), amountPlayerCanAfford, 0);
 //				PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), item.getItemId(), actualAmount);
 			}
 			shop.decreaseItemStock(item.getItemId(), amountPlayerCanAfford);
@@ -105,7 +105,7 @@ public class ShopBuyResponse extends Response {
 			
 			for (int i = 0; i < invItemIds.size() && amountPlayerCanAfford > 0; ++i) {
 				if (invItemIds.get(i) == 0) {
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, item.getItemId(), ItemDao.getMaxCharges(item.getItemId()));
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, item.getItemId(), 1, ItemDao.getMaxCharges(item.getItemId()));
 					--amountPlayerCanAfford;
 				}
 			}

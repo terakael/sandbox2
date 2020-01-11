@@ -47,7 +47,7 @@ public class CancelTradeResponse extends Response {
 	
 	private void restoreItemsToPlayer(Player player, HashMap<Integer, InventoryItemDto> items, ResponseMaps responseMaps) {
 		for (InventoryItemDto dto : items.values()) {
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), dto.getItemId(), dto.getCount());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), dto.getItemId(), dto.getCount(), dto.getCharges());
 		}
 		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.TRADE.getValue());
 	}

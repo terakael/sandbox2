@@ -42,6 +42,8 @@ public class AttackResponse extends Response {
 			// start the fight
 			player.setState(PlayerState.fighting);
 			player.setTileId(npc.getTileId());
+			npc.clearPath();
+			player.clearPath();
 			FightManager.addFight(player, npc);
 			
 			PvmStartResponse pvmStart = new PvmStartResponse();

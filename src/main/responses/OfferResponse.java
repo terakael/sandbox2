@@ -69,11 +69,11 @@ public class OfferResponse extends Response {
 				count = item.getCount();// -1 means all
 			
 			if (count == item.getCount()) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), 0, 1);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), 0, 1, 0);
 			} else {
 				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), -count);
 			}
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE.getValue(), itemId, count);
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE.getValue(), itemId, count, item.getCharges());
 		} else {
 			ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			
@@ -85,8 +85,8 @@ public class OfferResponse extends Response {
 			if (count == -1)
 				count = 20;// max inventory size
 			
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), 0, 1);
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE.getValue(), itemId, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), 0, 1, 0);
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE.getValue(), itemId, 1, item.getCharges());
 			
 			invItemIds.set(request.getSlot(), -1);
 			
@@ -95,10 +95,10 @@ public class OfferResponse extends Response {
 					if (index == -1)
 						break;
 					
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), index, 0, 1);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), index, 0, 1, 0);
 				invItemIds.set(index, -1);
 				
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE.getValue(), itemId, 1);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE.getValue(), itemId, 1, item.getCharges());
 			}
 		}
 		

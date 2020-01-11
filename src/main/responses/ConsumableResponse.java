@@ -45,7 +45,7 @@ public abstract class ConsumableResponse extends Response {
 			return;
 		}
 		
-		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, ConsumableDao.getBecomesItemId(itemId), 1);
+		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, ConsumableDao.getBecomesItemId(itemId), 1, ItemDao.getMaxCharges(itemId));
 		
 		boolean hpModified = false;
 		HashMap<Stats, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());

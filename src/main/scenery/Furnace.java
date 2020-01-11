@@ -4,6 +4,7 @@ import main.database.PlayerStorageDao;
 import main.database.SmithableDao;
 import main.processing.Player;
 import main.requests.RequestFactory;
+import main.requests.UseRequest;
 import main.responses.InventoryUpdateResponse;
 import main.responses.ResponseMaps;
 import main.responses.ShowSmithingTableResponse;
@@ -11,7 +12,9 @@ import main.responses.ShowSmithingTableResponse;
 public class Furnace extends Scenery {
 
 	@Override
-	public boolean use(int srcItemId, int slot, Player player, ResponseMaps responseMaps) {
+	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {
+		final int srcItemId = request.getSrc();
+		
 		switch (srcItemId) {
 		case 3: // copper
 		case 4: // iron

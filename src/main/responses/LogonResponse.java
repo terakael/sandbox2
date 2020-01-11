@@ -2,8 +2,10 @@ package main.responses;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.websocket.Session;
@@ -20,6 +22,8 @@ import main.database.PlayerDto;
 import main.database.PlayerSessionDao;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
+import main.processing.NPC;
+import main.processing.NPCManager;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.LogonRequest;
@@ -70,6 +74,8 @@ public class LogonResponse extends Response {
 		}
 		
 		id = dto.getId();
+		PlayerStorageDao.createBankSlotsIfNotExists(id);
+		
 		tileId = dto.getTileId();
 		attackStyleId = dto.getAttackStyleId();
 
@@ -82,7 +88,7 @@ public class LogonResponse extends Response {
 		// if there was a bad disconnection (server crash etc) and the player was mid-trade, put the items back into the player's inventory.
 		HashMap<Integer, InventoryItemDto> itemsInTrade = PlayerStorageDao.getStorageDtoMapByPlayerId(id, StorageTypes.TRADE.getValue());
 		for (InventoryItemDto itemInTrade : itemsInTrade.values()) {
-			PlayerStorageDao.addItemToFirstFreeSlot(id, StorageTypes.INVENTORY.getValue(), itemInTrade.getItemId(), itemInTrade.getCount());
+			PlayerStorageDao.addItemToFirstFreeSlot(id, StorageTypes.INVENTORY.getValue(), itemInTrade.getItemId(), itemInTrade.getCount(), itemInTrade.getCharges());
 		}
 		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(id, StorageTypes.TRADE.getValue());
 		
@@ -93,8 +99,9 @@ public class LogonResponse extends Response {
 		attackStyles = PlayerDao.getAttackStyles();
 		
 		WorldProcessor.playerSessions.put(client, player);
-		
 		responseMaps.addClientOnlyResponse(player, this);
+		
+		initializeNpcLocations(player, responseMaps);
 		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
@@ -121,5 +128,20 @@ public class LogonResponse extends Response {
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		
+	}
+	
+	public void initializeNpcLocations(Player player, ResponseMaps responseMaps) {
+		// initial npc location refresh response (all living npcs)
+		NpcLocationRefreshResponse npcLocationRefreshResponse = new NpcLocationRefreshResponse();
+		List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(player.getTileId(), 15);
+		localNpcs = localNpcs.stream().filter(e -> !e.isDead()).collect(Collectors.toList());
+		Set<Integer> localNpcInstanceIds = localNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
+		player.updateInRangeNpcs(localNpcInstanceIds);
+		
+		ArrayList<NpcLocationRefreshResponse.NpcLocation> npcLocations = new ArrayList<>();
+		for (NPC npc : localNpcs)
+			npcLocations.add(new NpcLocationRefreshResponse.NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId()));
+		npcLocationRefreshResponse.setNpcs(npcLocations);
+		responseMaps.addClientOnlyResponse(player, npcLocationRefreshResponse);
 	}
 }

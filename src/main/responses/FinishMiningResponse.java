@@ -60,7 +60,7 @@ public class FinishMiningResponse extends Response {
 		}
 		
 		if (mineSuccessful) {
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), mineable.getItemId(), 1);
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), mineable.getItemId(), 1, ItemDao.getMaxCharges(mineable.getItemId()));
 			
 			// as there are multiple pickaxe types, there is a specific order that it uses.
 			// that is: magic golden pickaxe, magic pickaxe, golden pickaxe, pickaxe
@@ -133,10 +133,10 @@ public class FinishMiningResponse extends Response {
 					playerId, 
 					StorageTypes.INVENTORY.getValue(), 
 					invItemIds.indexOf(pickaxeId), 
-					pickaxeId, invItem.getCharges() - 1);
+					pickaxeId, 1, invItem.getCharges() - 1);
 		} else {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(
-					playerId, StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(pickaxeId), 0, 1);
+					playerId, StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(pickaxeId), 0, 1, 0);
 		}
 	}
 

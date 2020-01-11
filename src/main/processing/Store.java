@@ -18,6 +18,7 @@ public abstract class Store {
 	protected ArrayList<ShopItemDto> baseItems = new ArrayList<>();
 	@Getter @Setter protected boolean dirty = false;
 	protected final int maxStock = 16;
+	private int tickCounter = 0;
 	
 	public Store(ShopDto dto) {
 		this.dto = dto;
@@ -27,11 +28,16 @@ public abstract class Store {
 	}
 	
 	public void process(ResponseMaps responseMaps) {
+		if (++tickCounter == Integer.MAX_VALUE)
+			tickCounter = 0;
+		
 		for (ShopItemDto item : baseItems) {
-			if (item.getCurrentStock() < item.getMaxStock())
-				addItem(item.getItemId(), 1);
-			else if (item.getCurrentStock() > item.getMaxStock())
-				decreaseItemStock(item.getItemId(), 1);
+			if (tickCounter % item.getRespawnTicks() == 0) {
+				if (item.getCurrentStock() < item.getMaxStock())
+					addItem(item.getItemId(), 1);
+				else if (item.getCurrentStock() > item.getMaxStock())
+					decreaseItemStock(item.getItemId(), 1);
+			}
 		}
 	}
 	

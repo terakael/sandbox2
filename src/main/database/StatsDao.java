@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,8 @@ public class StatsDao {
 	private static Map<Integer, String> cachedStats = null;
 	@Getter private static HashMap<Integer, Integer> expMap = null;
 	
+	@Getter private static Map<Stats, ArrayList<StatWindowRowDto>> statWindowRows;
+	
 	static {
 		expMap = new HashMap<>();
 		expMap.put(1,  0);
@@ -25,6 +28,9 @@ public class StatsDao {
 			cumulativeExp += (int)(i - 1 + 300 * Math.pow(2, (i - 1) / 7) / 4);
 			expMap.put(i, cumulativeExp);
 		}
+		
+		statWindowRows = new HashMap<>();
+		statWindowRows.put(Stats.HERBLORE, getHerbloreStatWindowRows());
 	}
 	
 	public static Map<Integer, Integer> getStatsByPlayerId(int id) {
@@ -265,5 +271,33 @@ public class StatsDao {
 				stats.get(Stats.HITPOINTS),
 				stats.get(Stats.MAGIC)
 			);
+	}
+	
+	private static ArrayList<StatWindowRowDto> getHerbloreStatWindowRows() {
+		final String query = 
+				"select level, resultItem.id as itemId, destItem.id as itemId2, srcItem.id as itemId3 from use_item_on_item " + 
+				"inner join brewable on resulting_item_id=brewable.potion_id " + 
+				"inner join items srcItem on srcItem.id = src_id " + 
+				"inner join items destItem on destItem.id = dest_id " + 
+				"inner join items resultItem on resultItem.id = potion_id " + 
+				"order by level";
+		
+		ArrayList<StatWindowRowDto> dtos = new ArrayList<>();
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+			ResultSet rs = ps.executeQuery();
+		) {			
+			while (rs.next()) {
+				StatWindowRowDto statWindowRow = new StatWindowRowDto(rs.getInt("level"), rs.getInt("itemId"));
+				statWindowRow.setItemId2(rs.getInt("itemId2"));
+				statWindowRow.setItemId3(rs.getInt("itemId3"));
+				dtos.add(statWindowRow);
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return dtos;
 	}
 }

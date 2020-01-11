@@ -78,7 +78,7 @@ public class ItemDao {
 	public static int getMaxCharges(int itemId) {
 		if (itemMaxCharges.containsKey(itemId))
 			return itemMaxCharges.get(itemId);
-		return 1;
+		return 0;
 	}
 
 	public static List<ItemDto> getAllItems() {

@@ -11,4 +11,5 @@ public class ShopItemDto {
 	@Setter private int currentStock;
 	private int maxStock;
 	private int price;
+	private int respawnTicks;
 }

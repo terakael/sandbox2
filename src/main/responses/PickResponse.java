@@ -51,7 +51,7 @@ public class PickResponse extends Response {
 			setRecoAndResponseText(1, String.format("you pick some %s.", ItemDao.getNameFromId(pickable.getItemId())));
 			responseMaps.addClientOnlyResponse(player, this);
 			
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), freeSlotId, pickable.getItemId(), 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), freeSlotId, pickable.getItemId(), 1, ItemDao.getMaxCharges(pickable.getItemId()));
 			new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 			
 			FlowerManager.addDepletedFlower(request.getTileId(), pickable.getRespawnTicks());

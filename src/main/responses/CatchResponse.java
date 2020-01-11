@@ -1,6 +1,7 @@
 package main.responses;
 
 import main.database.CatchableDao;
+import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.processing.NPC;
 import main.processing.NPCManager;
@@ -13,6 +14,7 @@ import main.requests.RequestFactory;
 import main.types.StorageTypes;
 
 public class CatchResponse extends Response {
+	private int instanceId;
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
@@ -26,6 +28,9 @@ public class CatchResponse extends Response {
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
+		
+		if (npc.isDead())
+			return;
 		
 		if (!PathFinder.isNextTo(player.getTileId(), npc.getTileId())) {
 			player.setPath(PathFinder.findPath(player.getTileId(), npc.getTileId(), false));
@@ -47,11 +52,14 @@ public class CatchResponse extends Response {
 			}
 			
 			int caughtItemId = CatchableDao.getCaughtItem(npc.getId());
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), freeSlot, caughtItemId, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), freeSlot, caughtItemId, 1, ItemDao.getMaxCharges(caughtItemId));
 			
 			npc.onDeath(player, responseMaps);
+			instanceId = npc.getInstanceId();
 			
 			InventoryUpdateResponse.sendUpdate(player, responseMaps);
+			
+			responseMaps.addLocalResponse(npc.getTileId(), this);
 		}
 	}
 	

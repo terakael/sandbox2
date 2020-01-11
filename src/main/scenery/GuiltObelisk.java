@@ -1,6 +1,7 @@
 package main.scenery;
 
 import main.processing.Player;
+import main.requests.UseRequest;
 import main.responses.ResponseMaps;
 import main.types.Items;
 
@@ -10,7 +11,10 @@ public class GuiltObelisk extends Obelisk {
 	}
 
 	@Override
-	public boolean use(int srcItemId, int slot, Player player, ResponseMaps responseMaps) {
+	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {
+		final int srcItemId = request.getSrc();
+		final int slot = request.getSlot();
+		
 		Items srcItem = Items.withValue(srcItemId); 
 		if (srcItem == null)
 			return false;

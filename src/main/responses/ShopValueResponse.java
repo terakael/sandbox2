@@ -23,14 +23,6 @@ public class ShopValueResponse extends Response {
 		
 		ShopValueRequest request = (ShopValueRequest)req;
 		
-//		ShopDto item = null;
-//		for (ShopDto dto : ShopDao.getShopStockById(player.getShopId())) {
-//			if (dto.getItemId() == request.getObjectId()) {
-//				item = dto;
-//				break;
-//			}
-//		}
-		
 		Store shop = ShopManager.getShopByShopId(player.getShopId());
 		if (shop == null)
 			return;
@@ -49,7 +41,7 @@ public class ShopValueResponse extends Response {
 		
 		ShopItemDto shopItem = shop.getStockByItemId(item.getId());
 		if (shopItem == null)
-			shopItem = new ShopItemDto(item.getId(), 0, 0, item.getPrice());// default; a general store with no stock
+			shopItem = new ShopItemDto(item.getId(), 0, 0, item.getPrice(), 100);// default; a general store with no stock
 		
 		int value = shop.getShopSellPrice(shopItem);
 		if (request.getValueTypeId() == 1)

@@ -51,11 +51,11 @@ public class RescindResponse extends Response {
 				count = item.getCount();
 			
 			if (count == item.getCount()) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), request.getSlot(), 0, 1);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), request.getSlot(), 0, 1, 0);
 			} else {
 				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.TRADE.getValue(), request.getSlot(), -count);
 			}
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, count);
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, count, 0);
 		} else {
 			ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.TRADE.getValue());
 			
@@ -64,8 +64,8 @@ public class RescindResponse extends Response {
 			if (count == -1)
 				count = 20;// inventory size
 			
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), request.getSlot(), 0, 1);
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), request.getSlot(), 0, 1, 0);
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, 1, item.getCharges());
 			
 			invItemIds.set(request.getSlot(), -1);
 			
@@ -74,10 +74,10 @@ public class RescindResponse extends Response {
 					if (index == -1)
 						break;
 					
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), index, 0, 1);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), index, 0, 1, 0);
 				invItemIds.set(index, -1);
 				
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, 1);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, 1, item.getCharges());
 			}
 		}
 		

@@ -25,7 +25,6 @@ import main.types.Stats;
 import main.types.StorageTypes;
 
 public class UseResponse extends Response {
-
 	public UseResponse() {
 		setAction("use");
 	}
@@ -80,7 +79,7 @@ public class UseResponse extends Response {
 		if (scenery == null)
 			return false;
 		
-		if (!scenery.use(request.getSrc(), request.getSlot(), player, responseMaps))
+		if (!scenery.use(request, player, responseMaps))
 			return false;
 		
 		return true;
@@ -151,7 +150,10 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
-		new StartUseResponse().process(request, player, responseMaps);		
+		StartUseResponse startUseResponse = new StartUseResponse();
+		startUseResponse.setIconId(ItemDao.getItem(dto.getResultingItemId()).getSpriteFrameId());
+		startUseResponse.process(request, player, responseMaps);		
+		
 		player.setState(PlayerState.using);
 		player.setSavedRequest(request);
 		player.setTickCounter(3);

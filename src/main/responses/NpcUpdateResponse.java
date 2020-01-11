@@ -9,7 +9,8 @@ public class NpcUpdateResponse extends Response {
 	@Setter private Integer instanceId = null;
 	@Setter private Integer damage = null;
 	@Setter private Integer hp = null;
-	@Setter private NPC npc = null;
+//	@Setter private NPC npc = null;
+	@Setter private Integer tileId = null;
 	
 	public NpcUpdateResponse() {
 		setAction("npc_update");

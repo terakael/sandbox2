@@ -15,7 +15,7 @@ import main.types.Items;
 import main.types.StorageTypes;
 import main.utils.RandomUtil;
 
-public abstract class Obelisk extends Scenery{
+public abstract class Obelisk extends Scenery {
 	protected int enchantChance = 0;
 	
 	protected boolean attemptToEnchant(Items src, Items dest, int slot, Player player, ResponseMaps responseMaps) {
@@ -38,7 +38,7 @@ public abstract class Obelisk extends Scenery{
 			}
 			
 			boolean success = RandomUtil.getRandom(0,  100) <= enchantChance;
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, success ? dest.getValue() : 0, 1);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, success ? dest.getValue() : 0, 1, ItemDao.getMaxCharges(dest.getValue()));
 			
 			InventoryUpdateResponse updateResponse = new InventoryUpdateResponse();
 			updateResponse.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);

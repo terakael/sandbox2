@@ -330,7 +330,10 @@ public enum Items {
 	DARK_BLUEBELL_MIX(276),
 	STARFLOWER_MIX(277),
 	
+	GOBLIN_NAILS(278),
+	WOLF_TEETH(279),
 	
+	CABBAGE(280)
 	
 	
 	;
