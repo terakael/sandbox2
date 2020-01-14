@@ -17,6 +17,7 @@ public class PlayerUpdateResponse extends Response {
 	@Setter Integer tile = null;
 	@Setter String state = null;
 	@Setter Integer damage = null;
+	@Setter Integer damageType = null;
 	@Setter Integer hp = null;
 	@Setter private Map<PlayerPartType, AnimationDto> equipAnimations = null;
 

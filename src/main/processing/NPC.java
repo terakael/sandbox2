@@ -19,6 +19,7 @@ import main.responses.NpcUpdateResponse;
 import main.responses.PvmStartResponse;
 import main.responses.ResponseMaps;
 import main.types.Buffs;
+import main.types.DamageTypes;
 import main.types.ItemAttributes;
 import main.types.NpcAttributes;
 import main.types.Stats;
@@ -83,10 +84,12 @@ public class NPC extends Attackable {
 			return;
 		}
 		
+		processPoison(responseMaps);
+		
 		if ((dto.getAttributes() & NpcAttributes.AGGRESSIVE.getValue()) == NpcAttributes.AGGRESSIVE.getValue() && !isInCombat()) {
 			// aggressive monster; look for targets
 			if (--huntTimer <= 0) {
-				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(dto.getTileId(), dto.getRoamRadius());
+				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(tileId, dto.getRoamRadius()/2);
 				
 				if (dto.getId() == 18 || dto.getId() == 22) { // goblins won't attack anyone with the goblin stank buff
 					closePlayers = closePlayers.stream().filter(player -> !player.hasBuff(Buffs.GOBLIN_STANK)).collect(Collectors.toList());
@@ -126,18 +129,29 @@ public class NPC extends Attackable {
 		} else {
 			// chase the target if not next to it
 			if (!PathFinder.isNextTo(tileId, target.tileId)) {
-				path = PathFinder.findPath(tileId, target.tileId, true);
+				if (PathFinder.tileWithinRadius(target.tileId, dto.getTileId(), dto.getRoamRadius() + 2)) {
+					path = PathFinder.findPath(tileId, target.tileId, true);
+				} else {
+					int retreatTileId = PathFinder.findRetreatTile(target.tileId, tileId, dto.getTileId(), dto.getRoamRadius());
+					System.out.println("retreating to tile " + retreatTileId + "(retreating from " + target.tileId + ", currently at " + tileId + ", anchor=" + dto.getTileId() + ", radius = " + dto.getRoamRadius() + ")");
+					
+					path = PathFinder.findPath(tileId, retreatTileId, true);
+					target = null;
+				}
 			} else {
 				if (target.isInCombat()) {
-					if (!FightManager.fightingWith(this, target))
+					if (!FightManager.fightingWith(this, target)) {
+						int retreatTileId = PathFinder.findRetreatTile(target.tileId, tileId, dto.getTileId(), dto.getRoamRadius());						
+						path = PathFinder.findPath(tileId, retreatTileId, true);
 						target = null;
+					}
 				} else {
 					Player p = (Player)target;
 					p.setState(PlayerState.fighting);
 					setTileId(p.getTileId());// npc is attacking the player so move to the player's tile
 					p.clearPath();
 					clearPath();
-					FightManager.addFight(p, this);
+					FightManager.addFight(p, this, false);
 					
 					PvmStartResponse pvmStart = new PvmStartResponse();
 					pvmStart.setPlayerId(p.getId());
@@ -162,6 +176,13 @@ public class NPC extends Attackable {
 		//currentHp = dto.getHp();
 		deathTimer = respawnTime;
 		target = null;
+		lastTarget = null;
+		clearPoison();
+
+		// if they die of poison during a fight, the fight should end right away
+		if (FightManager.fightWithFighterExists(this)) {
+			FightManager.cancelFight(this, responseMaps);
+		}
 		// also drop an item
 		
 		List<NpcDropDto> potentialDrops = NPCDao.getDropsByNpcId(dto.getId())
@@ -192,7 +213,7 @@ public class NPC extends Attackable {
 	}
 	
 	@Override
-	public void onHit(int damage, ResponseMaps responseMaps) {
+	public void onHit(int damage, DamageTypes type, ResponseMaps responseMaps) {
 		currentHp -= damage;
 		if (currentHp < 0)
 			currentHp = 0;
@@ -200,6 +221,7 @@ public class NPC extends Attackable {
 		NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 		updateResponse.setInstanceId(dto.getTileId());
 		updateResponse.setDamage(damage);
+		updateResponse.setDamageType(type.getValue());
 		updateResponse.setHp(currentHp);
 		responseMaps.addLocalResponse(tileId, updateResponse);
 	}

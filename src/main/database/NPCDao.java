@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import lombok.Getter;
+import main.types.ItemAttributes;
+import main.types.NpcAttributes;
 
 public class NPCDao {
 	@Getter private static ArrayList<NPCDto> npcInstanceList = null;
@@ -213,5 +215,14 @@ public class NPCDao {
 				return dto.getName();
 		}
 		return null;
+	}
+	
+	public static boolean npcHasAttribute(int npcId, NpcAttributes attribute) {
+		for (NPCDto npc : npcList) {
+			if (npc.getId() == npcId) {
+				return (npc.getAttributes() & attribute.getValue()) == attribute.getValue();
+			}
+		}
+		return false;
 	}
 }

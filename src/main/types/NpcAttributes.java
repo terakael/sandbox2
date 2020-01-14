@@ -3,7 +3,8 @@ package main.types;
 import lombok.Getter;
 
 public enum NpcAttributes {
-	AGGRESSIVE(1);
+	ATTACKABLE(1),
+	AGGRESSIVE(2);
 	
 	@Getter private int value;
 	NpcAttributes(int value) {

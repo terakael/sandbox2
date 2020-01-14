@@ -25,4 +25,5 @@ public class SceneryDto {
 	private int leftclickOption;
 	private int otherOptions;
 	@Getter private HashSet<Integer> instances = null;
+	private int attributes;
 }

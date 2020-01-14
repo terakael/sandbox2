@@ -18,7 +18,7 @@ public abstract class Store {
 	protected ArrayList<ShopItemDto> baseItems = new ArrayList<>();
 	@Getter @Setter protected boolean dirty = false;
 	protected final int maxStock = 16;
-	private int tickCounter = 0;
+	protected int tickCounter = 0;
 	
 	public Store(ShopDto dto) {
 		this.dto = dto;
@@ -99,7 +99,7 @@ public abstract class Store {
 		for (int i = 0; i <= currentStock; ++i)
 			price *= 0.95;
 		
-		return (int)price;
+		return Math.max((int)((double)item.getPrice() * 0.15) + 1, (int)price);
 	}
 	
 	public int getShopSellPrice(ShopItemDto item) {
@@ -111,7 +111,7 @@ public abstract class Store {
 		for (int i = 0; i <= currentStock; ++i)
 			price *= 0.85;
 		
-		return (int)price;
+		return Math.max((int)((double)item.getPrice() * 0.12) + 1, (int)price);
 	}
 	
 	public int getShopBuyPrice(ShopItemDto item) {

@@ -20,7 +20,7 @@ public class SceneryDao {
 	public static List<SceneryDto> getAllSceneryByRoom(int roomId) {
 		// TODO query is wrong
 		final String query = 
-				"select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, leftclick_option, other_options from scenery " +
+				"select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, leftclick_option, other_options, attributes from scenery " +
 				" where id in (select distinct scenery_id from room_scenery where room_id=? and id != 49)"; // 49 is impassable tile, don't send this to client (used in world builder tool and pathfinding)
 		
 		List<SceneryDto> sceneryList = new ArrayList<>();
@@ -47,6 +47,7 @@ public class SceneryDao {
 					dto.setLeftclickOption(rs.getInt("leftclick_option"));
 					dto.setOtherOptions(rs.getInt("other_options"));
 					dto.setInstances(getInstanceListByRoomIdAndSceneryId(roomId, rs.getInt("id")));
+					dto.setAttributes(rs.getInt("attributes"));
 					sceneryList.add(dto);
 				}
 			}

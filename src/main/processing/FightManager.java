@@ -2,24 +2,13 @@ package main.processing;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
-import lombok.Setter;
-import main.database.EquipmentBonusDto;
-import main.database.EquipmentDao;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
-import main.requests.Request;
-import main.responses.DamageResponse;
-import main.responses.DeathResponse;
-import main.responses.DropResponse;
-import main.responses.InventoryUpdateResponse;
 import main.responses.PvmEndResponse;
 import main.responses.PvpEndResponse;
-import main.responses.PvpStartResponse;
 import main.responses.ResponseMaps;
+import main.types.DamageTypes;
 
 public class FightManager {
 	private FightManager() {}
@@ -31,7 +20,7 @@ public class FightManager {
 		@Getter private Attackable fighter2;
 		@Getter private int battleLockTicks;
 		
-		Fight(Attackable fighter1, Attackable fighter2) {
+		Fight(Attackable fighter1, Attackable fighter2, boolean fighter1initiated) {
 			battleLockTicks = 10;
 			
 			this.fighter1 = fighter1;
@@ -40,8 +29,8 @@ public class FightManager {
 			this.fighter1.setTarget(this.fighter2);
 			this.fighter2.setTarget(this.fighter1);
 			
-			this.fighter1.setCooldown(0);
-			this.fighter2.setCooldown(3);
+			this.fighter1.setCooldown(fighter1initiated ? 0 : 3);
+			this.fighter2.setCooldown(fighter1initiated ? 3 : 0);
 		}
 		
 		public boolean isBattleLocked() {
@@ -85,23 +74,27 @@ public class FightManager {
 			other.setStatsAndBonuses();
 			
 			int hit = Math.max(attackable.hit() - other.block(), 0);
-			other.onHit(hit, responseMaps);
+			other.onHit(hit, DamageTypes.STANDARD, responseMaps);
 			
 			return other.getCurrentHp() == 0;
 		}
 	}
 	
 	public static void process(ResponseMaps responseMaps) {
-		ArrayList<Fight> finishedFights = new ArrayList<>();
-		for (Fight fight : fights) {
+//		ArrayList<Fight> finishedFights = new ArrayList<>();
+		
+		// we want to copy all the fights into a different container, as if a fight ends during processing
+		// then the fight will be removed from the main fighting list.
+		List<Fight> fightsCopy = fights.stream().collect(Collectors.toList());
+		for (Fight fight : fightsCopy) {
 			if (fight.process(responseMaps)) {
-				finishedFights.add(fight);
+//				finishedFights.add(fight);
 			}
 		}
 		
-		for (Fight fight : finishedFights) {
-			cancelFight(fight.getFighter1(), responseMaps);
-		}
+//		for (Fight fight : finishedFights) {
+//			cancelFight(fight.getFighter1(), responseMaps);
+//		}
 	}
 	
 	private static Fight getFightWithFighter(Attackable fighter) {
@@ -123,8 +116,8 @@ public class FightManager {
 		return fight.isBattleLocked();
 	}
 	
-	public static void addFight(Attackable fighter1, Attackable fighter2) {
-		fights.add(new Fight(fighter1, fighter2));
+	public static void addFight(Attackable fighter1, Attackable fighter2, boolean fighter1initiated) {
+		fights.add(new Fight(fighter1, fighter2, fighter1initiated));
 	}
 	
 	public static void cancelFight(Attackable participant, ResponseMaps responseMaps) {

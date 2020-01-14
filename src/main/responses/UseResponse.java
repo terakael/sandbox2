@@ -1,26 +1,36 @@
 package main.responses;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 import main.database.BrewableDao;
+import main.database.CastableDao;
+import main.database.CastableDto;
 import main.database.EquipmentDao;
+import main.database.InventoryItemDto;
 import main.database.ItemDao;
+import main.database.NPCDao;
 import main.database.PlayerStorageDao;
 import main.database.SceneryDao;
 import main.database.StatsDao;
 import main.database.UseItemOnItemDao;
 import main.database.UseItemOnItemDto;
 import main.processing.FightManager;
+import main.processing.NPC;
+import main.processing.NPCManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
+import main.requests.AttackRequest;
 import main.requests.Request;
-import main.requests.RequestFactory;
 import main.requests.UseRequest;
 import main.scenery.Scenery;
 import main.scenery.SceneryManager;
+import main.types.DamageTypes;
 import main.types.Items;
+import main.types.NpcAttributes;
 import main.types.Stats;
 import main.types.StorageTypes;
 
@@ -151,8 +161,10 @@ public class UseResponse extends Response {
 		}
 		
 		StartUseResponse startUseResponse = new StartUseResponse();
-		startUseResponse.setIconId(ItemDao.getItem(dto.getResultingItemId()).getSpriteFrameId());
 		startUseResponse.process(request, player, responseMaps);		
+		
+		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(dto.getResultingItemId()).getSpriteFrameId());
+		responseMaps.addLocalResponse(player.getTileId(), actionBubble);
 		
 		player.setState(PlayerState.using);
 		player.setSavedRequest(request);
@@ -160,9 +172,210 @@ public class UseResponse extends Response {
 		return true;
 	}
 
-	private boolean handleUseOnNpc(UseRequest request, Player player, ResponseMaps responseMaps) {
-		// for now you can only use poison on enemies, which requires you to be in combat.
-		return false;
+	private boolean handleUseOnNpc(UseRequest request, Player player, ResponseMaps responseMaps) {		
+		// there aren't that many items that can be used on npcs right...
+		// poison, magic scrolls, anything else?
+		
+		// when we use an item on an npc, don't do the actual check until you walk over into melee range of the npc.
+		// only exception to this is if the npc doesn't exist, because then we wouldn't know where to walk in the first place.
+		// also if the item is supposed to be used from range, i.e. magic scrolls!
+		
+		NPC targetNpc = NPCManager.get().getNpcByInstanceId(request.getDest());
+		if (targetNpc == null)
+			return false;
+		
+		if (CastableDao.isCastable(request.getSrc())) {
+			return handleCastableOnNpc(request, player, responseMaps);
+		}
+		
+		if (!PathFinder.isNextTo(player.getTileId(), targetNpc.getTileId())) {
+			player.setTarget(targetNpc);	
+			player.setSavedRequest(request);
+			return true;
+		} else {
+			// for now you can only use poison on enemies, which requires you to be in combat.
+			Items item = Items.withValue(request.getSrc());
+			if (item == null)
+				return false;
+			
+			// before we figure out to do with the item, make sure we have it in our inventory.
+			ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			if (!invItemIds.contains(request.getSrc()))
+				return false;
+			
+			// if there's some mismatch with the slot + item then use the first 
+			// slot in the inventory with said item instead (we know it exists in inventory now)
+			int slot = request.getSrcSlot();
+			if (slot >= invItemIds.size() || invItemIds.get(slot) != request.getSrc())
+				slot = invItemIds.indexOf(request.getSrc());
+			
+			switch (item) {
+			case POISON_1:
+			case POISON_2:
+			case POISON_3:
+			case POISON_4: {
+				// need to be in melee range, this also starts the fight so it works like an attack option
+				// also obviously cannot be used on non-attackables.
+				int becomesItemId = 0;
+				if (item != Items.POISON_1)
+					becomesItemId = item.getValue() + 1;// the item ids are in incremental order ((4) -> (3) -> (2) -> (1))
+				
+				if (!NPCDao.npcHasAttribute(targetNpc.getId(), NpcAttributes.ATTACKABLE))
+					return false;
+				
+				if (!FightManager.fightingWith(player, targetNpc) 
+						&& !FightManager.fightWithFighterExists(player) 
+						&& !FightManager.fightWithFighterExists(targetNpc)) {
+					AttackRequest attackRequest = new AttackRequest();
+					attackRequest.setObjectId(targetNpc.getInstanceId());
+					new AttackResponse().process(attackRequest, player, responseMaps);
+				}
+				
+				// by this point, whether or not we were previously in a fight with the targetNpc, we will be now.
+				if (FightManager.fightingWith(player, targetNpc)) {
+					setRecoAndResponseText(1, "you throw poison in your opponents face!");
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, becomesItemId, 1, ItemDao.getMaxCharges(becomesItemId));
+					InventoryUpdateResponse.sendUpdate(player, responseMaps);
+					targetNpc.inflictPoison(6);
+				}
+				responseMaps.addClientOnlyResponse(player, this);
+				return true;
+			}
+			
+			default:
+				return false;
+			}
+		}
+	}
+	
+	private boolean handleCastableOnNpc(UseRequest request, Player player, ResponseMaps responseMaps) {
+		CastableDto castable = CastableDao.getCastableByItemId(request.getSrc());
+		if (castable == null)
+			return false;
+		
+		NPC targetNpc = NPCManager.get().getNpcByInstanceId(request.getDest());
+		if (targetNpc == null)
+			return false;
+		
+		if (Items.withValue(castable.getItemId()) == Items.TYROTOWN_TELEPORT_RUNE)
+			return false;
+		
+		if (!NPCDao.npcHasAttribute(targetNpc.getId(), NpcAttributes.ATTACKABLE))
+			return false;
+		
+		if (FightManager.fightWithFighterExists(targetNpc) && !FightManager.fightingWith(targetNpc, player)) {
+			setRecoAndResponseText(0, "someone is already fighting that.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return true;
+		}
+		
+		if (FightManager.fightWithFighterExists(player) && !FightManager.fightingWith(targetNpc, player)) {
+			setRecoAndResponseText(0, "you're already fighting something else.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return true;
+		}
+		
+		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		if (!invItemIds.contains(castable.getItemId()))
+			return false;
+		
+		// in case of user fuckery, they modify the slot to a different slot.
+		// if it's somehow different then set it to the correct slot.
+		int slot = request.getSrcSlot();
+		if (slot >= invItemIds.size() || invItemIds.get(slot) != castable.getItemId())
+			slot = invItemIds.indexOf(castable.getItemId());
+		
+		// from here, either neither player or npc are in combat, or player and npc are in combat with eachother.
+		int magicLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.MAGIC, player.getId());
+		if (magicLevel < castable.getLevel()) {
+			setRecoAndResponseText(0, String.format("you need %d magic to cast that.", castable.getLevel()));
+			responseMaps.addClientOnlyResponse(player, this);
+			return true;
+		}
+		
+		// at this point we're good to cast the spell.
+		// TODO failure chance based off magic bonus, magic level and requirement levels
+		// TODO rune saving based off magic bonus, magic level and requirement level
+		int damage = new Random().nextInt(castable.getMaxHit() + 1);// +1 to include the max hit
+		targetNpc.onHit(damage, DamageTypes.MAGIC, responseMaps);
+		if (targetNpc.getCurrentHp() == 0) {
+			targetNpc.onDeath(player, responseMaps);
+		}
+		
+		if (!targetNpc.isDead()) {
+			if (!FightManager.fightWithFighterExists(targetNpc))
+				targetNpc.setTarget(player);
+			
+			// handle rune special effects
+			switch (Items.withValue(castable.getItemId())) {
+			case DISEASE_RUNE:
+				// 1/6 chance to poison for 3
+				if (new Random().nextInt(6) == 0)
+					targetNpc.inflictPoison(3);
+				break;
+				
+			case DECAY_RUNE:
+				// 1/4 chance poison for 6
+				if (new Random().nextInt(4) == 0)
+					targetNpc.inflictPoison(6);
+				break;
+				
+			case BLOOD_TITHE_RUNE:
+				HashMap<Stats, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());
+				int newRelativeBoost = relativeBoosts.get(Stats.HITPOINTS) + damage;
+				if (newRelativeBoost > 0)
+					newRelativeBoost = 0;
+				
+
+				player.setCurrentHp(player.getDto().getMaxHp() + newRelativeBoost);
+				StatsDao.setRelativeBoostByPlayerIdStatId(player.getId(), Stats.HITPOINTS, newRelativeBoost);
+				
+				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+				playerUpdateResponse.setId(player.getId());
+				playerUpdateResponse.setHp(player.getCurrentHp());
+				responseMaps.addBroadcastResponse(playerUpdateResponse);
+				break;
+				
+			default:
+				break;
+			}
+		}
+		
+		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
+		if (item.getCount() > 1) {
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(
+					player.getId(), 
+					StorageTypes.INVENTORY.getValue(), 
+					slot, 
+					item.getItemId(), item.getCount() - 1, item.getCharges());
+		} else {
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(
+					player.getId(), 
+					StorageTypes.INVENTORY.getValue(), 
+					slot, 
+					0, 1, 0);
+		}
+		InventoryUpdateResponse.sendUpdate(player, responseMaps);
+		
+		int exp = castable.getExp() + (damage * 4);
+		
+		Map<Integer, Integer> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
+		AddExpResponse addExpResponse = new AddExpResponse();
+		addExpResponse.addExp(Stats.MAGIC.getValue(), exp);		
+		responseMaps.addClientOnlyResponse(player, addExpResponse);
+		
+		StatsDao.addExpToPlayer(player.getId(), Stats.MAGIC, exp);
+		player.refreshStats(currentStatExp);
+		
+		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+		playerUpdate.setId(player.getId());
+		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(player.getId()));
+		responseMaps.addBroadcastResponse(playerUpdate);// should be local
+		
+		CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId());
+		responseMaps.addLocalResponse(player.getTileId(), castSpellResponse);
+		
+		return true;
 	}
 	
 	private boolean handleUseOnPlayer(UseRequest request, Player player, ResponseMaps responseMaps) {

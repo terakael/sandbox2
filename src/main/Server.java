@@ -7,6 +7,7 @@ import java.util.Scanner;
 import javax.websocket.DeploymentException;
 
 import main.database.BrewableDao;
+import main.database.CastableDao;
 import main.database.CatchableDao;
 import main.database.ConsumableDao;
 import main.database.CookableDao;
@@ -61,6 +62,7 @@ public class Server {
 			GroundItemManager.setupRespawnables();
 			LadderConnectionDao.setupCaches();
 			PickableDao.setupCaches();
+			CastableDao.setupCaches();
 			try {
 				MinimapGenerator.createImage();
 			} catch (IOException e) {

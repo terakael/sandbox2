@@ -20,13 +20,16 @@ public class GeneralStore extends Store {
 	public void process(ResponseMaps responseMaps) {
 		super.process(responseMaps);
 		
-		// iterate backwards to handle potential removal of items when stock hits 0
-		for (int i = playerItems.size() - 1; i >= 0; --i) {
-			ShopItemDto item = playerItems.get(i);
-			if (item.getCurrentStock() < item.getMaxStock())
-				addItem(item.getItemId(), 1);
-			else if (item.getCurrentStock() > item.getMaxStock())
-				decreaseItemStock(item.getItemId(), 1);
+		if (tickCounter % 100 == 0) {
+			// all the playerItems (i.e. non-base items) are removed at one item per minute
+			// iterate backwards to handle potential removal of items when stock hits 0
+			for (int i = playerItems.size() - 1; i >= 0; --i) {
+				ShopItemDto item = playerItems.get(i);
+				if (item.getCurrentStock() < item.getMaxStock())
+					addItem(item.getItemId(), 1);
+				else if (item.getCurrentStock() > item.getMaxStock())
+					decreaseItemStock(item.getItemId(), 1);
+			}
 		}
 	}
 	

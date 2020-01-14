@@ -1,5 +1,6 @@
 package main.responses;
 
+import main.database.NPCDao;
 import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;
@@ -8,6 +9,7 @@ import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.AttackRequest;
 import main.requests.Request;
+import main.types.NpcAttributes;
 
 public class AttackResponse extends Response {
 
@@ -24,7 +26,7 @@ public class AttackResponse extends Response {
 		
 		AttackRequest request = (AttackRequest)req;
 		NPC npc = NPCManager.get().getNpcByInstanceId(request.getObjectId());// request tileid is the instnace id
-		if (npc == null) {
+		if (npc == null || !NPCDao.npcHasAttribute(npc.getId(), NpcAttributes.ATTACKABLE)) {
 			setRecoAndResponseText(0, "you can't attack that.");
 			return;
 		}
@@ -44,7 +46,7 @@ public class AttackResponse extends Response {
 			player.setTileId(npc.getTileId());
 			npc.clearPath();
 			player.clearPath();
-			FightManager.addFight(player, npc);
+			FightManager.addFight(player, npc, true);
 			
 			PvmStartResponse pvmStart = new PvmStartResponse();
 			pvmStart.setPlayerId(player.getId());

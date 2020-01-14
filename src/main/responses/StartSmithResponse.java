@@ -7,11 +7,10 @@ import main.requests.Request;
 import main.requests.SmithRequest;
 
 public class StartSmithResponse extends Response {
-	private int iconId;
-	
 	public StartSmithResponse() {
 		setAction("start_smith");
 	}
+	
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		setRecoAndResponseText(1, "you place the ore in the furnace...");
@@ -20,7 +19,8 @@ public class StartSmithResponse extends Response {
 		if (dto == null)
 			return;
 		
-		iconId = dto.getSpriteFrameId();
+		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), dto.getSpriteFrameId());
+		responseMaps.addLocalResponse(player.getTileId(), actionBubble);
 		
 		responseMaps.addClientOnlyResponse(player, this);
 	}

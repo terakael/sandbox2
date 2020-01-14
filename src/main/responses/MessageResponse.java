@@ -57,7 +57,7 @@ public class MessageResponse extends Response {
 	
 	private void handleDebugCommand(Player player, String msg, ResponseMaps responseMaps) {
 		String[] msgParts = msg.split(" (?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");// the :: prefix should already be removed here
-		if (msgParts[0].equals("tele")) {
+		if (msgParts[0].equals("tele") || msgParts[0].equals("home")) {
 			handleDebugTele(player, msgParts, responseMaps);
 			return;
 		}
@@ -91,9 +91,17 @@ public class MessageResponse extends Response {
 		}
 	}
 	
-	private void handleDebugTele(Player player, String[] msgParts, ResponseMaps responseMaps) {
+	private void handleDebugTele(Player player, String[] msgParts, ResponseMaps responseMaps) {		
 		// syntax: ::tele (destPlayerName|tileId)[ srcPlayerName]
 		if (msgParts.length == 1) {
+			if (msgParts[0].equals("home")) {
+				PlayerUpdateResponse playerUpdate = (PlayerUpdateResponse)ResponseFactory.create("player_update");
+				playerUpdate.setId(player.getId());
+				playerUpdate.setTile(36859);
+				player.setTileId(36859);
+				responseMaps.addBroadcastResponse(playerUpdate);
+				return;
+			}
 			// invalid syntax
 			setRecoAndResponseText(0, "syntax: ::tele (destPlayerName|tileId)[ srcPlayerName]");
 			responseMaps.addClientOnlyResponse(player, this);

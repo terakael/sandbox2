@@ -5,7 +5,6 @@ import main.processing.Player;
 import main.requests.Request;
 
 public class StartCookingResponse extends Response {
-	@Setter private int iconId;
 	public StartCookingResponse() {
 		setAction("start_cooking");
 	}

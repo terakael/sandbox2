@@ -8,10 +8,8 @@ import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
-import main.requests.RequestFactory;
 import main.requests.UseRequest;
-import main.responses.FinishCookingResponse;
-import main.responses.InventoryUpdateResponse;
+import main.responses.ActionBubbleResponse;
 import main.responses.ResponseMaps;
 import main.responses.StartCookingResponse;
 import main.types.Items;
@@ -41,8 +39,10 @@ public class Fire extends Scenery {
 			
 			if (slot < inv.size()) {
 				StartCookingResponse startCookingResponse = new StartCookingResponse();
-				startCookingResponse.setIconId(ItemDao.getItem(cookable.getCookedItemId()).getSpriteFrameId());
 				responseMaps.addClientOnlyResponse(player, startCookingResponse);
+				
+				ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(cookable.getCookedItemId()).getSpriteFrameId());
+				responseMaps.addLocalResponse(player.getTileId(), actionBubble);
 
 				player.setSavedRequest(request);
 				player.setState(PlayerState.cooking);

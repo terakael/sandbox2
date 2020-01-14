@@ -86,7 +86,7 @@ public abstract class PlayerResponse extends Response {
 			case duel: {
 				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
 				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
-				FightManager.addFight(player1, player2);
+				FightManager.addFight(player1, player2, true);
 				
 				player1.setTileId(player2.getTileId());
 				

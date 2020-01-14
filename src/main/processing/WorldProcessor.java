@@ -135,7 +135,7 @@ public class WorldProcessor implements Runnable {
 			Set<Integer> localNpcInstanceIds = localNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
 			
 			// get the previous in-range npcs so we know which ones are new and which ones already existed
-			HashSet<Integer> previousInRangeNpcs = entry.getValue().getInRangeNpcs();
+			Set<Integer> previousInRangeNpcs = entry.getValue().getInRangeNpcs().stream().collect(Collectors.toSet());
 			HashSet<Integer> outOfRangeNpcInstanceIds = entry.getValue().updateInRangeNpcs(localNpcInstanceIds);
 			
 			ArrayList<NpcLocationRefreshResponse.NpcLocation> npcLocations = new ArrayList<>();

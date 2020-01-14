@@ -391,4 +391,34 @@ public class PathFinder {
 		
 		return newTile;
 	}
+	
+	public static boolean tileWithinRadius(int tileToCheck, int radiusCentreTile, int radius) {
+		// use manhattan algorithm to check
+		int centreX = radiusCentreTile % LENGTH;
+		int centreY = radiusCentreTile / LENGTH;
+		
+		int checkX = tileToCheck % LENGTH;
+		int checkY = tileToCheck / LENGTH;
+		
+		return Math.abs(centreX - checkX) + Math.abs(centreY - checkY) <= radius;
+	}
+	
+	public static int findRetreatTile(int retreatFromTile, int startTile, int anchorTile, int radius) {
+		int retreatFromX = retreatFromTile % LENGTH;
+		int retreatFromY = retreatFromTile / LENGTH;
+		
+		int startX = startTile % LENGTH;
+		int startY = startTile / LENGTH;
+		
+		boolean retreatToRight = retreatFromX - startX > 0;
+		boolean retreatUpwards = retreatFromY - startY > 0;
+		
+		int anchorX = anchorTile % LENGTH;
+		int anchorY = anchorTile / LENGTH;
+		
+		int retreatX = anchorX + (radius * (retreatToRight ? -1 : 1));
+		int retreatY = anchorY + (radius * (retreatUpwards ? -1 : 1));
+		
+		return (retreatY * LENGTH) + retreatX;
+	}
 }

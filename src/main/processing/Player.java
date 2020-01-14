@@ -41,6 +41,7 @@ import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
 import main.responses.StatBoostResponse;
 import main.types.Buffs;
+import main.types.DamageTypes;
 import main.types.ItemAttributes;
 import main.types.Stats;
 import main.types.StorageTypes;
@@ -346,6 +347,12 @@ public class Player extends Attackable {
 	
 	@Override
 	public void onDeath(Attackable killer, ResponseMaps responseMaps) {
+		lastTarget = null;
+		clearPoison();
+		if (FightManager.fightWithFighterExists(this)) {
+			FightManager.cancelFight(this, responseMaps);
+		}
+		
 		// unequip and drop all the items in inventory
 		EquipmentDao.clearAllEquppedItems(getId());
 		
@@ -371,8 +378,8 @@ public class Player extends Attackable {
 		DeathResponse deathResponse = new DeathResponse();
 		deathResponse.setId(getId());
 		deathResponse.setCurrentHp(currentHp);
-		deathResponse.setTileId(37611);
-		setTileId(37611);
+		deathResponse.setTileId(36859);
+		setTileId(36859);
 		responseMaps.addBroadcastResponse(deathResponse);
 		
 		state = PlayerState.idle;
@@ -482,9 +489,9 @@ public class Player extends Attackable {
 	}
 	
 	@Override
-	public void onHit(int damage, ResponseMaps responseMaps) {
+	public void onHit(int damage, DamageTypes type, ResponseMaps responseMaps) {
 		// remove any buffs that don't work in combat
-		if (activeBuffs.containsKey(Buffs.RESTORATION))
+		if (activeBuffs.containsKey(Buffs.RESTORATION) && type != DamageTypes.POISON)// don't kill the buff if it's due to poison
 			activeBuffs.put(Buffs.RESTORATION, 1);// kill it next tick
 		
 		int hpLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId());
@@ -495,7 +502,8 @@ public class Player extends Attackable {
 		
 		currentHp = hpLevel + hpBoost;
 		
-		handleReinforcedItemDegradation(responseMaps);
+		if (type != DamageTypes.POISON) // only for a standard/magic hit, poison doesn't degrade the reinforced armour
+			handleReinforcedItemDegradation(responseMaps);
 		
 		// you have 10 hp max, 1hp remaining
 		// relative boost should be -9
@@ -505,6 +513,7 @@ public class Player extends Attackable {
 		PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 		playerUpdateResponse.setId(getId());
 		playerUpdateResponse.setDamage(damage);
+		playerUpdateResponse.setDamageType(type.getValue());
 		playerUpdateResponse.setHp(currentHp);
 		responseMaps.addBroadcastResponse(playerUpdateResponse);	
 		
