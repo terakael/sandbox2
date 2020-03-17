@@ -32,7 +32,7 @@ public class FinishMiningResponse extends Response {
 			return;
 		
 		MineRequest request = (MineRequest)req;
-		MineableDto mineable = MineableDao.getMineableDtoByTileId(request.getTileId());
+		MineableDto mineable = MineableDao.getMineableDtoByTileId(player.getRoomId(), request.getTileId());
 		if (mineable == null) {
 			MineResponse mineResponse = new MineResponse();
 			mineResponse.setRecoAndResponseText(0, "you can't mine that.");

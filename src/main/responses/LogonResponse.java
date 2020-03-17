@@ -36,6 +36,7 @@ public class LogonResponse extends Response {
 	
 	@Getter private int id;
 	@Getter private int tileId;
+	@Getter private int roomId;
 	private int attackStyleId;
 	private Map<Integer, Integer> stats;
 	private Map<Integer, Integer> boosts;
@@ -77,6 +78,7 @@ public class LogonResponse extends Response {
 		PlayerStorageDao.createBankSlotsIfNotExists(id);
 		
 		tileId = dto.getTileId();
+		roomId = dto.getRoomId();
 		attackStyleId = dto.getAttackStyleId();
 
 		stats = StatsDao.getAllStatExpByPlayerId(dto.getId());
@@ -101,28 +103,38 @@ public class LogonResponse extends Response {
 		WorldProcessor.playerSessions.put(client, player);
 		responseMaps.addClientOnlyResponse(player, this);
 		
+		new LoadRoomResponse().process(null, player, responseMaps);
+		
 		initializeNpcLocations(player, responseMaps);
 		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
-		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(player.getId()));
+		playerUpdate.setName(player.getDto().getName());
+		playerUpdate.setTileId(tileId);
+		playerUpdate.setRoomId(roomId);
+		playerUpdate.setCurrentHp(StatsDao.getCurrentHpByPlayerId(player.getId()));
+		playerUpdate.setMaxHp(player.getStats().get(Stats.HITPOINTS));
+		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
 		playerUpdate.setEquipAnimations(equipAnimations);
-		responseMaps.addClientOnlyResponse(player, playerUpdate);
+		playerUpdate.setBaseAnimations(baseAnimations);
+//		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), playerUpdate);
+		responseMaps.addBroadcastResponse(playerUpdate, player);
 		
 		new EquipResponse().process(null, player, responseMaps);
 		
 		// broadcast to the rest of the players that this player has logged in
-		PlayerEnterResponse playerEnter = (PlayerEnterResponse)ResponseFactory.create("playerEnter");
-		playerEnter.setId(id);
-		playerEnter.setName(player.getDto().getName());
-		playerEnter.setTileId(tileId);
-		playerEnter.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
-		playerEnter.setMaxHp(player.getStats().get(Stats.HITPOINTS));
-		playerEnter.setCurrentHp(StatsDao.getCurrentHpByPlayerId(player.getId()));
-		playerEnter.setBaseAnimations(baseAnimations);
-		playerEnter.setEquipAnimations(equipAnimations);
-		
-		responseMaps.addBroadcastResponse(playerEnter, player);
+//		PlayerEnterResponse playerEnter = (PlayerEnterResponse)ResponseFactory.create("playerEnter");
+//		playerEnter.setId(id);
+//		playerEnter.setName(player.getDto().getName());
+//		playerEnter.setTileId(tileId);
+//		playerEnter.setRoomId(roomId);
+//		playerEnter.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
+//		playerEnter.setMaxHp(player.getStats().get(Stats.HITPOINTS));
+//		playerEnter.setCurrentHp(StatsDao.getCurrentHpByPlayerId(player.getId()));
+//		playerEnter.setBaseAnimations(baseAnimations);
+//		playerEnter.setEquipAnimations(equipAnimations);
+//		
+//		responseMaps.addBroadcastResponse(playerEnter, player);
 	}
 	
 	@Override
@@ -133,7 +145,7 @@ public class LogonResponse extends Response {
 	public void initializeNpcLocations(Player player, ResponseMaps responseMaps) {
 		// initial npc location refresh response (all living npcs)
 		NpcLocationRefreshResponse npcLocationRefreshResponse = new NpcLocationRefreshResponse();
-		List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(player.getTileId(), 15);
+		List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(player.getRoomId(), player.getTileId(), 15);
 		localNpcs = localNpcs.stream().filter(e -> !e.isDead()).collect(Collectors.toList());
 		Set<Integer> localNpcInstanceIds = localNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
 		player.updateInRangeNpcs(localNpcInstanceIds);

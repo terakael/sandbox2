@@ -67,6 +67,7 @@ public class EquipResponse extends Response {
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(player.getId());
 		
 		player.recacheEquippedItems();
+		player.refreshBonuses(bonuses);
 		
 		responseMaps.addClientOnlyResponse(player, this);
 		
@@ -82,6 +83,7 @@ public class EquipResponse extends Response {
 		case BODY:
 		case LEGS:
 		case SHIELD:
+		case CAPE:
 			if (player.getStats().get(Stats.DEFENCE) < equip.getRequirement()) {
 				setRecoAndResponseText(0, String.format("you need %d defence to equip that.", equip.getRequirement()));
 				responseMaps.addClientOnlyResponse(player, this);

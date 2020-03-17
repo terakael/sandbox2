@@ -52,7 +52,7 @@ public class MessageResponse extends Response {
 		name = PlayerDao.getNameFromId(id);
 		message = msg;
 		
-		responseMaps.addLocalResponse(player.getTileId(), this);
+		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), this);
 	}
 	
 	private void handleDebugCommand(Player player, String msg, ResponseMaps responseMaps) {
@@ -69,7 +69,7 @@ public class MessageResponse extends Response {
 			return;
 		}
 		
-		if (msgParts[0].matches("^att|str|def|hp|agil|acc|mage|herb|mine|smith$")) {
+		if (msgParts[0].matches("^att|str|def|hp|agil|acc|mage|herb|mine|smith|fish|cook$")) {
 			
 			if (msgParts.length >= 2) {
 				handleAddExp(player, msgParts, responseMaps);
@@ -97,7 +97,7 @@ public class MessageResponse extends Response {
 			if (msgParts[0].equals("home")) {
 				PlayerUpdateResponse playerUpdate = (PlayerUpdateResponse)ResponseFactory.create("player_update");
 				playerUpdate.setId(player.getId());
-				playerUpdate.setTile(36859);
+				playerUpdate.setTileId(36859);
 				player.setTileId(36859);
 				responseMaps.addBroadcastResponse(playerUpdate);
 				return;
@@ -150,7 +150,7 @@ public class MessageResponse extends Response {
 		
 		PlayerUpdateResponse playerUpdate = (PlayerUpdateResponse)ResponseFactory.create("player_update");
 		playerUpdate.setId(targetPlayer.getDto().getId());
-		playerUpdate.setTile(destTileId);
+		playerUpdate.setTileId(destTileId);
 		targetPlayer.setTileId(destTileId);
 		responseMaps.addBroadcastResponse(playerUpdate);
 	}
@@ -205,7 +205,7 @@ public class MessageResponse extends Response {
 		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(targetPlayer.getId());
-		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(targetPlayer.getId()));
+		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(targetPlayer.getId()));
 		responseMaps.addBroadcastResponse(playerUpdate);// should be local
 		
 		targetPlayer.refreshStats();
@@ -287,8 +287,8 @@ public class MessageResponse extends Response {
 		
 		PlayerUpdateResponse updateResponse = new PlayerUpdateResponse();
 		updateResponse.setId(targetPlayer.getId());
-		updateResponse.setHp(maxHp);
-		responseMaps.addLocalResponse(targetPlayer.getTileId(), updateResponse);
+		updateResponse.setCurrentHp(maxHp);
+		responseMaps.addLocalResponse(targetPlayer.getRoomId(), targetPlayer.getTileId(), updateResponse);
 		
 		if (targetPlayer != player) {
 			setRecoAndResponseText(1, "your god has given you life.");

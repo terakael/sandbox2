@@ -14,6 +14,7 @@ public class PlayerEnterResponse extends Response {
 	@Setter private int id;
 	@Setter private String name;
 	@Setter private int tileId;
+	@Setter private int roomId;
 	@Setter private int combatLevel;
 	@Setter private int maxHp;
 	@Setter private int currentHp;

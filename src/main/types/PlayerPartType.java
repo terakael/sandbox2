@@ -8,7 +8,9 @@ public enum PlayerPartType {
 	LEGS(3),
 	ONHAND(4),
 	OFFHAND(5),
-	RING(6);
+	RING(6),
+	CAPE(7),
+	NECKLACE(8);
 	
 	@Getter private int value;
 	PlayerPartType(int value) {

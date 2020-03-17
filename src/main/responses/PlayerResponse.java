@@ -47,6 +47,9 @@ public abstract class PlayerResponse extends Response {
 			return;
 		}
 		
+		if (player.getRoomId() != otherPlayer.getRoomId())
+			return;
+		
 		// you have to be next to the player to process the request
 		if (!PathFinder.isNextTo(player.getTileId(), otherPlayer.getTileId())) {
 			player.setSavedRequest(req);

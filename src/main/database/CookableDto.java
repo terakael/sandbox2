@@ -8,4 +8,7 @@ import lombok.Getter;
 public class CookableDto {
 	int rawItemId;
 	int cookedItemId;
+	int level;
+	int exp;
+	int burntItemId;
 }

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -129,7 +130,7 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("refresh npc locations");
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			// npc stuff
-			List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getTileId(), 15);
+			List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getRoomId(), entry.getValue().getTileId(), 15);
 //			localNpcs = localNpcs.stream().filter(e -> !e.isDead()).collect(Collectors.toList());// don't refresh locations of dead npcs
 			
 			Set<Integer> localNpcInstanceIds = localNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
@@ -256,14 +257,16 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	private void compileLocalResponses(HashMap<Player, ArrayList<Response>> clientResponses, ResponseMaps responseMaps) {
-		for (Map.Entry<Integer, ArrayList<Response>> localResponseMap : responseMaps.getLocalResponses().entrySet()) {
-			ArrayList<Player> localPlayers = getPlayersNearTile(localResponseMap.getKey(), 15);
-			for (Player localPlayer : localPlayers) {
-				if (!clientResponses.containsKey(localPlayer))
-					clientResponses.put(localPlayer, new ArrayList<>());
-				
-				for (Response response : localResponseMap.getValue())
-					clientResponses.get(localPlayer).add(response);
+		for (Entry<Integer, Map<Integer, ArrayList<Response>>> localResponseMapByRoom : responseMaps.getLocalResponses().entrySet()) {
+			for (Entry<Integer, ArrayList<Response>> localResponseMap : localResponseMapByRoom.getValue().entrySet()) {
+				ArrayList<Player> localPlayers = getPlayersNearTile(localResponseMapByRoom.getKey(), localResponseMap.getKey(), 15);
+				for (Player localPlayer : localPlayers) {
+					if (!clientResponses.containsKey(localPlayer))
+						clientResponses.put(localPlayer, new ArrayList<>());
+					
+					for (Response response : localResponseMap.getValue())
+						clientResponses.get(localPlayer).add(response);
+				}
 			}
 		}
 	}
@@ -279,7 +282,7 @@ public class WorldProcessor implements Runnable {
 		}
 	}
 	
-	public static ArrayList<Player> getPlayersNearTile(int tileId, int radius) {
+	public static ArrayList<Player> getPlayersNearTile(int roomId, int tileId, int radius) {
 		ArrayList<Player> localPlayers = new ArrayList<>();
 		
 		int tileX = tileId % PathFinder.LENGTH;
@@ -289,7 +292,7 @@ public class WorldProcessor implements Runnable {
 			int testTileY = player.getTileId() / PathFinder.LENGTH;
 			
 			if ((testTileX >= tileX - radius && testTileX <= tileX + radius) &&
-				(testTileY >= tileY - radius && testTileY <= tileY + radius)) {
+				(testTileY >= tileY - radius && testTileY <= tileY + radius) && player.getRoomId() == roomId) {
 				localPlayers.add(player);
 			}
 		}

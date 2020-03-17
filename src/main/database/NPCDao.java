@@ -13,13 +13,15 @@ import main.types.ItemAttributes;
 import main.types.NpcAttributes;
 
 public class NPCDao {
-	@Getter private static ArrayList<NPCDto> npcInstanceList = null;
+	@Getter private static HashMap<Integer, ArrayList<NPCDto>> npcInstanceList = null; // roomId, npcList
 	@Getter private static ArrayList<NPCDto> npcList = null;
 	private static HashMap<Integer, ArrayList<NpcDropDto>> npcDrops = null;
 	
 	public static void setupCaches() {
 		npcList = getNpcs();
-		npcInstanceList = getAllNpcsByRoom(1);// TODO multiple rooms
+//		npcInstanceList = getAllNpcsByRoom(1);// TODO multiple rooms
+		npcInstanceList = new HashMap<>();
+		npcInstanceList.put(1, getAllNpcsByRoom(1));
 		cacheNpcDrops();
 	}
 	
@@ -44,11 +46,12 @@ public class NPCDao {
 						rs.getInt("attack_id"),
 						rs.getFloat("scale_x"),
 						rs.getFloat("scale_y"),
-						0,// tileId
+						0,// tileId (not used in this map as this is not the instance list, just all npc types)
 						rs.getInt("hp"),
 						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("hp"), 0),
 						rs.getInt("leftclick_option"),
 						rs.getInt("other_options"),
+						0,// roomId (not used in this map as this is not the instance list, just all npc types)
 						rs.getInt("acc"),
 						rs.getInt("str"),
 						rs.getInt("def"),
@@ -101,6 +104,7 @@ public class NPCDao {
 						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("hp"), 0),
 						rs.getInt("leftclick_option"),
 						rs.getInt("other_options"),
+						roomId,
 						rs.getInt("acc"),
 						rs.getInt("str"),
 						rs.getInt("def"),
@@ -141,47 +145,50 @@ public class NPCDao {
 		return examineMap;
 	}
 	
-	public static int getNpcIdFromInstanceId(int instanceId) {
-		for (NPCDto dto : npcInstanceList) {
+	public static int getNpcIdFromInstanceId(int roomId, int instanceId) {
+		if (!npcInstanceList.containsKey(roomId))
+			return -1;
+		
+		for (NPCDto dto : npcInstanceList.get(roomId)) {
 			if (dto.getTileId() == instanceId)
 				return dto.getId();
 		}
 		return -1;
 	}
 	
-	public static HashSet<Integer> getNpcInstanceIds() {
-		final String query = "select tile_id from room_npcs";
-		
-		HashSet<Integer> set = new HashSet<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					set.add(rs.getInt("tile_id"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		return set;
-	}
+//	public static HashSet<Integer> getNpcInstanceIds() {
+//		final String query = "select tile_id from room_npcs";
+//		
+//		HashSet<Integer> set = new HashSet<>();
+//		try (
+//			Connection connection = DbConnection.get();
+//			PreparedStatement ps = connection.prepareStatement(query);
+//		) {
+//			try (ResultSet rs = ps.executeQuery()) {
+//				while (rs.next())
+//					set.add(rs.getInt("tile_id"));
+//			}
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		return set;
+//	}
 	
-	public static void addNpcInstance(int roomId, int npcId, int instanceId) {
-		final String query = "insert into room_npcs values (?,?,?)";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, roomId);
-			ps.setInt(2, npcId);
-			ps.setInt(3, instanceId);
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
+//	public static void addNpcInstance(int roomId, int npcId, int instanceId) {
+//		final String query = "insert into room_npcs values (?,?,?)";
+//		try (
+//			Connection connection = DbConnection.get();
+//			PreparedStatement ps = connection.prepareStatement(query)
+//		) {
+//			ps.setInt(1, roomId);
+//			ps.setInt(2, npcId);
+//			ps.setInt(3, instanceId);
+//			ps.executeUpdate();
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	public static void cacheNpcDrops() {
 		final String query = "select npc_id, item_id, count, rate from npc_drops";

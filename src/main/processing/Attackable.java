@@ -15,10 +15,11 @@ public abstract class Attackable {
 	private static Random rand = new Random();
 	
 	@Setter @Getter protected HashMap<Stats, Integer> stats = new HashMap<>();
-	@Setter private HashMap<Stats, Integer> bonuses = null;
+	@Setter @Getter protected HashMap<Stats, Integer> bonuses = new HashMap<>();
 	@Setter private HashMap<Stats, Integer> boosts = null;
 	@Setter @Getter protected int currentHp;
 	@Setter @Getter protected int tileId;
+	@Setter @Getter protected int roomId;
 	@Getter protected Attackable target = null;
 	@Getter protected Attackable lastTarget = null;// record the last person to attack in the case we die of poison (and therefore have no current target)
 	

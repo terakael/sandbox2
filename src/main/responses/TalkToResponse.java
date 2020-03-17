@@ -35,7 +35,7 @@ public class TalkToResponse extends Response {
 		}
 		
 		TalkToRequest request = (TalkToRequest)req;
-		NPC npc = NPCManager.get().getNpcByInstanceId(request.getObjectId());// request tileid is the instnace id
+		NPC npc = NPCManager.get().getNpcByInstanceId(player.getRoomId(), request.getObjectId());// request tileid is the instnace id
 		if (npc == null) {
 			setRecoAndResponseText(0, "you can't talk to that.");
 			return;
@@ -62,7 +62,7 @@ public class TalkToResponse extends Response {
 			ArrayList<String> messages = NpcMessageDao.getMessagesByNpcId(npc.getId()); 
 			if (!messages.isEmpty()) {
 				message = messages.get(RandomUtil.getRandom(0, messages.size()));
-				responseMaps.addLocalResponse(player.getTileId(), this);
+				responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), this);
 			}
 			return;
 		}

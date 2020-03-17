@@ -37,20 +37,20 @@ public class MineResponse extends Response {
 		
 		MineRequest request = (MineRequest)req;
 		
+		// does the tile have something mineable on it?
+		MineableDto mineable = MineableDao.getMineableDtoByTileId(player.getRoomId(), request.getTileId());
+		if (mineable == null) {
+			// this can technically happen when the player clicks a ladder, then right-clicks a rock
+			// then finally selects "mine" after they have switched rooms.  Do not do anything in this case.
+			return;
+		}
+		
 		if (!PathFinder.isNextTo(player.getTileId(), request.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getTileId(), request.getTileId(), false));
+			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), request.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;
-		} else {
-			// does the tile have something mineable on it?
-			MineableDto mineable = MineableDao.getMineableDtoByTileId(request.getTileId());
-			if (mineable == null) {
-				setRecoAndResponseText(0, "you can't mine this.");
-				responseMaps.addClientOnlyResponse(player, this);
-				return;
-			}
-			
+		} else {			
 			// does player have a pickaxe in their inventory?
 			ArrayList<Integer> inventoryItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			if (!inventoryItemIds.contains(Items.PICKAXE.getValue()) 

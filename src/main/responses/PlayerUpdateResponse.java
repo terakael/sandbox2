@@ -13,12 +13,16 @@ import main.types.PlayerPartType;
 public class PlayerUpdateResponse extends Response {
 	@Getter @Setter Integer id = null;
 	@Setter String name = null;
-	@Setter Integer cmb = null;
-	@Setter Integer tile = null;
+	@Setter Integer combatLevel = null;
+	@Setter Integer tileId = null;
+	@Setter Integer roomId = null;
 	@Setter String state = null;
 	@Setter Integer damage = null;
 	@Setter Integer damageType = null;
-	@Setter Integer hp = null;
+	@Setter Integer currentHp = null;
+	@Setter Integer maxHp = null;
+	@Setter Boolean loggedIn = null;
+	@Setter private Map<PlayerPartType, AnimationDto> baseAnimations = null;
 	@Setter private Map<PlayerPartType, AnimationDto> equipAnimations = null;
 
 	public PlayerUpdateResponse() {

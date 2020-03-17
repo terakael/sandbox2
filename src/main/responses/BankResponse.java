@@ -26,12 +26,12 @@ public class BankResponse extends Response {
 		
 		BankRequest request = (BankRequest)req;
 		
-		int sceneryId = SceneryDao.getSceneryIdByTileId(request.getTileId());
+		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getRoomId(), request.getTileId());
 		if (sceneryId != 53)// storage chest scenery id
 			return;
 		
 		if (!PathFinder.isNextTo(player.getTileId(), request.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getTileId(), request.getTileId(), false));
+			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), request.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;

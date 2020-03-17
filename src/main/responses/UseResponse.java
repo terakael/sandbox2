@@ -8,6 +8,7 @@ import java.util.Random;
 import main.database.BrewableDao;
 import main.database.CastableDao;
 import main.database.CastableDto;
+import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
 import main.database.ItemDao;
@@ -78,13 +79,13 @@ public class UseResponse extends Response {
 		}
 		
 		if (!PathFinder.isNextTo(player.getTileId(), request.getDest())) {
-			player.setPath(PathFinder.findPath(player.getTileId(), request.getDest(), false));
+			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), request.getDest(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(request);
 			return true;
 		}
 		
-		int sceneryId = SceneryDao.getSceneryIdByTileId(request.getDest());
+		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getRoomId(), request.getDest());
 		Scenery scenery = SceneryManager.getScenery(sceneryId);
 		if (scenery == null)
 			return false;
@@ -164,7 +165,7 @@ public class UseResponse extends Response {
 		startUseResponse.process(request, player, responseMaps);		
 		
 		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(dto.getResultingItemId()).getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getTileId(), actionBubble);
+		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), actionBubble);
 		
 		player.setState(PlayerState.using);
 		player.setSavedRequest(request);
@@ -180,7 +181,7 @@ public class UseResponse extends Response {
 		// only exception to this is if the npc doesn't exist, because then we wouldn't know where to walk in the first place.
 		// also if the item is supposed to be used from range, i.e. magic scrolls!
 		
-		NPC targetNpc = NPCManager.get().getNpcByInstanceId(request.getDest());
+		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getRoomId(), request.getDest());
 		if (targetNpc == null)
 			return false;
 		
@@ -253,7 +254,7 @@ public class UseResponse extends Response {
 		if (castable == null)
 			return false;
 		
-		NPC targetNpc = NPCManager.get().getNpcByInstanceId(request.getDest());
+		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getRoomId(), request.getDest());
 		if (targetNpc == null)
 			return false;
 		
@@ -294,7 +295,16 @@ public class UseResponse extends Response {
 		}
 		
 		// at this point we're good to cast the spell.
-		// TODO failure chance based off magic bonus, magic level and requirement levels
+		// failure chance based off magic bonus, magic level and requirement levels
+		EquipmentBonusDto equipmentBonuses = EquipmentDao.getEquipmentBonusesByPlayerId(player.getId());
+		int chanceToFail = Math.max(castable.getLevel() - (equipmentBonuses.getMage() + magicLevel) + 25, 0);
+		if (new Random().nextInt(100) < chanceToFail) {
+			// failed
+			setRecoAndResponseText(1, "you failed to cast the spell!");
+			responseMaps.addClientOnlyResponse(player, this);
+			return true;
+		}
+		
 		// TODO rune saving based off magic bonus, magic level and requirement level
 		int damage = new Random().nextInt(castable.getMaxHit() + 1);// +1 to include the max hit
 		targetNpc.onHit(damage, DamageTypes.MAGIC, responseMaps);
@@ -332,7 +342,7 @@ public class UseResponse extends Response {
 				
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(player.getId());
-				playerUpdateResponse.setHp(player.getCurrentHp());
+				playerUpdateResponse.setCurrentHp(player.getCurrentHp());
 				responseMaps.addBroadcastResponse(playerUpdateResponse);
 				break;
 				
@@ -369,11 +379,11 @@ public class UseResponse extends Response {
 		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
-		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(player.getId()));
+		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
 		responseMaps.addBroadcastResponse(playerUpdate);// should be local
 		
 		CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getTileId(), castSpellResponse);
+		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), castSpellResponse);
 		
 		return true;
 	}

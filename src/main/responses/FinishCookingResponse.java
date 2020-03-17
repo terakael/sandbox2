@@ -8,10 +8,13 @@ import main.database.CookableDto;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
+import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.UseRequest;
+import main.types.Stats;
 import main.types.StorageTypes;
+import main.utils.RandomUtil;
 
 public class FinishCookingResponse extends Response {
 	private int itemId;// so we can automatically re-cook
@@ -38,6 +41,13 @@ public class FinishCookingResponse extends Response {
 		int slot = request.getSlot();
 		CookableDto cookable = CookableDao.getCookable(itemId);
 		if (cookable != null) {
+			int cookingLevel = player.getStats().get(Stats.COOKING);
+			if (cookingLevel < cookable.getLevel()) {
+				setRecoAndResponseText(0, String.format("you need %d cooking to cook that.", cookable.getLevel()));
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
+			
 			ArrayList<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			
 			if (inv.get(slot) != cookable.getRawItemId()) {// the passed-in slot doesn't have the correct item?  check other slots
@@ -47,10 +57,21 @@ public class FinishCookingResponse extends Response {
 				}
 			}
 			
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, cookable.getCookedItemId(), 1, ItemDao.getMaxCharges(cookable.getCookedItemId()));
+			boolean success = RandomUtil.getRandom(0, 100) > 50;
+			
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, success ? cookable.getCookedItemId() : cookable.getBurntItemId(), 1, ItemDao.getMaxCharges(cookable.getCookedItemId()));
 			InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
 			invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
-			invUpdate.setResponseText(String.format("you cook the %s.", ItemDao.getNameFromId(cookable.getCookedItemId())));
+			invUpdate.setResponseText(String.format("you %s the %s.", success ? "cook" : "burn", ItemDao.getNameFromId(cookable.getCookedItemId())));
+			
+			if (success) {
+				AddExpRequest addExpReq = new AddExpRequest();
+				addExpReq.setId(player.getId());
+				addExpReq.setStatId(Stats.COOKING.getValue());
+				addExpReq.setExp(cookable.getExp());
+				
+				new AddExpResponse().process(addExpReq, player, responseMaps);
+			}
 			
 			responseMaps.addClientOnlyResponse(player, this);
 		}

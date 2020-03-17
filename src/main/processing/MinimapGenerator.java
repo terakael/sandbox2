@@ -20,35 +20,38 @@ import main.database.SceneryDao;
 import main.database.SpriteMapDao;
 
 public class MinimapGenerator {
-	private static BufferedImage image;
-	public static void createImage() throws IOException {
-		image = new BufferedImage(250, 250, BufferedImage.TYPE_INT_RGB);
+	private static HashMap<Integer, BufferedImage> images = new HashMap<>();
+	public static void createImage(int roomId) throws IOException {
+		BufferedImage image = new BufferedImage(250, 250, BufferedImage.TYPE_INT_RGB); 
 		
-		drawStandardGroundTextureDataToImage(image);
+		drawStandardGroundTextureDataToImage(roomId, image);
 
-		HashSet<Integer> woodenFloorInstances = GroundTextureDao.getInstancesByGroundTextureId(1).get(1);
-		for (int tileId : woodenFloorInstances) {
-			image.setRGB(tileId % 250, tileId / 250, 4665613);
+		HashSet<Integer> woodenFloorInstances = GroundTextureDao.getInstancesByGroundTextureId(1).get(roomId);
+		if (woodenFloorInstances != null) {
+			for (int tileId : woodenFloorInstances) {
+				image.setRGB(tileId % 250, tileId / 250, 4665613);
+			}
 		}
 		
 		// after the ground textures, we can add the rest of the scenery
-		
 		for (int i = 31; i <= 46; ++i) {
-			HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(1, i);
+			HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(roomId, i);
 			for (int tileId : instances) {
 				image.setRGB(tileId % 250, tileId / 250, Color.BLACK.getRGB());
 			}
 		}
 		
-		for (Map.Entry<Integer, HashSet<Integer>> entry : MineableDao.getMineableInstances().entrySet()) {
-			for (int tileId : entry.getValue()) {
-				image.setRGB(tileId % 250, tileId / 250, Color.GRAY.getRGB());
+		if (MineableDao.getMineableInstances().containsKey(roomId)) {
+			for (Map.Entry<Integer, HashSet<Integer>> entry : MineableDao.getMineableInstances().get(roomId).entrySet()) {
+				for (int tileId : entry.getValue()) {
+					image.setRGB(tileId % 250, tileId / 250, Color.GRAY.getRGB());
+				}
 			}
 		}
 		
 		// trees
 		for (int i = 1; i <= 9; ++i) {
-			HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(1, i);
+			HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(roomId, i);
 			for (int tileId : instances) {
 				image.setRGB(tileId % 250, tileId / 250, 1324044);
 			}
@@ -56,7 +59,7 @@ public class MinimapGenerator {
 		
 		// flowers
 		for (int i = 10; i <= 15; ++i) {
-			HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(1, i);
+			HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(roomId, i);
 			for (int tileId : instances) {
 				image.setRGB(tileId % 250, tileId / 250, 8625177);
 			}
@@ -65,37 +68,47 @@ public class MinimapGenerator {
 		// fire
 		int[] fireIds = {20,  47, 48};
 		for (int fireId : fireIds ) {
-			HashSet<Integer> fireInstances = SceneryDao.getInstanceListByRoomIdAndSceneryId(1, fireId);
+			HashSet<Integer> fireInstances = SceneryDao.getInstanceListByRoomIdAndSceneryId(roomId, fireId);
 			for (int tileId : fireInstances) {
 				image.setRGB(tileId % 250, tileId / 250, Color.RED.getRGB());
 			}
 		}
 		
+		int[] ladderIds = {50, 60};
+		for (int ladderId : ladderIds) {
+			HashSet<Integer> ladderInstances = SceneryDao.getInstanceListByRoomIdAndSceneryId(roomId, ladderId);
+			for (int tileId : ladderInstances) {
+				image.setRGB(tileId % 250, tileId / 250, Color.BLACK.getRGB());
+			}
+		}
+		
 		// furnace
-		HashSet<Integer> furnaceInstances = SceneryDao.getInstanceListByRoomIdAndSceneryId(1, 19);
+		HashSet<Integer> furnaceInstances = SceneryDao.getInstanceListByRoomIdAndSceneryId(roomId, 19);
 		for (int tileId : furnaceInstances) {
 			image.setRGB(tileId % 250, tileId / 250, Color.ORANGE.getRGB());
 		}
 		
 		// obelisks
 		for (int i = 21; i <= 28; ++i) {
-			HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(1, i);
+			HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(roomId, i);
 			for (int tileId : instances) {
 				image.setRGB(tileId % 250, tileId / 250, Color.WHITE.getRGB());
 			}
 		}
 		
 		// ladders
-		HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(1, 50);
+		HashSet<Integer> instances = SceneryDao.getInstanceListByRoomIdAndSceneryId(roomId, 50);
 		for (int tileId : instances) {
 			image.setRGB(tileId % 250, tileId / 250, Color.BLACK.getRGB());
 		}
 		
-		File outputfile = new File("D:\\github\\brackets\\img\\map.png");
+		File outputfile = new File(String.format("D:\\github\\brackets\\img\\map_%d.png", roomId));
 		ImageIO.write(image, "png", outputfile);
+		
+		images.put(roomId, image);
 	}
 	
-	private static void drawStandardGroundTextureDataToImage(BufferedImage image) throws IOException {
+	private static void drawStandardGroundTextureDataToImage(int roomId, BufferedImage image) throws IOException {
 		HashMap<Integer, Integer> primaryAveragesBySpriteMapId = new HashMap<>();
 		HashMap<Integer, Integer> opposingAveragesBySpriteMapId = new HashMap<>();
 		
@@ -138,7 +151,7 @@ public class MinimapGenerator {
 			opposingAveragesBySpriteMapId.put(spriteMapId, oAverage.getRGB());
 		}
 		
-		for (GroundTextureDto dto : GroundTextureDao.getAllGroundTexturesByRoom(1)) {
+		for (GroundTextureDto dto : GroundTextureDao.getAllGroundTexturesByRoom(roomId)) {
 			if (!standardGroundTextureSpriteMaps.contains(dto.getSpriteMapId()))			
 				continue;
 			
@@ -148,11 +161,14 @@ public class MinimapGenerator {
 		}
 	}
 	
-	public static String getImage() {
+	public static String getImage(int roomId) {
+		if (!images.containsKey(roomId))
+			return "";
+		
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		
 		try {
-			ImageIO.write(image, "png", os);
+			ImageIO.write(images.get(roomId), "png", os);
 			return Base64.getEncoder().encodeToString(os.toByteArray());
 		} catch (IOException e) {
 			e.printStackTrace();

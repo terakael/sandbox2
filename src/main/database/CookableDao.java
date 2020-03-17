@@ -11,7 +11,7 @@ public class CookableDao {
 	private static HashMap<Integer, CookableDto> cookables;// raw_item_id, dto
 	
 	public static void cacheCookables() {
-		final String query = "select raw_item_id, cooked_item_id from cookable";
+		final String query = "select raw_item_id, cooked_item_id, level, exp, burnt_item_id from cookable";
 		
 		cookables = new HashMap<>();
 		try (
@@ -20,7 +20,7 @@ public class CookableDao {
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
-					cookables.put(rs.getInt("raw_item_id"), new CookableDto(rs.getInt("raw_item_id"), rs.getInt("cooked_item_id")));
+					cookables.put(rs.getInt("raw_item_id"), new CookableDto(rs.getInt("raw_item_id"), rs.getInt("cooked_item_id"), rs.getInt("level"), rs.getInt("exp"), rs.getInt("burnt_item_id")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

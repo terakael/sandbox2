@@ -47,7 +47,7 @@ public class TakeResponse extends Response {
 		
 		if (takeReq.getTileId() != player.getTileId()) {
 			// walk over to the item before picking it up
-			player.setPath(PathFinder.findPath(player.getTileId(), takeReq.getTileId(), true));
+			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), takeReq.getTileId(), true));
 			player.setState(PlayerState.walking);
 			
 			// save the request so the player reprocesses it when they arrive at their destination

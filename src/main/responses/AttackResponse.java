@@ -25,9 +25,10 @@ public class AttackResponse extends Response {
 		}
 		
 		AttackRequest request = (AttackRequest)req;
-		NPC npc = NPCManager.get().getNpcByInstanceId(request.getObjectId());// request tileid is the instnace id
+		NPC npc = NPCManager.get().getNpcByInstanceId(player.getRoomId(), request.getObjectId());// request tileid is the instnace id
 		if (npc == null || !NPCDao.npcHasAttribute(npc.getId(), NpcAttributes.ATTACKABLE)) {
 			setRecoAndResponseText(0, "you can't attack that.");
+			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		

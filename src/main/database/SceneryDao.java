@@ -15,9 +15,17 @@ import main.responses.CachedResourcesResponse;
 public class SceneryDao {
 	private SceneryDao() {};
 	
+	private static HashMap<Integer, List<SceneryDto>> allSceneryByRoom;
+	
+	public static void setupCaches() {
+		allSceneryByRoom = new HashMap<>();
+		allSceneryByRoom.put(1, loadAllSceneryByRoom(1));
+		allSceneryByRoom.put(10001, loadAllSceneryByRoom(10001));
+	}
+	
 	@Getter private static HashMap<Integer, Integer> impassableTileIds;// tile_id, impassable_type
 
-	public static List<SceneryDto> getAllSceneryByRoom(int roomId) {
+	private static List<SceneryDto> loadAllSceneryByRoom(int roomId) {
 		// TODO query is wrong
 		final String query = 
 				"select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, leftclick_option, other_options, attributes from scenery " +
@@ -55,6 +63,12 @@ public class SceneryDao {
 			e.printStackTrace();
 		}
 		return sceneryList;
+	}
+	
+	public static List<SceneryDto> getAllSceneryByRoom(int roomId) {
+		if (!allSceneryByRoom.containsKey(roomId))
+			return new ArrayList<>();
+		return allSceneryByRoom.get(roomId);
 	}
 	
 	public static HashSet<Integer> getInstanceListByRoomIdAndSceneryId(int roomId, int sceneryId) {
@@ -139,8 +153,11 @@ public class SceneryDao {
 		return examineMap;
 	}
 	
-	public static int getSceneryIdByTileId(int tileId) {
-		for (SceneryDto dto : CachedResourcesResponse.get().getScenery()) {
+	public static int getSceneryIdByTileId(int roomId, int tileId) {
+		if (!allSceneryByRoom.containsKey(roomId))
+			return -1;
+		
+		for (SceneryDto dto : allSceneryByRoom.get(roomId)) {
 			if (dto.getInstances().contains(tileId))
 				return dto.getId();
 		}

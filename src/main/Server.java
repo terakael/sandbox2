@@ -1,7 +1,6 @@
 package main;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Scanner;
 
 import javax.websocket.DeploymentException;
@@ -12,11 +11,11 @@ import main.database.CatchableDao;
 import main.database.ConsumableDao;
 import main.database.CookableDao;
 import main.database.EquipmentDao;
+import main.database.FishableDao;
 import main.database.GroundTextureDao;
 import main.database.ItemDao;
 import main.database.LadderConnectionDao;
 import main.database.MineableDao;
-import main.database.NPCDao;
 import main.database.NpcMessageDao;
 import main.database.PickableDao;
 import main.database.RespawnableDao;
@@ -30,7 +29,6 @@ import main.processing.ShopManager;
 import main.processing.WorldProcessor;
 import main.responses.CachedResourcesResponse;
 import main.responses.ExamineResponse;
-import main.utils.RandomUtil;
 
 public class Server {
 
@@ -43,6 +41,7 @@ public class Server {
 			server.start();
 			
 			PathFinder.get();// init the path nodes and relationships
+			SceneryDao.setupCaches();
 			ExamineResponse.initializeExamineMap();// all the scenery examine
 			MineableDao.setupCaches();// mineable tiles, mineable objects
 			ItemDao.setupCaches();
@@ -63,8 +62,10 @@ public class Server {
 			LadderConnectionDao.setupCaches();
 			PickableDao.setupCaches();
 			CastableDao.setupCaches();
+			FishableDao.setupCaches();
 			try {
-				MinimapGenerator.createImage();
+				MinimapGenerator.createImage(1);
+				MinimapGenerator.createImage(10001);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

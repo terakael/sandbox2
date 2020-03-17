@@ -150,6 +150,10 @@ public class ResponseFactory {
 		case "show_stat_window":
 			response = new ShowStatWindowResponse();
 			break;
+		case "fish":
+			response = new FishResponse();
+			break;
+			
 		default:
 			response = new UnknownResponse();
 			break;

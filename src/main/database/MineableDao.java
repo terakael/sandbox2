@@ -15,15 +15,18 @@ public class MineableDao {
 	private MineableDao() {}
 	
 	private static List<MineableDto> mineables = null;
-	@Getter private static HashMap<Integer, HashSet<Integer>> mineableInstances = null;
+	@Getter private static HashMap<Integer, HashMap<Integer, HashSet<Integer>>> mineableInstances = null;
 	
 	public static void setupCaches() {
 		cacheMineables();
 		cacheMineableInstances();
 	}
 	
-	public static MineableDto getMineableDtoByTileId(int tileId) {
-		for (HashMap.Entry<Integer, HashSet<Integer>> instances : mineableInstances.entrySet()) {
+	public static MineableDto getMineableDtoByTileId(int roomId, int tileId) {
+		if (!mineableInstances.containsKey(roomId))
+			return null;
+		
+		for (HashMap.Entry<Integer, HashSet<Integer>> instances : mineableInstances.get(roomId).entrySet()) {
 			if (instances.getValue().contains(tileId)) {
 				for (MineableDto dto : mineables) {
 					if (dto.getSceneryId() == instances.getKey())
@@ -39,7 +42,7 @@ public class MineableDao {
 		
 		// run through every rock's scenery_id and pull out all the instance tiles
 		for (MineableDto dto : mineables) {
-			final String query = "select tile_id from room_scenery where scenery_id = ?";
+			final String query = "select room_id, tile_id from room_scenery where scenery_id = ?";
 			
 			try (
 				Connection connection = DbConnection.get();
@@ -47,14 +50,17 @@ public class MineableDao {
 			) {
 				ps.setInt(1, dto.getSceneryId());
 				
-				HashSet<Integer> instances = new HashSet<>();
 				try (ResultSet rs = ps.executeQuery()) {
 					while (rs.next()) {
-						instances.add(rs.getInt("tile_id"));
+						if (!mineableInstances.containsKey(rs.getInt("room_id")))
+							mineableInstances.put(rs.getInt("room_id"), new HashMap<>());
+						
+						if (!mineableInstances.get(rs.getInt("room_id")).containsKey(dto.getSceneryId()))
+							mineableInstances.get(rs.getInt("room_id")).put(dto.getSceneryId(), new HashSet<>());
+						
+						mineableInstances.get(rs.getInt("room_id")).get(dto.getSceneryId()).add(rs.getInt("tile_id"));
 					}
-				}	
-				
-				mineableInstances.put(dto.getSceneryId(), instances);
+				}
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}

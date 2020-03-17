@@ -10,9 +10,11 @@ import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.UseRequest;
 import main.responses.ActionBubbleResponse;
+import main.responses.MessageResponse;
 import main.responses.ResponseMaps;
 import main.responses.StartCookingResponse;
 import main.types.Items;
+import main.types.Stats;
 import main.types.StorageTypes;
 
 public class Fire extends Scenery {
@@ -28,6 +30,14 @@ public class Fire extends Scenery {
 		
 		CookableDto cookable = CookableDao.getCookable(srcItemId);
 		if (cookable != null) {
+			int cookingLevel = player.getStats().get(Stats.COOKING);
+			if (cookingLevel < cookable.getLevel()) {
+				MessageResponse response = new MessageResponse();
+				response.setRecoAndResponseText(0, String.format("you need %d cooking to cook that.", cookable.getLevel()));
+				responseMaps.addClientOnlyResponse(player, response);
+				return true;
+			}
+			
 			ArrayList<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			
 			if (inv.get(slot) != cookable.getRawItemId()) {// the passed-in slot doesn't have the correct item?  check other slots
@@ -42,7 +52,7 @@ public class Fire extends Scenery {
 				responseMaps.addClientOnlyResponse(player, startCookingResponse);
 				
 				ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(cookable.getCookedItemId()).getSpriteFrameId());
-				responseMaps.addLocalResponse(player.getTileId(), actionBubble);
+				responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), actionBubble);
 
 				player.setSavedRequest(request);
 				player.setState(PlayerState.cooking);

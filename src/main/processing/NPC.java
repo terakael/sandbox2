@@ -44,6 +44,7 @@ public class NPC extends Attackable {
 	public NPC(NPCDto dto) {
 		this.dto = dto;
 		tileId = dto.getTileId();
+		roomId = dto.getRoomId();
 		
 		HashMap<Stats, Integer> stats = new HashMap<>();
 		stats.put(Stats.STRENGTH, dto.getStr());
@@ -89,7 +90,7 @@ public class NPC extends Attackable {
 		if ((dto.getAttributes() & NpcAttributes.AGGRESSIVE.getValue()) == NpcAttributes.AGGRESSIVE.getValue() && !isInCombat()) {
 			// aggressive monster; look for targets
 			if (--huntTimer <= 0) {
-				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(tileId, dto.getRoamRadius()/2);
+				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(roomId, tileId, dto.getRoamRadius()/2);
 				
 				if (dto.getId() == 18 || dto.getId() == 22) { // goblins won't attack anyone with the goblin stank buff
 					closePlayers = closePlayers.stream().filter(player -> !player.hasBuff(Buffs.GOBLIN_STANK)).collect(Collectors.toList());
@@ -124,25 +125,25 @@ public class NPC extends Attackable {
 				tickCounter = r.nextInt((maxTickCount - minTickCount) + 1) + minTickCount;
 				
 				int destTile = PathFinder.chooseRandomTileIdInRadius(dto.getTileId(), dto.getRoamRadius());
-				path = PathFinder.findPath(tileId, destTile, true, dto.getTileId(), dto.getRoamRadius());
+				path = PathFinder.findPath(roomId, tileId, destTile, true, dto.getTileId(), dto.getRoamRadius());
 			}
 		} else {
 			// chase the target if not next to it
 			if (!PathFinder.isNextTo(tileId, target.tileId)) {
 				if (PathFinder.tileWithinRadius(target.tileId, dto.getTileId(), dto.getRoamRadius() + 2)) {
-					path = PathFinder.findPath(tileId, target.tileId, true);
+					path = PathFinder.findPath(roomId, tileId, target.tileId, true);
 				} else {
 					int retreatTileId = PathFinder.findRetreatTile(target.tileId, tileId, dto.getTileId(), dto.getRoamRadius());
 					System.out.println("retreating to tile " + retreatTileId + "(retreating from " + target.tileId + ", currently at " + tileId + ", anchor=" + dto.getTileId() + ", radius = " + dto.getRoamRadius() + ")");
 					
-					path = PathFinder.findPath(tileId, retreatTileId, true);
+					path = PathFinder.findPath(roomId, tileId, retreatTileId, true);
 					target = null;
 				}
 			} else {
 				if (target.isInCombat()) {
 					if (!FightManager.fightingWith(this, target)) {
 						int retreatTileId = PathFinder.findRetreatTile(target.tileId, tileId, dto.getTileId(), dto.getRoamRadius());						
-						path = PathFinder.findPath(tileId, retreatTileId, true);
+						path = PathFinder.findPath(roomId, tileId, retreatTileId, true);
 						target = null;
 					}
 				} else {
@@ -223,7 +224,7 @@ public class NPC extends Attackable {
 		updateResponse.setDamage(damage);
 		updateResponse.setDamageType(type.getValue());
 		updateResponse.setHp(currentHp);
-		responseMaps.addLocalResponse(tileId, updateResponse);
+		responseMaps.addLocalResponse(roomId, tileId, updateResponse);
 	}
 	
 	@Override
@@ -250,7 +251,7 @@ public class NPC extends Attackable {
 			updateResponse.setInstanceId(getInstanceId());
 			updateResponse.setHp(currentHp);
 			updateResponse.setTileId(tileId);
-			responseMaps.addLocalResponse(tileId, updateResponse);
+			responseMaps.addLocalResponse(roomId, tileId, updateResponse);
 		}
 	}
 	

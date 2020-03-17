@@ -11,7 +11,9 @@ public enum Stats {
 	MINING(6),
 	SMITHING(7),
 	MAGIC(8),
-	HERBLORE(9);
+	HERBLORE(9),
+	FISHING(10),
+	COOKING(11);
 	
 	@Getter private int value;
 	Stats(int value) {

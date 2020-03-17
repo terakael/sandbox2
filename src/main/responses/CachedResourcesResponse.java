@@ -25,17 +25,15 @@ import main.requests.Request;
 
 @Getter
 public class CachedResourcesResponse extends Response {
+	private static CachedResourcesResponse instance = null;
+	
 	private List<SpriteMapDto> spriteMaps = null;
 	private List<ItemDto> items = null;
 	private List<SpriteFrameDto> spriteFrames = null;
-	private List<SceneryDto> scenery = null;
 	private List<ContextOptionsDto> contextOptions = null;
-	private static CachedResourcesResponse instance = null;
 	private Map<Integer, String> statMap = null;
-	private List<NPCDto> npcs = null;
 	private Map<Integer, Integer> expMap = null;
-	private List<GroundTextureDto> groundTextures = null;
-	private String minimap;
+	private List<NPCDto> npcs = null;
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -58,13 +56,10 @@ public class CachedResourcesResponse extends Response {
 		spriteMaps = SpriteMapDao.getAllSpriteMaps();
 		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
 		items = ItemDao.getAllItems();
-		scenery = SceneryDao.getAllSceneryByRoom(1);// TODO dynamic based on player room when there's more rooms
-		groundTextures = GroundTextureDao.getAllGroundTexturesByRoom(1);
 		contextOptions = ContextOptionsDao.getAllContextOptions();
 		statMap = StatsDao.getStats();
 		npcs = NPCDao.getNpcList();
 		expMap = StatsDao.getExpMap();
-		minimap = MinimapGenerator.getImage();
 	}
 
 }

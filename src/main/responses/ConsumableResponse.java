@@ -58,8 +58,9 @@ public abstract class ConsumableResponse extends Response {
 			int newRelativeBoost;
 			if (dto.getStatId() == Stats.HITPOINTS.getValue()) {
 				newRelativeBoost = relativeBoosts.get(stat) + dto.getAmount();
-				if (newRelativeBoost > 0)// the hp relative boost is negative for how many hp lost
-					newRelativeBoost = 0;
+				
+				if (newRelativeBoost > player.getBonuses().get(Stats.HITPOINTS))// the hp relative boost is negative for how many hp lost
+					newRelativeBoost = player.getBonuses().get(Stats.HITPOINTS);
 				hpModified = true;
 				player.setCurrentHp(player.getDto().getMaxHp() + newRelativeBoost);
 			} else {
@@ -91,7 +92,7 @@ public abstract class ConsumableResponse extends Response {
 		if (hpModified) {
 			PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 			playerUpdateResponse.setId(player.getId());
-			playerUpdateResponse.setHp(player.getCurrentHp());
+			playerUpdateResponse.setCurrentHp(player.getCurrentHp());
 			responseMaps.addBroadcastResponse(playerUpdateResponse);
 		}
 		

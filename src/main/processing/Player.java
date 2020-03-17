@@ -21,6 +21,7 @@ import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
+import main.requests.FishRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
@@ -30,6 +31,7 @@ import main.responses.DeathResponse;
 import main.responses.EquipResponse;
 import main.responses.FinishClimbResponse;
 import main.responses.FinishCookingResponse;
+import main.responses.FinishFishingResponse;
 import main.responses.FinishMiningResponse;
 import main.responses.FinishSmithResponse;
 import main.responses.FinishUseResponse;
@@ -57,7 +59,8 @@ public class Player extends Attackable {
 		fighting,
 		using,
 		climbing, // ladders etc, give a tick or so duration (like for climbing animation in the future)
-		cooking
+		cooking,
+		fishing
 	};
 	
 	@Getter private PlayerDto dto;
@@ -80,15 +83,19 @@ public class Player extends Attackable {
 	private int restorationBuffCurrentTriggerTicks = restorationBuffTriggerTicks;
 	
 	public Player(PlayerDto dto, Session session) {
-		this.dto = dto;
-		tileId = dto.getTileId();
 		this.session = session;
 		
-		refreshStats();
-		refreshBoosts();
-		
-		currentHp = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(Stats.HITPOINTS);
-		setPostFightCooldown();
+		if (dto != null) {
+			this.dto = dto;
+			tileId = dto.getTileId();
+			roomId = dto.getRoomId();
+			
+			refreshStats();
+			refreshBoosts();
+			
+			currentHp = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(Stats.HITPOINTS);
+			setPostFightCooldown();
+		}
 	}
 	
 	public void addBuff(Buffs buff) {
@@ -110,6 +117,24 @@ public class Player extends Attackable {
 	
 	public void refreshBoosts() {
 		setBoosts(StatsDao.getRelativeBoostsByPlayerId(getId()));
+	}
+	
+	public void refreshBonuses() {
+		EquipmentBonusDto equipment = EquipmentDao.getEquipmentBonusesByPlayerId(getId());
+		refreshBonuses(equipment);
+		
+		int weaponCooldown = equipment.getSpeed();
+		if (weaponCooldown == 0)
+			weaponCooldown = 3;// no weapon equipped, default to speed between sword/daggers
+		setMaxCooldown(weaponCooldown);
+	}
+	
+	public void refreshBonuses(EquipmentBonusDto equipment) {
+		bonuses.put(Stats.STRENGTH, equipment.getStr());
+		bonuses.put(Stats.ACCURACY, equipment.getAcc());
+		bonuses.put(Stats.DEFENCE, equipment.getDef());
+		bonuses.put(Stats.AGILITY, equipment.getAgil());
+		bonuses.put(Stats.HITPOINTS, equipment.getHp());
 	}
 	
 	public void process(ResponseMaps responseMaps) {
@@ -149,8 +174,8 @@ public class Player extends Attackable {
 
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
-				playerUpdateResponse.setTile(getTileId());
-				responseMaps.addLocalResponse(getTileId(), playerUpdateResponse);
+				playerUpdateResponse.setTileId(getTileId());
+				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdateResponse);
 				
 				if (path.isEmpty()) {
 					if (savedRequest == null) // if not null then reprocess the saved request; this is a walkandaction.
@@ -169,9 +194,12 @@ public class Player extends Attackable {
 				setTileId(path.pop());
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(getId());
-				playerUpdateResponse.setTile(getTileId());
-				responseMaps.addLocalResponse(getTileId(), playerUpdateResponse);
+				playerUpdateResponse.setTileId(getTileId());
+				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdateResponse);
 			}
+			
+			if (roomId != target.getRoomId())// if the target goes down a ladder or something then stop following
+				target = null;
 
 			// maybe the target player logged out
 			if (target == null) {
@@ -180,7 +208,7 @@ public class Player extends Attackable {
 			}
 			
 			if (!PathFinder.isNextTo(tileId, target.getTileId())) {
-				path = PathFinder.findPath(tileId, target.getTileId(), false);
+				path = PathFinder.findPath(roomId, tileId, target.getTileId(), false);
 			}
 			break;
 		}
@@ -192,7 +220,7 @@ public class Player extends Attackable {
 			}
 			
 			if (!PathFinder.isNextTo(tileId, target.getTileId())) {
-				path = PathFinder.findPath(tileId, target.getTileId(), false);
+				path = PathFinder.findPath(roomId, tileId, target.getTileId(), false);
 			} else {
 				// start the fight
 				if (savedRequest != null) {
@@ -211,8 +239,8 @@ public class Player extends Attackable {
 				setTileId(path.pop());
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
-				playerUpdateResponse.setTile(getTileId());
-				responseMaps.addLocalResponse(getTileId(), playerUpdateResponse);
+				playerUpdateResponse.setTileId(getTileId());
+				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdateResponse);
 			}
 
 			break;
@@ -238,6 +266,20 @@ public class Player extends Attackable {
 				}
 				
 				new FinishMiningResponse().process(savedRequest, this, responseMaps);
+
+				savedRequest = null;
+				state = PlayerState.idle;
+			}
+			break;
+		case fishing:
+			if (--tickCounter <= 0) {
+				if (!(savedRequest instanceof FishRequest)) {
+					savedRequest = null;
+					state = PlayerState.idle;
+					return;
+				}
+				
+				new FinishFishingResponse().process(savedRequest, this, responseMaps);
 
 				savedRequest = null;
 				state = PlayerState.idle;
@@ -295,10 +337,13 @@ public class Player extends Attackable {
 		HashMap<Stats, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
 		
 		for (Map.Entry<Stats, Integer> entry : boosts.entrySet()) {
+			// max hitpoints depends on the hitpoints bonus (i.e. +5 means we can heal +5 over max hitpoints)
+			int maxBoost = entry.getKey().equals(Stats.HITPOINTS) ? getBonuses().get(Stats.HITPOINTS) : 0;
+						
 			int relativeBoost = entry.getValue();
-			if (relativeBoost > 0)
+			if (relativeBoost > maxBoost)
 				--relativeBoost;
-			else if (relativeBoost < 0)
+			else if (relativeBoost < maxBoost)
 				++relativeBoost;
 			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
 		}
@@ -313,7 +358,11 @@ public class Player extends Attackable {
 		
 		for (Map.Entry<Stats, Integer> entry : boosts.entrySet()) {
 			int relativeBoost = entry.getValue();
-			if (relativeBoost < 0)
+			
+			// max hitpoints depends on the hitpoints bonus (i.e. +5 means we can heal +5 over max hitpoints)
+			int maxBoost = entry.getKey().equals(Stats.HITPOINTS) ? getBonuses().get(Stats.HITPOINTS) : 0;
+			
+			if (relativeBoost < maxBoost)
 				++relativeBoost;
 			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
 		}
@@ -331,6 +380,11 @@ public class Player extends Attackable {
 	public void setTileId(int tileId) {
 		this.tileId = tileId;
 		PlayerDao.updateTileId(dto.getId(), tileId);
+	}
+	
+	public void setRoomId(int roomId) {
+		this.roomId = roomId;
+		PlayerDao.updateRoomId(dto.getId(), roomId);
 	}
 	
 	public int getTileId() {
@@ -484,7 +538,7 @@ public class Player extends Attackable {
 		refreshStats(currentStatExp);
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(getId());
-		playerUpdate.setCmb(StatsDao.getCombatLevelByPlayerId(getId()));
+		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(getId()));
 		responseMaps.addBroadcastResponse(playerUpdate);// should be local
 	}
 	
@@ -514,7 +568,7 @@ public class Player extends Attackable {
 		playerUpdateResponse.setId(getId());
 		playerUpdateResponse.setDamage(damage);
 		playerUpdateResponse.setDamageType(type.getValue());
-		playerUpdateResponse.setHp(currentHp);
+		playerUpdateResponse.setCurrentHp(currentHp);
 		responseMaps.addBroadcastResponse(playerUpdateResponse);	
 		
 		new StatBoostResponse().process(null, this, responseMaps);
@@ -577,24 +631,8 @@ public class Player extends Attackable {
 	
 	@Override
 	public void setStatsAndBonuses() {
-		HashMap<Stats, Integer> stats = new HashMap<>();
-		for (Map.Entry<Integer, Integer> entry : StatsDao.getStatsByPlayerId(getId()).entrySet())
-			stats.put(Stats.withValue(entry.getKey()), StatsDao.getLevelFromExp(entry.getValue()));
-		setStats(stats);
-		
-		EquipmentBonusDto equipment = EquipmentDao.getEquipmentBonusesByPlayerId(getId());
-		HashMap<Stats, Integer> bonuses = new HashMap<>();
-		bonuses.put(Stats.STRENGTH, equipment.getStr());
-		bonuses.put(Stats.ACCURACY, equipment.getAcc());
-		bonuses.put(Stats.DEFENCE, equipment.getDef());
-		bonuses.put(Stats.AGILITY, equipment.getAgil());
-		bonuses.put(Stats.HITPOINTS, equipment.getHp());
-		setBonuses(bonuses);
-		
-		int weaponCooldown = equipment.getSpeed();
-		if (weaponCooldown == 0)
-			weaponCooldown = 3;// no weapon equipped, default to speed between sword/daggers
-		setMaxCooldown(weaponCooldown);
+		refreshStats();
+		refreshBonuses();
 	}
 	
 	@Override

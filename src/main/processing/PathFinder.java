@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 
 import lombok.Getter;
 import lombok.Setter;
 import main.database.SceneryDao;
-import main.database.SceneryDto;
 import main.types.ImpassableTypes;
 import main.utils.Stopwatch;
 
@@ -20,31 +19,38 @@ public class PathFinder {
 	
 	public static final int LENGTH = 250;
 	
-	private PathNode[] nodes = new PathNode[LENGTH * LENGTH];// always square so no need for separate length/width variables
+	private Map<Integer, PathNode[]> nodes = new HashMap<>();// new PathNode[LENGTH * LENGTH];// always square so no need for separate length/width variables
 	
 	
 	private PathFinder() {
-		HashMap<Integer, Integer> impassableTileIds = SceneryDao.getImpassableTileIdsByRoomId(1);
+		nodes.put(1, new PathNode[LENGTH * LENGTH]);// TODO pull all valid rooms from db
 		
-		for (int i = 0; i < nodes.length; ++i) {
-			nodes[i] = new PathNode();
-		}
+		// underground (under room 1)
+		nodes.put(10001, new PathNode[LENGTH * LENGTH]);
 		
-		for (int i = 0; i < nodes.length; ++i) {
-			PathNode[] siblings = {
-				getNode(i, i - LENGTH - 1),
-				getNode(i, i - LENGTH),
-				getNode(i, i - LENGTH + 1),
-				getNode(i, i - 1),
-				getNode(i, i + 1),
-				getNode(i, i + LENGTH - 1),
-				getNode(i, i + LENGTH),
-				getNode(i, i + LENGTH + 1)
-			};
+		for (Map.Entry<Integer, PathNode[]> entry : nodes.entrySet()) {
+			HashMap<Integer, Integer> impassableTileIds = SceneryDao.getImpassableTileIdsByRoomId(entry.getKey());
+			PathNode[] nodeList = entry.getValue();
+			for (int i = 0; i < nodeList.length; ++i) {
+				nodeList[i] = new PathNode();
+			}
 			
-			nodes[i].setId(i);
-			nodes[i].setImpassableTypes(impassableTileIds.containsKey(i) ? impassableTileIds.get(i) : 0);
-			nodes[i].setSiblings(siblings);
+			for (int i = 0; i < nodeList.length; ++i) {
+				PathNode[] siblings = {
+					getNode(entry.getKey(), i, i - LENGTH - 1),
+					getNode(entry.getKey(), i, i - LENGTH),
+					getNode(entry.getKey(), i, i - LENGTH + 1),
+					getNode(entry.getKey(), i, i - 1),
+					getNode(entry.getKey(), i, i + 1),
+					getNode(entry.getKey(), i, i + LENGTH - 1),
+					getNode(entry.getKey(), i, i + LENGTH),
+					getNode(entry.getKey(), i, i + LENGTH + 1)
+				};
+				
+				nodeList[i].setId(i);
+				nodeList[i].setImpassableTypes(impassableTileIds.containsKey(i) ? impassableTileIds.get(i) : 0);
+				nodeList[i].setSiblings(siblings);
+			}
 		}
 	}
 	
@@ -210,7 +216,7 @@ public class PathFinder {
 		}
 	}
 	
-	private PathNode getNode(int id, int siblingId) {
+	private PathNode getNode(int roomId, int id, int siblingId) {
 		if (siblingId < 0 || siblingId >= LENGTH * LENGTH) 
 			return null;// above first row or below last row
 		
@@ -220,20 +226,20 @@ public class PathFinder {
 		if (id % LENGTH == LENGTH - 1 && siblingId == id + 1)
 			return null;// right of rightmost
 		
-		return nodes[siblingId];
+		return nodes.get(roomId)[siblingId];
 	}
 	
-	public static Stack<Integer> findPath(int from, int to, boolean includeToTile) {
-		return findPath(from, to, includeToTile, 0, 0);
+	public static Stack<Integer> findPath(int roomId, int from, int to, boolean includeToTile) {
+		return findPath(roomId, from, to, includeToTile, 0, 0);
 	}
 	
-	public static Stack<Integer> findPath(int from, int to, boolean includeToTile, int spawnTileId, int maxRadius) {
+	public static Stack<Integer> findPath(int roomId, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius) {
 		Stopwatch.start("find path");
 		Stack<Integer> output = new Stack<>();
 		if (from == to)
 			return output;
 		
-		PathNode[] nodes = PathFinder.get().nodes;
+		PathNode[] nodes = PathFinder.get().nodes.get(roomId);
 		if (from < 0 || from >= nodes.length || to < 0 || to >= nodes.length)
 			return output;
 		

@@ -59,7 +59,7 @@ public class ExamineResponse extends Response {
 			break;
 		}
 		case "npc": {
-			int npcId = NPCDao.getNpcIdFromInstanceId(request.getObjectId());
+			int npcId = NPCDao.getNpcIdFromInstanceId(player.getRoomId(), request.getObjectId());
 			examineText = npcExamineMap.get(npcId);
 			break;
 		}

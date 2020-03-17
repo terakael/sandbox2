@@ -40,7 +40,7 @@ public class MoveResponse extends Response {
 			
 			int destTile = destX + (destY * 250);
 			
-			Stack<Integer> ints = PathFinder.findPath(player.getTileId(), destTile, true);
+			Stack<Integer> ints = PathFinder.findPath(player.getRoomId(), player.getTileId(), destTile, true);
 			player.setPath(ints);
 		}
 	}
