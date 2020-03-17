@@ -417,7 +417,7 @@ public class Player extends Attackable {
 				// both use the same "count" parameter so it's impossible anyway.
 				int stack = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.STACKABLE) ? dto.getCount() : 1;
 				int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? dto.getCount() : 1;
-				GroundItemManager.add(getId(), dto.getItemId(), tileId, stack, charges);
+				GroundItemManager.add(roomId, getId(), dto.getItemId(), tileId, stack, charges);
 			}
 		}
 		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(getId(), StorageTypes.INVENTORY.getValue());

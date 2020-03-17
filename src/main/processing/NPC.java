@@ -194,7 +194,7 @@ public class NPC extends Attackable {
 						if (PlayerStorageDao.itemExistsInPlayerStorage(playerId, dto.getItemId()))
 							return false;
 						
-						if (GroundItemManager.itemIsOnGround(playerId, dto.getItemId()))
+						if (GroundItemManager.itemIsOnGround(roomId, playerId, dto.getItemId()))
 							return false;
 					}
 					return true;
@@ -203,7 +203,7 @@ public class NPC extends Attackable {
 		
 		for (NpcDropDto dto : potentialDrops) {
 			if (RandomUtil.getRandom(0, dto.getRate()) == 0) {
-				GroundItemManager.add(((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount(), ItemDao.getMaxCharges(dto.getItemId()));
+				GroundItemManager.add(roomId, ((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount(), ItemDao.getMaxCharges(dto.getItemId()));
 			}
 		}
 	}

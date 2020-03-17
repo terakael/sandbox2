@@ -53,7 +53,7 @@ public class DropResponse extends Response {
 		}
 		
 
-		GroundItemManager.add(player.getId(), itemToDrop.getItemId(), player.getTileId(), itemToDrop.getCount(), itemToDrop.getCharges());
+		GroundItemManager.add(player.getRoomId(), player.getId(), itemToDrop.getItemId(), player.getTileId(), itemToDrop.getCount(), itemToDrop.getCharges());
 		PlayerStorageDao.setItemFromPlayerIdAndSlot(dropReq.getId(), StorageTypes.INVENTORY.getValue(), dropReq.getSlot(), 0, 1, 0);
 		
 		// update the player inventory/equipped items and only send it to the player

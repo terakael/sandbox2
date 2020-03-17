@@ -58,7 +58,7 @@ public class Server {
 			ShopDao.setupCaches();
 			ShopManager.setupShops();
 			RespawnableDao.setupCaches();// ground items that respawn once picked up
-			GroundItemManager.setupRespawnables();
+			GroundItemManager.initialize();
 			LadderConnectionDao.setupCaches();
 			PickableDao.setupCaches();
 			CastableDao.setupCaches();

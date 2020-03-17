@@ -1,9 +1,7 @@
 package main.responses;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import lombok.Setter;
 import main.GroundItemManager;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
@@ -11,6 +9,7 @@ import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
+import main.processing.RoomGroundItemManager;
 import main.requests.Request;
 import main.requests.TakeRequest;
 import main.types.ItemAttributes;
@@ -38,7 +37,7 @@ public class TakeResponse extends Response {
 		
 		TakeRequest takeReq = (TakeRequest)req;
 		
-		GroundItemManager.GroundItem groundItem = GroundItemManager.getItemAtTileId(player.getId(), takeReq.getItemId(), takeReq.getTileId());
+		RoomGroundItemManager.GroundItem groundItem = GroundItemManager.getItemAtTileId(player.getRoomId(), player.getId(), takeReq.getItemId(), takeReq.getTileId());
 		if (groundItem == null) {
 			setRecoAndResponseText(0, "too late - it's gone!");
 			responseMaps.addClientOnlyResponse(player, this);
@@ -78,7 +77,7 @@ public class TakeResponse extends Response {
 			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), 1, groundItem.getCharges());
 		}
 		
-		GroundItemManager.remove(player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount(), groundItem.getCharges());
+		GroundItemManager.remove(player.getRoomId(), player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount(), groundItem.getCharges());
 		
 		// update the player inventory/equipped items and only send it to the player
 		Response resp = ResponseFactory.create("invupdate");

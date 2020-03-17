@@ -162,7 +162,7 @@ public class WorldProcessor implements Runnable {
 			}
 			
 			// ground item stuff
-			HashMap<Integer, ArrayList<Integer>> localItemIds = GroundItemManager.getItemIdsNearTile(entry.getValue().getId(), entry.getValue().getTileId(), 15);
+			HashMap<Integer, ArrayList<Integer>> localItemIds = GroundItemManager.getItemIdsNearTile(entry.getValue().getRoomId(), entry.getValue().getId(), entry.getValue().getTileId(), 15);
 			GroundItemRefreshResponse groundItemRefresh = new GroundItemRefreshResponse();
 			groundItemRefresh.setGroundItems(localItemIds);
 			responseMaps.addClientOnlyResponse(entry.getValue(), groundItemRefresh);
