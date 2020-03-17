@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import main.database.GroundTextureDao;
 import main.database.ItemDao;
 import main.database.RespawnableDao;
 import main.database.RespawnableDto;
@@ -22,10 +23,8 @@ interface IGenericFunc {
 public class GroundItemManager {
 	private static HashMap<Integer, RoomGroundItemManager> groundItemManagers = new HashMap<>();
 	
-	public static void initialize() {
-		int[] currentRooms = {1, 10001};
-		
-		for (int roomId : currentRooms) {
+	public static void initialize() {		
+		for (int roomId : GroundTextureDao.getDistinctRoomIds()) {
 			RoomGroundItemManager groundItemManager = new RoomGroundItemManager(roomId);
 			groundItemManager.setupRespawnables();
 			groundItemManagers.put(roomId, groundItemManager);

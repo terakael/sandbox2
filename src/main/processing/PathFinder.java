@@ -10,6 +10,7 @@ import java.util.Stack;
 
 import lombok.Getter;
 import lombok.Setter;
+import main.database.GroundTextureDao;
 import main.database.SceneryDao;
 import main.types.ImpassableTypes;
 import main.utils.Stopwatch;
@@ -23,11 +24,10 @@ public class PathFinder {
 	
 	
 	private PathFinder() {
-		nodes.put(1, new PathNode[LENGTH * LENGTH]);// TODO pull all valid rooms from db
-		
-		// underground (under room 1)
-		nodes.put(10001, new PathNode[LENGTH * LENGTH]);
-		
+		for (int roomId : GroundTextureDao.getDistinctRoomIds()) {
+			nodes.put(roomId, new PathNode[LENGTH * LENGTH]);
+		}
+
 		for (Map.Entry<Integer, PathNode[]> entry : nodes.entrySet()) {
 			HashMap<Integer, Integer> impassableTileIds = SceneryDao.getImpassableTileIdsByRoomId(entry.getKey());
 			PathNode[] nodeList = entry.getValue();

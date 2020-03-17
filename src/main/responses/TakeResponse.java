@@ -39,8 +39,8 @@ public class TakeResponse extends Response {
 		
 		RoomGroundItemManager.GroundItem groundItem = GroundItemManager.getItemAtTileId(player.getRoomId(), player.getId(), takeReq.getItemId(), takeReq.getTileId());
 		if (groundItem == null) {
-			setRecoAndResponseText(0, "too late - it's gone!");
-			responseMaps.addClientOnlyResponse(player, this);
+//			setRecoAndResponseText(0, "too late - it's gone!");
+//			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		

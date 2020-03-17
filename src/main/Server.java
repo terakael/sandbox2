@@ -40,6 +40,7 @@ public class Server {
 			resourceServer.start();
 			server.start();
 			
+			GroundTextureDao.cacheDistinctRoomIds(); // what constitutes a room is having at least one ground texture: no ground textures, the room doesnt exist.
 			PathFinder.get();// init the path nodes and relationships
 			SceneryDao.setupCaches();
 			ExamineResponse.initializeExamineMap();// all the scenery examine
@@ -64,8 +65,8 @@ public class Server {
 			CastableDao.setupCaches();
 			FishableDao.setupCaches();
 			try {
-				MinimapGenerator.createImage(1);
-				MinimapGenerator.createImage(10001);
+				for (int roomId : GroundTextureDao.getDistinctRoomIds())
+					MinimapGenerator.createImage(roomId);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

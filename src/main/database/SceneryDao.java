@@ -19,8 +19,9 @@ public class SceneryDao {
 	
 	public static void setupCaches() {
 		allSceneryByRoom = new HashMap<>();
-		allSceneryByRoom.put(1, loadAllSceneryByRoom(1));
-		allSceneryByRoom.put(10001, loadAllSceneryByRoom(10001));
+		for (int roomId : GroundTextureDao.getDistinctRoomIds()) {
+			allSceneryByRoom.put(roomId, loadAllSceneryByRoom(roomId));
+		}
 	}
 	
 	@Getter private static HashMap<Integer, Integer> impassableTileIds;// tile_id, impassable_type

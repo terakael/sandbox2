@@ -9,8 +9,27 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import lombok.Getter;
+
 public class GroundTextureDao {
 	private static HashMap<Integer, ArrayList<GroundTextureDto>> dtoMapByRoom = new HashMap<>();
+	@Getter private static HashSet<Integer> distinctRoomIds = new HashSet<>();
+	
+	public static void cacheDistinctRoomIds() {
+		final String query = "select distinct room_id from room_ground_textures";
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query)
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					distinctRoomIds.add(rs.getInt("room_id"));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public static void cacheTextures() {
 		final String query = "select id, sprite_map_id, x, y from ground_textures ";
