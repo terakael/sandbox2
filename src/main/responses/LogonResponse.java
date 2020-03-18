@@ -14,6 +14,7 @@ import lombok.Getter;
 import main.GroundItemManager;
 import main.database.AnimationDao;
 import main.database.AnimationDto;
+import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.GroundTextureDto;
 import main.database.InventoryItemDto;
@@ -33,18 +34,14 @@ import main.types.Stats;
 import main.types.StorageTypes;
 
 public class LogonResponse extends Response {
+	private PlayerDto playerDto;
 	
-	@Getter private int id;
-	@Getter private int tileId;
-	@Getter private int roomId;
-	private int attackStyleId;
 	private Map<Integer, Integer> stats;
 	private Map<Integer, Integer> boosts;
-	private List<PlayerDto> players;
 	private Map<Integer, InventoryItemDto> inventory;
-	private Map<PlayerPartType, AnimationDto> baseAnimations;
-	private Map<PlayerPartType, AnimationDto> equipAnimations;
 	private Map<Integer, String> attackStyles;
+	private HashSet<Integer> equippedSlots;
+	private EquipmentBonusDto bonuses;
 
 	public LogonResponse() {
 		setAction("logon");
@@ -58,83 +55,51 @@ public class LogonResponse extends Response {
 		
 		LogonRequest logonReq = (LogonRequest)req;
 		
-		PlayerDto dto = PlayerDao.getPlayerByUsernameAndPassword(logonReq.getName(), logonReq.getPassword());
-		Player player = new Player(dto, client);
-		if (dto == null) {
+		playerDto = PlayerDao.getPlayerByUsernameAndPassword(logonReq.getName(), logonReq.getPassword());
+		
+		Player player = new Player(playerDto, client);
+		if (playerDto == null) {
 			setRecoAndResponseText(0, "invalid credentials");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
-		} else {
-			if (PlayerSessionDao.entryExists(dto.getId())) {
-				setRecoAndResponseText(0, "already logged in");
-				responseMaps.addClientOnlyResponse(player, this);
-				return;
-			}
-			PlayerDao.updateLastLoggedIn(dto.getId());
-			PlayerSessionDao.addPlayer(dto.getId());
 		}
 		
-		id = dto.getId();
-		PlayerStorageDao.createBankSlotsIfNotExists(id);
+		if (PlayerSessionDao.entryExists(playerDto.getId())) {
+			setRecoAndResponseText(0, "already logged in");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
 		
-		tileId = dto.getTileId();
-		roomId = dto.getRoomId();
-		attackStyleId = dto.getAttackStyleId();
-
-		stats = StatsDao.getAllStatExpByPlayerId(dto.getId());
-		boosts = StatsDao.getRelativeBoostsByPlayerId(dto.getId())
+		PlayerDao.updateLastLoggedIn(playerDto.getId());
+		PlayerSessionDao.addPlayer(playerDto.getId());
+				
+		PlayerStorageDao.createBankSlotsIfNotExists(playerDto.getId());
+		
+		stats = StatsDao.getAllStatExpByPlayerId(playerDto.getId());
+		boosts = StatsDao.getRelativeBoostsByPlayerId(playerDto.getId())
 				.entrySet()
 				.stream()
 				.collect(Collectors.toMap(e -> e.getKey().getValue(), Map.Entry::getValue));
+		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(playerDto.getId());
+		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(playerDto.getId(), StorageTypes.INVENTORY.getValue());
+		attackStyles = PlayerDao.getAttackStyles();
+		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(playerDto.getId());
+		player.refreshBonuses(bonuses);
 		
 		// if there was a bad disconnection (server crash etc) and the player was mid-trade, put the items back into the player's inventory.
-		HashMap<Integer, InventoryItemDto> itemsInTrade = PlayerStorageDao.getStorageDtoMapByPlayerId(id, StorageTypes.TRADE.getValue());
+		HashMap<Integer, InventoryItemDto> itemsInTrade = PlayerStorageDao.getStorageDtoMapByPlayerId(playerDto.getId(), StorageTypes.TRADE.getValue());
 		for (InventoryItemDto itemInTrade : itemsInTrade.values()) {
-			PlayerStorageDao.addItemToFirstFreeSlot(id, StorageTypes.INVENTORY.getValue(), itemInTrade.getItemId(), itemInTrade.getCount(), itemInTrade.getCharges());
+			PlayerStorageDao.addItemToFirstFreeSlot(playerDto.getId(), StorageTypes.INVENTORY.getValue(), itemInTrade.getItemId(), itemInTrade.getCount(), itemInTrade.getCharges());
 		}
-		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(id, StorageTypes.TRADE.getValue());
-		
-		players = PlayerDao.getAllPlayers();
-		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(dto.getId(), StorageTypes.INVENTORY.getValue());
-		baseAnimations = AnimationDao.loadAnimationsByPlayerId(dto.getId());
-		equipAnimations = AnimationDao.getEquipmentAnimationsByPlayerId(player.getId());
-		attackStyles = PlayerDao.getAttackStyles();
+		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(playerDto.getId(), StorageTypes.TRADE.getValue());
 		
 		WorldProcessor.playerSessions.put(client, player);
 		responseMaps.addClientOnlyResponse(player, this);
 		
 		new LoadRoomResponse().process(null, player, responseMaps);
+		new PlayerEnterResponse().process(null, player, responseMaps);
 		
-		initializeNpcLocations(player, responseMaps);
-		
-		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
-		playerUpdate.setId(player.getId());
-		playerUpdate.setName(player.getDto().getName());
-		playerUpdate.setTileId(tileId);
-		playerUpdate.setRoomId(roomId);
-		playerUpdate.setCurrentHp(StatsDao.getCurrentHpByPlayerId(player.getId()));
-		playerUpdate.setMaxHp(player.getStats().get(Stats.HITPOINTS));
-		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
-		playerUpdate.setEquipAnimations(equipAnimations);
-		playerUpdate.setBaseAnimations(baseAnimations);
-//		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), playerUpdate);
-		responseMaps.addBroadcastResponse(playerUpdate, player);
-		
-		new EquipResponse().process(null, player, responseMaps);
-		
-		// broadcast to the rest of the players that this player has logged in
-//		PlayerEnterResponse playerEnter = (PlayerEnterResponse)ResponseFactory.create("playerEnter");
-//		playerEnter.setId(id);
-//		playerEnter.setName(player.getDto().getName());
-//		playerEnter.setTileId(tileId);
-//		playerEnter.setRoomId(roomId);
-//		playerEnter.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
-//		playerEnter.setMaxHp(player.getStats().get(Stats.HITPOINTS));
-//		playerEnter.setCurrentHp(StatsDao.getCurrentHpByPlayerId(player.getId()));
-//		playerEnter.setBaseAnimations(baseAnimations);
-//		playerEnter.setEquipAnimations(equipAnimations);
-//		
-//		responseMaps.addBroadcastResponse(playerEnter, player);
+//		initializeNpcLocations(player, responseMaps);
 	}
 	
 	@Override
@@ -142,18 +107,18 @@ public class LogonResponse extends Response {
 		
 	}
 	
-	public void initializeNpcLocations(Player player, ResponseMaps responseMaps) {
-		// initial npc location refresh response (all living npcs)
-		NpcLocationRefreshResponse npcLocationRefreshResponse = new NpcLocationRefreshResponse();
-		List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(player.getRoomId(), player.getTileId(), 15);
-		localNpcs = localNpcs.stream().filter(e -> !e.isDead()).collect(Collectors.toList());
-		Set<Integer> localNpcInstanceIds = localNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
-		player.updateInRangeNpcs(localNpcInstanceIds);
-		
-		ArrayList<NpcLocationRefreshResponse.NpcLocation> npcLocations = new ArrayList<>();
-		for (NPC npc : localNpcs)
-			npcLocations.add(new NpcLocationRefreshResponse.NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId()));
-		npcLocationRefreshResponse.setNpcs(npcLocations);
-		responseMaps.addClientOnlyResponse(player, npcLocationRefreshResponse);
-	}
+//	public void initializeNpcLocations(Player player, ResponseMaps responseMaps) {
+//		// initial npc location refresh response (all living npcs)
+//		NpcLocationRefreshResponse npcLocationRefreshResponse = new NpcLocationRefreshResponse();
+//		List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(player.getRoomId(), player.getTileId(), 15);
+//		localNpcs = localNpcs.stream().filter(e -> !e.isDead()).collect(Collectors.toList());
+//		Set<Integer> localNpcInstanceIds = localNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
+//		player.updateInRangeNpcs(localNpcInstanceIds);
+//		
+//		ArrayList<NpcLocationRefreshResponse.NpcLocation> npcLocations = new ArrayList<>();
+//		for (NPC npc : localNpcs)
+//			npcLocations.add(new NpcLocationRefreshResponse.NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId()));
+//		npcLocationRefreshResponse.setNpcs(npcLocations);
+//		responseMaps.addClientOnlyResponse(player, npcLocationRefreshResponse);
+//	}
 }

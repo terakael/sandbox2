@@ -43,7 +43,7 @@ public class ShopResponse extends Response {
 		}
 		FightManager.cancelFight(player, responseMaps);
 		
-		if (!PathFinder.isNextTo(player.getTileId(), npc.getTileId())) {
+		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), npc.getTileId())) {
 			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), npc.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);

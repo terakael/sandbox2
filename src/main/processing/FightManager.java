@@ -39,7 +39,7 @@ public class FightManager {
 		
 		public boolean process(ResponseMaps responseMaps) {
 			// if the players aren't on the same tile then they are still closing in on eachother
-			if (!PathFinder.isNextTo(fighter1.getTileId(), fighter2.getTileId())) {
+			if (!PathFinder.isNextTo(fighter1.getRoomId(), fighter1.getTileId(), fighter2.getTileId())) {
 				return false;
 			}
 			

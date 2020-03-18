@@ -35,4 +35,5 @@ public class NPCDto {
 	private transient int attackSpeed;
 	private transient int roamRadius;
 	private transient int attributes;
+	private transient int respawnTicks;
 }

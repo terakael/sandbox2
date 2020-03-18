@@ -19,9 +19,9 @@ public class NPCDao {
 	
 	public static void setupCaches() {
 		npcList = getNpcs();
-//		npcInstanceList = getAllNpcsByRoom(1);// TODO multiple rooms
 		npcInstanceList = new HashMap<>();
-		npcInstanceList.put(1, getAllNpcsByRoom(1));
+		for (int roomId : GroundTextureDao.getDistinctRoomIds())
+			npcInstanceList.put(roomId, getAllNpcsByRoom(roomId));
 		cacheNpcDrops();
 	}
 	
@@ -63,7 +63,8 @@ public class NPCDao {
 						rs.getInt("agil_bonus"),
 						rs.getInt("attack_speed"),
 						rs.getInt("roam_radius"),
-						rs.getInt("attributes")
+						rs.getInt("attributes"),
+						rs.getInt("respawn_ticks")
 					));
 				}
 			}
@@ -76,7 +77,7 @@ public class NPCDao {
 	
 	public static ArrayList<NPCDto> getAllNpcsByRoom(int roomId) {
 		final String query = 
-			"select id, name, up_id, down_id, left_id, right_id, attack_id, scale_x, scale_y, acc, str, def, agil, hp, magic, acc_bonus, str_bonus, def_bonus, agil_bonus, attack_speed, tile_id, leftclick_option, other_options, roam_radius, attributes from npcs" + 
+			"select id, name, up_id, down_id, left_id, right_id, attack_id, scale_x, scale_y, acc, str, def, agil, hp, magic, acc_bonus, str_bonus, def_bonus, agil_bonus, attack_speed, tile_id, leftclick_option, other_options, roam_radius, attributes, respawn_ticks from npcs" + 
 			" inner join room_npcs on room_npcs.npc_id = id" + 
 			" where room_id=?";
 		
@@ -116,7 +117,8 @@ public class NPCDao {
 						rs.getInt("agil_bonus"),
 						rs.getInt("attack_speed"),
 						rs.getInt("roam_radius"),
-						rs.getInt("attributes")
+						rs.getInt("attributes"),
+						rs.getInt("respawn_ticks")
 					));
 				}
 			}

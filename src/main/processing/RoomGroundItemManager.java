@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import main.database.ItemDao;
+import main.database.PlayerStorageDao;
 import main.database.RespawnableDao;
 import main.database.RespawnableDto;
 import main.types.ItemAttributes;
@@ -168,9 +169,7 @@ public class RoomGroundItemManager {
 			return;
 		
 		if (removeFromGlobalGroundItems(playerId, tileId, itemId, count, charges))
-			return;
-		
-		
+			return;		
 	}
 	
 	private boolean removeFromGlobalGroundItems(int playerId, int tileId, int itemId, int count, int charges) {

@@ -74,7 +74,8 @@ public class Player extends Attackable {
 	private int postFightCooldown = 0;
 	private HashMap<Integer, Integer> equippedSlotsByItemId = new HashMap<>();// itemId, slot
 	private HashMap<Buffs, Integer> activeBuffs = new HashMap<>(); // buff, remaining ticks
-	@Getter private HashSet<Integer> inRangeNpcs = new HashSet<>();
+	@Getter @Setter private Set<Integer> inRangeNpcs = new HashSet<>();
+	@Getter @Setter private Set<Integer> inRangePlayers = new HashSet<>();
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
@@ -207,7 +208,7 @@ public class Player extends Attackable {
 				break;
 			}
 			
-			if (!PathFinder.isNextTo(tileId, target.getTileId())) {
+			if (!PathFinder.isNextTo(roomId, tileId, target.getTileId())) {
 				path = PathFinder.findPath(roomId, tileId, target.getTileId(), false);
 			}
 			break;
@@ -219,7 +220,7 @@ public class Player extends Attackable {
 				break;
 			}
 			
-			if (!PathFinder.isNextTo(tileId, target.getTileId())) {
+			if (!PathFinder.isNextTo(roomId, tileId, target.getTileId())) {
 				path = PathFinder.findPath(roomId, tileId, target.getTileId(), false);
 			} else {
 				// start the fight
@@ -413,11 +414,22 @@ public class Player extends Attackable {
 		HashMap<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.INVENTORY.getValue());
 		for (InventoryItemDto dto : inventoryList.values()) {
 			if (dto.getItemId() != 0) {
-				// stack and charges are mutually exclusive; you cannot have a stackable charged item.
-				// both use the same "count" parameter so it's impossible anyway.
 				int stack = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.STACKABLE) ? dto.getCount() : 1;
-				int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? dto.getCount() : 1;
-				GroundItemManager.add(roomId, getId(), dto.getItemId(), tileId, stack, charges);
+				int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? dto.getCharges() : 1;
+				
+				if (killer instanceof Player && ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.TRADEABLE)) {
+					// if it's a tradeable unique, the killer should only see it if they don't already have one.
+					if (ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.UNIQUE)) {
+						if (PlayerStorageDao.itemExistsInPlayerStorage(((Player)killer).getId(), dto.getItemId()) || GroundItemManager.itemIsOnGround(roomId, ((Player)killer).getId(), dto.getItemId())) {
+							continue;
+						}
+					}
+					
+					GroundItemManager.add(roomId, ((Player)killer).getId(), dto.getItemId(), tileId, stack, charges);
+				} else {
+					// for now, untradeables will drop on the ground for the owner to pick back up
+					GroundItemManager.add(roomId, getId(), dto.getItemId(), tileId, stack, charges);
+				}
 			}
 		}
 		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(getId(), StorageTypes.INVENTORY.getValue());
@@ -445,6 +457,13 @@ public class Player extends Attackable {
 		setPostFightCooldown();
 		int totalExp = killed.getExp();
 		float points = ((float)totalExp / 5) * 4;
+		
+		if (killed instanceof Player) {
+			MessageResponse messageResponse = new MessageResponse();
+			messageResponse.setRecoAndResponseText(1, String.format("you have defeated %s!", ((Player)killed).getDto().getName()));
+			messageResponse.setColour("white");
+			responseMaps.addClientOnlyResponse(this, messageResponse);
+		}
 		
 		// exp is doled out based on attackStyle and weapon type.
 		// exp is split into five parts (called points) and the points are stored as follows:
@@ -534,12 +553,11 @@ public class Player extends Attackable {
 		}		
 		responseMaps.addClientOnlyResponse(this, response);
 		
-		// TODO update stat cache if the exp gain gives us a level
 		refreshStats(currentStatExp);
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(getId());
 		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(getId()));
-		responseMaps.addBroadcastResponse(playerUpdate);// should be local
+		responseMaps.addLocalResponse(roomId, tileId, playerUpdate);
 	}
 	
 	@Override
@@ -651,20 +669,6 @@ public class Player extends Attackable {
 	
 	public void recacheEquippedItems() {
 		equippedSlotsByItemId = EquipmentDao.getEquippedSlotsAndItemIdsByPlayerId(this.getId());
-	}
-	
-	public HashSet<Integer> updateInRangeNpcs(Set<Integer> upToDateNpcs) {
-		HashSet<Integer> outOfRangeNpcs = new HashSet<>();
-		for (int instanceId : inRangeNpcs) {
-			if (!upToDateNpcs.contains(instanceId)) {
-				outOfRangeNpcs.add(instanceId);
-			}
-		}
-		
-		inRangeNpcs.clear();
-		inRangeNpcs.addAll(upToDateNpcs);
-		
-		return outOfRangeNpcs;
 	}
 	
 	public void clearPath() {

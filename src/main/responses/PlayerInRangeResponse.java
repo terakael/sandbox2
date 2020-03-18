@@ -1,6 +1,7 @@
 package main.responses;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import main.database.AnimationDao;
 import main.database.StatsDao;
@@ -9,19 +10,21 @@ import main.processing.WorldProcessor;
 import main.requests.Request;
 import main.types.Stats;
 
-public class RefreshLocalPlayersResponse extends Response {
-	private ArrayList<PlayerUpdateResponse> players = null;
+public class PlayerInRangeResponse extends Response {
+	private ArrayList<PlayerUpdateResponse> players = new ArrayList<>();
 	
-	public RefreshLocalPlayersResponse() {
-		setAction("refresh_players");
+	public PlayerInRangeResponse() {
+		setAction("player_in_range");
 	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		players = new ArrayList<>();
-		for (Player localPlayer : WorldProcessor.getPlayersNearTile(player.getRoomId(), player.getTileId(), 15)) {
-			if (localPlayer.getId() == player.getId())
-				continue;// don't add self
+		
+	}
+	
+	public void addPlayers(Set<Integer> playerIds) {
+		for (Integer playerId : playerIds) {
+			Player localPlayer = WorldProcessor.getPlayerById(playerId);
 			
 			PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 			playerUpdate.setId(localPlayer.getId());
@@ -35,8 +38,6 @@ public class RefreshLocalPlayersResponse extends Response {
 			playerUpdate.setBaseAnimations(AnimationDao.loadAnimationsByPlayerId(localPlayer.getId()));
 			players.add(playerUpdate);
 		}
-		
-		responseMaps.addClientOnlyResponse(player, this);
 	}
 
 }

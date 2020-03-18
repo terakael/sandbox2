@@ -51,7 +51,7 @@ public abstract class PlayerResponse extends Response {
 			return;
 		
 		// you have to be next to the player to process the request
-		if (!PathFinder.isNextTo(player.getTileId(), otherPlayer.getTileId())) {
+		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), otherPlayer.getTileId())) {
 			player.setSavedRequest(req);
 			player.setState(PlayerState.chasing);
 			player.setTarget(otherPlayer);

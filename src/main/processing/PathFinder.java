@@ -277,7 +277,7 @@ public class PathFinder {
 				
 				// we're at the final step - if the final step is completely impassable we want to keep processing
 				// but if there is some passable way and we're not actually next to it then continue.
-				if (successor == nodes[to] && successor.impassableTypes != 15 && !isNextTo(q.id, successor.id))
+				if (successor == nodes[to] && successor.impassableTypes != 15 && !isNextTo(roomId, q.id, successor.id))
 					continue;
 				
 				if (spawnTileId > 0 && maxRadius > 0) {
@@ -345,14 +345,14 @@ public class PathFinder {
 		return Math.abs(src % LENGTH - dest % LENGTH) + Math.abs(src / LENGTH - dest / LENGTH);
 	}
 	
-	public static boolean isNextTo(int srcTile, int destTile) {
+	public static boolean isNextTo(int roomId, int srcTile, int destTile) {
 		// returns true if srcTile and destTile are touching horizontally or vertically (or are the same tile)
 		// if the tiles are next to eachother but there's a barrier between them (non-zero impassableType)
 		// then they are not technically next to eachother (i.e. there's a wall between the tiles).
 		// the exception to this is if the dest tile is completely impassable i.e. impassableType 15 like a rock etc
 		// in this case we are next to it, as there's no way to get any closer.
-		int srcImpassableType = SceneryDao.getImpassableTypeByTileId(srcTile);		
-		int destImpassableType = SceneryDao.getImpassableTypeByTileId(destTile);
+		int srcImpassableType = SceneryDao.getImpassableTypeByTileId(roomId, srcTile);		
+		int destImpassableType = SceneryDao.getImpassableTypeByTileId(roomId, destTile);
 		
 		return  
 			// destTile is to the left, destTile doesn't have a right-facing wall, srcTile doesn't have a left-facing wall

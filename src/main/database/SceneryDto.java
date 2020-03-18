@@ -24,6 +24,5 @@ public class SceneryDto {
 	private int framerate;
 	private int leftclickOption;
 	private int otherOptions;
-	@Getter private HashSet<Integer> instances = null;
 	private int attributes;
 }

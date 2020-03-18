@@ -33,7 +33,6 @@ public class NPC extends Attackable {
 	private final transient int maxTickCount = 15;
 	private final transient int minTickCount = 5;
 	private transient int tickCounter = maxTickCount;
-	private int respawnTime = 10;
 	private int deathTimer = 0;
 	private final transient int MAX_HUNT_TIMER = 5;
 	private transient int huntTimer = 0;
@@ -117,6 +116,11 @@ public class NPC extends Attackable {
 		if (!path.isEmpty()) {
 			tileId = path.pop();
 			moving = true;
+			
+			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
+			updateResponse.setInstanceId(getInstanceId());
+			updateResponse.setTileId(tileId);
+			responseMaps.addLocalResponse(roomId, tileId, updateResponse);
 		}
 		
 		if (target == null) {
@@ -129,7 +133,7 @@ public class NPC extends Attackable {
 			}
 		} else {
 			// chase the target if not next to it
-			if (!PathFinder.isNextTo(tileId, target.tileId)) {
+			if (!PathFinder.isNextTo(roomId, tileId, target.tileId)) {
 				if (PathFinder.tileWithinRadius(target.tileId, dto.getTileId(), dto.getRoamRadius() + 2)) {
 					path = PathFinder.findPath(roomId, tileId, target.tileId, true);
 				} else {
@@ -174,8 +178,7 @@ public class NPC extends Attackable {
 	
 	@Override
 	public void onDeath(Attackable killer, ResponseMaps responseMaps) {
-		//currentHp = dto.getHp();
-		deathTimer = respawnTime;
+		deathTimer = dto.getRespawnTicks();
 		target = null;
 		lastTarget = null;
 		clearPoison();
@@ -241,6 +244,10 @@ public class NPC extends Attackable {
 		return deathTimer > 0;
 	}
 	
+	public boolean isDeadWithDelay() {
+		return deathTimer > 0 && deathTimer < dto.getRespawnTicks() - 2;
+	}
+	
 	private void handleRespawn(ResponseMaps responseMaps) {
 		if (--deathTimer <= 0) {
 			deathTimer = 0;
@@ -251,6 +258,7 @@ public class NPC extends Attackable {
 			updateResponse.setInstanceId(getInstanceId());
 			updateResponse.setHp(currentHp);
 			updateResponse.setTileId(tileId);
+			updateResponse.setSnapToTile(true);
 			responseMaps.addLocalResponse(roomId, tileId, updateResponse);
 		}
 	}

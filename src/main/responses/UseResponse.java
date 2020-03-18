@@ -18,12 +18,14 @@ import main.database.SceneryDao;
 import main.database.StatsDao;
 import main.database.UseItemOnItemDao;
 import main.database.UseItemOnItemDto;
+import main.processing.Attackable;
 import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
+import main.processing.WorldProcessor;
 import main.requests.AttackRequest;
 import main.requests.Request;
 import main.requests.UseRequest;
@@ -78,7 +80,7 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
-		if (!PathFinder.isNextTo(player.getTileId(), request.getDest())) {
+		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), request.getDest())) {
 			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), request.getDest(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(request);
@@ -189,7 +191,7 @@ public class UseResponse extends Response {
 			return handleCastableOnNpc(request, player, responseMaps);
 		}
 		
-		if (!PathFinder.isNextTo(player.getTileId(), targetNpc.getTileId())) {
+		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), targetNpc.getTileId())) {
 			player.setTarget(targetNpc);	
 			player.setSavedRequest(request);
 			return true;
@@ -305,51 +307,7 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
-		// TODO rune saving based off magic bonus, magic level and requirement level
-		int damage = new Random().nextInt(castable.getMaxHit() + 1);// +1 to include the max hit
-		targetNpc.onHit(damage, DamageTypes.MAGIC, responseMaps);
-		if (targetNpc.getCurrentHp() == 0) {
-			targetNpc.onDeath(player, responseMaps);
-		}
-		
-		if (!targetNpc.isDead()) {
-			if (!FightManager.fightWithFighterExists(targetNpc))
-				targetNpc.setTarget(player);
-			
-			// handle rune special effects
-			switch (Items.withValue(castable.getItemId())) {
-			case DISEASE_RUNE:
-				// 1/6 chance to poison for 3
-				if (new Random().nextInt(6) == 0)
-					targetNpc.inflictPoison(3);
-				break;
-				
-			case DECAY_RUNE:
-				// 1/4 chance poison for 6
-				if (new Random().nextInt(4) == 0)
-					targetNpc.inflictPoison(6);
-				break;
-				
-			case BLOOD_TITHE_RUNE:
-				HashMap<Stats, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());
-				int newRelativeBoost = relativeBoosts.get(Stats.HITPOINTS) + damage;
-				if (newRelativeBoost > 0)
-					newRelativeBoost = 0;
-				
-
-				player.setCurrentHp(player.getDto().getMaxHp() + newRelativeBoost);
-				StatsDao.setRelativeBoostByPlayerIdStatId(player.getId(), Stats.HITPOINTS, newRelativeBoost);
-				
-				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
-				playerUpdateResponse.setId(player.getId());
-				playerUpdateResponse.setCurrentHp(player.getCurrentHp());
-				responseMaps.addBroadcastResponse(playerUpdateResponse);
-				break;
-				
-			default:
-				break;
-			}
-		}
+		castOffensiveSpell(castable, player, targetNpc, responseMaps);
 		
 		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
 		if (item.getCount() > 1) {
@@ -367,6 +325,56 @@ public class UseResponse extends Response {
 		}
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		
+		CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId());
+		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), castSpellResponse);
+		
+		return true;
+	}
+	
+	private void castOffensiveSpell(CastableDto castable, Player player, Attackable opponent, ResponseMaps responseMaps) {
+		// TODO rune saving based off magic bonus, magic level and requirement level
+		int damage = new Random().nextInt(castable.getMaxHit() + 1);// +1 to include the max hit
+		opponent.onHit(damage, DamageTypes.MAGIC, responseMaps);
+		if (opponent.getCurrentHp() == 0) {
+			opponent.onDeath(player, responseMaps);
+		} else {
+			if (!FightManager.fightWithFighterExists(opponent))
+				opponent.setTarget(player);
+			
+			// handle rune special effects
+			switch (Items.withValue(castable.getItemId())) {
+			case DISEASE_RUNE:
+				// 1/6 chance to poison for 3
+				if (new Random().nextInt(6) == 0)
+					opponent.inflictPoison(3);
+				break;
+				
+			case DECAY_RUNE:
+				// 1/4 chance poison for 6
+				if (new Random().nextInt(4) == 0)
+					opponent.inflictPoison(6);
+				break;
+				
+			case BLOOD_TITHE_RUNE:
+				HashMap<Stats, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());
+				int newRelativeBoost = relativeBoosts.get(Stats.HITPOINTS) + damage;
+				if (newRelativeBoost > 0)
+					newRelativeBoost = 0;
+
+				player.setCurrentHp(player.getDto().getMaxHp() + newRelativeBoost);
+				StatsDao.setRelativeBoostByPlayerIdStatId(player.getId(), Stats.HITPOINTS, newRelativeBoost);
+				
+				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+				playerUpdateResponse.setId(player.getId());
+				playerUpdateResponse.setCurrentHp(player.getCurrentHp());
+				responseMaps.addBroadcastResponse(playerUpdateResponse);
+				break;
+				
+			default:
+				break;
+			}
+		}
+		
 		int exp = castable.getExp() + (damage * 4);
 		
 		Map<Integer, Integer> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
@@ -380,16 +388,124 @@ public class UseResponse extends Response {
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
 		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
-		responseMaps.addBroadcastResponse(playerUpdate);// should be local
-		
-		CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), castSpellResponse);
-		
-		return true;
+		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), playerUpdate);// should be local
 	}
 	
 	private boolean handleUseOnPlayer(UseRequest request, Player player, ResponseMaps responseMaps) {
-		// for now you can only use poison on enemies, which requires you to be in combat.
+		if (CastableDao.isCastable(request.getSrc())) {
+			return handleCastableOnPlayer(request, player, responseMaps);
+		}
+		
+		return false;
+	}
+	
+	private boolean handleCastableOnPlayer(UseRequest request, Player player, ResponseMaps responseMaps) {
+		CastableDto castable = CastableDao.getCastableByItemId(request.getSrc());
+		if (castable == null)
+			return false;
+		
+		int playerMagicLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.MAGIC, player.getId());
+		
+		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		if (!invItemIds.contains(castable.getItemId()))
+			return false;
+		
+		int slot = invItemIds.indexOf(castable.getItemId());
+		
+		// are we using something on ourself?
+		if (request.getDest() == player.getId()) {
+			switch (Items.withValue(castable.getItemId())) {
+				case TYROTOWN_TELEPORT_RUNE: {
+					if (playerMagicLevel < castable.getLevel()) {
+						setRecoAndResponseText(0, String.format("you need %d magic to cast that.", castable.getLevel()));
+						responseMaps.addClientOnlyResponse(player, this);
+						return true;
+					}
+					
+					if (FightManager.fightWithFighterIsBattleLocked(player)) {
+						setRecoAndResponseText(0, "you can't retreat yet!");
+						responseMaps.addClientOnlyResponse(player, this);
+						return true;
+					}
+					
+					final int oldRoomId = player.getRoomId();
+					final int newRoomId = 7575;
+					player.setRoomId(newRoomId);
+					if (oldRoomId != newRoomId)
+						new LoadRoomResponse().process(null, player, responseMaps);
+					
+					player.setTileId(36858);
+					PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+					playerUpdate.setId(player.getId());
+					playerUpdate.setTileId(player.getTileId());
+					playerUpdate.setRoomId(player.getRoomId());
+					playerUpdate.setSnapToTile(true);
+					responseMaps.addClientOnlyResponse(player, playerUpdate);
+					
+					Map<Integer, Integer> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
+					AddExpResponse addExpResponse = new AddExpResponse();
+					addExpResponse.addExp(Stats.MAGIC.getValue(), castable.getExp());		
+					responseMaps.addClientOnlyResponse(player, addExpResponse);
+					StatsDao.addExpToPlayer(player.getId(), Stats.MAGIC, castable.getExp());
+					player.refreshStats(currentStatExp);
+					
+					InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
+					if (item.getCount() > 1) {
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(
+								player.getId(), 
+								StorageTypes.INVENTORY.getValue(), 
+								slot, 
+								item.getItemId(), item.getCount() - 1, item.getCharges());
+					} else {
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(
+								player.getId(), 
+								StorageTypes.INVENTORY.getValue(), 
+								slot, 
+								0, 1, 0);
+					}
+					InventoryUpdateResponse.sendUpdate(player, responseMaps);
+					
+					return true;
+				}
+				
+				default:
+					break;
+			}
+		} else {
+			Player targetPlayer = WorldProcessor.getPlayerById(request.getDest());
+			if (targetPlayer == null) {
+				return false;
+			}
+			
+			if (!FightManager.fightingWith(player, targetPlayer)) {
+				setRecoAndResponseText(0, "you can only cast spells on other players during a duel.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return true;
+			}
+			
+			castOffensiveSpell(castable, player, targetPlayer, responseMaps);
+			
+			InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
+			if (item.getCount() > 1) {
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(
+						player.getId(), 
+						StorageTypes.INVENTORY.getValue(), 
+						slot, 
+						item.getItemId(), item.getCount() - 1, item.getCharges());
+			} else {
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(
+						player.getId(), 
+						StorageTypes.INVENTORY.getValue(), 
+						slot, 
+						0, 1, 0);
+			}
+			InventoryUpdateResponse.sendUpdate(player, responseMaps);
+			
+			CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetPlayer.getId(), "player", castable.getSpriteFrameId());
+			responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), castSpellResponse);
+			return true;
+		}
+		
 		return false;
 	}
 }

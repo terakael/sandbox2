@@ -22,7 +22,7 @@ public class PickResponse extends Response {
 			return;
 		
 		PickRequest request = (PickRequest)req;
-		if (!PathFinder.isNextTo(player.getTileId(), request.getTileId())) {
+		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), request.getTileId())) {
 			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), request.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);

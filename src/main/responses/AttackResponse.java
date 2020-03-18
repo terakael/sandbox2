@@ -38,7 +38,7 @@ public class AttackResponse extends Response {
 			return;
 		}
 		
-		if (!PathFinder.isNextTo(npc.getTileId(), player.getTileId())) {
+		if (!PathFinder.isNextTo(player.getRoomId(), npc.getTileId(), player.getTileId())) {
 			player.setTarget(npc);	
 			player.setSavedRequest(request);
 		} else {

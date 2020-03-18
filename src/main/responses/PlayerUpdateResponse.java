@@ -22,6 +22,7 @@ public class PlayerUpdateResponse extends Response {
 	@Setter Integer currentHp = null;
 	@Setter Integer maxHp = null;
 	@Setter Boolean loggedIn = null;
+	@Setter Boolean snapToTile = null;
 	@Setter private Map<PlayerPartType, AnimationDto> baseAnimations = null;
 	@Setter private Map<PlayerPartType, AnimationDto> equipAnimations = null;
 

@@ -20,8 +20,11 @@ import main.database.ShopDao;
 import main.requests.Request;
 import main.responses.GroundItemRefreshResponse;
 import main.responses.LogonResponse;
+import main.responses.NpcInRangeResponse;
 import main.responses.NpcLocationRefreshResponse;
 import main.responses.NpcOutOfRangeResponse;
+import main.responses.PlayerInRangeResponse;
+import main.responses.PlayerOutOfRangeResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
@@ -102,6 +105,31 @@ public class WorldProcessor implements Runnable {
 		}
 		Stopwatch.end("process players");
 		
+		Stopwatch.start("updating in-range players");
+		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
+			Set<Integer> currentInRangePlayers = entry.getValue().getInRangePlayers();
+			Set<Integer> newInRangePlayers = WorldProcessor.getPlayersNearTile(entry.getValue().getRoomId(), entry.getValue().getTileId(), 15)
+														   .stream()
+														   .map(Player::getId)
+														   .collect(Collectors.toSet());
+			
+			Set<Integer> removedPlayers = currentInRangePlayers.stream().filter(e -> entry.getValue().getId() != e && !newInRangePlayers.contains(e)).collect(Collectors.toSet());
+			if (!removedPlayers.isEmpty()) {
+				PlayerOutOfRangeResponse playerOutOfRangeResponse = new PlayerOutOfRangeResponse();
+				playerOutOfRangeResponse.setPlayerIds(removedPlayers);
+				responseMaps.addClientOnlyResponse(entry.getValue(), playerOutOfRangeResponse);
+			}
+			
+			Set<Integer> addedPlayers = newInRangePlayers.stream().filter(e -> entry.getValue().getId() != e && !currentInRangePlayers.contains(e)).collect(Collectors.toSet());
+			if (!addedPlayers.isEmpty()) {
+				PlayerInRangeResponse playerInRangeResponse = new PlayerInRangeResponse();
+				playerInRangeResponse.addPlayers(addedPlayers);
+				responseMaps.addClientOnlyResponse(entry.getValue(), playerInRangeResponse);
+			}
+			entry.getValue().setInRangePlayers(newInRangePlayers);
+		}
+		Stopwatch.end("updating in-range players");
+		
 		Stopwatch.start("process npcs");
 		NPCManager.get().process(responseMaps);
 		Stopwatch.end("process npcs");
@@ -129,45 +157,38 @@ public class WorldProcessor implements Runnable {
 		
 		Stopwatch.start("refresh npc locations");
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
-			// npc stuff
-			List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getRoomId(), entry.getValue().getTileId(), 15);
-//			localNpcs = localNpcs.stream().filter(e -> !e.isDead()).collect(Collectors.toList());// don't refresh locations of dead npcs
+			Set<Integer> currentInRangeNpcs = entry.getValue().getInRangeNpcs();
+			Set<Integer> newInRangeNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getRoomId(), entry.getValue().getTileId(), 15)
+												    .stream()
+												    .filter(e -> !e.isDeadWithDelay())	// the delay of two ticks gives the client time for the death animation
+												    .map(NPC::getInstanceId)
+												    .collect(Collectors.toSet());
 			
-			Set<Integer> localNpcInstanceIds = localNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
-			
-			// get the previous in-range npcs so we know which ones are new and which ones already existed
-			Set<Integer> previousInRangeNpcs = entry.getValue().getInRangeNpcs().stream().collect(Collectors.toSet());
-			HashSet<Integer> outOfRangeNpcInstanceIds = entry.getValue().updateInRangeNpcs(localNpcInstanceIds);
-			
-			ArrayList<NpcLocationRefreshResponse.NpcLocation> npcLocations = new ArrayList<>();
-			for (NPC npc : localNpcs) {
-				if (npc.isDead())
-					continue;// don't refresh locations of dead npcs
-				
-				// if newly added to players local npc set (walked into range) OR npc moved locations then add to npcRefresh list
-				if (!previousInRangeNpcs.contains(npc.getInstanceId()) || npc.isMoving())
-					npcLocations.add(new NpcLocationRefreshResponse.NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId()));
+			Set<Integer> removedNpcs = currentInRangeNpcs.stream().filter(e -> !newInRangeNpcs.contains(e)).collect(Collectors.toSet());
+			if (!removedNpcs.isEmpty()) {
+				NpcOutOfRangeResponse npcOutOfRangeResponse = new NpcOutOfRangeResponse();
+				npcOutOfRangeResponse.setInstances(removedNpcs);
+				responseMaps.addClientOnlyResponse(entry.getValue(), npcOutOfRangeResponse);
 			}
 			
-			if (!npcLocations.isEmpty()) {
-				NpcLocationRefreshResponse npcRefresh = new NpcLocationRefreshResponse();
-				npcRefresh.setNpcs(npcLocations);
-				responseMaps.addClientOnlyResponse(entry.getValue(), npcRefresh);
+			Set<Integer> addedNpcs = newInRangeNpcs.stream().filter(e -> !currentInRangeNpcs.contains(e)).collect(Collectors.toSet());
+			if (!addedNpcs.isEmpty()) {
+				NpcInRangeResponse npcInRangeResponse = new NpcInRangeResponse();
+				npcInRangeResponse.addInstances(entry.getValue().getRoomId(), addedNpcs);
+				responseMaps.addClientOnlyResponse(entry.getValue(), npcInRangeResponse);
 			}
-			
-			if (!outOfRangeNpcInstanceIds.isEmpty()) {
-				NpcOutOfRangeResponse outOfRangeResponse = new NpcOutOfRangeResponse();
-				outOfRangeResponse.setInstances(outOfRangeNpcInstanceIds);
-				responseMaps.addClientOnlyResponse(entry.getValue(), outOfRangeResponse);
-			}
-			
-			// ground item stuff
+			entry.getValue().setInRangeNpcs(newInRangeNpcs);
+		}
+		Stopwatch.end("refresh npc locations");
+		
+		Stopwatch.start("refresh ground items");
+		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			HashMap<Integer, ArrayList<Integer>> localItemIds = GroundItemManager.getItemIdsNearTile(entry.getValue().getRoomId(), entry.getValue().getId(), entry.getValue().getTileId(), 15);
 			GroundItemRefreshResponse groundItemRefresh = new GroundItemRefreshResponse();
 			groundItemRefresh.setGroundItems(localItemIds);
 			responseMaps.addClientOnlyResponse(entry.getValue(), groundItemRefresh);
 		}
-		Stopwatch.end("refresh npc locations");
+		Stopwatch.end("refresh ground items");
 		
 		Stopwatch.start("update shop stock");
 		for (Store store : ShopManager.getShops()) {

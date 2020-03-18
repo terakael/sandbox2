@@ -32,7 +32,7 @@ public class CatchResponse extends Response {
 		if (npc.isDead())
 			return;
 		
-		if (!PathFinder.isNextTo(player.getTileId(), npc.getTileId())) {
+		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), npc.getTileId())) {
 			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), npc.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);

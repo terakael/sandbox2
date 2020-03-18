@@ -1,17 +1,17 @@
 package main.responses;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import lombok.Setter;
 import main.processing.Player;
 import main.requests.Request;
 
-public class NpcOutOfRangeResponse extends Response {
+public class PlayerOutOfRangeResponse extends Response {
+	@Setter private Set<Integer> playerIds = new HashSet<>();
 	
-	@Setter private Set<Integer> instances;
-	
-	public NpcOutOfRangeResponse() {
-		setAction("npc_out_of_range");
+	public PlayerOutOfRangeResponse() {
+		setAction("player_out_of_range");
 	}
 
 	@Override
