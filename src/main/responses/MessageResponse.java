@@ -8,6 +8,7 @@ import main.database.ItemDao;
 import main.database.PlayerDao;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
+import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.WorldProcessor;
@@ -95,10 +96,19 @@ public class MessageResponse extends Response {
 		// syntax: ::tele (destPlayerName|tileId)[ srcPlayerName]
 		if (msgParts.length == 1) {
 			if (msgParts[0].equals("home")) {
+				// don't let the player escape from a fight mid-combat, thats cheating
+				if (FightManager.fightWithFighterExists(player)) {
+					setRecoAndResponseText(0, "you can't do that while you're in combat.");
+					responseMaps.addClientOnlyResponse(player, this);
+					return;
+				}
+				
 				PlayerUpdateResponse playerUpdate = (PlayerUpdateResponse)ResponseFactory.create("player_update");
 				playerUpdate.setId(player.getId());
 				playerUpdate.setTileId(36859);
+				playerUpdate.setSnapToTile(true);
 				player.setTileId(36859);
+				player.clearPath();
 				responseMaps.addBroadcastResponse(playerUpdate);
 				return;
 			}
@@ -107,6 +117,10 @@ public class MessageResponse extends Response {
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
+		
+		// regular players can't tele willy nilly (only to home)
+		if (!player.isGod())
+			return;
 		
 		int destTileId = -1;
 		int destPlayerId = PlayerDao.getIdFromName(msgParts[1].replaceAll("\"", ""));
@@ -148,10 +162,15 @@ public class MessageResponse extends Response {
 			targetPlayer = player;
 		}
 		
+		// cancel the fight if it exists
+		FightManager.cancelFight(targetPlayer, responseMaps);
+		
 		PlayerUpdateResponse playerUpdate = (PlayerUpdateResponse)ResponseFactory.create("player_update");
 		playerUpdate.setId(targetPlayer.getDto().getId());
 		playerUpdate.setTileId(destTileId);
+		playerUpdate.setSnapToTile(true);
 		targetPlayer.setTileId(destTileId);
+		targetPlayer.clearPath();
 		responseMaps.addBroadcastResponse(playerUpdate);
 	}
 	

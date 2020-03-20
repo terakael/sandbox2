@@ -36,4 +36,8 @@ public class RockManager {
 	public static void addDepletedRock(int tileId, int ticks) {
 		deadRocks.put(tileId, ticks);
 	}
+	
+	public static HashSet<Integer> getDepletedRockTileIds() {
+		return new HashSet<>(deadRocks.keySet());
+	}
 }

@@ -16,15 +16,21 @@ import com.google.gson.Gson;
 
 import main.Endpoint;
 import main.GroundItemManager;
+import main.database.GroundTextureDao;
 import main.database.ShopDao;
+import main.processing.FightManager.Fight;
 import main.requests.Request;
-import main.responses.GroundItemRefreshResponse;
+import main.responses.AddGroundTextureSegmentsResponse;
+import main.responses.GroundItemInRangeResponse;
+import main.responses.GroundItemOutOfRangeResponse;
 import main.responses.LogonResponse;
 import main.responses.NpcInRangeResponse;
-import main.responses.NpcLocationRefreshResponse;
 import main.responses.NpcOutOfRangeResponse;
 import main.responses.PlayerInRangeResponse;
 import main.responses.PlayerOutOfRangeResponse;
+import main.responses.PvmStartResponse;
+import main.responses.PvpStartResponse;
+import main.responses.RemoveGroundTextureSegmentsResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
@@ -81,7 +87,7 @@ public class WorldProcessor implements Runnable {
 		
 		// process all requests and add all responses to this object which will be compiled into the response list for each player
 		ResponseMaps responseMaps = new ResponseMaps();
-		
+
 		Stopwatch.start("player requests");
 		// process player requests for this tick
 		for (Map.Entry<Session, Request> entry : requestMap.entrySet()) {
@@ -93,7 +99,10 @@ public class WorldProcessor implements Runnable {
 				LogonResponse logonResponse = (LogonResponse)response;
 				logonResponse.processLogon(request, entry.getKey(), responseMaps);
 			} else {
-				response.process(request, playerSessions.get(entry.getKey()), responseMaps);
+				// if the player logs out before its requests are processed then don't process
+				Player player = playerSessions.get(entry.getKey());
+				if (player != null)
+					response.processSuper(request, player, responseMaps);
 			}
 		}
 		Stopwatch.end("player requests");
@@ -127,6 +136,37 @@ public class WorldProcessor implements Runnable {
 				responseMaps.addClientOnlyResponse(entry.getValue(), playerInRangeResponse);
 			}
 			entry.getValue().setInRangePlayers(newInRangePlayers);
+			
+			// if a player comes into range, we need to check if they're fighting something
+			Set<Integer> checkedPlayerIds = new HashSet<>();
+			for (int inRangePlayerId : addedPlayers) {			
+				if (checkedPlayerIds.contains(inRangePlayerId))
+					continue;// already checked this (i.e. this was the opponent of a fight we already created a response for)
+				
+				Fight fight = FightManager.getFightByPlayerId(inRangePlayerId);
+				if (fight == null)
+					continue;
+				
+				int fighter1id = ((Player)fight.getFighter1()).getId();
+				checkedPlayerIds.add(fighter1id);
+				
+				if (fight.getFighter2() instanceof Player) {
+					int fighter2id = ((Player)fight.getFighter2()).getId();
+					checkedPlayerIds.add(fighter2id);
+					
+					PvpStartResponse pvpStartResponse = new PvpStartResponse();
+					pvpStartResponse.setPlayer1Id(fighter1id);
+					pvpStartResponse.setPlayer2Id(fighter2id);
+					pvpStartResponse.setTileId(fight.getFighter1().getTileId());
+					responseMaps.addClientOnlyResponse(entry.getValue(), pvpStartResponse);
+				} else if (fight.getFighter2() instanceof NPC) {
+					PvmStartResponse pvmStartResponse = new PvmStartResponse();
+					pvmStartResponse.setPlayerId(fighter1id);
+					pvmStartResponse.setMonsterId(((NPC)fight.getFighter2()).getInstanceId());
+					pvmStartResponse.setTileId(fight.getFighter1().getTileId());
+					responseMaps.addClientOnlyResponse(entry.getValue(), pvmStartResponse);
+				}
+			}
 		}
 		Stopwatch.end("updating in-range players");
 		
@@ -183,10 +223,78 @@ public class WorldProcessor implements Runnable {
 		
 		Stopwatch.start("refresh ground items");
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
-			HashMap<Integer, ArrayList<Integer>> localItemIds = GroundItemManager.getItemIdsNearTile(entry.getValue().getRoomId(), entry.getValue().getId(), entry.getValue().getTileId(), 15);
-			GroundItemRefreshResponse groundItemRefresh = new GroundItemRefreshResponse();
-			groundItemRefresh.setGroundItems(localItemIds);
-			responseMaps.addClientOnlyResponse(entry.getValue(), groundItemRefresh);
+			Map<Integer, List<Integer>> currentInRangeGroundItems = entry.getValue().getInRangeGroundItems();
+			Map<Integer, List<Integer>> newInRangeGroundItems = GroundItemManager.getItemIdsNearTile(entry.getValue().getRoomId(), entry.getValue().getId(), entry.getValue().getTileId(), 15);
+			
+			Map<Integer, List<Integer>> removedGroundItems = new HashMap<>();
+			for (Map.Entry<Integer, List<Integer>> currentEntry : currentInRangeGroundItems.entrySet()) {
+				if (!newInRangeGroundItems.containsKey(currentEntry.getKey())) {
+					removedGroundItems.put(currentEntry.getKey(), currentEntry.getValue());
+					continue;
+				}
+				
+				// current: 33333: [22, 22, 22, 23]
+				// new: 	33333: [22]
+				// result:  33333: [22, 22, 23]
+				
+				
+				
+				
+				// current: 33333: [22]
+				// new:     33333: []
+				
+				
+				List<Integer> currentList = new ArrayList<>(currentEntry.getValue());
+				List<Integer> newList = newInRangeGroundItems.get(currentEntry.getKey());
+				for (int newItemId : newList) {
+					if (currentList.contains(newItemId))
+						currentList.remove(currentList.indexOf(newItemId));
+				}
+				
+				//List<Integer> removedItemIds = currentEntry.getValue().stream().filter(e -> !newInRangeGroundItems.get(currentEntry.getKey()).contains(e)).collect(Collectors.toList());
+				if (!currentList.isEmpty())
+					removedGroundItems.put(currentEntry.getKey(), currentList);
+			}
+			
+			if (!removedGroundItems.isEmpty()) {
+				GroundItemOutOfRangeResponse groundItemOutOfRangeResponse = new GroundItemOutOfRangeResponse();
+				groundItemOutOfRangeResponse.setGroundItems(removedGroundItems);
+				responseMaps.addClientOnlyResponse(entry.getValue(), groundItemOutOfRangeResponse);
+			}
+			
+			Map<Integer, List<Integer>> addedGroundItems = new HashMap<>();
+			for (Map.Entry<Integer, List<Integer>> newEntry : newInRangeGroundItems.entrySet()) {
+				if (!currentInRangeGroundItems.containsKey(newEntry.getKey())) {
+					addedGroundItems.put(newEntry.getKey(), newEntry.getValue());
+					continue;
+				}
+				
+				// current: 33333: [22]
+				// new: 	33333: [22, 22, 22, 23]
+				// result:  33333: [22, 22, 23]
+				
+				List<Integer> currentList = currentInRangeGroundItems.get(newEntry.getKey());
+				List<Integer> newList = new ArrayList<>(newEntry.getValue());
+				for (int currentItemId : currentList) {
+					if (newList.contains(currentItemId))
+						newList.remove(newList.indexOf(currentItemId));
+				}
+
+				if (!newList.isEmpty())
+					addedGroundItems.put(newEntry.getKey(), newList);
+			}
+			if (!addedGroundItems.isEmpty()) {
+				GroundItemInRangeResponse groundItemInRangeResponse = new GroundItemInRangeResponse();
+				groundItemInRangeResponse.setGroundItems(addedGroundItems);
+				responseMaps.addClientOnlyResponse(entry.getValue(), groundItemInRangeResponse);
+			}
+			
+			entry.getValue().setInRangeGroundItems(newInRangeGroundItems);
+			
+//			HashMap<Integer, ArrayList<Integer>> localItemIds = GroundItemManager.getItemIdsNearTile(entry.getValue().getRoomId(), entry.getValue().getId(), entry.getValue().getTileId(), 15);
+//			GroundItemRefreshResponse groundItemRefresh = new GroundItemRefreshResponse();
+//			groundItemRefresh.setGroundItems(localItemIds);
+//			responseMaps.addClientOnlyResponse(entry.getValue(), groundItemRefresh);
 		}
 		Stopwatch.end("refresh ground items");
 		
@@ -207,6 +315,60 @@ public class WorldProcessor implements Runnable {
 			}
 		}
 		Stopwatch.end("update shop stock");
+		
+		Stopwatch.start("updating local ground texture segments");
+		for (Player player : playerSessions.values()) {
+			// we store the info in a map so we can compare the roomId as well.
+			// the segments will only ever contain a single map entry, which is the roomId.
+			// to make the comparisons more readable, if the current segments are empty for the roomId then
+			// we just add an empty set, meaning all the "newLoadedSegments" will be added.
+			// this would be the case if the player went up a ladder; the roomId changes but the loadedSegmentIds would remain the same
+			Map<Integer, Set<Integer>> currentLoadedSegments = player.getLoadedSegments();
+			if (!currentLoadedSegments.containsKey(player.getRoomId()))
+				currentLoadedSegments.put(player.getRoomId(), new HashSet<>());
+			Map<Integer, Set<Integer>> newLoadedSegments = new HashMap<>();
+			newLoadedSegments.put(player.getRoomId(), GroundTextureDao.getSegmentGroupByTileId(player.getTileId()));
+			
+			Map<Integer, Set<Integer>> removalMap = new HashMap<>();
+			for (Map.Entry<Integer, Set<Integer>> currentEntry : currentLoadedSegments.entrySet()) {
+				if (!newLoadedSegments.containsKey(currentEntry.getKey())) {
+					// if newLoadedSegments doesn't contain any values in this room then delete every entry for the room
+					removalMap.put(currentEntry.getKey(), currentEntry.getValue());
+					continue;
+				}
+				
+				Set<Integer> removedSegments = currentEntry.getValue().stream().filter(e -> !newLoadedSegments.get(currentEntry.getKey()).contains(e)).collect(Collectors.toSet());
+				if (!removedSegments.isEmpty()) {
+					removalMap.put(currentEntry.getKey(), removedSegments);
+				}
+			}
+			
+			if (!removalMap.isEmpty()) {
+				RemoveGroundTextureSegmentsResponse removeResponse = new RemoveGroundTextureSegmentsResponse();
+				removeResponse.setSegments(removalMap);
+				responseMaps.addClientOnlyResponse(player, removeResponse);
+			}
+			
+			Set<Integer> addedSegmentIds = newLoadedSegments.get(player.getRoomId()).stream().filter(e -> !currentLoadedSegments.get(player.getRoomId()).contains(e)).collect(Collectors.toSet());
+			if (!addedSegmentIds.isEmpty()) {
+				Map<Integer, List<Integer>> addedSegmentLists = new HashMap<>();
+				for (int addedSegmentId : addedSegmentIds) {
+					List<Integer> segmentList = GroundTextureDao.getGroundTextureIdsByRoomIdSegmentId(player.getRoomId(), addedSegmentId);
+					if (segmentList != null)
+						addedSegmentLists.put(addedSegmentId, segmentList);
+				}
+				
+				Map<Integer, Map<Integer, List<Integer>>> addedSegmentListsByRoom = new HashMap<>();
+				addedSegmentListsByRoom.put(player.getRoomId(), addedSegmentLists);
+				
+				AddGroundTextureSegmentsResponse addResponse = new AddGroundTextureSegmentsResponse();
+				addResponse.setSegments(addedSegmentListsByRoom);
+				responseMaps.addClientOnlyResponse(player, addResponse);
+			}
+			
+			player.setLoadedSegments(newLoadedSegments);
+		}
+		Stopwatch.end("updating local ground texture segments");
 		
 		// take all the responseMaps and compile the responses to send to each player
 		Stopwatch.start("compile response maps");

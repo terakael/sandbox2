@@ -15,7 +15,7 @@ public class FightManager {
 	
 	private static ArrayList<Fight> fights = new ArrayList<>();
 	
-	private static class Fight {
+	public static class Fight {
 		@Getter private Attackable fighter1;
 		@Getter private Attackable fighter2;
 		@Getter private int battleLockTicks;
@@ -73,7 +73,9 @@ public class FightManager {
 			attackable.setStatsAndBonuses();
 			other.setStatsAndBonuses();
 			
-			int hit = Math.max(attackable.hit() - other.block(), 0);
+			int hit = Math.max(attackable.hit() - (attackable.hit() * other.block() / 100), 0);
+			
+			//int hit = Math.max(attackable.hit() - other.block(), 0);
 			other.onHit(hit, DamageTypes.STANDARD, responseMaps);
 			
 			return other.getCurrentHp() == 0;
@@ -102,6 +104,18 @@ public class FightManager {
 			if (fight.getFighter1() == fighter || fight.getFighter2() == fighter)
 				return fight;
 		}
+		return null;
+	}
+	
+	public static Fight getFightByPlayerId(int playerId) {
+		for (Fight fight : fights) {
+			if (((Player)fight.getFighter1()).getId() == playerId)
+				return fight;
+			
+			if (fight.getFighter2() instanceof Player && ((Player)fight.getFighter2()).getId() == playerId)
+				return fight;
+		}
+		
 		return null;
 	}
 	
@@ -135,7 +149,7 @@ public class FightManager {
 						resp.setMonsterId(((NPC)fight.getFighter2()).getInstanceId());
 						resp.setPlayerTileId(fight.getFighter1().getTileId());
 						resp.setMonsterTileId(fight.getFighter2().getTileId());
-						responseMaps.addBroadcastResponse(resp);
+						responseMaps.addLocalResponse(participant.getRoomId(), participant.getTileId(), resp);
 					} else {
 						fight.getFighter2().setTarget(null);
 						PvpEndResponse resp = new PvpEndResponse();
@@ -143,7 +157,7 @@ public class FightManager {
 						resp.setPlayer2Id(((Player)fight.getFighter2()).getId());
 						resp.setPlayer1TileId(fight.getFighter1().getTileId());
 						resp.setPlayer2TileId(fight.getFighter2().getTileId());
-						responseMaps.addBroadcastResponse(resp);
+						responseMaps.addLocalResponse(participant.getRoomId(), participant.getTileId(), resp);
 					}
 				}
 				fights.remove(fight);

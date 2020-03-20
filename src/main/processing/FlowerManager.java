@@ -36,4 +36,8 @@ public class FlowerManager {
 	public static void addDepletedFlower(int tileId, int ticks) {
 		deadFlowers.put(tileId, ticks);
 	}
+	
+	public static HashSet<Integer> getDepletedFlowerTileIds() {
+		return new HashSet<Integer>(deadFlowers.keySet());
+	}
 }

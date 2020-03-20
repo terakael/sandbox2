@@ -99,7 +99,7 @@ public class ShopSellResponse extends Response {
 			for (int i = 0; i < invItemIds.size(); ++i) {
 				if (ItemDao.itemHasAttribute(invItemIds.get(i), ItemAttributes.CHARGED)) {
 					InventoryItemDto invItem = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i);
-					if (invItem.getCount() != ItemDao.getMaxCharges(invItem.getItemId())) {
+					if (invItem.getCharges() != ItemDao.getMaxCharges(invItem.getItemId())) {
 						// not fully charged, so we won't sell it
 						invItemIds.set(i, 0);
 					}

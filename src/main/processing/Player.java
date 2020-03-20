@@ -2,6 +2,7 @@ package main.processing;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -21,6 +22,8 @@ import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
+import main.database.TeleportableDao;
+import main.database.TeleportableDto;
 import main.requests.FishRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
@@ -36,6 +39,7 @@ import main.responses.FinishMiningResponse;
 import main.responses.FinishSmithResponse;
 import main.responses.FinishUseResponse;
 import main.responses.InventoryUpdateResponse;
+import main.responses.LoadRoomResponse;
 import main.responses.MessageResponse;
 import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
@@ -45,8 +49,10 @@ import main.responses.StatBoostResponse;
 import main.types.Buffs;
 import main.types.DamageTypes;
 import main.types.ItemAttributes;
+import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
+import main.utils.Utils;
 
 public class Player extends Attackable {
 	public enum PlayerState {
@@ -60,7 +66,8 @@ public class Player extends Attackable {
 		using,
 		climbing, // ladders etc, give a tick or so duration (like for climbing animation in the future)
 		cooking,
-		fishing
+		fishing,
+		dead
 	};
 	
 	@Getter private PlayerDto dto;
@@ -76,6 +83,8 @@ public class Player extends Attackable {
 	private HashMap<Buffs, Integer> activeBuffs = new HashMap<>(); // buff, remaining ticks
 	@Getter @Setter private Set<Integer> inRangeNpcs = new HashSet<>();
 	@Getter @Setter private Set<Integer> inRangePlayers = new HashSet<>();
+	@Getter @Setter private Map<Integer, List<Integer>> inRangeGroundItems = new HashMap<>();
+	@Getter @Setter private Map<Integer, Set<Integer>> loadedSegments = new HashMap<>(); // roomId, <segments>
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
@@ -328,6 +337,33 @@ public class Player extends Attackable {
 				state = PlayerState.idle;
 			}
 			break;
+			
+		case dead: {// note that while the player is in the dead state, every response (except Message) is ignored at the Response superclass level
+			if (--tickCounter <= 0) {
+				// TODO check if the player died in the same room; reloading the room in that case is not necessary
+				new LoadRoomResponse().process(null, this, responseMaps);
+				
+				// update the player inventory to show there's no more items
+				new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);
+				
+				PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+				playerUpdate.setId(getId());
+				playerUpdate.setTileId(getTileId());
+				playerUpdate.setRoomId(getRoomId());
+				playerUpdate.setSnapToTile(true);
+				playerUpdate.setCurrentHp(currentHp);
+				playerUpdate.setMaxHp(currentHp);
+				playerUpdate.setEquipAnimations(AnimationDao.getEquipmentAnimationsByPlayerId(getId()));
+				playerUpdate.setRespawn(true);
+				
+				// the reason this is local is so the other players know the player respawned
+				// (they also receive the player_in_range response automatically but if they're around the spawn point it will be missing respawn data)
+				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdate);
+				
+				state = PlayerState.idle;
+			}
+			break;
+		}
 		case idle:// fall through
 		default:
 			break;
@@ -413,6 +449,9 @@ public class Player extends Attackable {
 		
 		HashMap<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.INVENTORY.getValue());
 		for (InventoryItemDto dto : inventoryList.values()) {
+			if (dto.getSlot() < 3)
+				continue;// you always protect your items in the first three slots (0, 1, 2)
+			
 			if (dto.getItemId() != 0) {
 				int stack = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.STACKABLE) ? dto.getCount() : 1;
 				int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? dto.getCharges() : 1;
@@ -432,23 +471,28 @@ public class Player extends Attackable {
 				}
 			}
 		}
-		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(getId(), StorageTypes.INVENTORY.getValue());
-		
-		// update the player inventory to show there's no more items
-		new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);
+		PlayerStorageDao.clearPlayerInventoryExceptFirstThreeSlots(getId());
 		
 		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.HITPOINTS, 0);
 		currentHp = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId());
 		
-		// let everyone know you died lmao
-		DeathResponse deathResponse = new DeathResponse();
-		deathResponse.setId(getId());
-		deathResponse.setCurrentHp(currentHp);
-		deathResponse.setTileId(36859);
-		setTileId(36859);
-		responseMaps.addBroadcastResponse(deathResponse);
+		// let everyone around the dead player know they died 
+		responseMaps.addLocalResponse(getRoomId(), getTileId(), new DeathResponse(dto.getId()));
 		
-		state = PlayerState.idle;
+		// respawn at the tyrotown teleport spot
+		TeleportableDto respawnPoint = TeleportableDao.getTeleportableByItemId(Items.TYROTOWN_TELEPORT_RUNE.getValue());
+		
+		// if the player's spawn point is not local to where they died, they won't receive the local death response.
+		// it's not ideal to send an additional response but we have to set the respawn point immediately
+		// otherwise the player can just disconnect during the death sequence then relogin in the same spot they died (with full hp)
+		if (respawnPoint.getRoomId() != getRoomId() || !Utils.areTileIdsWithinRadius(respawnPoint.getTileId(), getTileId(), 15))
+			responseMaps.addClientOnlyResponse(this, new DeathResponse(dto.getId()));
+				
+		setTileId(respawnPoint.getTileId());
+		setRoomId(respawnPoint.getRoomId());
+
+		state = PlayerState.dead;
+		tickCounter = 2;
 	}
 	
 	@Override
@@ -628,10 +672,10 @@ public class Player extends Attackable {
 			recacheEquippedItems();
 			new InventoryUpdateResponse().process(RequestFactory.create("", getId()), this, responseMaps);
 			if (itemCleared) {
-				PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
-				playerUpdate.setId(getId());
-				playerUpdate.setEquipAnimations(AnimationDao.getEquipmentAnimationsByPlayerId(getId()));
-				responseMaps.addBroadcastResponse(playerUpdate);
+//				PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+//				playerUpdate.setId(getId());
+//				playerUpdate.setEquipAnimations(AnimationDao.getEquipmentAnimationsByPlayerId(getId()));
+//				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdate);
 				
 				new EquipResponse().process(null, WorldProcessor.getPlayerById(getId()), responseMaps);
 			}

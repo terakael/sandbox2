@@ -102,7 +102,7 @@ public class MinimapGenerator {
 			image.setRGB(tileId % 250, tileId / 250, Color.BLACK.getRGB());
 		}
 		
-		File outputfile = new File(String.format("D:\\github\\brackets\\img\\map_%d.png", roomId));
+		File outputfile = new File(String.format("D:\\github\\brackets\\img\\maps\\map_%d.png", roomId));
 		ImageIO.write(image, "png", outputfile);
 		
 		images.put(roomId, image);

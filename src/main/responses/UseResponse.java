@@ -16,6 +16,8 @@ import main.database.NPCDao;
 import main.database.PlayerStorageDao;
 import main.database.SceneryDao;
 import main.database.StatsDao;
+import main.database.TeleportableDao;
+import main.database.TeleportableDto;
 import main.database.UseItemOnItemDao;
 import main.database.UseItemOnItemDto;
 import main.processing.Attackable;
@@ -260,7 +262,8 @@ public class UseResponse extends Response {
 		if (targetNpc == null)
 			return false;
 		
-		if (Items.withValue(castable.getItemId()) == Items.TYROTOWN_TELEPORT_RUNE)
+		// you can't teleport an npc
+		if (TeleportableDao.isTeleportable(castable.getItemId()))
 			return false;
 		
 		if (!NPCDao.npcHasAttribute(targetNpc.getId(), NpcAttributes.ATTACKABLE))
@@ -288,25 +291,7 @@ public class UseResponse extends Response {
 		if (slot >= invItemIds.size() || invItemIds.get(slot) != castable.getItemId())
 			slot = invItemIds.indexOf(castable.getItemId());
 		
-		// from here, either neither player or npc are in combat, or player and npc are in combat with eachother.
-		int magicLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.MAGIC, player.getId());
-		if (magicLevel < castable.getLevel()) {
-			setRecoAndResponseText(0, String.format("you need %d magic to cast that.", castable.getLevel()));
-			responseMaps.addClientOnlyResponse(player, this);
-			return true;
-		}
-		
-		// at this point we're good to cast the spell.
-		// failure chance based off magic bonus, magic level and requirement levels
-		EquipmentBonusDto equipmentBonuses = EquipmentDao.getEquipmentBonusesByPlayerId(player.getId());
-		int chanceToFail = Math.max(castable.getLevel() - (equipmentBonuses.getMage() + magicLevel) + 25, 0);
-		if (new Random().nextInt(100) < chanceToFail) {
-			// failed
-			setRecoAndResponseText(1, "you failed to cast the spell!");
-			responseMaps.addClientOnlyResponse(player, this);
-			return true;
-		}
-		
+		// at this point we're good to cast the spell.		
 		castOffensiveSpell(castable, player, targetNpc, responseMaps);
 		
 		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
@@ -332,6 +317,24 @@ public class UseResponse extends Response {
 	}
 	
 	private void castOffensiveSpell(CastableDto castable, Player player, Attackable opponent, ResponseMaps responseMaps) {
+		// from here, either neither player or npc are in combat, or player and npc are in combat with eachother.
+		int magicLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.MAGIC, player.getId());
+		if (magicLevel < castable.getLevel()) {
+			setRecoAndResponseText(0, String.format("you need %d magic to cast that.", castable.getLevel()));
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+				
+		// failure chance based off magic bonus, magic level and requirement levels
+		EquipmentBonusDto equipmentBonuses = EquipmentDao.getEquipmentBonusesByPlayerId(player.getId());
+		int chanceToFail = Math.max(castable.getLevel() - (equipmentBonuses.getMage() + magicLevel) + 25, 0);
+		if (new Random().nextInt(100) < chanceToFail) {
+			// failed
+			setRecoAndResponseText(1, "you failed to cast the spell!");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+				
 		// TODO rune saving based off magic bonus, magic level and requirement level
 		int damage = new Random().nextInt(castable.getMaxHit() + 1);// +1 to include the max hit
 		opponent.onHit(damage, DamageTypes.MAGIC, responseMaps);
@@ -405,6 +408,11 @@ public class UseResponse extends Response {
 			return false;
 		
 		int playerMagicLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.MAGIC, player.getId());
+		if (playerMagicLevel < castable.getLevel()) {
+			setRecoAndResponseText(0, String.format("you need %d magic to cast that.", castable.getLevel()));
+			responseMaps.addClientOnlyResponse(player, this);
+			return true;
+		}
 		
 		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 		if (!invItemIds.contains(castable.getItemId()))
@@ -414,63 +422,8 @@ public class UseResponse extends Response {
 		
 		// are we using something on ourself?
 		if (request.getDest() == player.getId()) {
-			switch (Items.withValue(castable.getItemId())) {
-				case TYROTOWN_TELEPORT_RUNE: {
-					if (playerMagicLevel < castable.getLevel()) {
-						setRecoAndResponseText(0, String.format("you need %d magic to cast that.", castable.getLevel()));
-						responseMaps.addClientOnlyResponse(player, this);
-						return true;
-					}
-					
-					if (FightManager.fightWithFighterIsBattleLocked(player)) {
-						setRecoAndResponseText(0, "you can't retreat yet!");
-						responseMaps.addClientOnlyResponse(player, this);
-						return true;
-					}
-					
-					final int oldRoomId = player.getRoomId();
-					final int newRoomId = 7575;
-					player.setRoomId(newRoomId);
-					if (oldRoomId != newRoomId)
-						new LoadRoomResponse().process(null, player, responseMaps);
-					
-					player.setTileId(36858);
-					PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
-					playerUpdate.setId(player.getId());
-					playerUpdate.setTileId(player.getTileId());
-					playerUpdate.setRoomId(player.getRoomId());
-					playerUpdate.setSnapToTile(true);
-					responseMaps.addClientOnlyResponse(player, playerUpdate);
-					
-					Map<Integer, Integer> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
-					AddExpResponse addExpResponse = new AddExpResponse();
-					addExpResponse.addExp(Stats.MAGIC.getValue(), castable.getExp());		
-					responseMaps.addClientOnlyResponse(player, addExpResponse);
-					StatsDao.addExpToPlayer(player.getId(), Stats.MAGIC, castable.getExp());
-					player.refreshStats(currentStatExp);
-					
-					InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
-					if (item.getCount() > 1) {
-						PlayerStorageDao.setItemFromPlayerIdAndSlot(
-								player.getId(), 
-								StorageTypes.INVENTORY.getValue(), 
-								slot, 
-								item.getItemId(), item.getCount() - 1, item.getCharges());
-					} else {
-						PlayerStorageDao.setItemFromPlayerIdAndSlot(
-								player.getId(), 
-								StorageTypes.INVENTORY.getValue(), 
-								slot, 
-								0, 1, 0);
-					}
-					InventoryUpdateResponse.sendUpdate(player, responseMaps);
-					
-					return true;
-				}
-				
-				default:
-					break;
-			}
+			if (TeleportableDao.isTeleportable(castable.getItemId()))
+				return handleTeleport(castable, player, slot, responseMaps);
 		} else {
 			Player targetPlayer = WorldProcessor.getPlayerById(request.getDest());
 			if (targetPlayer == null) {
@@ -507,5 +460,61 @@ public class UseResponse extends Response {
 		}
 		
 		return false;
+	}
+	
+	private boolean handleTeleport(CastableDto castable, Player player, int slot, ResponseMaps responseMaps) {
+		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+			setRecoAndResponseText(0, "you can't retreat yet!");
+			responseMaps.addClientOnlyResponse(player, this);
+			return true;
+		}
+		
+		// if there is a fight, then cancel it
+		FightManager.cancelFight(player, responseMaps);
+		
+		TeleportableDto teleportable = TeleportableDao.getTeleportableByItemId(castable.getItemId());
+		if (teleportable == null) {
+			return false;
+		}
+		
+		final int oldRoomId = player.getRoomId();
+		final int newRoomId = teleportable.getRoomId();
+		player.setRoomId(newRoomId);
+		if (oldRoomId != newRoomId)
+			new LoadRoomResponse().process(null, player, responseMaps);
+		
+		player.setTileId(teleportable.getTileId());
+		player.clearPath();
+		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+		playerUpdate.setId(player.getId());
+		playerUpdate.setTileId(player.getTileId());
+		playerUpdate.setRoomId(player.getRoomId());
+		playerUpdate.setSnapToTile(true);
+		responseMaps.addClientOnlyResponse(player, playerUpdate);
+		
+		Map<Integer, Integer> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
+		AddExpResponse addExpResponse = new AddExpResponse();
+		addExpResponse.addExp(Stats.MAGIC.getValue(), castable.getExp());		
+		responseMaps.addClientOnlyResponse(player, addExpResponse);
+		StatsDao.addExpToPlayer(player.getId(), Stats.MAGIC, castable.getExp());
+		player.refreshStats(currentStatExp);
+		
+		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
+		if (item.getCount() > 1) {
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(
+					player.getId(), 
+					StorageTypes.INVENTORY.getValue(), 
+					slot, 
+					item.getItemId(), item.getCount() - 1, item.getCharges());
+		} else {
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(
+					player.getId(), 
+					StorageTypes.INVENTORY.getValue(), 
+					slot, 
+					0, 1, 0);
+		}
+		InventoryUpdateResponse.sendUpdate(player, responseMaps);
+		
+		return true;
 	}
 }

@@ -69,7 +69,7 @@ public class GroundItemManager {
 		return groundItemManagers.get(roomId).itemIsOnGround(playerId, itemId);
 	}
 	
-	public static HashMap<Integer, ArrayList<Integer>> getItemIdsNearTile(int roomId, int playerId, int tileId, int proximity) {
+	public static Map<Integer, List<Integer>> getItemIdsNearTile(int roomId, int playerId, int tileId, int proximity) {
 		if (!groundItemManagers.containsKey(roomId))
 			return new HashMap<>();
 		

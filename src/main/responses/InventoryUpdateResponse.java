@@ -43,11 +43,7 @@ public class InventoryUpdateResponse extends Response {
 		HashMap<Integer, InventoryItemDto> items = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 		InventoryItemDto destItem = items.get(req.getDest());
 		InventoryItemDto srcItem = items.get(req.getSrc());
-		
-		// check if there's already an item in the slot we're trying to move the src item to
-//		ItemDto destItem = PlayerStorageDao.getItemFromPlayerIdAndSlot(req.getId(), req.getDest());
-//		ItemDto srcItem = PlayerStorageDao.getItemFromPlayerIdAndSlot(req.getId(), req.getSrc());
-		
+
 		boolean destItemEquipped = EquipmentDao.isSlotEquipped(req.getId(), req.getDest());
 		boolean srcItemEquipped = EquipmentDao.isSlotEquipped(req.getId(), req.getSrc());
 		

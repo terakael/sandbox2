@@ -35,6 +35,7 @@ public class CachedResourcesResponse extends Response {
 	private Map<Integer, Integer> expMap = null;
 	private List<NPCDto> npcs = null;
 	private List<SceneryDto> scenery = null;
+	private List<GroundTextureDto> groundTextures = null;
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -62,6 +63,7 @@ public class CachedResourcesResponse extends Response {
 		npcs = NPCDao.getNpcList();
 		expMap = StatsDao.getExpMap();
 		scenery = SceneryDao.getAllScenery();
+		groundTextures = GroundTextureDao.getDtosWithoutInstances();
 	}
 
 }

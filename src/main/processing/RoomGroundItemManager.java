@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import main.database.ItemDao;
-import main.database.PlayerStorageDao;
 import main.database.RespawnableDao;
 import main.database.RespawnableDto;
 import main.types.ItemAttributes;
@@ -189,7 +189,7 @@ public class RoomGroundItemManager {
 			
 			for (RespawnableGroundItem item : respawnableGroundItems) {
 				if (item.tileId == tileId && item.id == toRemove.id && item.lifetime == 0) {
-					item.lifetime = RespawnableDao.getCachedRespawnableByRoomIdTileId(1, tileId).getRespawnTicks();
+					item.lifetime = RespawnableDao.getCachedRespawnableByRoomIdTileId(roomId, tileId).getRespawnTicks();
 					break;
 				}
 			}
@@ -244,8 +244,8 @@ public class RoomGroundItemManager {
 		return false;
 	}
 	
-	public HashMap<Integer, ArrayList<Integer>> getItemIdsNearTile(int playerId, int tileId, int proximity) {
-		HashMap<Integer, ArrayList<Integer>> localTiles = new HashMap<>();
+	public Map<Integer, List<Integer>> getItemIdsNearTile(int playerId, int tileId, int proximity) {
+		Map<Integer, List<Integer>> localTiles = new HashMap<>();
 		
 		final int tileX = tileId % PathFinder.LENGTH;
 		final int tileY = tileId / PathFinder.LENGTH;

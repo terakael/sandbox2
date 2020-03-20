@@ -1,12 +1,12 @@
 package main.responses;
 
-import javax.websocket.Session;
-
 import com.google.gson.Gson;
 
 import lombok.Getter;
 import lombok.Setter;
 import main.processing.Player;
+import main.processing.Player.PlayerState;
+import main.requests.MessageRequest;
 import main.requests.Request;
 
 @SuppressWarnings("unused")
@@ -30,6 +30,14 @@ public abstract class Response {
 	public void setRecoAndResponseText(int success, String responseText) {
 		this.success = success;
 		this.responseText = responseText;
+	}
+	
+	public final void processSuper(Request req, Player player, ResponseMaps responseMaps) {
+		// message request is a special case as it's the only action that doesn't directly affect the player
+		if (!(req instanceof MessageRequest) && player.getState() == PlayerState.dead)
+			return;
+		
+		process(req, player, responseMaps);
 	}
 
 	public abstract void process(Request req, Player player, ResponseMaps responseMaps);

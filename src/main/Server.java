@@ -21,6 +21,7 @@ import main.database.PickableDao;
 import main.database.RespawnableDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
+import main.database.TeleportableDao;
 import main.database.UseItemOnItemDao;
 import main.processing.MinimapGenerator;
 import main.processing.NPCManager;
@@ -41,6 +42,7 @@ public class Server {
 			server.start();
 			
 			GroundTextureDao.cacheDistinctRoomIds(); // what constitutes a room is having at least one ground texture: no ground textures, the room doesnt exist.
+			GroundTextureDao.cacheSegments();
 			PathFinder.get();// init the path nodes and relationships
 			SceneryDao.setupCaches();
 			ExamineResponse.initializeExamineMap();// all the scenery examine
@@ -63,6 +65,7 @@ public class Server {
 			LadderConnectionDao.setupCaches();
 			PickableDao.setupCaches();
 			CastableDao.setupCaches();
+			TeleportableDao.setupCaches();
 			FishableDao.setupCaches();
 			try {
 				for (int roomId : GroundTextureDao.getDistinctRoomIds())

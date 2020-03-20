@@ -1,36 +1,24 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.websocket.Session;
 
-import lombok.Getter;
-import main.GroundItemManager;
-import main.database.AnimationDao;
-import main.database.AnimationDto;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
-import main.database.GroundTextureDto;
 import main.database.InventoryItemDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerSessionDao;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
-import main.processing.NPC;
-import main.processing.NPCManager;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.LogonRequest;
 import main.requests.Request;
-import main.types.PlayerPartType;
-import main.types.Stats;
 import main.types.StorageTypes;
 
 public class LogonResponse extends Response {
@@ -98,27 +86,10 @@ public class LogonResponse extends Response {
 		
 		new LoadRoomResponse().process(null, player, responseMaps);
 		new PlayerEnterResponse().process(null, player, responseMaps);
-		
-//		initializeNpcLocations(player, responseMaps);
 	}
 	
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		
 	}
-	
-//	public void initializeNpcLocations(Player player, ResponseMaps responseMaps) {
-//		// initial npc location refresh response (all living npcs)
-//		NpcLocationRefreshResponse npcLocationRefreshResponse = new NpcLocationRefreshResponse();
-//		List<NPC> localNpcs = NPCManager.get().getNpcsNearTile(player.getRoomId(), player.getTileId(), 15);
-//		localNpcs = localNpcs.stream().filter(e -> !e.isDead()).collect(Collectors.toList());
-//		Set<Integer> localNpcInstanceIds = localNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
-//		player.updateInRangeNpcs(localNpcInstanceIds);
-//		
-//		ArrayList<NpcLocationRefreshResponse.NpcLocation> npcLocations = new ArrayList<>();
-//		for (NPC npc : localNpcs)
-//			npcLocations.add(new NpcLocationRefreshResponse.NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId()));
-//		npcLocationRefreshResponse.setNpcs(npcLocations);
-//		responseMaps.addClientOnlyResponse(player, npcLocationRefreshResponse);
-//	}
 }

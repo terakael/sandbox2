@@ -1,16 +1,14 @@
 package main.responses;
 
-import lombok.Getter;
 import lombok.Setter;
 import main.processing.Player;
 import main.requests.Request;
 
 public class DeathResponse extends Response {
-	@Getter @Setter private int id;
-	@Getter @Setter private int tileId;
-	@Setter private int currentHp;
+	@Setter private int id;
 
-	public DeathResponse() {
+	public DeathResponse(int id) {
+		this.id = id;
 		setAction("dead");
 	}
 

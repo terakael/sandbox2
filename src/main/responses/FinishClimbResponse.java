@@ -37,6 +37,7 @@ public class FinishClimbResponse extends Response {
 				if (dto.getFromRoomId() == player.getRoomId() && dto.getFromTileId() == request.getTileId()) {
 					player.setTileId(dto.getToTileId());
 					player.setRoomId(dto.getToRoomId());
+					player.clearPath();
 
 					if (dto.getFromRoomId() != dto.getToRoomId()) // if the room changes we need to reload the room
 						new LoadRoomResponse().process(null, player, responseMaps);

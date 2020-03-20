@@ -10,6 +10,7 @@ import lombok.Setter;
 import main.responses.ResponseMaps;
 import main.types.DamageTypes;
 import main.types.Stats;
+import main.utils.RandomUtil;
 
 public abstract class Attackable {
 	private static Random rand = new Random();
@@ -64,7 +65,7 @@ public abstract class Attackable {
 		}
 		
 		ArrayList<Integer> numbersToBoost = new ArrayList<>();
-		int acc = (int)Math.ceil((stats.get(Stats.ACCURACY) + boosts.get(Stats.ACCURACY)) * 0.18) + (int)Math.ceil(bonuses.get(Stats.ACCURACY) * 0.10);
+		int acc = (int)Math.ceil((stats.get(Stats.ACCURACY) + boosts.get(Stats.ACCURACY)) * 0.08) + (int)Math.ceil(bonuses.get(Stats.ACCURACY) * 0.05);
 		for (int i = numberLine.size() - 1; i >= Math.max((numberLine.size() - acc), 0); --i) {
 			numbersToBoost.add(numberLine.get(i));
 		}
@@ -81,7 +82,12 @@ public abstract class Attackable {
 	}
 	
 	public int block() {
-		int maxBlock = (int)Math.ceil((stats.get(Stats.DEFENCE) + boosts.get(Stats.DEFENCE)) * 0.18) + (int)Math.ceil(bonuses.get(Stats.DEFENCE) * 0.10);
+		// agility gives a chance to completely block the damage
+		int chanceInThousand = stats.get(Stats.AGILITY) + boosts.get(Stats.AGILITY) + (bonuses.get(Stats.AGILITY) * 4);
+		if (RandomUtil.getRandom(0, 1000) < chanceInThousand)
+			return 100; // 100% block
+		
+		int maxBlock = (int)Math.ceil((stats.get(Stats.DEFENCE) + boosts.get(Stats.DEFENCE)) * 0.22) + (int)Math.ceil(bonuses.get(Stats.DEFENCE) * 0.25);
 
 		int distribution = 100 / (maxBlock + 1);
 		ArrayList<Integer> numberLine = new ArrayList<>();
@@ -91,7 +97,7 @@ public abstract class Attackable {
 		}
 		
 		ArrayList<Integer> numbersToBoost = new ArrayList<>();
-		int acc = (int)Math.ceil((stats.get(Stats.AGILITY) + boosts.get(Stats.AGILITY)) * 0.18) + (int)Math.ceil(bonuses.get(Stats.AGILITY) * 0.10);
+		int acc = (int)Math.ceil((stats.get(Stats.AGILITY) + boosts.get(Stats.AGILITY)) * 0.22) + (int)Math.ceil(bonuses.get(Stats.AGILITY) * 0.25);
 		for (int i = numberLine.size() - 1; i >= Math.max((numberLine.size() - acc), 0); --i) {
 			numbersToBoost.add(numberLine.get(i));
 		}

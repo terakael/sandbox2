@@ -231,6 +231,20 @@ public class PlayerStorageDao {
 		return false;
 	}
 	
+	public static void clearPlayerInventoryExceptFirstThreeSlots(int playerId) {
+		final String query = "update player_storage set item_id=0 where player_id=? and slot >= 3";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			ps.setInt(1, playerId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	// checks the item stack count
 	public static int getStorageItemCountByPlayerIdItemIdStorageTypeId(int playerId, int itemId, int storageTypeId) {
 		final String query = "select count from player_storage where player_id=? and storage_id=? and item_id=?";

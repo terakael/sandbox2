@@ -1,15 +1,21 @@
 package main.responses;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Setter;
+import main.GroundItemManager;
 import main.database.DialogueDao;
+import main.database.ItemDao;
 import main.database.NPCDao;
 import main.database.NpcDialogueDto;
 import main.database.NpcDialogueOptionDto;
+import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.DialogueOptionRequest;
 import main.requests.Request;
+import main.types.Items;
+import main.types.StorageTypes;
 
 public class DialogueOptionResponse extends Response {
 	@Setter private ArrayList<NpcDialogueOptionDto> options;
@@ -45,5 +51,43 @@ public class DialogueOptionResponse extends Response {
 		dialogueResponse.setDialogue(newDialogue.getDialogue());
 		dialogueResponse.setSpeaker(NPCDao.getNpcNameById(newDialogue.getNpcId()));
 		responseMaps.addClientOnlyResponse(player, dialogueResponse);
+		
+		// not sure how to structure this; needs to be in a db table somewhere though.
+		if (newDialogue.getNpcId() == 26 && newDialogue.getPointId() == 1 && newDialogue.getDialogueId() == 13) {
+			// "here you go" for the cape
+			int capeId = 0;
+			switch (selectedOption.getOptionId()) {
+			case 3: // black
+				capeId = Items.BLACK_CAPE.getValue();
+				break;
+			case 4: // white
+				capeId = Items.WHITE_CAPE.getValue();
+				break;
+			case 5: // red
+				capeId = Items.RED_CAPE.getValue();
+				break;
+			case 6:  // blue
+				capeId = Items.BLUE_CAPE.getValue();
+				break;
+			case 7: // green
+				capeId = Items.GREEN_CAPE.getValue();
+				break;
+			default:
+				break;
+			}
+			
+			if (capeId != 0) {
+				// if the player doesn't have any inventory space then drop it on the ground below them
+				List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+				if (!invItemIds.contains(0)) {
+					// drop on ground
+					GroundItemManager.add(player.getRoomId(), player.getId(), capeId, player.getTileId(), 1, ItemDao.getMaxCharges(capeId));
+				} else {
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(0), capeId, 1, ItemDao.getMaxCharges(capeId));
+				}
+				
+				InventoryUpdateResponse.sendUpdate(player, responseMaps);
+			}
+		}
 	}
 }

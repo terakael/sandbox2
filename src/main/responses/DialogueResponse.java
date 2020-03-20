@@ -1,15 +1,19 @@
 package main.responses;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Setter;
+import main.GroundItemManager;
 import main.database.DialogueDao;
+import main.database.ItemDao;
 import main.database.NPCDao;
 import main.database.NpcDialogueDto;
 import main.database.NpcDialogueOptionDto;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.Request;
+import main.types.Items;
 import main.types.StorageTypes;
 
 @Setter
@@ -33,8 +37,6 @@ public class DialogueResponse extends Response {
 		
 		ArrayList<NpcDialogueOptionDto> options = DialogueDao.getDialogueOptionsBySrcDialogueId(currentDialogue.getNpcId(), currentDialogue.getPointId(), currentDialogue.getDialogueId());
 		if (!options.isEmpty()) {
-			// send ShowDialogueOptionResponse
-			
 			ArrayList<NpcDialogueOptionDto> validOptions = new ArrayList<>();// inventory checks etc
 			ArrayList<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 			for (NpcDialogueOptionDto option : options) {
@@ -59,6 +61,15 @@ public class DialogueResponse extends Response {
 		dialogue = nextDialogue.getDialogue();
 		speaker = NPCDao.getNpcNameById(nextDialogue.getNpcId());
 		responseMaps.addClientOnlyResponse(player, this);
+		
+		if (nextDialogue.getNpcId() == 12 && nextDialogue.getPointId() == 2 && nextDialogue.getDialogueId() == 13) {
+			// leo gives the sword to the player
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			if (invItemIds.contains(Items.LEOS_BABY.getValue())) {
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(Items.LEOS_BABY.getValue()), Items.STEEL_SWORD_III.getValue(), 1, ItemDao.getMaxCharges(Items.STEEL_SWORD_III.getValue()));
+				InventoryUpdateResponse.sendUpdate(player, responseMaps);
+			}
+		}
 	}
 
 }
