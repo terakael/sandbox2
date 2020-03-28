@@ -22,11 +22,11 @@ public class MineableDao {
 		cacheMineableInstances();
 	}
 	
-	public static MineableDto getMineableDtoByTileId(int roomId, int tileId) {
-		if (!mineableInstances.containsKey(roomId))
+	public static MineableDto getMineableDtoByTileId(int floor, int tileId) {
+		if (!mineableInstances.containsKey(floor))
 			return null;
 		
-		for (HashMap.Entry<Integer, HashSet<Integer>> instances : mineableInstances.get(roomId).entrySet()) {
+		for (HashMap.Entry<Integer, HashSet<Integer>> instances : mineableInstances.get(floor).entrySet()) {
 			if (instances.getValue().contains(tileId)) {
 				for (MineableDto dto : mineables) {
 					if (dto.getSceneryId() == instances.getKey())
@@ -42,7 +42,7 @@ public class MineableDao {
 		
 		// run through every rock's scenery_id and pull out all the instance tiles
 		for (MineableDto dto : mineables) {
-			final String query = "select room_id, tile_id from room_scenery where scenery_id = ?";
+			final String query = "select floor, tile_id from room_scenery where scenery_id = ?";
 			
 			try (
 				Connection connection = DbConnection.get();
@@ -52,13 +52,13 @@ public class MineableDao {
 				
 				try (ResultSet rs = ps.executeQuery()) {
 					while (rs.next()) {
-						if (!mineableInstances.containsKey(rs.getInt("room_id")))
-							mineableInstances.put(rs.getInt("room_id"), new HashMap<>());
+						if (!mineableInstances.containsKey(rs.getInt("floor")))
+							mineableInstances.put(rs.getInt("floor"), new HashMap<>());
 						
-						if (!mineableInstances.get(rs.getInt("room_id")).containsKey(dto.getSceneryId()))
-							mineableInstances.get(rs.getInt("room_id")).put(dto.getSceneryId(), new HashSet<>());
+						if (!mineableInstances.get(rs.getInt("floor")).containsKey(dto.getSceneryId()))
+							mineableInstances.get(rs.getInt("floor")).put(dto.getSceneryId(), new HashSet<>());
 						
-						mineableInstances.get(rs.getInt("room_id")).get(dto.getSceneryId()).add(rs.getInt("tile_id"));
+						mineableInstances.get(rs.getInt("floor")).get(dto.getSceneryId()).add(rs.getInt("tile_id"));
 					}
 				}
 			} catch (SQLException e) {

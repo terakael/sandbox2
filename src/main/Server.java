@@ -41,40 +41,101 @@ public class Server {
 			resourceServer.start();
 			server.start();
 			
-			GroundTextureDao.cacheDistinctRoomIds(); // what constitutes a room is having at least one ground texture: no ground textures, the room doesnt exist.
-			GroundTextureDao.cacheSegments();
-			PathFinder.get();// init the path nodes and relationships
+			System.out.println("caching distinct roomIds");
+			GroundTextureDao.cacheDistinctFloors(); // what constitutes a room is having at least one ground texture: no ground textures, the room doesnt exist.
+			
+			System.out.println("caching ground texture instances");
+			GroundTextureDao.cacheTileIdsByGroundTextureId();
+			
+			System.out.println("caching scenery");
 			SceneryDao.setupCaches();
+			
+			System.out.println("initializing pathfinder");
+			PathFinder.get();// init the path nodes and relationships
+			
+			System.out.println("initializing examine map");
 			ExamineResponse.initializeExamineMap();// all the scenery examine
+			
+			System.out.println("caching mineables");
 			MineableDao.setupCaches();// mineable tiles, mineable objects
+			
+			System.out.println("caching items");
 			ItemDao.setupCaches();
+			
+			System.out.println("caching ground textures");
 			GroundTextureDao.cacheTextures();
+			
+			System.out.println("caching npcs");
 			NPCManager.get().loadNpcs();
+			
+			System.out.println("caching npc messages");
 			NpcMessageDao.setupCaches();
+			
+			System.out.println("caching consumables");
 			ConsumableDao.cacheConsumables();
+			
+			System.out.println("caching consumable effects");
 			ConsumableDao.cacheConsumableEffects();
+			
+			System.out.println("caching cookables");
 			CookableDao.cacheCookables();
+			
+			System.out.println("caching catchables");
 			CatchableDao.cacheCatchables();
+			
+			System.out.println("caching item -> item usage");
 			UseItemOnItemDao.cacheData();
+			
+			System.out.println("caching equipment");
 			EquipmentDao.setupCaches();
+			
+			System.out.println("caching brewables");
 			BrewableDao.cacheBrewables();
+			
+			System.out.println("caching shops");
 			ShopDao.setupCaches();
+			
+			System.out.println("setting up shops");
 			ShopManager.setupShops();
+			
+			System.out.println("caching respawnables");
 			RespawnableDao.setupCaches();// ground items that respawn once picked up
+			
+			System.out.println("initializing ground item manager");
 			GroundItemManager.initialize();
+			
+			System.out.println("caching ladder connections");
 			LadderConnectionDao.setupCaches();
+			
+			System.out.println("caching pickables");
 			PickableDao.setupCaches();
+			
+			System.out.println("caching castables");
 			CastableDao.setupCaches();
+			
+			System.out.println("caching teleportables");
 			TeleportableDao.setupCaches();
+			
+			System.out.println("caching fishables");
 			FishableDao.setupCaches();
-			try {
-				for (int roomId : GroundTextureDao.getDistinctRoomIds())
-					MinimapGenerator.createImage(roomId);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			
+			final boolean generateMinimaps = false;
+			if (generateMinimaps) {
+				try {
+					GroundTextureDao.cacheAllTexturesForMinimapGeneration();
+					for (int floor : GroundTextureDao.getDistinctFloors()) { // slow
+						System.out.println("generating minimap for floor" + floor);
+						MinimapGenerator.createImage(floor);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 			
+			System.out.println("loading minimaps");
+			MinimapGenerator.loadMinimaps();
+			
+			System.out.println("caching client resources");
 			// should be last after all the other caches are set up
 			CachedResourcesResponse.get();// loads/caches all the sprite maps, scenery etc and gets sent on client load
 			
@@ -84,6 +145,12 @@ public class Server {
 			System.out.println("press any key to quit");
 			new Scanner(System.in).nextLine();
 		} catch (DeploymentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {

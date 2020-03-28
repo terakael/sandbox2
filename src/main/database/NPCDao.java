@@ -6,29 +6,29 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import lombok.Getter;
-import main.types.ItemAttributes;
 import main.types.NpcAttributes;
 
 public class NPCDao {
-	@Getter private static HashMap<Integer, ArrayList<NPCDto>> npcInstanceList = null; // roomId, npcList
-	@Getter private static ArrayList<NPCDto> npcList = null;
-	private static HashMap<Integer, ArrayList<NpcDropDto>> npcDrops = null;
+	@Getter private static Map<Integer, List<NPCDto>> npcInstanceList = null; // floor, npcList
+	@Getter private static List<NPCDto> npcList = null;
+	private static Map<Integer, List<NpcDropDto>> npcDrops = null;
 	
 	public static void setupCaches() {
 		npcList = getNpcs();
 		npcInstanceList = new HashMap<>();
-		for (int roomId : GroundTextureDao.getDistinctRoomIds())
-			npcInstanceList.put(roomId, getAllNpcsByRoom(roomId));
+		for (int floor : GroundTextureDao.getDistinctFloors())
+			npcInstanceList.put(floor, getAllNpcsByFloor(floor));
 		cacheNpcDrops();
 	}
 	
-	private static ArrayList<NPCDto> getNpcs() {
+	private static List<NPCDto> getNpcs() {
 		final String query = "select * from npcs";
 		
-		ArrayList<NPCDto> npcList = new ArrayList<>();
+		List<NPCDto> npcList = new ArrayList<>();
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -51,7 +51,7 @@ public class NPCDao {
 						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("hp"), 0),
 						rs.getInt("leftclick_option"),
 						rs.getInt("other_options"),
-						0,// roomId (not used in this map as this is not the instance list, just all npc types)
+						0,// floor (not used in this map as this is not the instance list, just all npc types)
 						rs.getInt("acc"),
 						rs.getInt("str"),
 						rs.getInt("def"),
@@ -75,19 +75,19 @@ public class NPCDao {
 		
 	}
 	
-	public static ArrayList<NPCDto> getAllNpcsByRoom(int roomId) {
+	public static List<NPCDto> getAllNpcsByFloor(int floor) {
 		final String query = 
 			"select id, name, up_id, down_id, left_id, right_id, attack_id, scale_x, scale_y, acc, str, def, agil, hp, magic, acc_bonus, str_bonus, def_bonus, agil_bonus, attack_speed, tile_id, leftclick_option, other_options, roam_radius, attributes, respawn_ticks from npcs" + 
 			" inner join room_npcs on room_npcs.npc_id = id" + 
-			" where room_id=?";
+			" where floor=?";
 		
-		ArrayList<NPCDto> npcList = new ArrayList<>();
+		List<NPCDto> npcList = new ArrayList<>();
 		
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
-			ps.setInt(1, roomId);
+			ps.setInt(1, floor);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
 					npcList.add(new NPCDto(
@@ -105,7 +105,7 @@ public class NPCDao {
 						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("hp"), 0),
 						rs.getInt("leftclick_option"),
 						rs.getInt("other_options"),
-						roomId,
+						floor,
 						rs.getInt("acc"),
 						rs.getInt("str"),
 						rs.getInt("def"),
@@ -128,9 +128,9 @@ public class NPCDao {
 		return npcList;
 	}
 	
-	public static HashMap<Integer, String> getExamineMap() {
+	public static Map<Integer, String> getExamineMap() {
 		final String query = "select id, description from npcs";
-		HashMap<Integer, String> examineMap = new HashMap<>();
+		Map<Integer, String> examineMap = new HashMap<>();
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -147,50 +147,16 @@ public class NPCDao {
 		return examineMap;
 	}
 	
-	public static int getNpcIdFromInstanceId(int roomId, int instanceId) {
-		if (!npcInstanceList.containsKey(roomId))
+	public static int getNpcIdFromInstanceId(int floor, int instanceId) {
+		if (!npcInstanceList.containsKey(floor))
 			return -1;
 		
-		for (NPCDto dto : npcInstanceList.get(roomId)) {
+		for (NPCDto dto : npcInstanceList.get(floor)) {
 			if (dto.getTileId() == instanceId)
 				return dto.getId();
 		}
 		return -1;
 	}
-	
-//	public static HashSet<Integer> getNpcInstanceIds() {
-//		final String query = "select tile_id from room_npcs";
-//		
-//		HashSet<Integer> set = new HashSet<>();
-//		try (
-//			Connection connection = DbConnection.get();
-//			PreparedStatement ps = connection.prepareStatement(query);
-//		) {
-//			try (ResultSet rs = ps.executeQuery()) {
-//				while (rs.next())
-//					set.add(rs.getInt("tile_id"));
-//			}
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		}
-//		
-//		return set;
-//	}
-	
-//	public static void addNpcInstance(int roomId, int npcId, int instanceId) {
-//		final String query = "insert into room_npcs values (?,?,?)";
-//		try (
-//			Connection connection = DbConnection.get();
-//			PreparedStatement ps = connection.prepareStatement(query)
-//		) {
-//			ps.setInt(1, roomId);
-//			ps.setInt(2, npcId);
-//			ps.setInt(3, instanceId);
-//			ps.executeUpdate();
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		}
-//	}
 	
 	public static void cacheNpcDrops() {
 		final String query = "select npc_id, item_id, count, rate from npc_drops";
@@ -212,7 +178,7 @@ public class NPCDao {
 		}
 	}
 	
-	public static ArrayList<NpcDropDto> getDropsByNpcId(int npcId) {
+	public static List<NpcDropDto> getDropsByNpcId(int npcId) {
 		if (npcDrops.containsKey(npcId))
 			return npcDrops.get(npcId);
 		return new ArrayList<>();

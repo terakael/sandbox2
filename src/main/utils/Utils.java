@@ -1,10 +1,10 @@
 package main.utils;
 
 import main.processing.PathFinder;
-import main.processing.Player;
-import main.processing.WorldProcessor;
 
 public class Utils {
+	public static final int SEGMENT_SIZE = 5; // a segment size is 5x5 tiles
+	
 	public static String getFriendlyCount(int count) {
 		final int THOUSAND = 1000;
 		final int HUNDRED_THOUSAND = THOUSAND * 100;

@@ -232,7 +232,7 @@ public class PlayerStorageDao {
 	}
 	
 	public static void clearPlayerInventoryExceptFirstThreeSlots(int playerId) {
-		final String query = "update player_storage set item_id=0 where player_id=? and slot >= 3";
+		final String query = "update player_storage set item_id=0 where player_id=? and slot >= 3 and storage_id=1";
 		
 		try (
 			Connection connection = DbConnection.get();

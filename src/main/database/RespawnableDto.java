@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class RespawnableDto {
-	private int roomId;
+	private int floor;
 	private int tileId;
 	private int itemId;
 	private int count;

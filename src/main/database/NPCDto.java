@@ -20,7 +20,7 @@ public class NPCDto {
 	private int cmb;
 	private int leftclickOption;
 	private int otherOptions;
-	private int roomId;
+	private int floor;
 	
 	// below are data that doesn't get sent to client as the client doesn't need to see these
 	private transient int acc;

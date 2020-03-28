@@ -20,13 +20,13 @@ public class ResponseMaps {
 		clientOnlyResponses.get(player).add(response);
 	}
 	
-	public void addLocalResponse(Integer roomId, Integer tileId, Response response) {
-		if (!localResponses.containsKey(roomId))
-			localResponses.put(roomId, new HashMap<>());
+	public void addLocalResponse(Integer floor, Integer tileId, Response response) {
+		if (!localResponses.containsKey(floor))
+			localResponses.put(floor, new HashMap<>());
 		
-		if (!localResponses.get(roomId).containsKey(tileId))
-			localResponses.get(roomId).put(tileId, new ArrayList<>());
-		localResponses.get(roomId).get(tileId).add(response);
+		if (!localResponses.get(floor).containsKey(tileId))
+			localResponses.get(floor).put(tileId, new ArrayList<>());
+		localResponses.get(floor).get(tileId).add(response);
 	}
 	
 	public void addBroadcastResponse(Response response, Player playerToExclude) {

@@ -52,7 +52,7 @@ public class Fire extends Scenery {
 				responseMaps.addClientOnlyResponse(player, startCookingResponse);
 				
 				ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(cookable.getCookedItemId()).getSpriteFrameId());
-				responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), actionBubble);
+				responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
 
 				player.setSavedRequest(request);
 				player.setState(PlayerState.cooking);

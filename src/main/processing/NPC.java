@@ -28,8 +28,6 @@ import main.utils.RandomUtil;
 public class NPC extends Attackable {
 	@Getter private NPCDto dto;
 	
-	private Stack<Integer> path = new Stack<>();
-	
 	private final transient int maxTickCount = 15;
 	private final transient int minTickCount = 5;
 	private transient int tickCounter = maxTickCount;
@@ -43,7 +41,7 @@ public class NPC extends Attackable {
 	public NPC(NPCDto dto) {
 		this.dto = dto;
 		tileId = dto.getTileId();
-		roomId = dto.getRoomId();
+		floor = dto.getFloor();
 		
 		HashMap<Stats, Integer> stats = new HashMap<>();
 		stats.put(Stats.STRENGTH, dto.getStr());
@@ -89,7 +87,7 @@ public class NPC extends Attackable {
 		if ((dto.getAttributes() & NpcAttributes.AGGRESSIVE.getValue()) == NpcAttributes.AGGRESSIVE.getValue() && !isInCombat()) {
 			// aggressive monster; look for targets
 			if (--huntTimer <= 0) {
-				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(roomId, tileId, dto.getRoamRadius()/2);
+				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(floor, tileId, dto.getRoamRadius()/2);
 				
 				if (dto.getId() == 18 || dto.getId() == 22) { // goblins won't attack anyone with the goblin stank buff
 					closePlayers = closePlayers.stream().filter(player -> !player.hasBuff(Buffs.GOBLIN_STANK)).collect(Collectors.toList());
@@ -114,13 +112,13 @@ public class NPC extends Attackable {
 		
 		moving = false;
 		if (!path.isEmpty()) {
-			tileId = path.pop();
+			popPath();
 			moving = true;
 			
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 			updateResponse.setInstanceId(getInstanceId());
 			updateResponse.setTileId(tileId);
-			responseMaps.addLocalResponse(roomId, tileId, updateResponse);
+			responseMaps.addLocalResponse(floor, tileId, updateResponse);
 		}
 		
 		if (target == null) {
@@ -129,25 +127,25 @@ public class NPC extends Attackable {
 				tickCounter = r.nextInt((maxTickCount - minTickCount) + 1) + minTickCount;
 				
 				int destTile = PathFinder.chooseRandomTileIdInRadius(dto.getTileId(), dto.getRoamRadius());
-				path = PathFinder.findPath(roomId, tileId, destTile, true, dto.getTileId(), dto.getRoamRadius());
+				path = PathFinder.findPath(floor, tileId, destTile, true, dto.getTileId(), dto.getRoamRadius());
 			}
 		} else {
 			// chase the target if not next to it
-			if (!PathFinder.isNextTo(roomId, tileId, target.tileId)) {
+			if (!PathFinder.isNextTo(floor, tileId, target.tileId)) {
 				if (PathFinder.tileWithinRadius(target.tileId, dto.getTileId(), dto.getRoamRadius() + 2)) {
-					path = PathFinder.findPath(roomId, tileId, target.tileId, true);
+					path = PathFinder.findPath(floor, tileId, target.tileId, true);
 				} else {
 					int retreatTileId = PathFinder.findRetreatTile(target.tileId, tileId, dto.getTileId(), dto.getRoamRadius());
 					System.out.println("retreating to tile " + retreatTileId + "(retreating from " + target.tileId + ", currently at " + tileId + ", anchor=" + dto.getTileId() + ", radius = " + dto.getRoamRadius() + ")");
 					
-					path = PathFinder.findPath(roomId, tileId, retreatTileId, true);
+					path = PathFinder.findPath(floor, tileId, retreatTileId, true);
 					target = null;
 				}
 			} else {
 				if (target.isInCombat()) {
 					if (!FightManager.fightingWith(this, target)) {
 						int retreatTileId = PathFinder.findRetreatTile(target.tileId, tileId, dto.getTileId(), dto.getRoamRadius());						
-						path = PathFinder.findPath(roomId, tileId, retreatTileId, true);
+						path = PathFinder.findPath(floor, tileId, retreatTileId, true);
 						target = null;
 					}
 				} else {
@@ -197,7 +195,7 @@ public class NPC extends Attackable {
 						if (PlayerStorageDao.itemExistsInPlayerStorage(playerId, dto.getItemId()))
 							return false;
 						
-						if (GroundItemManager.itemIsOnGround(roomId, playerId, dto.getItemId()))
+						if (GroundItemManager.itemIsOnGround(floor, playerId, dto.getItemId()))
 							return false;
 					}
 					return true;
@@ -206,7 +204,7 @@ public class NPC extends Attackable {
 		
 		for (NpcDropDto dto : potentialDrops) {
 			if (RandomUtil.getRandom(0, dto.getRate()) == 0) {
-				GroundItemManager.add(roomId, ((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount(), ItemDao.getMaxCharges(dto.getItemId()));
+				GroundItemManager.add(floor, ((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount(), ItemDao.getMaxCharges(dto.getItemId()));
 			}
 		}
 	}
@@ -227,7 +225,7 @@ public class NPC extends Attackable {
 		updateResponse.setDamage(damage);
 		updateResponse.setDamageType(type.getValue());
 		updateResponse.setHp(currentHp);
-		responseMaps.addLocalResponse(roomId, tileId, updateResponse);
+		responseMaps.addLocalResponse(floor, tileId, updateResponse);
 	}
 	
 	@Override
@@ -259,7 +257,7 @@ public class NPC extends Attackable {
 			updateResponse.setHp(currentHp);
 			updateResponse.setTileId(tileId);
 			updateResponse.setSnapToTile(true);
-			responseMaps.addLocalResponse(roomId, tileId, updateResponse);
+			responseMaps.addLocalResponse(floor, tileId, updateResponse);
 		}
 	}
 	

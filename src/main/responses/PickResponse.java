@@ -22,8 +22,8 @@ public class PickResponse extends Response {
 			return;
 		
 		PickRequest request = (PickRequest)req;
-		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), request.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), request.getTileId(), false));
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;
@@ -35,7 +35,7 @@ public class PickResponse extends Response {
 				return;
 			}
 			
-			if (FlowerManager.flowerIsDepleted(request.getTileId())) {
+			if (FlowerManager.flowerIsDepleted(player.getFloor(), request.getTileId())) {
 				setRecoAndResponseText(1, "you need to wait until it grows back.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
@@ -54,11 +54,11 @@ public class PickResponse extends Response {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), freeSlotId, pickable.getItemId(), 1, ItemDao.getMaxCharges(pickable.getItemId()));
 			new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 			
-			FlowerManager.addDepletedFlower(request.getTileId(), pickable.getRespawnTicks());
+			FlowerManager.addDepletedFlower(player.getFloor(), request.getTileId(), pickable.getRespawnTicks());
 			
 			FlowerDepleteResponse flowerDepleteResponse = new FlowerDepleteResponse();
 			flowerDepleteResponse.setTileId(request.getTileId());
-			responseMaps.addBroadcastResponse(flowerDepleteResponse);
+			responseMaps.addLocalResponse(player.getFloor(), request.getTileId(), flowerDepleteResponse);
 		}
 	}
 

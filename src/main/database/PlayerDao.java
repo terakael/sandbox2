@@ -12,7 +12,7 @@ public class PlayerDao {
 	private PlayerDao() {}
 		
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
-		final String query = "select id, name, password, tile_id, room_id, attack_style_id from player where name = ? and password = ?";
+		final String query = "select id, name, password, tile_id, floor, attack_style_id from player where name = ? and password = ?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -27,7 +27,7 @@ public class PlayerDao {
 							rs.getString("name"), 
 							rs.getString("password"), 
 							rs.getInt("tile_id"),
-							rs.getInt("room_id"),
+							rs.getInt("floor"),
 							StatsDao.getCurrentHpByPlayerId(rs.getInt("id")), 
 							StatsDao.getMaxHpByPlayerId(rs.getInt("id")), 
 							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
@@ -97,7 +97,7 @@ public class PlayerDao {
 	
 	public static List<PlayerDto> getAllPlayers() {
 		List<PlayerDto> playerList = new ArrayList<>();
-		final String query = "select id, name, tile_id, room_id, attack_style_id from player inner join player_session on player_session.player_id = player.id";
+		final String query = "select id, name, tile_id, floor, attack_style_id from player inner join player_session on player_session.player_id = player.id";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
@@ -110,7 +110,7 @@ public class PlayerDao {
 						rs.getString("name"), 
 						null, 
 						rs.getInt("tile_id"),
-						rs.getInt("room_id"), 
+						rs.getInt("floor"), 
 						StatsDao.getCurrentHpByPlayerId(playerId), 
 						StatsDao.getMaxHpByPlayerId(playerId), 
 						StatsDao.getCombatLevelByPlayerId(playerId),
@@ -141,13 +141,13 @@ public class PlayerDao {
 		}
 	}
 	
-	public static void updateRoomId(int id, int roomId) {
-		final String query = "update player set room_id=? where id=?";
+	public static void updateFloor(int id, int floor) {
+		final String query = "update player set floor=? where id=?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
 		) {
-			ps.setInt(1, roomId);
+			ps.setInt(1, floor);
 			ps.setInt(2, id);
 			
 			ps.executeUpdate();

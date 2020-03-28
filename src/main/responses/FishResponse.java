@@ -27,8 +27,8 @@ public class FishResponse extends Response {
 		
 		FishRequest request = (FishRequest)req;
 		
-		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), request.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), request.getTileId(), false));
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;
@@ -58,7 +58,7 @@ public class FishResponse extends Response {
 			
 			// the action bubble will be the fish you're trying to catch
 			ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(fishable.getItemId()).getSpriteFrameId());
-			responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), actionBubble);
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
 			
 			player.setState(PlayerState.fishing);
 			player.setSavedRequest(req);

@@ -74,7 +74,7 @@ public class EquipResponse extends Response {
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
 		playerUpdate.setEquipAnimations(equipAnimations);
-		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), playerUpdate);
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), playerUpdate);
 	}
 	
 	private boolean playerHasRequirements(Player player, EquipmentDto equip, ResponseMaps responseMaps) {

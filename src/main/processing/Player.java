@@ -72,7 +72,6 @@ public class Player extends Attackable {
 	
 	@Getter private PlayerDto dto;
 	@Getter private Session session;
-	@Setter private Stack<Integer> path = new Stack<>();// stack of tile_ids
 	@Getter private PlayerState state = PlayerState.idle;
 	@Setter private Request savedRequest = null;
 	@Setter private int tickCounter = 0;
@@ -84,7 +83,8 @@ public class Player extends Attackable {
 	@Getter @Setter private Set<Integer> inRangeNpcs = new HashSet<>();
 	@Getter @Setter private Set<Integer> inRangePlayers = new HashSet<>();
 	@Getter @Setter private Map<Integer, List<Integer>> inRangeGroundItems = new HashMap<>();
-	@Getter @Setter private Map<Integer, Set<Integer>> loadedSegments = new HashMap<>(); // roomId, <segments>
+	@Getter @Setter private Set<Integer> localTiles = new HashSet<>();
+	@Getter @Setter private int loadedFloor = 0;
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
@@ -98,7 +98,7 @@ public class Player extends Attackable {
 		if (dto != null) {
 			this.dto = dto;
 			tileId = dto.getTileId();
-			roomId = dto.getRoomId();
+			floor = dto.getFloor();
 			
 			refreshStats();
 			refreshBoosts();
@@ -179,13 +179,13 @@ public class Player extends Attackable {
 		switch (state) {
 		case walking: {
 			// if the player path stack isn't empty, then pop one off and create a player_updates response entry.
-			if (!path.isEmpty()) {				
-				setTileId(path.pop());
+			if (!path.isEmpty()) {	
+				popPath();
 
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTileId(getTileId());
-				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdateResponse);
+				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
 				
 				if (path.isEmpty()) {
 					if (savedRequest == null) // if not null then reprocess the saved request; this is a walkandaction.
@@ -201,14 +201,14 @@ public class Player extends Attackable {
 		}
 		case following: {
 			if (!path.isEmpty()) {
-				setTileId(path.pop());
+				popPath();
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(getId());
 				playerUpdateResponse.setTileId(getTileId());
-				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdateResponse);
+				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
 			}
 			
-			if (roomId != target.getRoomId())// if the target goes down a ladder or something then stop following
+			if (floor != target.getFloor())// if the target goes down a ladder or something then stop following
 				target = null;
 
 			// maybe the target player logged out
@@ -217,8 +217,8 @@ public class Player extends Attackable {
 				break;
 			}
 			
-			if (!PathFinder.isNextTo(roomId, tileId, target.getTileId())) {
-				path = PathFinder.findPath(roomId, tileId, target.getTileId(), false);
+			if (!PathFinder.isNextTo(floor, tileId, target.getTileId())) {
+				path = PathFinder.findPath(floor, tileId, target.getTileId(), false);
 			}
 			break;
 		}
@@ -229,8 +229,8 @@ public class Player extends Attackable {
 				break;
 			}
 			
-			if (!PathFinder.isNextTo(roomId, tileId, target.getTileId())) {
-				path = PathFinder.findPath(roomId, tileId, target.getTileId(), false);
+			if (!PathFinder.isNextTo(floor, tileId, target.getTileId())) {
+				path = PathFinder.findPath(floor, tileId, target.getTileId(), false);
 			} else {
 				// start the fight
 				if (savedRequest != null) {
@@ -246,11 +246,11 @@ public class Player extends Attackable {
 			
 			// similar to walking, but need to recalculate path each tick due to moving target
 			if (!path.isEmpty()) {
-				setTileId(path.pop());
+				popPath();
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTileId(getTileId());
-				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdateResponse);
+				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
 			}
 
 			break;
@@ -349,7 +349,6 @@ public class Player extends Attackable {
 				PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 				playerUpdate.setId(getId());
 				playerUpdate.setTileId(getTileId());
-				playerUpdate.setRoomId(getRoomId());
 				playerUpdate.setSnapToTile(true);
 				playerUpdate.setCurrentHp(currentHp);
 				playerUpdate.setMaxHp(currentHp);
@@ -358,7 +357,7 @@ public class Player extends Attackable {
 				
 				// the reason this is local is so the other players know the player respawned
 				// (they also receive the player_in_range response automatically but if they're around the spawn point it will be missing respawn data)
-				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdate);
+				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdate);
 				
 				state = PlayerState.idle;
 			}
@@ -419,9 +418,9 @@ public class Player extends Attackable {
 		PlayerDao.updateTileId(dto.getId(), tileId);
 	}
 	
-	public void setRoomId(int roomId) {
-		this.roomId = roomId;
-		PlayerDao.updateRoomId(dto.getId(), roomId);
+	public void setFloor(int floor) {
+		this.floor = floor;
+		PlayerDao.updateFloor(dto.getId(), floor);
 	}
 	
 	public int getTileId() {
@@ -459,15 +458,15 @@ public class Player extends Attackable {
 				if (killer instanceof Player && ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.TRADEABLE)) {
 					// if it's a tradeable unique, the killer should only see it if they don't already have one.
 					if (ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.UNIQUE)) {
-						if (PlayerStorageDao.itemExistsInPlayerStorage(((Player)killer).getId(), dto.getItemId()) || GroundItemManager.itemIsOnGround(roomId, ((Player)killer).getId(), dto.getItemId())) {
+						if (PlayerStorageDao.itemExistsInPlayerStorage(((Player)killer).getId(), dto.getItemId()) || GroundItemManager.itemIsOnGround(floor, ((Player)killer).getId(), dto.getItemId())) {
 							continue;
 						}
 					}
 					
-					GroundItemManager.add(roomId, ((Player)killer).getId(), dto.getItemId(), tileId, stack, charges);
+					GroundItemManager.add(floor, ((Player)killer).getId(), dto.getItemId(), tileId, stack, charges);
 				} else {
 					// for now, untradeables will drop on the ground for the owner to pick back up
-					GroundItemManager.add(roomId, getId(), dto.getItemId(), tileId, stack, charges);
+					GroundItemManager.add(floor, getId(), dto.getItemId(), tileId, stack, charges);
 				}
 			}
 		}
@@ -477,7 +476,7 @@ public class Player extends Attackable {
 		currentHp = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId());
 		
 		// let everyone around the dead player know they died 
-		responseMaps.addLocalResponse(getRoomId(), getTileId(), new DeathResponse(dto.getId()));
+		responseMaps.addLocalResponse(getFloor(), getTileId(), new DeathResponse(dto.getId()));
 		
 		// respawn at the tyrotown teleport spot
 		TeleportableDto respawnPoint = TeleportableDao.getTeleportableByItemId(Items.TYROTOWN_TELEPORT_RUNE.getValue());
@@ -485,11 +484,11 @@ public class Player extends Attackable {
 		// if the player's spawn point is not local to where they died, they won't receive the local death response.
 		// it's not ideal to send an additional response but we have to set the respawn point immediately
 		// otherwise the player can just disconnect during the death sequence then relogin in the same spot they died (with full hp)
-		if (respawnPoint.getRoomId() != getRoomId() || !Utils.areTileIdsWithinRadius(respawnPoint.getTileId(), getTileId(), 15))
+		if (respawnPoint.getFloor() != getFloor() || !Utils.areTileIdsWithinRadius(respawnPoint.getTileId(), getTileId(), 15))
 			responseMaps.addClientOnlyResponse(this, new DeathResponse(dto.getId()));
 				
 		setTileId(respawnPoint.getTileId());
-		setRoomId(respawnPoint.getRoomId());
+		setFloor(respawnPoint.getFloor());
 
 		state = PlayerState.dead;
 		tickCounter = 2;
@@ -601,7 +600,7 @@ public class Player extends Attackable {
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(getId());
 		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(getId()));
-		responseMaps.addLocalResponse(roomId, tileId, playerUpdate);
+		responseMaps.addLocalResponse(floor, tileId, playerUpdate);
 	}
 	
 	@Override
@@ -675,7 +674,7 @@ public class Player extends Attackable {
 //				PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 //				playerUpdate.setId(getId());
 //				playerUpdate.setEquipAnimations(AnimationDao.getEquipmentAnimationsByPlayerId(getId()));
-//				responseMaps.addLocalResponse(getRoomId(), getTileId(), playerUpdate);
+//				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdate);
 				
 				new EquipResponse().process(null, WorldProcessor.getPlayerById(getId()), responseMaps);
 			}

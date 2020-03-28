@@ -39,7 +39,7 @@ public class FightManager {
 		
 		public boolean process(ResponseMaps responseMaps) {
 			// if the players aren't on the same tile then they are still closing in on eachother
-			if (!PathFinder.isNextTo(fighter1.getRoomId(), fighter1.getTileId(), fighter2.getTileId())) {
+			if (!PathFinder.isNextTo(fighter1.getFloor(), fighter1.getTileId(), fighter2.getTileId())) {
 				return false;
 			}
 			
@@ -149,7 +149,7 @@ public class FightManager {
 						resp.setMonsterId(((NPC)fight.getFighter2()).getInstanceId());
 						resp.setPlayerTileId(fight.getFighter1().getTileId());
 						resp.setMonsterTileId(fight.getFighter2().getTileId());
-						responseMaps.addLocalResponse(participant.getRoomId(), participant.getTileId(), resp);
+						responseMaps.addLocalResponse(participant.getFloor(), participant.getTileId(), resp);
 					} else {
 						fight.getFighter2().setTarget(null);
 						PvpEndResponse resp = new PvpEndResponse();
@@ -157,7 +157,7 @@ public class FightManager {
 						resp.setPlayer2Id(((Player)fight.getFighter2()).getId());
 						resp.setPlayer1TileId(fight.getFighter1().getTileId());
 						resp.setPlayer2TileId(fight.getFighter2().getTileId());
-						responseMaps.addLocalResponse(participant.getRoomId(), participant.getTileId(), resp);
+						responseMaps.addLocalResponse(participant.getFloor(), participant.getTileId(), resp);
 					}
 				}
 				fights.remove(fight);

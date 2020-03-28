@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Stack;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,12 +16,13 @@ import main.utils.RandomUtil;
 public abstract class Attackable {
 	private static Random rand = new Random();
 	
+	@Setter protected Stack<Integer> path = new Stack<>();// stack of tile_ids
 	@Setter @Getter protected HashMap<Stats, Integer> stats = new HashMap<>();
 	@Setter @Getter protected HashMap<Stats, Integer> bonuses = new HashMap<>();
 	@Setter private HashMap<Stats, Integer> boosts = null;
 	@Setter @Getter protected int currentHp;
 	@Setter @Getter protected int tileId;
-	@Setter @Getter protected int roomId;
+	@Setter @Getter protected int floor;
 	@Getter protected Attackable target = null;
 	@Getter protected Attackable lastTarget = null;// record the last person to attack in the case we die of poison (and therefore have no current target)
 	
@@ -42,6 +44,11 @@ public abstract class Attackable {
 	public abstract void onHit(int damage, DamageTypes type, ResponseMaps responseMaps);
 	public abstract void setStatsAndBonuses();
 	public abstract int getExp();
+	
+	protected void popPath() {
+		int nextTile = path.pop();
+		setTileId(nextTile);
+	}
 	
 	public boolean readyToHit() {
 		if (cooldown == 0)

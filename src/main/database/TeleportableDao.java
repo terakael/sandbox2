@@ -10,7 +10,7 @@ public class TeleportableDao {
 private static HashMap<Integer, TeleportableDto> teleportables; // itemId, dto
 	
 	public static void setupCaches() {
-		final String query = "select item_id, room_id, tile_id from teleportable";
+		final String query = "select item_id, floor, tile_id from teleportable";
 		
 		teleportables = new HashMap<>();
 		try (
@@ -19,7 +19,7 @@ private static HashMap<Integer, TeleportableDto> teleportables; // itemId, dto
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
-					teleportables.put(rs.getInt("item_id"), new TeleportableDto(rs.getInt("item_id"), rs.getInt("room_id"), rs.getInt("tile_id")));
+					teleportables.put(rs.getInt("item_id"), new TeleportableDto(rs.getInt("item_id"), rs.getInt("floor"), rs.getInt("tile_id")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

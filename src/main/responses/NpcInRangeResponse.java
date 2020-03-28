@@ -10,6 +10,7 @@ import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.Player;
 import main.requests.Request;
+import main.utils.Utils;
 
 @Setter
 public class NpcInRangeResponse extends Response {
@@ -26,10 +27,12 @@ public class NpcInRangeResponse extends Response {
 		setAction("npc_in_range");
 	}
 
-	public void addInstances(int roomId, Set<Integer> instanceIds) {
+	public void addInstances(int floor, Set<Integer> instanceIds) {
 		for (int instanceId : instanceIds) {
-			NPC npc = NPCManager.get().getNpcByInstanceId(roomId, instanceId);
-			npcs.add(new NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId(), npc.getCurrentHp()));
+			NPC npc = NPCManager.get().getNpcByInstanceId(floor, instanceId);
+			
+			if (npc != null)
+				npcs.add(new NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId(), npc.getCurrentHp()));
 		}
 	}
 	

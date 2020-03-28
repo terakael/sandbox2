@@ -30,7 +30,6 @@ public class PlayerInRangeResponse extends Response {
 			playerUpdate.setId(localPlayer.getId());
 			playerUpdate.setName(localPlayer.getDto().getName());
 			playerUpdate.setTileId(localPlayer.getTileId());
-			playerUpdate.setRoomId(localPlayer.getRoomId());
 			playerUpdate.setCurrentHp(StatsDao.getCurrentHpByPlayerId(localPlayer.getId()));
 			playerUpdate.setMaxHp(localPlayer.getStats().get(Stats.HITPOINTS));
 			playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(localPlayer.getId()));

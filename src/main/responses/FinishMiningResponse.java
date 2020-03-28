@@ -32,7 +32,7 @@ public class FinishMiningResponse extends Response {
 			return;
 		
 		MineRequest request = (MineRequest)req;
-		MineableDto mineable = MineableDao.getMineableDtoByTileId(player.getRoomId(), request.getTileId());
+		MineableDto mineable = MineableDao.getMineableDtoByTileId(player.getFloor(), request.getTileId());
 		if (mineable == null) {
 			MineResponse mineResponse = new MineResponse();
 			mineResponse.setRecoAndResponseText(0, "you can't mine that.");
@@ -112,11 +112,11 @@ public class FinishMiningResponse extends Response {
 				
 				int depletionChance = Math.max(20 - ((miningLevel - requirementLevel) / 2), requirementLevel / 10);
 				if (RandomUtil.getRandom(0,  100) < depletionChance) {
-					RockManager.addDepletedRock(tileId, mineable.getRespawnTicks());
+					RockManager.addDepletedRock(player.getFloor(), tileId, mineable.getRespawnTicks());
 					
 					RockDepleteResponse rockDepleteResponse = new RockDepleteResponse();
 					rockDepleteResponse.setTileId(tileId);
-					responseMaps.addBroadcastResponse(rockDepleteResponse);
+					responseMaps.addLocalResponse(player.getFloor(), tileId, rockDepleteResponse);
 				}
 			}
 		} else {

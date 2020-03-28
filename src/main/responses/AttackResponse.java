@@ -25,7 +25,7 @@ public class AttackResponse extends Response {
 		}
 		
 		AttackRequest request = (AttackRequest)req;
-		NPC npc = NPCManager.get().getNpcByInstanceId(player.getRoomId(), request.getObjectId());// request tileid is the instnace id
+		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());// request tileid is the instnace id
 		if (npc == null || !NPCDao.npcHasAttribute(npc.getId(), NpcAttributes.ATTACKABLE)) {
 			setRecoAndResponseText(0, "you can't attack that.");
 			responseMaps.addClientOnlyResponse(player, this);
@@ -38,7 +38,7 @@ public class AttackResponse extends Response {
 			return;
 		}
 		
-		if (!PathFinder.isNextTo(player.getRoomId(), npc.getTileId(), player.getTileId())) {
+		if (!PathFinder.isNextTo(player.getFloor(), npc.getTileId(), player.getTileId())) {
 			player.setTarget(npc);	
 			player.setSavedRequest(request);
 		} else {

@@ -38,15 +38,15 @@ public class MineResponse extends Response {
 		MineRequest request = (MineRequest)req;
 		
 		// does the tile have something mineable on it?
-		MineableDto mineable = MineableDao.getMineableDtoByTileId(player.getRoomId(), request.getTileId());
+		MineableDto mineable = MineableDao.getMineableDtoByTileId(player.getFloor(), request.getTileId());
 		if (mineable == null) {
 			// this can technically happen when the player clicks a ladder, then right-clicks a rock
 			// then finally selects "mine" after they have switched rooms.  Do not do anything in this case.
 			return;
 		}
 		
-		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), request.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), request.getTileId(), false));
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;
@@ -63,7 +63,7 @@ public class MineResponse extends Response {
 			}
 			
 			// does the rock currently have ore in it?
-			if (RockManager.rockIsDepleted(request.getTileId())) {
+			if (RockManager.rockIsDepleted(player.getFloor(), request.getTileId())) {
 				setRecoAndResponseText(0, "the rock currently contains no ore.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;

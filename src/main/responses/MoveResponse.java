@@ -38,9 +38,9 @@ public class MoveResponse extends Response {
 			int destX = moveReq.getX() / 32;
 			int destY = moveReq.getY() / 32;
 			
-			int destTile = destX + (destY * 250);
+			int destTile = destX + (destY * 25000);
 			
-			Stack<Integer> ints = PathFinder.findPath(player.getRoomId(), player.getTileId(), destTile, true);
+			Stack<Integer> ints = PathFinder.findPath(player.getFloor(), player.getTileId(), destTile, true);
 			player.setPath(ints);
 		}
 	}

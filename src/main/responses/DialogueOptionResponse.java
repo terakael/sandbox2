@@ -81,7 +81,7 @@ public class DialogueOptionResponse extends Response {
 				List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
 				if (!invItemIds.contains(0)) {
 					// drop on ground
-					GroundItemManager.add(player.getRoomId(), player.getId(), capeId, player.getTileId(), 1, ItemDao.getMaxCharges(capeId));
+					GroundItemManager.add(player.getFloor(), player.getId(), capeId, player.getTileId(), 1, ItemDao.getMaxCharges(capeId));
 				} else {
 					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(0), capeId, 1, ItemDao.getMaxCharges(capeId));
 				}

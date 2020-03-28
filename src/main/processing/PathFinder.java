@@ -1,12 +1,18 @@
 package main.processing;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,42 +20,52 @@ import main.database.GroundTextureDao;
 import main.database.SceneryDao;
 import main.types.ImpassableTypes;
 import main.utils.Stopwatch;
+import main.utils.Utils;
 
 public class PathFinder {
 	private static PathFinder instance;
 	
-	public static final int LENGTH = 250;
-	
-	private Map<Integer, PathNode[]> nodes = new HashMap<>();// new PathNode[LENGTH * LENGTH];// always square so no need for separate length/width variables
-	
+	public static final int LENGTH = 25000;
+	private static Map<Integer, Map<Integer, PathNode>> nodesByFloor; // floor, <tileId, node> (the tileId map is so we can quickly retrieve by tileId)
 	
 	private PathFinder() {
-		for (int roomId : GroundTextureDao.getDistinctRoomIds()) {
-			nodes.put(roomId, new PathNode[LENGTH * LENGTH]);
-		}
-
-		for (Map.Entry<Integer, PathNode[]> entry : nodes.entrySet()) {
-			HashMap<Integer, Integer> impassableTileIds = SceneryDao.getImpassableTileIdsByRoomId(entry.getKey());
-			PathNode[] nodeList = entry.getValue();
-			for (int i = 0; i < nodeList.length; ++i) {
-				nodeList[i] = new PathNode();
+		nodesByFloor = new HashMap<>();
+		Set<Integer> distinctFloors = GroundTextureDao.getDistinctFloors();
+		for (int floor : distinctFloors) {
+			Set<Integer> tileIds = GroundTextureDao.getAllTileIdsByFloor(floor);
+			if (tileIds.isEmpty())
+				continue;
+			
+			nodesByFloor.put(floor, new HashMap<>());
+			HashMap<Integer, Integer> tileIdImpassability = SceneryDao.getImpassableTileIdsByFloor(floor);
+			
+			for (int tileId : tileIds) {
+				PathNode node = new PathNode();
+				node.setId(tileId);
+				node.setImpassableTypes(tileIdImpassability.get(tileId) == null ? 0 : tileIdImpassability.get(tileId));
+				nodesByFloor.get(floor).put(tileId, node);
 			}
 			
-			for (int i = 0; i < nodeList.length; ++i) {
-				PathNode[] siblings = {
-					getNode(entry.getKey(), i, i - LENGTH - 1),
-					getNode(entry.getKey(), i, i - LENGTH),
-					getNode(entry.getKey(), i, i - LENGTH + 1),
-					getNode(entry.getKey(), i, i - 1),
-					getNode(entry.getKey(), i, i + 1),
-					getNode(entry.getKey(), i, i + LENGTH - 1),
-					getNode(entry.getKey(), i, i + LENGTH),
-					getNode(entry.getKey(), i, i + LENGTH + 1)
+			for (int tileId : tileIds) {
+				int[] tileIdsToCheck = {
+					tileId - LENGTH - 1,	// top left
+					tileId - LENGTH,		// top
+					tileId - LENGTH + 1,	// top right
+					tileId - 1,				// left
+					tileId + 1,				// right
+					tileId + LENGTH - 1,	// bottom left
+					tileId + LENGTH,		// bottom
+					tileId + LENGTH + 1		// bottom right
 				};
 				
-				nodeList[i].setId(i);
-				nodeList[i].setImpassableTypes(impassableTileIds.containsKey(i) ? impassableTileIds.get(i) : 0);
-				nodeList[i].setSiblings(siblings);
+				PathNode currentNode = nodesByFloor.get(floor).get(tileId); 
+				PathNode[] siblings = new PathNode[tileIdsToCheck.length];
+				for (int i = 0; i < tileIdsToCheck.length; ++i) {
+//					if (currentNode.isSiblingPassable(i))
+						siblings[i] = nodesByFloor.get(floor).get(tileIdsToCheck[i]);
+				}
+				
+				currentNode.setSiblings(siblings);
 			}
 		}
 	}
@@ -216,42 +232,32 @@ public class PathFinder {
 		}
 	}
 	
-	private PathNode getNode(int roomId, int id, int siblingId) {
-		if (siblingId < 0 || siblingId >= LENGTH * LENGTH) 
-			return null;// above first row or below last row
-		
-		if (id % LENGTH == 0 && siblingId == id - 1)
-			return null;// left of leftmost
-		
-		if (id % LENGTH == LENGTH - 1 && siblingId == id + 1)
-			return null;// right of rightmost
-		
-		return nodes.get(roomId)[siblingId];
+	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile) {
+		return findPath(floor, from, to, includeToTile, 0, 0);
 	}
 	
-	public static Stack<Integer> findPath(int roomId, int from, int to, boolean includeToTile) {
-		return findPath(roomId, from, to, includeToTile, 0, 0);
-	}
-	
-	public static Stack<Integer> findPath(int roomId, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius) {
+	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius) {
 		Stopwatch.start("find path");
 		Stack<Integer> output = new Stack<>();
 		if (from == to)
 			return output;
+
+		Map<Integer, PathNode> nodes = nodesByFloor.get(floor);
 		
-		PathNode[] nodes = PathFinder.get().nodes.get(roomId);
-		if (from < 0 || from >= nodes.length || to < 0 || to >= nodes.length)
+		if (!nodes.containsKey(to)) {
+//			System.out.println(String.format("trying to go from %d to tile %d which is outside of range (floor %d)", from, to, floor));
 			return output;
+		}
 		
 		// cannot move to an impassable tile.
-		if (nodes[to].getImpassableTypes() == 15) // TODO inaccurate
+		if (nodes.get(to).getImpassableTypes() == 15) // TODO inaccurate
 			includeToTile = false;
 		
 		ArrayList<PathNode> open = new ArrayList<>();
 		ArrayList<PathNode> closed = new ArrayList<>();
 		
-		nodes[from].setParent(null);
-		open.add(nodes[from]);
+		nodes.get(from).setParent(null);
+		open.add(nodes.get(from));
 		
 		while (!open.isEmpty() ) {
 			// get lowest F node from open list
@@ -268,16 +274,16 @@ public class PathFinder {
 			for (int i = 0; i < q.getSiblings().length; ++i) {
 				// sometimes the sibling isn't passable, but the sibling happens to be the destination node.
 				// we obviously want to find the destination node so we cannot "continue" in this case.
-				if (!q.isSiblingPassable(i) && q.getSibling(i) != nodes[to])
+				if (!q.isSiblingPassable(i) && q.getSibling(i) != nodes.get(to))
 					continue;
 				
 				PathNode successor = q.getSibling(i);				
-				if (successor == null || (successor.getWeight() == -1 && successor != nodes[to]))// corner and edge nodes have some null siblings
+				if (successor == null || (successor.getWeight() == -1 && successor != nodes.get(to)))// corner and edge nodes have some null siblings
 					continue;
 				
 				// we're at the final step - if the final step is completely impassable we want to keep processing
 				// but if there is some passable way and we're not actually next to it then continue.
-				if (successor == nodes[to] && successor.impassableTypes != 15 && !isNextTo(roomId, q.id, successor.id))
+				if (successor == nodes.get(to) && successor.impassableTypes != 15 && !isNextTo(floor, q.id, successor.id))
 					continue;
 				
 				if (spawnTileId > 0 && maxRadius > 0) {
@@ -303,7 +309,7 @@ public class PathFinder {
 				double newH = calculateManhattan(successor.getId(), to);
 				double newF = newG + newH;
 
-				if ((newF < successor.getF() || !open.contains(successor)) && (!(successor == nodes[to] && isDiagonal))) {
+				if ((newF < successor.getF() || !open.contains(successor)) && (!(successor == nodes.get(to) && isDiagonal))) {
 					successor.setG(newG);
 					successor.setH(newH);
 					successor.setParent(q);
@@ -312,7 +318,7 @@ public class PathFinder {
 						open.add(successor);
 				}
 				
-				if (successor == nodes[to]) {
+				if (successor == nodes.get(to)) {
 					if (isDiagonal)
 						continue;
 					
@@ -327,7 +333,9 @@ public class PathFinder {
 					
 					Stopwatch.end("find path");
 					if (Stopwatch.getMs("find path") > 100) {
-						System.out.println(String.format("WEIRD PATHFIND: ms=%d, open=%d, closed=%d, from=%d, to=%d", Stopwatch.getMs("find path"), open.size(), closed.size(), from, to));
+						System.out.println(String.format("WEIRD PATHFIND: ms=%d, open=%d, closed=%d, from=%d, to=%d, getLocalPathNodes=%d", Stopwatch.getMs("find path"), open.size(), closed.size(), from, to, Stopwatch.getMs("getLocalPathNodes")));
+						
+						Stopwatch.dump();
 					}
 					return output;
 				}
@@ -345,23 +353,23 @@ public class PathFinder {
 		return Math.abs(src % LENGTH - dest % LENGTH) + Math.abs(src / LENGTH - dest / LENGTH);
 	}
 	
-	public static boolean isNextTo(int roomId, int srcTile, int destTile) {
+	public static boolean isNextTo(int floor, int srcTile, int destTile) {
 		// returns true if srcTile and destTile are touching horizontally or vertically (or are the same tile)
 		// if the tiles are next to eachother but there's a barrier between them (non-zero impassableType)
 		// then they are not technically next to eachother (i.e. there's a wall between the tiles).
 		// the exception to this is if the dest tile is completely impassable i.e. impassableType 15 like a rock etc
 		// in this case we are next to it, as there's no way to get any closer.
-		int srcImpassableType = SceneryDao.getImpassableTypeByTileId(roomId, srcTile);		
-		int destImpassableType = SceneryDao.getImpassableTypeByTileId(roomId, destTile);
+		int srcImpassableType = SceneryDao.getImpassableTypeByFloor(floor, srcTile);		
+		int destImpassableType = SceneryDao.getImpassableTypeByFloor(floor, destTile);
 		
 		return  
 			// destTile is to the left, destTile doesn't have a right-facing wall, srcTile doesn't have a left-facing wall
-			(destTile == srcTile - 1 && 
+			((destTile == srcTile - 1 || (srcTile % LENGTH == 0 && destTile == srcTile + LENGTH - 1))  && 
 				((!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, destImpassableType) && 
 					!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, srcImpassableType)) || destImpassableType == 15)) ||
 			
 			// destTile is to the right; destTile doesn't have a left-facing wall, srcTile doesn't have a right-facing wall
-			(destTile == srcTile + 1 && 
+			((destTile == srcTile + 1 || (srcTile % LENGTH == LENGTH - 1 && destTile == srcTile - LENGTH + 1))&& 
 				((!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, destImpassableType) && 
 					!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, srcImpassableType)) || destImpassableType == 15)) ||
 			
@@ -410,6 +418,7 @@ public class PathFinder {
 	}
 	
 	public static int findRetreatTile(int retreatFromTile, int startTile, int anchorTile, int radius) {
+		// TODO might be better to precalc each npcs available tiles and choose from that list
 		int retreatFromX = retreatFromTile % LENGTH;
 		int retreatFromY = retreatFromTile / LENGTH;
 		

@@ -30,7 +30,7 @@ public class ShopResponse extends Response {
 				return;
 		
 		ShopRequest request = (ShopRequest)req;
-		NPC npc = NPCManager.get().getNpcByInstanceId(player.getRoomId(), request.getObjectId());// request tileid is the instnace id
+		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());// request tileid is the instnace id
 		if (npc == null) {
 			setRecoAndResponseText(0, "you cannot do that.");
 			return;
@@ -43,8 +43,8 @@ public class ShopResponse extends Response {
 		}
 		FightManager.cancelFight(player, responseMaps);
 		
-		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), npc.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), npc.getTileId(), false));
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), npc.getTileId())) {
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), npc.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;

@@ -13,7 +13,7 @@ public class PlayerDto {
 	private String name;
 	private transient String password;
 	private int tileId;
-	private int roomId;
+	private int floor;
 	private int currentHp;
 	private int maxHp;
 	private int combatLevel;

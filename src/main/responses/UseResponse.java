@@ -82,14 +82,14 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
-		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), request.getDest())) {
-			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), request.getDest(), false));
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getDest())) {
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getDest(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(request);
 			return true;
 		}
 		
-		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getRoomId(), request.getDest());
+		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getDest());
 		Scenery scenery = SceneryManager.getScenery(sceneryId);
 		if (scenery == null)
 			return false;
@@ -169,7 +169,7 @@ public class UseResponse extends Response {
 		startUseResponse.process(request, player, responseMaps);		
 		
 		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(dto.getResultingItemId()).getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), actionBubble);
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
 		
 		player.setState(PlayerState.using);
 		player.setSavedRequest(request);
@@ -185,7 +185,7 @@ public class UseResponse extends Response {
 		// only exception to this is if the npc doesn't exist, because then we wouldn't know where to walk in the first place.
 		// also if the item is supposed to be used from range, i.e. magic scrolls!
 		
-		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getRoomId(), request.getDest());
+		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getDest());
 		if (targetNpc == null)
 			return false;
 		
@@ -193,7 +193,7 @@ public class UseResponse extends Response {
 			return handleCastableOnNpc(request, player, responseMaps);
 		}
 		
-		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), targetNpc.getTileId())) {
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), targetNpc.getTileId())) {
 			player.setTarget(targetNpc);	
 			player.setSavedRequest(request);
 			return true;
@@ -258,7 +258,7 @@ public class UseResponse extends Response {
 		if (castable == null)
 			return false;
 		
-		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getRoomId(), request.getDest());
+		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getDest());
 		if (targetNpc == null)
 			return false;
 		
@@ -311,7 +311,7 @@ public class UseResponse extends Response {
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		
 		CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), castSpellResponse);
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), castSpellResponse);
 		
 		return true;
 	}
@@ -391,7 +391,7 @@ public class UseResponse extends Response {
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
 		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
-		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), playerUpdate);// should be local
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), playerUpdate);// should be local
 	}
 	
 	private boolean handleUseOnPlayer(UseRequest request, Player player, ResponseMaps responseMaps) {
@@ -455,7 +455,7 @@ public class UseResponse extends Response {
 			InventoryUpdateResponse.sendUpdate(player, responseMaps);
 			
 			CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetPlayer.getId(), "player", castable.getSpriteFrameId());
-			responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), castSpellResponse);
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), castSpellResponse);
 			return true;
 		}
 		
@@ -477,9 +477,9 @@ public class UseResponse extends Response {
 			return false;
 		}
 		
-		final int oldRoomId = player.getRoomId();
-		final int newRoomId = teleportable.getRoomId();
-		player.setRoomId(newRoomId);
+		final int oldRoomId = player.getFloor();
+		final int newRoomId = teleportable.getFloor();
+		player.setFloor(newRoomId);
 		if (oldRoomId != newRoomId)
 			new LoadRoomResponse().process(null, player, responseMaps);
 		
@@ -488,7 +488,6 @@ public class UseResponse extends Response {
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
 		playerUpdate.setTileId(player.getTileId());
-		playerUpdate.setRoomId(player.getRoomId());
 		playerUpdate.setSnapToTile(true);
 		responseMaps.addClientOnlyResponse(player, playerUpdate);
 		

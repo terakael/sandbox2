@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class LadderConnectionDto {
-	private int fromRoomId;
+	private int fromFloor;
 	private int fromTileId;
-	private int toRoomId;
+	private int toFloor;
 	private int toTileId;
 }

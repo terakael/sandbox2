@@ -7,6 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TeleportableDto {
 	private int itemId;
-	private int roomId;
+	private int floor;
 	private int tileId;
 }

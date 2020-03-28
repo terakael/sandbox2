@@ -22,7 +22,7 @@ public class CatchResponse extends Response {
 			return;
 		
 		CatchRequest request = (CatchRequest)req;
-		NPC npc = NPCManager.get().getNpcByInstanceId(player.getRoomId(), request.getObjectId());
+		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());
 		if (npc == null) {
 			setRecoAndResponseText(0, "you can't catch that.");
 			responseMaps.addClientOnlyResponse(player, this);
@@ -32,8 +32,8 @@ public class CatchResponse extends Response {
 		if (npc.isDead())
 			return;
 		
-		if (!PathFinder.isNextTo(player.getRoomId(), player.getTileId(), npc.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), npc.getTileId(), false));
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), npc.getTileId())) {
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), npc.getTileId(), false));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;
@@ -59,7 +59,7 @@ public class CatchResponse extends Response {
 			
 			InventoryUpdateResponse.sendUpdate(player, responseMaps);
 			
-			responseMaps.addLocalResponse(player.getRoomId(), npc.getTileId(), this);
+			responseMaps.addLocalResponse(player.getFloor(), npc.getTileId(), this);
 		}
 	}
 	

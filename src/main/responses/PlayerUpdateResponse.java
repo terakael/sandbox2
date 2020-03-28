@@ -15,8 +15,6 @@ public class PlayerUpdateResponse extends Response {
 	@Setter String name = null;
 	@Setter Integer combatLevel = null;
 	@Setter Integer tileId = null;
-	@Setter Integer roomId = null;
-	@Setter String state = null;
 	@Setter Integer damage = null;
 	@Setter Integer damageType = null;
 	@Setter Integer currentHp = null;

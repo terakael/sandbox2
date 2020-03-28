@@ -20,7 +20,7 @@ public class StartSmithResponse extends Response {
 			return;
 		
 		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), dto.getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), actionBubble);
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
 		
 		responseMaps.addClientOnlyResponse(player, this);
 	}

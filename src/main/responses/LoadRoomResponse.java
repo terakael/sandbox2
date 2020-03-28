@@ -20,8 +20,8 @@ import main.processing.WorldProcessor;
 import main.requests.Request;
 
 public class LoadRoomResponse extends Response {
-	private HashMap<Integer, HashSet<Integer>> sceneryInstances;
-	private HashSet<Integer> depletedScenery; // depleted rocks, flowers etc need to be flicked to their next frame (frame[0] is non-depleted, frame[1] depleted)
+//	private HashMap<Integer, HashSet<Integer>> sceneryInstances;
+//	private HashSet<Integer> depletedScenery; // depleted rocks, flowers etc need to be flicked to their next frame (frame[0] is non-depleted, frame[1] depleted)
 	private String minimap;
 	
 	public LoadRoomResponse() {
@@ -30,12 +30,12 @@ public class LoadRoomResponse extends Response {
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		sceneryInstances = SceneryDao.getAllSceneryInstancesByRoom(player.getRoomId());
-		minimap = MinimapGenerator.getImage(player.getRoomId());
-		
-		depletedScenery = new HashSet<>();
-		depletedScenery.addAll(FlowerManager.getDepletedFlowerTileIds());
-		depletedScenery.addAll(RockManager.getDepletedRockTileIds());
+//		sceneryInstances = SceneryDao.getAllSceneryInstancesByRoom(player.getFloor());
+		minimap = MinimapGenerator.getImage(player.getFloor());
+//		
+//		depletedScenery = new HashSet<>();
+//		depletedScenery.addAll(FlowerManager.getDepletedFlowerTileIds());
+//		depletedScenery.addAll(RockManager.getDepletedRockTileIds());
 		
 		responseMaps.addClientOnlyResponse(player, this);
 	}

@@ -1,20 +1,11 @@
 package main;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import main.database.GroundTextureDao;
-import main.database.ItemDao;
-import main.database.RespawnableDao;
-import main.database.RespawnableDto;
-import main.processing.PathFinder;
 import main.processing.RoomGroundItemManager;
 import main.processing.RoomGroundItemManager.GroundItem;
-import main.processing.RoomGroundItemManager.RespawnableGroundItem;
-import main.types.ItemAttributes;
 
 interface IGenericFunc {
 	void handle(RoomGroundItemManager groundItemManager);
@@ -24,10 +15,10 @@ public class GroundItemManager {
 	private static HashMap<Integer, RoomGroundItemManager> groundItemManagers = new HashMap<>();
 	
 	public static void initialize() {		
-		for (int roomId : GroundTextureDao.getDistinctRoomIds()) {
-			RoomGroundItemManager groundItemManager = new RoomGroundItemManager(roomId);
+		for (int floor : GroundTextureDao.getDistinctFloors()) {
+			RoomGroundItemManager groundItemManager = new RoomGroundItemManager(floor);
 			groundItemManager.setupRespawnables();
-			groundItemManagers.put(roomId, groundItemManager);
+			groundItemManagers.put(floor, groundItemManager);
 		}
 	}
 	
@@ -37,49 +28,49 @@ public class GroundItemManager {
 		}
 	}
 	
-	public static boolean itemIsRespawnable(int roomId, int tileId, int itemId) {
-		if (!groundItemManagers.containsKey(roomId))
+	public static boolean itemIsRespawnable(int floor, int tileId, int itemId) {
+		if (!groundItemManagers.containsKey(floor))
 			return false;
 		
-		return groundItemManagers.get(roomId).itemIsRespawnable(tileId, itemId);
+		return groundItemManagers.get(floor).itemIsRespawnable(tileId, itemId);
 	}
 	
 	public static void process() {
 		allGroundItemManagers(RoomGroundItemManager::process);
 	}
 
-	public static void add(int roomId, int playerId, int itemId, int tileId, int count, int charges) {
-		if (!groundItemManagers.containsKey(roomId))
+	public static void add(int floor, int playerId, int itemId, int tileId, int count, int charges) {
+		if (!groundItemManagers.containsKey(floor))
 			return;
 		
-		groundItemManagers.get(roomId).add(playerId, itemId, tileId, count, charges);
+		groundItemManagers.get(floor).add(playerId, itemId, tileId, count, charges);
 	}
 
-	public static void remove(int roomId, int playerId, int tileId, int itemId, int count, int charges) {
-		if (!groundItemManagers.containsKey(roomId))
+	public static void remove(int floor, int playerId, int tileId, int itemId, int count, int charges) {
+		if (!groundItemManagers.containsKey(floor))
 			return;
 		
-		groundItemManagers.get(roomId).remove(playerId, tileId, itemId, count, charges);
+		groundItemManagers.get(floor).remove(playerId, tileId, itemId, count, charges);
 	}
 	
-	public static boolean itemIsOnGround(int roomId, int playerId, int itemId) {		
-		if (!groundItemManagers.containsKey(roomId))
+	public static boolean itemIsOnGround(int floor, int playerId, int itemId) {		
+		if (!groundItemManagers.containsKey(floor))
 			return false;
 		
-		return groundItemManagers.get(roomId).itemIsOnGround(playerId, itemId);
+		return groundItemManagers.get(floor).itemIsOnGround(playerId, itemId);
 	}
 	
-	public static Map<Integer, List<Integer>> getItemIdsNearTile(int roomId, int playerId, int tileId, int proximity) {
-		if (!groundItemManagers.containsKey(roomId))
+	public static Map<Integer, List<Integer>> getItemIdsNearTile(int floor, int playerId, int tileId, int proximity) {
+		if (!groundItemManagers.containsKey(floor))
 			return new HashMap<>();
 		
-		return groundItemManagers.get(roomId).getItemIdsNearTile(playerId, tileId, proximity);
+		return groundItemManagers.get(floor).getItemIdsNearTile(playerId, tileId, proximity);
 	}
 	
-	public static GroundItem getItemAtTileId(int roomId, int playerId, int itemId, int tileId) {
-		if (!groundItemManagers.containsKey(roomId))
+	public static GroundItem getItemAtTileId(int floor, int playerId, int itemId, int tileId) {
+		if (!groundItemManagers.containsKey(floor))
 			return null;
 		
-		return groundItemManagers.get(roomId).getItemAtTileId(playerId, itemId, tileId);
+		return groundItemManagers.get(floor).getItemAtTileId(playerId, itemId, tileId);
 	}
 }

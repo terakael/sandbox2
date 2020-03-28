@@ -37,7 +37,7 @@ public class TakeResponse extends Response {
 		
 		TakeRequest takeReq = (TakeRequest)req;
 		
-		RoomGroundItemManager.GroundItem groundItem = GroundItemManager.getItemAtTileId(player.getRoomId(), player.getId(), takeReq.getItemId(), takeReq.getTileId());
+		RoomGroundItemManager.GroundItem groundItem = GroundItemManager.getItemAtTileId(player.getFloor(), player.getId(), takeReq.getItemId(), takeReq.getTileId());
 		if (groundItem == null) {
 //			setRecoAndResponseText(0, "too late - it's gone!");
 //			responseMaps.addClientOnlyResponse(player, this);
@@ -46,7 +46,7 @@ public class TakeResponse extends Response {
 		
 		if (takeReq.getTileId() != player.getTileId()) {
 			// walk over to the item before picking it up
-			player.setPath(PathFinder.findPath(player.getRoomId(), player.getTileId(), takeReq.getTileId(), true));
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), takeReq.getTileId(), true));
 			player.setState(PlayerState.walking);
 			
 			// save the request so the player reprocesses it when they arrive at their destination
@@ -77,7 +77,7 @@ public class TakeResponse extends Response {
 			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), 1, groundItem.getCharges());
 		}
 		
-		GroundItemManager.remove(player.getRoomId(), player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount(), groundItem.getCharges());
+		GroundItemManager.remove(player.getFloor(), player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount(), groundItem.getCharges());
 		
 		// update the player inventory/equipped items and only send it to the player
 		Response resp = ResponseFactory.create("invupdate");

@@ -53,7 +53,7 @@ public class MessageResponse extends Response {
 		name = PlayerDao.getNameFromId(id);
 		message = msg;
 		
-		responseMaps.addLocalResponse(player.getRoomId(), player.getTileId(), this);
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), this);
 	}
 	
 	private void handleDebugCommand(Player player, String msg, ResponseMaps responseMaps) {
@@ -307,7 +307,7 @@ public class MessageResponse extends Response {
 		PlayerUpdateResponse updateResponse = new PlayerUpdateResponse();
 		updateResponse.setId(targetPlayer.getId());
 		updateResponse.setCurrentHp(maxHp);
-		responseMaps.addLocalResponse(targetPlayer.getRoomId(), targetPlayer.getTileId(), updateResponse);
+		responseMaps.addLocalResponse(targetPlayer.getFloor(), targetPlayer.getTileId(), updateResponse);
 		
 		if (targetPlayer != player) {
 			setRecoAndResponseText(1, "your god has given you life.");

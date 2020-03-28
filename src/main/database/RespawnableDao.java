@@ -13,11 +13,11 @@ import lombok.Getter;
 public class RespawnableDao {
 	@Getter private static Map<Integer, ArrayList<RespawnableDto>> cachedRespawnables = new HashMap<>();
 	
-	public static RespawnableDto getCachedRespawnableByRoomIdTileId(int roomId, int tileId) {
-		if (!cachedRespawnables.containsKey(roomId))
+	public static RespawnableDto getCachedRespawnableByFloorAndTileId(int floor, int tileId) {
+		if (!cachedRespawnables.containsKey(floor))
 			return null;
 		
-		for (RespawnableDto dto : cachedRespawnables.get(roomId)) {
+		for (RespawnableDto dto : cachedRespawnables.get(floor)) {
 			if (dto.getTileId() == tileId)
 				return dto;
 		}
@@ -25,18 +25,18 @@ public class RespawnableDao {
 	}
 	
 	public static void setupCaches() {
-		final String query = "select room_id, tile_id, item_id, count, respawn_ticks from respawnable ";
+		final String query = "select floor, tile_id, item_id, count, respawn_ticks from respawnable ";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					if (!cachedRespawnables.containsKey(rs.getInt("room_id")))
-						cachedRespawnables.put(rs.getInt("room_id"), new ArrayList<>());
+					if (!cachedRespawnables.containsKey(rs.getInt("floor")))
+						cachedRespawnables.put(rs.getInt("floor"), new ArrayList<>());
 					
-					cachedRespawnables.get(rs.getInt("room_id")).add(new RespawnableDto(
-							rs.getInt("room_id"), 
+					cachedRespawnables.get(rs.getInt("floor")).add(new RespawnableDto(
+							rs.getInt("floor"), 
 							rs.getInt("tile_id"), 
 							rs.getInt("item_id"), 
 							rs.getInt("count"), 

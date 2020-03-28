@@ -8,27 +8,30 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import lombok.Getter;
 
 public class SceneryDao {
 	private SceneryDao() {};
 	
-	@Getter private static List<SceneryDto> allScenery;
-	private static HashMap<Integer, List<SceneryDto>> allSceneryByRoom;
-	private static HashMap<Integer, HashMap<Integer, HashSet<Integer>>> sceneryInstancesByRoom; // roomId, <sceneryId, tileids>
+	@Getter private static List<SceneryDto> allScenery; // passed to player on page load
+	private static HashMap<Integer, List<SceneryDto>> allSceneryByFloor;
+	private static Map<Integer, Map<Integer, Set<Integer>>> sceneryInstancesByFloor; // floor, <sceneryId, tileids>
+	@Getter private static HashMap<Integer, HashMap<Integer, Integer>> impassableTileIds = new HashMap<>();// floor, <tile_id, impassable_type>
 	
 	public static void setupCaches() {
 		allScenery = loadAllScenery();
-		allSceneryByRoom = new HashMap<>();
-		sceneryInstancesByRoom = new HashMap<>();
-		for (int roomId : GroundTextureDao.getDistinctRoomIds()) {
-			allSceneryByRoom.put(roomId, loadAllSceneryByRoom(roomId));
-			sceneryInstancesByRoom.put(roomId, loadSceneryInstancesByRoom(roomId));
+		allSceneryByFloor = new HashMap<>();
+		sceneryInstancesByFloor = new HashMap<>();
+		for (int floor : GroundTextureDao.getDistinctFloors()) {
+			allSceneryByFloor.put(floor, loadAllSceneryByFloor(floor));
+			sceneryInstancesByFloor.put(floor, loadSceneryInstancesByFloor(floor));
+			
+			cacheImpassableTileIdsByFloor(floor);
 		}
 	}
-	
-	@Getter private static HashMap<Integer, HashMap<Integer, Integer>> impassableTileIds = new HashMap<>();// roomId, <tile_id, impassable_type>
 	
 	private static List<SceneryDto> loadAllScenery() {
 		final String query = 
@@ -68,11 +71,10 @@ public class SceneryDao {
 		return sceneryList;
 	}
 
-	private static List<SceneryDto> loadAllSceneryByRoom(int roomId) {
-		// TODO query is wrong
+	private static List<SceneryDto> loadAllSceneryByFloor(int floor) {
 		final String query = 
 				"select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, leftclick_option, other_options, attributes from scenery " +
-				" where id in (select distinct scenery_id from room_scenery where room_id=? and id != 49)"; // 49 is impassable tile, don't send this to client (used in world builder tool and pathfinding)
+				" where id in (select distinct scenery_id from room_scenery where floor=? and id != 49)"; // 49 is impassable tile, don't send this to client (used in world builder tool and pathfinding)
 		
 		List<SceneryDto> sceneryList = new ArrayList<>();
 		
@@ -80,7 +82,7 @@ public class SceneryDao {
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
-			ps.setInt(1, roomId);
+			ps.setInt(1, floor);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
 					SceneryDto dto = new SceneryDto();
@@ -97,7 +99,6 @@ public class SceneryDao {
 					dto.setFramerate(rs.getInt("framerate"));
 					dto.setLeftclickOption(rs.getInt("leftclick_option"));
 					dto.setOtherOptions(rs.getInt("other_options"));
-//					dto.setInstances(getInstanceListByRoomIdAndSceneryId(roomId, rs.getInt("id")));
 					dto.setAttributes(rs.getInt("attributes"));
 					sceneryList.add(dto);
 				}
@@ -108,28 +109,22 @@ public class SceneryDao {
 		return sceneryList;
 	}
 	
-	public static HashMap<Integer, HashSet<Integer>> loadSceneryInstancesByRoom(int roomId) {
-		HashMap<Integer, HashSet<Integer>> sceneryInstances = new HashMap<>();
-		for (SceneryDto dto : allSceneryByRoom.get(roomId)) {
-			sceneryInstances.put(dto.getId(), getInstanceListByRoomIdAndSceneryId(roomId, dto.getId()));
+	private static Map<Integer, Set<Integer>> loadSceneryInstancesByFloor(int floor) {
+		Map<Integer, Set<Integer>> sceneryInstances = new HashMap<>();
+		for (SceneryDto dto : allSceneryByFloor.get(floor)) {
+			sceneryInstances.put(dto.getId(), getInstanceListByFloorAndSceneryId(floor, dto.getId()));
 		}
 		return sceneryInstances;
 	}
-	
-	public static List<SceneryDto> getAllSceneryByRoom(int roomId) {
-		if (!allSceneryByRoom.containsKey(roomId))
-			return new ArrayList<>();
-		return allSceneryByRoom.get(roomId);
-	}
-	
-	public static HashMap<Integer, HashSet<Integer>> getAllSceneryInstancesByRoom(int roomId) {
-		if (!sceneryInstancesByRoom.containsKey(roomId))
+
+	public static Map<Integer, Set<Integer>> getAllSceneryInstancesByFloor(int floor) {
+		if (!sceneryInstancesByFloor.containsKey(floor))
 			return new HashMap<>();
-		return sceneryInstancesByRoom.get(roomId);
+		return sceneryInstancesByFloor.get(floor);
 	}
 	
-	public static HashSet<Integer> getInstanceListByRoomIdAndSceneryId(int roomId, int sceneryId) {
-		String query = "select tile_id from room_scenery where room_id=? and scenery_id=?";
+	public static Set<Integer> getInstanceListByFloorAndSceneryId(int floor, int sceneryId) {
+		String query = "select tile_id from room_scenery where floor=? and scenery_id=?";
 		
 		HashSet<Integer> instanceList = new HashSet<>();
 		
@@ -137,7 +132,7 @@ public class SceneryDao {
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
-			ps.setInt(1, roomId);
+			ps.setInt(1, floor);
 			ps.setInt(2, sceneryId);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
@@ -150,42 +145,25 @@ public class SceneryDao {
 		return instanceList;
 	}
 	
-	public static void addRoomScenery(int roomId, int sceneryId, int tileId) {
-		String query = "insert into room_scenery (room_id, scenery_id, tile_id) values (?, ?, ?)";
-		try (
-				Connection connection = DbConnection.get();
-				PreparedStatement ps = connection.prepareStatement(query)
-			) {
-				ps.setInt(1, roomId);
-				ps.setInt(2, sceneryId);
-				ps.setInt(3, tileId);
-				ps.executeUpdate();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-	}
-	
-	public static HashMap<Integer, Integer> getImpassableTileIdsByRoomId(int roomId) {
+	public static void cacheImpassableTileIdsByFloor(int floor) {
 		String query = "select tile_id, impassable from room_scenery ";
 		query += " inner join scenery on room_scenery.scenery_id=scenery.id and impassable > 0";
-		query += " where room_id=?";
+		query += " where floor=?";
 		
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
-			ps.setInt(1, roomId);
+			ps.setInt(1, floor);
 			try (ResultSet rs = ps.executeQuery()) {
-				impassableTileIds.put(roomId, new HashMap<>());
+				impassableTileIds.put(floor, new HashMap<>());
 				while (rs.next()) {
-					impassableTileIds.get(roomId).put(rs.getInt("tile_id"), rs.getInt("impassable"));
+					impassableTileIds.get(floor).put(rs.getInt("tile_id"), rs.getInt("impassable"));
 				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-		return impassableTileIds.get(roomId);
 	}
 	
 	public static HashMap<Integer, String> getExamineMap() {
@@ -209,29 +187,35 @@ public class SceneryDao {
 		return examineMap;
 	}
 	
-	public static int getSceneryIdByTileId(int roomId, int tileId) {
-		if (!allSceneryByRoom.containsKey(roomId))
+	public static int getSceneryIdByTileId(int floor, int tileId) {
+		if (!allSceneryByFloor.containsKey(floor))
 			return -1;
 		
-		if (!sceneryInstancesByRoom.containsKey(roomId))
+		if (!sceneryInstancesByFloor.containsKey(floor))
 			return -1;
 		
-		for (SceneryDto dto : allSceneryByRoom.get(roomId)) {
-			if (sceneryInstancesByRoom.get(roomId).containsKey(dto.getId())) {
-				if (sceneryInstancesByRoom.get(roomId).get(dto.getId()).contains(tileId))
+		for (SceneryDto dto : allSceneryByFloor.get(floor)) {
+			if (sceneryInstancesByFloor.get(floor).containsKey(dto.getId())) {
+				if (sceneryInstancesByFloor.get(floor).get(dto.getId()).contains(tileId))
 					return dto.getId();
 			}
 		}
 		return -1;
 	}
 	
-	public static int getImpassableTypeByTileId(int roomId, int tileId) {
-		if (!impassableTileIds.containsKey(roomId))
+	public static int getImpassableTypeByFloor(int floor, int tileId) {
+		if (!impassableTileIds.containsKey(floor))
 			return 0;
 		
-		if (impassableTileIds.get(roomId).containsKey(tileId))
-			return impassableTileIds.get(roomId).get(tileId);
+		if (impassableTileIds.get(floor).containsKey(tileId))
+			return impassableTileIds.get(floor).get(tileId);
 		
 		return 0;
+	}
+	
+	public static HashMap<Integer, Integer> getImpassableTileIdsByFloor(int floor) {
+		if (!impassableTileIds.containsKey(floor))
+			return null;
+		return impassableTileIds.get(floor);
 	}
 }

@@ -2,6 +2,7 @@ package main.processing;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
@@ -13,7 +14,7 @@ public class NPCManager {
 	private NPCManager() {};
 	
 	private static NPCManager instance;
-	@Getter private HashMap<Integer, ArrayList<NPC>> npcs = new HashMap<>();
+	@Getter private Map<Integer, List<NPC>> npcs = new HashMap<>();
 	
 	public static NPCManager get() {
 		if (instance == null)
@@ -25,22 +26,20 @@ public class NPCManager {
 		if (NPCDao.getNpcInstanceList() == null)
 			NPCDao.setupCaches();
 		
-		for (Map.Entry<Integer, ArrayList<NPCDto>> entry : NPCDao.getNpcInstanceList().entrySet()) {
+		for (Map.Entry<Integer, List<NPCDto>> entry : NPCDao.getNpcInstanceList().entrySet()) {
 			npcs.put(entry.getKey(), new ArrayList<>());
 			for (NPCDto dto : entry.getValue()) {
 				npcs.get(entry.getKey()).add(new NPC(dto));
 			}
 		}
-		
-		
 	}
 	
 	// TODO should probs be a Map<id, NPC>
-	public NPC getNpcByInstanceId(int roomId, int id) {
-		if (!npcs.containsKey(roomId))
+	public NPC getNpcByInstanceId(int floor, int id) {
+		if (!npcs.containsKey(floor))
 			return null;
 		
-		for (NPC npc : npcs.get(roomId)) {
+		for (NPC npc : npcs.get(floor)) {
 			if (npc.getDto().getTileId() == id)// tileId is the instance id
 				return npc;
 		}
@@ -48,15 +47,15 @@ public class NPCManager {
 	}
 	
 	public void process(ResponseMaps responseMaps) {
-		for (Map.Entry<Integer, ArrayList<NPC>> entry : npcs.entrySet()) {
+		for (Map.Entry<Integer, List<NPC>> entry : npcs.entrySet()) {
 			for (NPC npc : entry.getValue()) {
 				npc.process(responseMaps);
 			}
 		}
 	}
 	
-	public ArrayList<NPC> getNpcsNearTile(int roomId, int tileId, int radius) {
-		if (!npcs.containsKey(roomId))
+	public List<NPC> getNpcsNearTile(int floor, int tileId, int radius) {
+		if (!npcs.containsKey(floor))
 			return new ArrayList<>();// if there's no room then there's no NPCs so return an empty list
 		
 		final int tileX = tileId % PathFinder.LENGTH;
@@ -66,8 +65,8 @@ public class NPCManager {
 		final int maxX = tileX + radius;
 		final int minY = tileY - radius;
 		final int maxY = tileY + radius;
-		ArrayList<NPC> localNpcs = new ArrayList<>();
-		for (NPC npc : npcs.get(roomId)) {			
+		List<NPC> localNpcs = new ArrayList<>();
+		for (NPC npc : npcs.get(floor)) {			
 			final int npcTileX = npc.getTileId() % PathFinder.LENGTH;
 			final int npcTileY = npc.getTileId() / PathFinder.LENGTH;
 			

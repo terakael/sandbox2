@@ -11,7 +11,7 @@ public class LadderConnectionDao {
 	@Getter private static ArrayList<LadderConnectionDto> ladderConnections;
 	
 	public static void setupCaches() {
-		final String query = "select from_room_id, from_tile_id, to_room_id, to_tile_id from ladder_connections ";
+		final String query = "select from_floor, from_tile_id, to_floor, to_tile_id from ladder_connections ";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -19,7 +19,7 @@ public class LadderConnectionDao {
 			try (ResultSet rs = ps.executeQuery()) {
 				ladderConnections = new ArrayList<>();
 				while (rs.next()) {
-					ladderConnections.add(new LadderConnectionDto(rs.getInt("from_room_id"), rs.getInt("from_tile_id"), rs.getInt("to_room_id"), rs.getInt("to_tile_id")));
+					ladderConnections.add(new LadderConnectionDto(rs.getInt("from_floor"), rs.getInt("from_tile_id"), rs.getInt("to_floor"), rs.getInt("to_tile_id")));
 				}
 			}
 		} catch (SQLException e) {

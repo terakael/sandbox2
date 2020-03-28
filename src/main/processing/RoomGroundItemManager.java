@@ -17,7 +17,7 @@ import main.types.ItemAttributes;
 
 public class RoomGroundItemManager {
 	private static final int LIFETIME = 100;
-	private int roomId = 0;
+	private int floor = 0;
 	
 	@Setter @Getter @AllArgsConstructor
 	public static class GroundItem {
@@ -35,8 +35,8 @@ public class RoomGroundItemManager {
 		private int tileId;
 	}
 	
-	public RoomGroundItemManager(int roomId) {
-		this.roomId = roomId;
+	public RoomGroundItemManager(int floor) {
+		this.floor = floor;
 	}
 	
 	// a map containing a list of ground items per tileId: Map<TileId, ItemList>
@@ -48,10 +48,10 @@ public class RoomGroundItemManager {
 	private HashSet<RespawnableGroundItem> respawnableGroundItems = new HashSet<>();
 	
 	public void setupRespawnables() {
-		if (!RespawnableDao.getCachedRespawnables().containsKey(roomId))
+		if (!RespawnableDao.getCachedRespawnables().containsKey(floor))
 			return;
 		
-		for (RespawnableDto dto : RespawnableDao.getCachedRespawnables().get(roomId)) {
+		for (RespawnableDto dto : RespawnableDao.getCachedRespawnables().get(floor)) {
 			respawnableGroundItems.add(new RespawnableGroundItem(dto.getItemId(), 0, dto.getCount(), dto.getTileId()));
 			
 			if (!globalGroundItems.containsKey(dto.getTileId()))
@@ -189,7 +189,7 @@ public class RoomGroundItemManager {
 			
 			for (RespawnableGroundItem item : respawnableGroundItems) {
 				if (item.tileId == tileId && item.id == toRemove.id && item.lifetime == 0) {
-					item.lifetime = RespawnableDao.getCachedRespawnableByRoomIdTileId(roomId, tileId).getRespawnTicks();
+					item.lifetime = RespawnableDao.getCachedRespawnableByFloorAndTileId(floor, tileId).getRespawnTicks();
 					break;
 				}
 			}
