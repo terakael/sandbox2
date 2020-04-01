@@ -19,7 +19,6 @@ import main.database.SpriteFrameDto;
 import main.database.SpriteMapDao;
 import main.database.SpriteMapDto;
 import main.database.StatsDao;
-import main.processing.MinimapGenerator;
 import main.processing.Player;
 import main.requests.Request;
 

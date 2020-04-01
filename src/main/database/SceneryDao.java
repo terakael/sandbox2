@@ -35,8 +35,9 @@ public class SceneryDao {
 	
 	private static List<SceneryDto> loadAllScenery() {
 		final String query = 
-				"select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, leftclick_option, other_options, attributes from scenery " +
-				" where id in (select distinct scenery_id from room_scenery where id != 49)"; // 49 is impassable tile, don't send this to client (used in world builder tool and pathfinding)
+				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes from scenery " +
+						" where attributes != 2 ";
+//				" where id in (select distinct scenery_id from room_scenery where id != 49)"; // 49 is impassable tile, don't send this to client (used in world builder tool and pathfinding)
 		
 		List<SceneryDto> sceneryList = new ArrayList<>();
 		
@@ -49,15 +50,7 @@ public class SceneryDao {
 					SceneryDto dto = new SceneryDto();
 					dto.setId(rs.getInt("id"));
 					dto.setName(rs.getString("name"));
-					dto.setSpriteMapId(rs.getInt("sprite_map_id"));
-					dto.setX(rs.getInt("x"));
-					dto.setY(rs.getInt("y"));
-					dto.setW(rs.getInt("w"));
-					dto.setH(rs.getInt("h"));
-					dto.setAnchorX(rs.getFloat("anchor_x"));
-					dto.setAnchorY(rs.getFloat("anchor_y"));
-					dto.setFramecount(rs.getInt("framecount"));
-					dto.setFramerate(rs.getInt("framerate"));
+					dto.setSpriteFrameId(rs.getInt("sprite_frame_id"));
 					dto.setLeftclickOption(rs.getInt("leftclick_option"));
 					dto.setOtherOptions(rs.getInt("other_options"));
 					dto.setAttributes(rs.getInt("attributes"));
@@ -73,8 +66,8 @@ public class SceneryDao {
 
 	private static List<SceneryDto> loadAllSceneryByFloor(int floor) {
 		final String query = 
-				"select id, name, sprite_map_id, x, y, w, h, anchor_x, anchor_y, framecount, framerate, leftclick_option, other_options, attributes from scenery " +
-				" where id in (select distinct scenery_id from room_scenery where floor=? and id != 49)"; // 49 is impassable tile, don't send this to client (used in world builder tool and pathfinding)
+				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes from scenery " +
+				" where id in (select distinct scenery_id from room_scenery where floor=?) and attributes != 2";
 		
 		List<SceneryDto> sceneryList = new ArrayList<>();
 		
@@ -88,15 +81,7 @@ public class SceneryDao {
 					SceneryDto dto = new SceneryDto();
 					dto.setId(rs.getInt("id"));
 					dto.setName(rs.getString("name"));
-					dto.setSpriteMapId(rs.getInt("sprite_map_id"));
-					dto.setX(rs.getInt("x"));
-					dto.setY(rs.getInt("y"));
-					dto.setW(rs.getInt("w"));
-					dto.setH(rs.getInt("h"));
-					dto.setAnchorX(rs.getFloat("anchor_x"));
-					dto.setAnchorY(rs.getFloat("anchor_y"));
-					dto.setFramecount(rs.getInt("framecount"));
-					dto.setFramerate(rs.getInt("framerate"));
+					dto.setSpriteFrameId(rs.getInt("sprite_frame_id"));
 					dto.setLeftclickOption(rs.getInt("leftclick_option"));
 					dto.setOtherOptions(rs.getInt("other_options"));
 					dto.setAttributes(rs.getInt("attributes"));

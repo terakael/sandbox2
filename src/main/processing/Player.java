@@ -39,7 +39,6 @@ import main.responses.FinishMiningResponse;
 import main.responses.FinishSmithResponse;
 import main.responses.FinishUseResponse;
 import main.responses.InventoryUpdateResponse;
-import main.responses.LoadRoomResponse;
 import main.responses.MessageResponse;
 import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
@@ -85,6 +84,7 @@ public class Player extends Attackable {
 	@Getter @Setter private Map<Integer, List<Integer>> inRangeGroundItems = new HashMap<>();
 	@Getter @Setter private Set<Integer> localTiles = new HashSet<>();
 	@Getter @Setter private int loadedFloor = 0;
+	@Getter @Setter private Set<Integer> loadedMinimapSegments = new HashSet<>();
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
@@ -145,6 +145,7 @@ public class Player extends Attackable {
 		bonuses.put(Stats.DEFENCE, equipment.getDef());
 		bonuses.put(Stats.AGILITY, equipment.getAgil());
 		bonuses.put(Stats.HITPOINTS, equipment.getHp());
+		bonuses.put(Stats.MAGIC, equipment.getMage());
 	}
 	
 	public void process(ResponseMaps responseMaps) {
@@ -340,9 +341,6 @@ public class Player extends Attackable {
 			
 		case dead: {// note that while the player is in the dead state, every response (except Message) is ignored at the Response superclass level
 			if (--tickCounter <= 0) {
-				// TODO check if the player died in the same room; reloading the room in that case is not necessary
-				new LoadRoomResponse().process(null, this, responseMaps);
-				
 				// update the player inventory to show there's no more items
 				new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);
 				

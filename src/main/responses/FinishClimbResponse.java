@@ -38,9 +38,6 @@ public class FinishClimbResponse extends Response {
 					player.setTileId(dto.getToTileId());
 					player.setFloor(dto.getToFloor());
 					player.clearPath();
-
-					if (dto.getFromFloor() != dto.getToFloor()) // if the room changes we need to reload the room
-						new LoadRoomResponse().process(null, player, responseMaps);
 					
 					// local players will receive a player_update message regardless, but the current player will not receive one for himself automatically.
 					PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();

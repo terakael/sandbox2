@@ -13,7 +13,6 @@ import java.util.Set;
 import lombok.Getter;
 
 public class GroundTextureDao {
-	private static HashMap<Integer, ArrayList<GroundTextureDto>> dtoMapByRoomForMinimapGeneration = new HashMap<>();
 	@Getter private static List<GroundTextureDto> dtosWithoutInstances = new ArrayList<>();
 	@Getter private static HashSet<Integer> distinctFloors = new HashSet<>();
 	
@@ -89,34 +88,6 @@ public class GroundTextureDao {
 		}
 	}
 	
-	public static void cacheAllTexturesForMinimapGeneration() {
-		final String query = "select id, sprite_map_id, x, y from ground_textures ";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {					
-					HashMap<Integer, HashSet<Integer>> instancesByRoom = getInstancesByGroundTextureId(rs.getInt("id"));
-					for (Map.Entry<Integer, HashSet<Integer>> entry : instancesByRoom.entrySet()) {
-						if (!dtoMapByRoomForMinimapGeneration.containsKey(entry.getKey()))
-							dtoMapByRoomForMinimapGeneration.put(entry.getKey(), new ArrayList<>());
-						dtoMapByRoomForMinimapGeneration.get(entry.getKey())
-									.add(new GroundTextureDto(
-										rs.getInt("id"), 
-										entry.getKey(), 
-										rs.getInt("sprite_map_id"), 
-										rs.getInt("x"), 
-										rs.getInt("y"), 
-										entry.getValue()));
-					}
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-	
 	public static HashMap<Integer, HashSet<Integer>> getInstancesByGroundTextureId(int textureId) {
 		final String query = "select floor, tile_id from room_ground_textures where ground_texture_id=?";
 		HashMap<Integer, HashSet<Integer>> instances = new HashMap<>();
@@ -153,10 +124,6 @@ public class GroundTextureDao {
 			e.printStackTrace();
 		}
 		return spriteMapIds;
-	}
-	
-	public static ArrayList<GroundTextureDto> getAllGroundTexturesByRoomForMinimapGeneration(int floor) {
-		return dtoMapByRoomForMinimapGeneration.get(floor);
 	}
 	
 	public static Set<Integer> getAllTileIdsByFloor(int floor) {

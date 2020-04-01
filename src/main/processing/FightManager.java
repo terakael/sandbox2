@@ -83,20 +83,12 @@ public class FightManager {
 	}
 	
 	public static void process(ResponseMaps responseMaps) {
-//		ArrayList<Fight> finishedFights = new ArrayList<>();
-		
 		// we want to copy all the fights into a different container, as if a fight ends during processing
 		// then the fight will be removed from the main fighting list.
 		List<Fight> fightsCopy = fights.stream().collect(Collectors.toList());
 		for (Fight fight : fightsCopy) {
-			if (fight.process(responseMaps)) {
-//				finishedFights.add(fight);
-			}
+			fight.process(responseMaps);
 		}
-		
-//		for (Fight fight : finishedFights) {
-//			cancelFight(fight.getFighter1(), responseMaps);
-//		}
 	}
 	
 	private static Fight getFightWithFighter(Attackable fighter) {

@@ -8,6 +8,8 @@ import main.database.ItemDao;
 import main.database.PlayerDao;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
+import main.database.TeleportableDao;
+import main.database.TeleportableDto;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
@@ -16,6 +18,7 @@ import main.requests.MessageRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.types.ItemAttributes;
+import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
 
@@ -103,11 +106,14 @@ public class MessageResponse extends Response {
 					return;
 				}
 				
+				TeleportableDto tyrotownTele = TeleportableDao.getTeleportableByItemId(Items.TYROTOWN_TELEPORT_RUNE.getValue());
+				
 				PlayerUpdateResponse playerUpdate = (PlayerUpdateResponse)ResponseFactory.create("player_update");
 				playerUpdate.setId(player.getId());
-				playerUpdate.setTileId(36859);
+				playerUpdate.setTileId(tyrotownTele.getTileId());
 				playerUpdate.setSnapToTile(true);
-				player.setTileId(36859);
+				player.setTileId(tyrotownTele.getTileId());
+				player.setFloor(tyrotownTele.getFloor());
 				player.clearPath();
 				responseMaps.addBroadcastResponse(playerUpdate);
 				return;
@@ -136,14 +142,14 @@ public class MessageResponse extends Response {
 				destTileId = destPlayer.getTileId();
 		}
 		
-		if (destTileId < 0 || destTileId > PathFinder.LENGTH * PathFinder.LENGTH) {
+		if (!PathFinder.tileIsValid(player.getFloor(), destTileId)) {
 			setRecoAndResponseText(0, "invalid teleport destination.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		
 		Player targetPlayer = null;
-		if (msgParts.length == 3 && player.isGod()) {
+		if (msgParts.length == 3) {
 			// there's a srcPlayerName
 			int targetPlayerId = PlayerDao.getIdFromName(msgParts[2]);
 			if (targetPlayerId == -1) {

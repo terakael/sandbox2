@@ -17,12 +17,14 @@ import com.google.gson.Gson;
 import main.Endpoint;
 import main.GroundItemManager;
 import main.database.GroundTextureDao;
+import main.database.MinimapSegmentDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
 import main.processing.FightManager.Fight;
 import main.processing.Player.PlayerState;
 import main.requests.Request;
 import main.responses.AddGroundTextureInstancesResponse;
+import main.responses.AddMinimapSegmentsResponse;
 import main.responses.AddSceneryInstancesResponse;
 import main.responses.GroundItemInRangeResponse;
 import main.responses.GroundItemOutOfRangeResponse;
@@ -34,6 +36,7 @@ import main.responses.PlayerOutOfRangeResponse;
 import main.responses.PvmStartResponse;
 import main.responses.PvpStartResponse;
 import main.responses.RemoveGroundTextureInstancesResponse;
+import main.responses.RemoveMinimapSegmentsResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
@@ -152,7 +155,7 @@ public class WorldProcessor implements Runnable {
 		
 		// take all the responseMaps and compile the responses to send to each player
 		Stopwatch.start("compile response maps");
-		HashMap<Player, ArrayList<Response>> clientResponses = new HashMap<>();
+		Map<Player, List<Response>> clientResponses = new HashMap<>();
 		compileBroadcastResponses(clientResponses, responseMaps);
 		compileBroadcastExcludeResponses(clientResponses, responseMaps);
 		compileLocalResponses(clientResponses, responseMaps);
@@ -163,7 +166,7 @@ public class WorldProcessor implements Runnable {
 		
 		// go through the clientResponses and send the response array to each player
 		Stopwatch.start("send responses");
-		for (Map.Entry<Player, ArrayList<Response>> responses : clientResponses.entrySet()) {
+		for (Map.Entry<Player, List<Response>> responses : clientResponses.entrySet()) {
 			try {
 				responses.getKey().getSession().getBasicRemote().sendText(gson.toJson(responses.getValue()));
 				
@@ -193,7 +196,7 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.end("kill sessions");
 	}
 	
-	private void compileBroadcastResponses(HashMap<Player, ArrayList<Response>> clientResponses, ResponseMaps responseMaps) {
+	private void compileBroadcastResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
 		for (Map.Entry<Session, Player> playerSession : playerSessions.entrySet()) {
 			// every player gets the broadcast responses
 			for (Response broadcastResponse : responseMaps.getBroadcastResponses()) {
@@ -204,8 +207,8 @@ public class WorldProcessor implements Runnable {
 		}
 	}
 	
-	private void compileBroadcastExcludeResponses(HashMap<Player, ArrayList<Response>> clientResponses, ResponseMaps responseMaps) {
-		for (Map.Entry<Player, ArrayList<Response>> broadcastResponseMap : responseMaps.getBroadcastExcludeClientResponses().entrySet()) {
+	private void compileBroadcastExcludeResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
+		for (Map.Entry<Player, List<Response>> broadcastResponseMap : responseMaps.getBroadcastExcludeClientResponses().entrySet()) {
 			for (Map.Entry<Session, Player> playerSession : playerSessions.entrySet()) {
 				if (playerSession.getValue().equals(broadcastResponseMap.getKey()))
 					continue;// don't send to client
@@ -219,10 +222,10 @@ public class WorldProcessor implements Runnable {
 		}
 	}
 	
-	private void compileLocalResponses(HashMap<Player, ArrayList<Response>> clientResponses, ResponseMaps responseMaps) {
-		for (Entry<Integer, Map<Integer, ArrayList<Response>>> localResponseMapByFloor : responseMaps.getLocalResponses().entrySet()) {
-			for (Entry<Integer, ArrayList<Response>> localResponseMap : localResponseMapByFloor.getValue().entrySet()) {
-				ArrayList<Player> localPlayers = getPlayersNearTile(localResponseMapByFloor.getKey(), localResponseMap.getKey(), 15);
+	private void compileLocalResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
+		for (Entry<Integer, Map<Integer, List<Response>>> localResponseMapByFloor : responseMaps.getLocalResponses().entrySet()) {
+			for (Entry<Integer, List<Response>> localResponseMap : localResponseMapByFloor.getValue().entrySet()) {
+				List<Player> localPlayers = getPlayersNearTile(localResponseMapByFloor.getKey(), localResponseMap.getKey(), 15);
 				for (Player localPlayer : localPlayers) {
 					if (!clientResponses.containsKey(localPlayer))
 						clientResponses.put(localPlayer, new ArrayList<>());
@@ -234,8 +237,8 @@ public class WorldProcessor implements Runnable {
 		}
 	}
 
-	private void compileClientOnlyResponses(HashMap<Player, ArrayList<Response>> clientResponses, ResponseMaps responseMaps) {
-		for (Map.Entry<Player, ArrayList<Response>> privateResponseMap : responseMaps.getClientOnlyResponses().entrySet()) {
+	private void compileClientOnlyResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
+		for (Map.Entry<Player, List<Response>> privateResponseMap : responseMaps.getClientOnlyResponses().entrySet()) {
 			// only individual players get these responses
 			for (Response privateResponse : privateResponseMap.getValue()) {
 				if (!clientResponses.containsKey(privateResponseMap.getKey()))
@@ -245,8 +248,8 @@ public class WorldProcessor implements Runnable {
 		}
 	}
 	
-	public static ArrayList<Player> getPlayersNearTile(int floor, int tileId, int radius) {
-		ArrayList<Player> localPlayers = new ArrayList<>();
+	public static List<Player> getPlayersNearTile(int floor, int tileId, int radius) {
+		List<Player> localPlayers = new ArrayList<>();
 		
 		int tileX = tileId % PathFinder.LENGTH;
 		int tileY = tileId / PathFinder.LENGTH;
@@ -479,8 +482,44 @@ public class WorldProcessor implements Runnable {
 					addSceneryResponse.setDepletedScenery(depletedScenery);
 				}
 			}
+			
+			// minimap segments
+			Set<Integer> newSegments = MinimapSegmentDao.getSegmentIdsFromTileId(player.getTileId());
+			Set<Integer> currentSegments = player.getLoadedMinimapSegments();
+			
+			Set<Integer> removedSegments = currentSegments.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !newSegments.contains(e)).collect(Collectors.toSet());
+			if (!removedSegments.isEmpty()) {
+				// remove minimap segments response
+				RemoveMinimapSegmentsResponse minimapResponse = new RemoveMinimapSegmentsResponse();
+				minimapResponse.setSegments(removedSegments);
+				responseMaps.addClientOnlyResponse(player, minimapResponse);
+			}
+			
+			Set<Integer> addedSegments = newSegments.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !currentSegments.contains(e)).collect(Collectors.toSet());
+			if (!addedSegments.isEmpty()) {
+				Map<Integer, Set<Integer>> minimapIconLocations = new HashMap<>();
+				Map<Integer, String> segments = new HashMap<>();
+				for (int segmentId : addedSegments) {
+					segments.put(segmentId, MinimapSegmentDao.getMinimapDataByFloorAndSegmentId(player.getFloor(), segmentId));
+					
+					Map<Integer, Set<Integer>> minimapIconLocationsByFloorAndSegment = MinimapSegmentDao.getMinimapIconLocationsByFloorAndSegment(player.getFloor(), segmentId);
+					for (Map.Entry<Integer, Set<Integer>> entry : minimapIconLocationsByFloorAndSegment.entrySet()) {
+						if (!minimapIconLocations.containsKey(entry.getKey()))
+							minimapIconLocations.put(entry.getKey(), new HashSet<>());
+						minimapIconLocations.get(entry.getKey()).addAll(entry.getValue());
+					}
+				}
+				
+				
+				AddMinimapSegmentsResponse minimapResponse = new AddMinimapSegmentsResponse();
+				minimapResponse.setSegments(segments);
+				minimapResponse.setMinimapIconLocations(minimapIconLocations);
+				responseMaps.addClientOnlyResponse(player, minimapResponse);
+			}
+			
 			player.setLocalTiles(newLocalTiles);
 			player.setLoadedFloor(player.getFloor());
+			player.setLoadedMinimapSegments(newSegments);
 		}
 		Stopwatch.end("updating local ground textures and scenery");
 	}

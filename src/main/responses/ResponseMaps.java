@@ -1,7 +1,8 @@
 package main.responses;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
@@ -9,10 +10,10 @@ import main.processing.Player;
 
 @Getter
 public class ResponseMaps {
-	private Map<Player, ArrayList<Response>> clientOnlyResponses = new HashMap<>();
-	private Map<Integer, Map<Integer, ArrayList<Response>>> localResponses = new HashMap<>();// key is the central tileId
-	private ArrayList<Response> broadcastResponses = new ArrayList<>();
-	private Map<Player, ArrayList<Response>> broadcastExcludeClientResponses = new HashMap<>();
+	private Map<Player, List<Response>> clientOnlyResponses = new LinkedHashMap<>();// we use linked has maps to keep the insertion order, this is important
+	private Map<Integer, Map<Integer, List<Response>>> localResponses = new LinkedHashMap<>();// key is the central tileId
+	private List<Response> broadcastResponses = new ArrayList<>();
+	private Map<Player, List<Response>> broadcastExcludeClientResponses = new LinkedHashMap<>();
 	
 	public void addClientOnlyResponse(Player player, Response response) {
 		if (!clientOnlyResponses.containsKey(player))
@@ -22,7 +23,7 @@ public class ResponseMaps {
 	
 	public void addLocalResponse(Integer floor, Integer tileId, Response response) {
 		if (!localResponses.containsKey(floor))
-			localResponses.put(floor, new HashMap<>());
+			localResponses.put(floor, new LinkedHashMap<>());
 		
 		if (!localResponses.get(floor).containsKey(tileId))
 			localResponses.get(floor).put(tileId, new ArrayList<>());

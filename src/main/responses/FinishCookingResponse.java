@@ -57,7 +57,10 @@ public class FinishCookingResponse extends Response {
 				}
 			}
 			
-			boolean success = RandomUtil.getRandom(0, 100) > 50;
+			int baseChanceToBurn = (cookable.getLevel() - (cookable.getLevel() % 10)) + 10; // 1-10 cooking is 10% chance, 11-20 cooking is 20% chance etc
+			int actualChanceToBurn = Math.max(baseChanceToBurn - cookingLevel, 0);
+			
+			boolean success = RandomUtil.getRandom(0, 100) >= actualChanceToBurn;
 			
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, success ? cookable.getCookedItemId() : cookable.getBurntItemId(), 1, ItemDao.getMaxCharges(cookable.getCookedItemId()));
 			InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 

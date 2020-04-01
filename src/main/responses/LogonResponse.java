@@ -84,7 +84,6 @@ public class LogonResponse extends Response {
 		WorldProcessor.playerSessions.put(client, player);
 		responseMaps.addClientOnlyResponse(player, this);
 		
-		new LoadRoomResponse().process(null, player, responseMaps);
 		new PlayerEnterResponse().process(null, player, responseMaps);
 	}
 	

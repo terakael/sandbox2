@@ -337,6 +337,14 @@ public class UseResponse extends Response {
 				
 		// TODO rune saving based off magic bonus, magic level and requirement level
 		int damage = new Random().nextInt(castable.getMaxHit() + 1);// +1 to include the max hit
+		
+		// higher the magic bonus, the more chance of hitting higher
+		for (int i = 0; i < Math.floor(player.getBonuses().get(Stats.MAGIC) / 11); ++i) {
+			if (damage > castable.getMaxHit() / 2)
+				break;
+			damage = new Random().nextInt(castable.getMaxHit() + 1);
+		}
+		
 		opponent.onHit(damage, DamageTypes.MAGIC, responseMaps);
 		if (opponent.getCurrentHp() == 0) {
 			opponent.onDeath(player, responseMaps);
@@ -480,8 +488,6 @@ public class UseResponse extends Response {
 		final int oldRoomId = player.getFloor();
 		final int newRoomId = teleportable.getFloor();
 		player.setFloor(newRoomId);
-		if (oldRoomId != newRoomId)
-			new LoadRoomResponse().process(null, player, responseMaps);
 		
 		player.setTileId(teleportable.getTileId());
 		player.clearPath();

@@ -436,4 +436,11 @@ public class PathFinder {
 		
 		return (retreatY * LENGTH) + retreatX;
 	}
+	
+	public static boolean tileIsValid(int floor, int tileId) {
+		if (!nodesByFloor.containsKey(floor))
+			return false;
+		
+		return nodesByFloor.get(floor).containsKey(tileId);
+	}
 }
