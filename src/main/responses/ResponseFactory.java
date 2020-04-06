@@ -153,6 +153,9 @@ public class ResponseFactory {
 		case "fish":
 			response = new FishResponse();
 			break;
+		case "enter":
+			response = new EnterPortalResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

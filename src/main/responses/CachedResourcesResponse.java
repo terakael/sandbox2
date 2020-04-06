@@ -62,7 +62,7 @@ public class CachedResourcesResponse extends Response {
 		npcs = NPCDao.getNpcList();
 		expMap = StatsDao.getExpMap();
 		scenery = SceneryDao.getAllScenery();
-		groundTextures = GroundTextureDao.getDtosWithoutInstances();
+		groundTextures = GroundTextureDao.getGroundTextures();
 	}
 
 }

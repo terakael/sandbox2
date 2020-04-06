@@ -1,7 +1,5 @@
 package main.database;
 
-import java.util.HashSet;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -9,9 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public class GroundTextureDto {
 	private int id;
-	private int floor;
+//	private int floor;
 	private int spriteMapId;
 	private int x;
 	private int y;
-	private HashSet<Integer> instances;
+	private boolean walkable;
 }

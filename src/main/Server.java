@@ -1,6 +1,5 @@
 package main;
 
-import java.io.IOException;
 import java.util.Scanner;
 
 import javax.websocket.DeploymentException;
@@ -14,11 +13,11 @@ import main.database.EquipmentDao;
 import main.database.FishableDao;
 import main.database.GroundTextureDao;
 import main.database.ItemDao;
-import main.database.LadderConnectionDao;
 import main.database.MineableDao;
 import main.database.MinimapSegmentDao;
 import main.database.NpcMessageDao;
 import main.database.PickableDao;
+import main.database.PlayerDao;
 import main.database.RespawnableDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
@@ -72,6 +71,9 @@ public class Server {
 			System.out.println("caching ground textures");
 			GroundTextureDao.cacheTextures();
 			
+			System.out.println("caching player stuff");
+			PlayerDao.setupCaches();
+			
 			System.out.println("caching npcs");
 			NPCManager.get().loadNpcs();
 			
@@ -110,9 +112,6 @@ public class Server {
 			
 			System.out.println("initializing ground item manager");
 			GroundItemManager.initialize();
-			
-			System.out.println("caching ladder connections");
-			LadderConnectionDao.setupCaches();
 			
 			System.out.println("caching pickables");
 			PickableDao.setupCaches();

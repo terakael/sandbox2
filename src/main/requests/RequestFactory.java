@@ -50,6 +50,7 @@ public class RequestFactory {
 		map.put("withdraw", BankWithdrawRequest.class);
 		map.put("show_stat_window", ShowStatWindowRequest.class);
 		map.put("fish", FishRequest.class);
+		map.put("enter", EnterPortalRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

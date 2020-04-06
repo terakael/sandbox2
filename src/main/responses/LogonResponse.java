@@ -12,7 +12,6 @@ import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
 import main.database.PlayerDao;
 import main.database.PlayerDto;
-import main.database.PlayerSessionDao;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.processing.Player;
@@ -52,14 +51,13 @@ public class LogonResponse extends Response {
 			return;
 		}
 		
-		if (PlayerSessionDao.entryExists(playerDto.getId())) {
+		if (WorldProcessor.sessionExistsByPlayerId(playerDto.getId())) {
 			setRecoAndResponseText(0, "already logged in");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		
 		PlayerDao.updateLastLoggedIn(playerDto.getId());
-		PlayerSessionDao.addPlayer(playerDto.getId());
 				
 		PlayerStorageDao.createBankSlotsIfNotExists(playerDto.getId());
 		
@@ -68,11 +66,13 @@ public class LogonResponse extends Response {
 				.entrySet()
 				.stream()
 				.collect(Collectors.toMap(e -> e.getKey().getValue(), Map.Entry::getValue));
+		
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(playerDto.getId());
 		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(playerDto.getId(), StorageTypes.INVENTORY.getValue());
 		attackStyles = PlayerDao.getAttackStyles();
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(playerDto.getId());
 		player.refreshBonuses(bonuses);
+		player.recacheEquippedItems();
 		
 		// if there was a bad disconnection (server crash etc) and the player was mid-trade, put the items back into the player's inventory.
 		HashMap<Integer, InventoryItemDto> itemsInTrade = PlayerStorageDao.getStorageDtoMapByPlayerId(playerDto.getId(), StorageTypes.TRADE.getValue());

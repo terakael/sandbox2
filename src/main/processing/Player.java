@@ -616,7 +616,7 @@ public class Player extends Attackable {
 		currentHp = hpLevel + hpBoost;
 		
 		if (type != DamageTypes.POISON) // only for a standard/magic hit, poison doesn't degrade the reinforced armour
-			handleReinforcedItemDegradation(responseMaps);
+			handleReinforcedItemDegradation(damage, responseMaps);
 		
 		// you have 10 hp max, 1hp remaining
 		// relative boost should be -9
@@ -633,19 +633,19 @@ public class Player extends Attackable {
 		new StatBoostResponse().process(null, this, responseMaps);
 	}
 	
-	private void handleReinforcedItemDegradation(ResponseMaps responseMaps) {
+	private void handleReinforcedItemDegradation(int damage, ResponseMaps responseMaps) {
 		boolean itemUpdated = false;
 		boolean itemCleared = false;
 		for (Map.Entry<Integer, Integer> entry : equippedSlotsByItemId.entrySet()) {
 			int degradedItemId = EquipmentDao.getBaseItemFromReinforcedItem(entry.getKey());
 			if (degradedItemId > 0) {
 				InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY.getValue(), entry.getValue());
-				if (item.getCharges() > 1) {
+				if (item.getCharges() > damage) {
 					PlayerStorageDao.setItemFromPlayerIdAndSlot(
 							getId(), 
 							StorageTypes.INVENTORY.getValue(), 
 							entry.getValue(), 
-							entry.getKey(), 1, item.getCharges() - 1);
+							entry.getKey(), 1, item.getCharges() - damage);
 				} else {
 					// ran out of charges; degrade to the base item
 					PlayerStorageDao.setItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY.getValue(), entry.getValue(), degradedItemId, 1, ItemDao.getMaxCharges(degradedItemId));

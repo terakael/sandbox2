@@ -37,8 +37,6 @@ public class SceneryDao {
 		final String query = 
 				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes from scenery " +
 						" where attributes != 2 ";
-//				" where id in (select distinct scenery_id from room_scenery where id != 49)"; // 49 is impassable tile, don't send this to client (used in world builder tool and pathfinding)
-		
 		List<SceneryDto> sceneryList = new ArrayList<>();
 		
 		try (

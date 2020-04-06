@@ -551,4 +551,8 @@ public class WorldProcessor implements Runnable {
 		}
 		Stopwatch.end("refresh npc locations");
 	}
+	
+	public static boolean sessionExistsByPlayerId(int playerId) {
+		return playerSessions.values().stream().anyMatch(e -> e.getId() == playerId);
+	}
 }

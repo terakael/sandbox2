@@ -32,7 +32,7 @@ public class PathFinder {
 		nodesByFloor = new HashMap<>();
 		Set<Integer> distinctFloors = GroundTextureDao.getDistinctFloors();
 		for (int floor : distinctFloors) {
-			Set<Integer> tileIds = GroundTextureDao.getAllTileIdsByFloor(floor);
+			Set<Integer> tileIds = GroundTextureDao.getAllWalkableTileIdsByFloor(floor);
 			if (tileIds.isEmpty())
 				continue;
 			
@@ -61,8 +61,7 @@ public class PathFinder {
 				PathNode currentNode = nodesByFloor.get(floor).get(tileId); 
 				PathNode[] siblings = new PathNode[tileIdsToCheck.length];
 				for (int i = 0; i < tileIdsToCheck.length; ++i) {
-//					if (currentNode.isSiblingPassable(i))
-						siblings[i] = nodesByFloor.get(floor).get(tileIdsToCheck[i]);
+					siblings[i] = nodesByFloor.get(floor).get(tileIdsToCheck[i]);
 				}
 				
 				currentNode.setSiblings(siblings);

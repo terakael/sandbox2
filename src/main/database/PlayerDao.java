@@ -4,12 +4,22 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import lombok.Getter;
+import main.processing.Player;
+import main.processing.WorldProcessor;
 
 public class PlayerDao {
+	@Getter private static Map<Integer, String> attackStyles;
+	
 	private PlayerDao() {}
+	
+	public static void setupCaches() {
+		cacheAttackStyles();
+	}
 		
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
 		final String query = "select id, name, password, tile_id, floor, attack_style_id from player where name = ? and password = ?";
@@ -57,73 +67,13 @@ public class PlayerDao {
 	}
 	
 	public static String getNameFromId(int id) {
-		final String query = "select name from player where id = ?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, id);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getString("name");
-			}
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-		
-		return "";
+		Optional<Player> player = WorldProcessor.playerSessions.values().stream().filter(e -> e.getId() == id).findFirst();
+		return player.isPresent() ? player.get().getDto().getName() : "";
 	}
 	
 	public static int getIdFromName(String name) {
-		final String query = "select id from player where name = ?";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setString(1, name);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("id");
-			}
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-		
-		return -1;
-	}
-	
-	public static List<PlayerDto> getAllPlayers() {
-		List<PlayerDto> playerList = new ArrayList<>();
-		final String query = "select id, name, tile_id, floor, attack_style_id from player inner join player_session on player_session.player_id = player.id";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery();
-		) {
-			while (rs.next()) {
-				int playerId = rs.getInt("id");
-				playerList.add(new PlayerDto(
-						playerId, 
-						rs.getString("name"), 
-						null, 
-						rs.getInt("tile_id"),
-						rs.getInt("floor"), 
-						StatsDao.getCurrentHpByPlayerId(playerId), 
-						StatsDao.getMaxHpByPlayerId(playerId), 
-						StatsDao.getCombatLevelByPlayerId(playerId),
-						rs.getInt("attack_style_id"), 
-						AnimationDao.loadAnimationsByPlayerId(playerId),
-						AnimationDao.getEquipmentAnimationsByPlayerId(playerId)));
-			}
-				
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-		
-		return playerList;
+		Optional<Player> player = WorldProcessor.playerSessions.values().stream().filter(e -> e.getDto().getName().equals(name)).findFirst();
+		return player.isPresent() ? player.get().getId() : -1;
 	}
 	
 	public static void updateTileId(int id, int tileId) {
@@ -156,24 +106,23 @@ public class PlayerDao {
 		}
 	}
 	
-	public static HashMap<Integer, String> getAttackStyles() {
+	public static void cacheAttackStyles() {
+		attackStyles = new HashMap<>();
+		
 		final String query = "select id, name from attack_styles";
 		
-		HashMap<Integer, String> attackStyleMap = new HashMap<>();
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 			ResultSet rs = ps.executeQuery();
 		) {
 			while (rs.next()) {
-				attackStyleMap.put(rs.getInt("id"), rs.getString("name"));
+				attackStyles.put(rs.getInt("id"), rs.getString("name"));
 			}
 				
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
-		
-		return attackStyleMap;
 	}
 	
 	public static void updateAttackStyleId(int playerId, int attackStyleId) {

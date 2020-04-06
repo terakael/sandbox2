@@ -3,7 +3,6 @@ package main;
 import javax.websocket.server.ServerEndpoint;
 
 import com.google.gson.Gson;
-import main.database.PlayerSessionDao;
 import main.processing.FightManager;
 import main.processing.Player;
 import main.processing.TradeManager;
@@ -30,9 +29,9 @@ public class Endpoint {
 	
 	public static Map<Session, Request> requestMap = new HashMap<>();
 	
-	static {
-		PlayerSessionDao.clearAllSessions();
-	}
+//	static {
+//		PlayerSessionDao.clearAllSessions();
+//	}
 	
 	@OnOpen
 	public void onOpen(Session session) {
@@ -64,8 +63,6 @@ public class Endpoint {
 		WorldProcessor.playerSessions.remove(session);
 		
 		if (playerToRemove.getDto() != null) {
-			PlayerSessionDao.removePlayer(playerToRemove.getId());
-			
 			PlayerLeaveRequest req = new PlayerLeaveRequest();
 			req.setAction("playerLeave");
 			req.setId(playerToRemove.getId());

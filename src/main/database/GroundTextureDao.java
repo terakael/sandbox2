@@ -13,7 +13,7 @@ import java.util.Set;
 import lombok.Getter;
 
 public class GroundTextureDao {
-	@Getter private static List<GroundTextureDto> dtosWithoutInstances = new ArrayList<>();
+	@Getter private static List<GroundTextureDto> groundTextures = new ArrayList<>();
 	@Getter private static HashSet<Integer> distinctFloors = new HashSet<>();
 	
 	private static Map<Integer, Map<Integer, Set<Integer>>> tileIdsByGroundTextureId = new HashMap<>(); // floor, <groundTextureId, tileId>
@@ -73,14 +73,14 @@ public class GroundTextureDao {
 	}
 	
 	public static void cacheTextures() {
-		final String query = "select id, sprite_map_id, x, y from ground_textures ";
+		final String query = "select id, sprite_map_id, x, y, walkable from ground_textures ";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					dtosWithoutInstances.add(new GroundTextureDto(rs.getInt("id"), 0, rs.getInt("sprite_map_id"), rs.getInt("x"), rs.getInt("y"), null));
+					groundTextures.add(new GroundTextureDto(rs.getInt("id"), rs.getInt("sprite_map_id"), rs.getInt("x"), rs.getInt("y"), rs.getBoolean("walkable")));
 				}
 			}
 		} catch (SQLException e) {
@@ -126,10 +126,11 @@ public class GroundTextureDao {
 		return spriteMapIds;
 	}
 	
-	public static Set<Integer> getAllTileIdsByFloor(int floor) {
+	public static Set<Integer> getAllWalkableTileIdsByFloor(int floor) {
 		Set<Integer> allTileIdsByFloor = new HashSet<>();
 		
-		final String query = "select tile_id from room_ground_textures where floor=?";
+		final String query = "select tile_id from room_ground_textures where floor=? and ground_texture_id in "
+								+ "(select id from ground_textures where walkable=1)";
 		
 		try (
 			Connection connection = DbConnection.get();
