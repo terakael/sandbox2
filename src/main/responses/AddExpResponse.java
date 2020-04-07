@@ -11,7 +11,7 @@ import main.types.Stats;
 
 @Setter
 public class AddExpResponse extends Response {
-	HashMap<Integer, Integer> stats = new HashMap<>();
+	HashMap<Integer, Double> stats = new HashMap<>();
 
 	public AddExpResponse() {
 		setAction("addexp");
@@ -31,7 +31,7 @@ public class AddExpResponse extends Response {
 		responseMaps.addClientOnlyResponse(player, this);
 	}
 	
-	public void addExp(int statId, int exp) {
+	public void addExp(int statId, double exp) {
 		stats.put(statId, exp);
 	}
 

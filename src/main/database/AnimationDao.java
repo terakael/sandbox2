@@ -7,78 +7,41 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import main.types.AnimationType;
 import main.types.PlayerPartType;
 
-public class AnimationDao {
+public class AnimationDao {	
+	private static Map<Integer, Map<PlayerPartType, AnimationDto>> playerBaseAnimations;
 	
 	private AnimationDao() {}
 	
-	private static int getAnimationIdByPlayerId(int playerId, AnimationType type, PlayerPartType playerPart) {
-		final String query = "select " + type.name() + "_id from player_animations where player_id=? and player_part_id=?";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.setInt(2, playerPart.getValue());
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return rs.getInt(type.name() + "_id");
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return -1;
-	}
-	
-	public static AnimationDto loadAnimationsByPlayerIdPartId(int playerId, PlayerPartType playerPart) {
-		return new AnimationDto(
-			AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.up, playerPart),
-			AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.down, playerPart),
-			AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.left, playerPart),
-			AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.right, playerPart),
-			AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.attack_left, playerPart),
-			AnimationDao.getAnimationIdByPlayerId(playerId, AnimationType.attack_right, playerPart));
-	}
-	
-	public static Map<PlayerPartType, AnimationDto> loadAnimationsByPlayerId(int playerId) {
+	public static Map<PlayerPartType, AnimationDto> loadAnimationsByPlayerId(int playerId) {		
 		Map<PlayerPartType, AnimationDto> animationMap = new HashMap<>();
-		animationMap.put(PlayerPartType.HEAD, loadAnimationsByPlayerIdPartId(playerId, PlayerPartType.HEAD));
-		animationMap.put(PlayerPartType.TORSO, loadAnimationsByPlayerIdPartId(playerId, PlayerPartType.TORSO));
-		animationMap.put(PlayerPartType.LEGS, loadAnimationsByPlayerIdPartId(playerId, PlayerPartType.LEGS));
+		if (!playerBaseAnimations.containsKey(playerId))
+			return animationMap;
+		
+		animationMap.put(PlayerPartType.HEAD, playerBaseAnimations.get(playerId).get(PlayerPartType.HEAD));
+		animationMap.put(PlayerPartType.TORSO, playerBaseAnimations.get(playerId).get(PlayerPartType.TORSO));
+		animationMap.put(PlayerPartType.LEGS, playerBaseAnimations.get(playerId).get(PlayerPartType.LEGS));
 		return animationMap;
 	}
 	
-	public static Map<PlayerPartType, AnimationDto> getEquipmentAnimationsByPlayerId(int playerId) {
-		Map<PlayerPartType, AnimationDto> animationMap = new HashMap<>();
+	public static void cacheBasePlayerAnimations() {
+		playerBaseAnimations = new HashMap<>();
 		
-		final String query = 
-				"select " + 
-				" player_equipment.player_id," + 
-				" player_equipment.equipment_id," + 
-				" equipment.player_part_id," + 
-				" equipment.equipment_type_id," + 
-				" equipment.up_id," + 
-				" equipment.down_id," + 
-				" equipment.left_id," + 
-				" equipment.right_id," + 
-				" equipment.attack_left_id," +
-				" equipment.attack_right_id" +
-				" from player_equipment" + 
-				" inner join equipment on equipment.item_id = player_equipment.equipment_id" + 
-				" where player_id=?";
+		final String query = "select player_id, player_part_id, up_id, down_id, left_id, right_id, attack_left_id, attack_right_id from player_animations";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
-			ps.setInt(1, playerId);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					animationMap.put(PlayerPartType.withValue(rs.getInt("player_part_id")), 
-							new AnimationDto(
+					final int playerId = rs.getInt("player_id");
+					if (!playerBaseAnimations.containsKey(playerId))
+						playerBaseAnimations.put(playerId, new HashMap<>());
+					
+						playerBaseAnimations.get(playerId)
+							.put(PlayerPartType.withValue(rs.getInt("player_part_id")), 
+								new AnimationDto(
 									rs.getInt("up_id"), 
 									rs.getInt("down_id"),
 									rs.getInt("left_id"),
@@ -90,7 +53,5 @@ public class AnimationDao {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-		return animationMap;
 	}
 }

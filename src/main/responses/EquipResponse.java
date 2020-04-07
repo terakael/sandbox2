@@ -3,6 +3,7 @@ package main.responses;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import main.database.AnimationDao;
 import main.database.AnimationDto;
@@ -19,7 +20,7 @@ import main.types.PlayerPartType;
 import main.types.Stats;
 
 public class EquipResponse extends Response {
-	private HashSet<Integer> equippedSlots = new HashSet<>();
+	private Set<Integer> equippedSlots = new HashSet<>();
 	private Map<PlayerPartType, AnimationDto> equipAnimations = new HashMap<>();
 	private EquipmentBonusDto bonuses = null;
 
@@ -63,7 +64,7 @@ public class EquipResponse extends Response {
 		}
 		
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
-		equipAnimations = AnimationDao.getEquipmentAnimationsByPlayerId(player.getId());
+		equipAnimations = EquipmentDao.getEquipmentAnimationsByPlayerId(player.getId());
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(player.getId());
 		
 		player.recacheEquippedItems();

@@ -76,21 +76,4 @@ public class FishableDao {
 			}
 		}
 	}
-	
-	public static int getFishableExpByItemId(int itemId) {
-		final String query = "select exp from fishable where item_id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, itemId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("exp");
-			}	
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0;
-	}
 }

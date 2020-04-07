@@ -58,7 +58,7 @@ public class CachedResourcesResponse extends Response {
 		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
 		items = ItemDao.getAllItems();
 		contextOptions = ContextOptionsDao.getAllContextOptions();
-		statMap = StatsDao.getStats();
+		statMap = StatsDao.getCachedStats();
 		npcs = NPCDao.getNpcList();
 		expMap = StatsDao.getExpMap();
 		scenery = SceneryDao.getAllScenery();

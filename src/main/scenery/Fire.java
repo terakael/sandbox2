@@ -1,6 +1,6 @@
 package main.scenery;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import main.database.CookableDao;
 import main.database.CookableDto;
@@ -38,7 +38,7 @@ public class Fire extends Scenery {
 				return true;
 			}
 			
-			ArrayList<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			List<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			
 			if (inv.get(slot) != cookable.getRawItemId()) {// the passed-in slot doesn't have the correct item?  check other slots
 				for (slot = 0; slot < inv.size(); ++slot) {

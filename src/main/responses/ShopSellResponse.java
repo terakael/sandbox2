@@ -1,8 +1,8 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
@@ -30,7 +30,7 @@ public class ShopSellResponse extends Response {
 		ShopSellRequest request = (ShopSellRequest)req;
 		int requestAmount = Math.min(request.getAmount(), 10);// prevention of client injection
 		
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (!invItemIds.contains(request.getObjectId()))
 			return; // player doesn't have it.
 		
@@ -63,7 +63,7 @@ public class ShopSellResponse extends Response {
 		if (ItemDao.itemHasAttribute(item.getId(), ItemAttributes.STACKABLE)) {
 			// if the inventory is full and we don't have coins, but we're selling the whole stack
 			// then we can replace the stack with the coins.
-			InventoryItemDto invItem = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(item.getId()));
+			InventoryItemDto invItem = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, invItemIds.indexOf(item.getId()));
 			int sellCount = Math.min(invItem.getCount(), requestAmount);
 			if (sellCount < invItem.getCount() 
 					&& PlayerStorageDao.getFreeSlotByPlayerId(player.getId()) == -1 
@@ -82,13 +82,13 @@ public class ShopSellResponse extends Response {
 			
 			// we have room to accept the coins
 			numCoins = out[0];
-			PlayerStorageDao.setCountOnInventorySlot(player.getId(), invItemIds.indexOf(item.getId()), invItem.getCount() - out[1]);
+			PlayerStorageDao.setCountOnSlot(player.getId(), StorageTypes.INVENTORY, invItemIds.indexOf(item.getId()), invItem.getCount() - out[1]);
 			shop.addItem(item.getId(), out[1]);
 					
 		} else {
 			
 			// exclude equipped items from the sale
-			HashSet<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
+			Set<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
 			for (Integer slot : equippedSlots) {
 				if (invItemIds.get(slot) == item.getId()) {
 					invItemIds.set(slot, 0);// exclude the equipped item from the list
@@ -98,7 +98,7 @@ public class ShopSellResponse extends Response {
 			// exclude partially charged items from the sale
 			for (int i = 0; i < invItemIds.size(); ++i) {
 				if (ItemDao.itemHasAttribute(invItemIds.get(i), ItemAttributes.CHARGED)) {
-					InventoryItemDto invItem = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i);
+					InventoryItemDto invItem = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, i);
 					if (invItem.getCharges() != ItemDao.getMaxCharges(invItem.getItemId())) {
 						// not fully charged, so we won't sell it
 						invItemIds.set(i, 0);
@@ -121,7 +121,7 @@ public class ShopSellResponse extends Response {
 				
 				for (int i = 0; i < invItemIds.size() && sellCount > 0; ++i) {
 					if (invItemIds.get(i) == item.getId()) {				
-						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, 0, 1, 0);
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, i, 0, 1, 0);
 						--sellCount;
 					}
 				}
@@ -137,9 +137,9 @@ public class ShopSellResponse extends Response {
 		if (numCoins > 0) {
 			// items were sold, now give the player the coins
 			if (invItemIds.contains(Items.COINS.getValue()))
-				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(Items.COINS.getValue()), numCoins);
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY, invItemIds.indexOf(Items.COINS.getValue()), numCoins);
 			else
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), Items.COINS.getValue(), numCoins, 0);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, Items.COINS.getValue(), numCoins, 0);
 	//			PlayerStorageDao.addItemByPlayerIdItemId(player.getId(), Items.COINS.getValue(), numCoins);
 		}
 		

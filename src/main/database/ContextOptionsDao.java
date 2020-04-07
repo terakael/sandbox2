@@ -7,12 +7,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.Getter;
+
 public class ContextOptionsDao {
+	@Getter private static List<ContextOptionsDto> allContextOptions;
+	
 	private ContextOptionsDao() {};
 	
-	public static List<ContextOptionsDto> getAllContextOptions() {
+	public static void cacheAllContextOptions() {
+		allContextOptions = new ArrayList<>();
 		final String query = "select id, name, priority from context_options";
-		List<ContextOptionsDto> contextOptions = new ArrayList<>();
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -20,12 +24,10 @@ public class ContextOptionsDao {
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
-					contextOptions.add(new ContextOptionsDto(rs.getInt("id"), rs.getString("name"), rs.getInt("priority")));
+					allContextOptions.add(new ContextOptionsDto(rs.getInt("id"), rs.getString("name"), rs.getInt("priority")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-		return contextOptions;
 	}
 }

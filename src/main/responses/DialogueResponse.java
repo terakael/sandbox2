@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Setter;
-import main.GroundItemManager;
 import main.database.DialogueDao;
 import main.database.ItemDao;
 import main.database.NPCDao;
@@ -37,8 +36,8 @@ public class DialogueResponse extends Response {
 		
 		ArrayList<NpcDialogueOptionDto> options = DialogueDao.getDialogueOptionsBySrcDialogueId(currentDialogue.getNpcId(), currentDialogue.getPointId(), currentDialogue.getDialogueId());
 		if (!options.isEmpty()) {
-			ArrayList<NpcDialogueOptionDto> validOptions = new ArrayList<>();// inventory checks etc
-			ArrayList<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			List<NpcDialogueOptionDto> validOptions = new ArrayList<>();// inventory checks etc
+			List<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			for (NpcDialogueOptionDto option : options) {
 				if (option.getRequiredItem1() == 0 || inv.contains(option.getRequiredItem1()))
 					validOptions.add(option);
@@ -64,9 +63,9 @@ public class DialogueResponse extends Response {
 		
 		if (nextDialogue.getNpcId() == 12 && nextDialogue.getPointId() == 2 && nextDialogue.getDialogueId() == 13) {
 			// leo gives the sword to the player
-			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			if (invItemIds.contains(Items.LEOS_BABY.getValue())) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(Items.LEOS_BABY.getValue()), Items.STEEL_SWORD_III.getValue(), 1, ItemDao.getMaxCharges(Items.STEEL_SWORD_III.getValue()));
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, invItemIds.indexOf(Items.LEOS_BABY.getValue()), Items.STEEL_SWORD_III.getValue(), 1, ItemDao.getMaxCharges(Items.STEEL_SWORD_III.getValue()));
 				InventoryUpdateResponse.sendUpdate(player, responseMaps);
 			}
 		}

@@ -49,7 +49,7 @@ public class ExamineResponse extends Response {
 			// if you examine the ground stackable it will tell you your inventory stackable count.
 			// ideally we could tell the source of the request (inventory, ground, shop, bank, smithing interface etc) and handle it accordingly.
 			if (ItemDao.itemHasAttribute(request.getObjectId(), ItemAttributes.STACKABLE)) {
-				int stackCount = PlayerStorageDao.getNumStorageItemsByPlayerIdItemIdStorageTypeId(player.getId(), request.getObjectId(), StorageTypes.INVENTORY.getValue()); 
+				int stackCount = PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), request.getObjectId(), StorageTypes.INVENTORY); 
 				if (stackCount >= 100000) {// 0 if the item isn't in the inventory
 					examineText = String.format("%,d %s.", stackCount , ItemDao.getNameFromId(request.getObjectId()));
 					break;

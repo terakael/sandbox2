@@ -1,6 +1,6 @@
 package main.responses;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import main.GroundItemManager;
 import main.database.ItemDao;
@@ -54,7 +54,7 @@ public class TakeResponse extends Response {
 			return;
 		}
 		
-		ArrayList<Integer> invItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		List<Integer> invItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (ItemDao.itemHasAttribute(groundItem.getId(), ItemAttributes.STACKABLE)) {
 			if (!invItems.contains(0) && !invItems.contains(takeReq.getItemId())) {
 				setRecoAndResponseText(0, "you don't have enough space to take that.");
@@ -64,9 +64,9 @@ public class TakeResponse extends Response {
 			
 			int invItemIndex = invItems.indexOf(groundItem.getId());
 			if (invItemIndex >= 0) {
-				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIndex, groundItem.getCount());
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY, invItemIndex, groundItem.getCount());
 			} else {
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), groundItem.getCount(), 0);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, takeReq.getItemId(), groundItem.getCount(), 0);
 			}
 		} else {
 			if (!invItems.contains(0)) {
@@ -74,7 +74,7 @@ public class TakeResponse extends Response {
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
 			}
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), takeReq.getItemId(), 1, groundItem.getCharges());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, takeReq.getItemId(), 1, groundItem.getCharges());
 		}
 		
 		GroundItemManager.remove(player.getFloor(), player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount(), groundItem.getCharges());

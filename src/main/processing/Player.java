@@ -5,25 +5,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 import javax.websocket.Session;
 
 import lombok.Getter;
 import lombok.Setter;
 import main.GroundItemManager;
-import main.database.AnimationDao;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
 import main.database.ItemDao;
 import main.database.NpcDialogueDto;
-import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.database.TeleportableDao;
 import main.database.TeleportableDto;
+import main.database.entity.update.UpdatePlayerEntity;
 import main.requests.FishRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
@@ -77,7 +75,7 @@ public class Player extends Attackable {
 	@Setter @Getter private NpcDialogueDto currentDialogue = null;
 	@Setter @Getter private int shopId;// if the player is currently in a shop, this is the id
 	private int postFightCooldown = 0;
-	private HashMap<Integer, Integer> equippedSlotsByItemId = new HashMap<>();// itemId, slot
+	private Map<Integer, Integer> equippedSlotsByItemId = new HashMap<>();// itemId, slot
 	private HashMap<Buffs, Integer> activeBuffs = new HashMap<>(); // buff, remaining ticks
 	@Getter @Setter private Set<Integer> inRangeNpcs = new HashSet<>();
 	@Getter @Setter private Set<Integer> inRangePlayers = new HashSet<>();
@@ -116,9 +114,9 @@ public class Player extends Attackable {
 		return activeBuffs.containsKey(buff);
 	}
 	
-	public void refreshStats(Map<Integer, Integer> statExp) {
-		for (Map.Entry<Integer, Integer> stat : statExp.entrySet())
-			stats.put(Stats.withValue(stat.getKey()), StatsDao.getLevelFromExp(stat.getValue()));
+	public void refreshStats(Map<Integer, Double> statExp) {
+		for (Map.Entry<Integer, Double> stat : statExp.entrySet())
+			stats.put(Stats.withValue(stat.getKey()), StatsDao.getLevelFromExp(stat.getValue().intValue()));
 	}
 	
 	public void refreshStats() {
@@ -350,7 +348,7 @@ public class Player extends Attackable {
 				playerUpdate.setSnapToTile(true);
 				playerUpdate.setCurrentHp(currentHp);
 				playerUpdate.setMaxHp(currentHp);
-				playerUpdate.setEquipAnimations(AnimationDao.getEquipmentAnimationsByPlayerId(getId()));
+				playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(getId()));
 				playerUpdate.setRespawn(true);
 				
 				// the reason this is local is so the other players know the player respawned
@@ -413,12 +411,12 @@ public class Player extends Attackable {
 	
 	public void setTileId(int tileId) {
 		this.tileId = tileId;
-		PlayerDao.updateTileId(dto.getId(), tileId);
+		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(dto.getId()).tileId(tileId).build());
 	}
 	
 	public void setFloor(int floor) {
 		this.floor = floor;
-		PlayerDao.updateFloor(dto.getId(), floor);
+		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(dto.getId()).floor(floor).build());
 	}
 	
 	public int getTileId() {
@@ -444,7 +442,7 @@ public class Player extends Attackable {
 		// unequip and drop all the items in inventory
 		EquipmentDao.clearAllEquppedItems(getId());
 		
-		HashMap<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.INVENTORY.getValue());
+		Map<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.INVENTORY);
 		for (InventoryItemDto dto : inventoryList.values()) {
 			if (dto.getSlot() < 3)
 				continue;// you always protect your items in the first three slots (0, 1, 2)
@@ -515,7 +513,7 @@ public class Player extends Attackable {
 			return;
 		}
 		
-		Map<Integer, Integer> expBefore = StatsDao.getAllStatExpByPlayerId(getId());
+		Map<Integer, Double> expBefore = StatsDao.getAllStatExpByPlayerId(getId());
 		
 		// hammer/aggressive: 4str, 1hp
 		// hammer/defensive: 4def, 1hp
@@ -584,11 +582,11 @@ public class Player extends Attackable {
 			}
 		}
 		
-		Map<Integer, Integer> currentStatExp = StatsDao.getAllStatExpByPlayerId(getId());
+		Map<Integer, Double> currentStatExp = StatsDao.getAllStatExpByPlayerId(getId());
 		
 		AddExpResponse response = new AddExpResponse();
-		for (Map.Entry<Integer, Integer> statExp : currentStatExp.entrySet()) {
-			int diff = statExp.getValue() - expBefore.get(statExp.getKey()); 
+		for (Map.Entry<Integer, Double> statExp : currentStatExp.entrySet()) {
+			double diff = statExp.getValue() - expBefore.get(statExp.getKey()); 
 			if (diff > 0)
 				response.addExp(statExp.getKey(), diff);
 		}		
@@ -639,16 +637,16 @@ public class Player extends Attackable {
 		for (Map.Entry<Integer, Integer> entry : equippedSlotsByItemId.entrySet()) {
 			int degradedItemId = EquipmentDao.getBaseItemFromReinforcedItem(entry.getKey());
 			if (degradedItemId > 0) {
-				InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY.getValue(), entry.getValue());
+				InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY, entry.getValue());
 				if (item.getCharges() > damage) {
 					PlayerStorageDao.setItemFromPlayerIdAndSlot(
 							getId(), 
-							StorageTypes.INVENTORY.getValue(), 
+							StorageTypes.INVENTORY, 
 							entry.getValue(), 
 							entry.getKey(), 1, item.getCharges() - damage);
 				} else {
 					// ran out of charges; degrade to the base item
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY.getValue(), entry.getValue(), degradedItemId, 1, ItemDao.getMaxCharges(degradedItemId));
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY, entry.getValue(), degradedItemId, 1, ItemDao.getMaxCharges(degradedItemId));
 					
 					// clear the equipped item first then reset it with the degraded base item
 					EquipmentDao.clearEquippedItem(getId(), entry.getValue());
@@ -669,11 +667,6 @@ public class Player extends Attackable {
 			recacheEquippedItems();
 			new InventoryUpdateResponse().process(RequestFactory.create("", getId()), this, responseMaps);
 			if (itemCleared) {
-//				PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
-//				playerUpdate.setId(getId());
-//				playerUpdate.setEquipAnimations(AnimationDao.getEquipmentAnimationsByPlayerId(getId()));
-//				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdate);
-				
 				new EquipResponse().process(null, WorldProcessor.getPlayerById(getId()), responseMaps);
 			}
 		}

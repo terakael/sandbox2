@@ -1,6 +1,7 @@
 package main.responses;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import main.database.InventoryItemDto;
 import main.database.PlayerStorageDao;
@@ -11,8 +12,8 @@ import main.requests.Request;
 import main.types.StorageTypes;
 
 public class TradeUpdateResponse extends Response {
-	private HashMap<Integer, InventoryItemDto> playerTradeData = new HashMap<>();
-	private HashMap<Integer, InventoryItemDto> otherTradeData = new HashMap<>();
+	private Map<Integer, InventoryItemDto> playerTradeData = new HashMap<>();
+	private Map<Integer, InventoryItemDto> otherTradeData = new HashMap<>();
 	
 	public TradeUpdateResponse() {
 		setAction("trade_update");
@@ -28,8 +29,8 @@ public class TradeUpdateResponse extends Response {
 		if (otherPlayer == null)
 			return;
 		
-		playerTradeData = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.TRADE.getValue());
-		otherTradeData = PlayerStorageDao.getStorageDtoMapByPlayerId(otherPlayer.getId(), StorageTypes.TRADE.getValue());
+		playerTradeData = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.TRADE);
+		otherTradeData = PlayerStorageDao.getStorageDtoMapByPlayerId(otherPlayer.getId(), StorageTypes.TRADE);
 		
 		responseMaps.addClientOnlyResponse(player, this);
 	}

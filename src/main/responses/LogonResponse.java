@@ -1,8 +1,8 @@
 package main.responses;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.websocket.Session;
@@ -23,11 +23,11 @@ import main.types.StorageTypes;
 public class LogonResponse extends Response {
 	private PlayerDto playerDto;
 	
-	private Map<Integer, Integer> stats;
+	private Map<Integer, Double> stats;
 	private Map<Integer, Integer> boosts;
 	private Map<Integer, InventoryItemDto> inventory;
 	private Map<Integer, String> attackStyles;
-	private HashSet<Integer> equippedSlots;
+	private Set<Integer> equippedSlots;
 	private EquipmentBonusDto bonuses;
 
 	public LogonResponse() {
@@ -68,18 +68,18 @@ public class LogonResponse extends Response {
 				.collect(Collectors.toMap(e -> e.getKey().getValue(), Map.Entry::getValue));
 		
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(playerDto.getId());
-		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(playerDto.getId(), StorageTypes.INVENTORY.getValue());
+		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(playerDto.getId(), StorageTypes.INVENTORY);
 		attackStyles = PlayerDao.getAttackStyles();
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(playerDto.getId());
 		player.refreshBonuses(bonuses);
 		player.recacheEquippedItems();
 		
 		// if there was a bad disconnection (server crash etc) and the player was mid-trade, put the items back into the player's inventory.
-		HashMap<Integer, InventoryItemDto> itemsInTrade = PlayerStorageDao.getStorageDtoMapByPlayerId(playerDto.getId(), StorageTypes.TRADE.getValue());
-		for (InventoryItemDto itemInTrade : itemsInTrade.values()) {
-			PlayerStorageDao.addItemToFirstFreeSlot(playerDto.getId(), StorageTypes.INVENTORY.getValue(), itemInTrade.getItemId(), itemInTrade.getCount(), itemInTrade.getCharges());
+		Map<Integer, InventoryItemDto> itemsInTrade = PlayerStorageDao.getStorageDtoMapByPlayerId(playerDto.getId(), StorageTypes.TRADE);		
+		for (InventoryItemDto itemInTrade : itemsInTrade.values().stream().filter(e -> e.getItemId() != 0).collect(Collectors.toList())) {
+			PlayerStorageDao.addItemToFirstFreeSlot(playerDto.getId(), StorageTypes.INVENTORY, itemInTrade.getItemId(), itemInTrade.getCount(), itemInTrade.getCharges());
 		}
-		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(playerDto.getId(), StorageTypes.TRADE.getValue());
+		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(playerDto.getId(), StorageTypes.TRADE);
 		
 		WorldProcessor.playerSessions.put(client, player);
 		responseMaps.addClientOnlyResponse(player, this);

@@ -1,6 +1,5 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Setter;
@@ -18,7 +17,7 @@ import main.types.Items;
 import main.types.StorageTypes;
 
 public class DialogueOptionResponse extends Response {
-	@Setter private ArrayList<NpcDialogueOptionDto> options;
+	@Setter private List<NpcDialogueOptionDto> options;
 	public DialogueOptionResponse() {
 		setAction("dialogue_option");
 	}
@@ -78,12 +77,12 @@ public class DialogueOptionResponse extends Response {
 			
 			if (capeId != 0) {
 				// if the player doesn't have any inventory space then drop it on the ground below them
-				List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+				List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 				if (!invItemIds.contains(0)) {
 					// drop on ground
 					GroundItemManager.add(player.getFloor(), player.getId(), capeId, player.getTileId(), 1, ItemDao.getMaxCharges(capeId));
 				} else {
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(0), capeId, 1, ItemDao.getMaxCharges(capeId));
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, invItemIds.indexOf(0), capeId, 1, ItemDao.getMaxCharges(capeId));
 				}
 				
 				InventoryUpdateResponse.sendUpdate(player, responseMaps);

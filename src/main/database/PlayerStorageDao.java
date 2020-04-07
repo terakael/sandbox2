@@ -6,42 +6,41 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import main.GroundItemManager;
+import main.database.entity.update.UpdatePlayerStorageEntity;
+import main.processing.DatabaseUpdater;
+import main.processing.Player;
+import main.processing.WorldProcessor;
 import main.types.ItemAttributes;
+import main.types.Items;
 import main.types.StorageTypes;
-import main.utils.Utils;
 
 public class PlayerStorageDao {
+	private static Map<Integer, Map<StorageTypes, Map<Integer, PlayerStorageDto>>> playerStorage; // playerId, <storageTypeId, <slot, dto>>
+	
 	private PlayerStorageDao() {}
 	
-	public static ArrayList<Integer> getStorageListByPlayerId(int playerId, int storageTypeId) {
-		ArrayList<Integer> inventoryList = new ArrayList<>();
-		final String query = "select item_id from player_storage where player_id=? and storage_id=? order by slot";
+	public static List<Integer> getStorageListByPlayerId(int playerId, StorageTypes storageType) {
+		if (!validatePlayerStorageElement(playerId, storageType))
+			return new ArrayList<>();
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.setInt(2, storageTypeId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					inventoryList.add(rs.getInt("item_id"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		return inventoryList;
+		return playerStorage.get(playerId).get(storageType).values().stream()
+					.map(PlayerStorageDto::getItemId)
+					.collect(Collectors.toList());
 	}
 	
-	public static boolean addItemToFirstFreeSlot(int playerId, int storageTypeId, int itemId, int count, int charges) {
-		ArrayList<Integer> invItemIds = getStorageListByPlayerId(playerId, storageTypeId);
+	public static boolean addItemToFirstFreeSlot(int playerId, StorageTypes storageTypeId, int itemId, int count, int charges) {
+		List<Integer> invItemIds = getStorageListByPlayerId(playerId, storageTypeId);
 		
 		boolean existingStackableSlot = false;
 		int slot = -1;
-		if (ItemDao.itemHasAttribute(itemId, ItemAttributes.STACKABLE) || storageTypeId == StorageTypes.BANK.getValue()) {
+		if (ItemDao.itemHasAttribute(itemId, ItemAttributes.STACKABLE) || storageTypeId == StorageTypes.BANK) {
 			if (ItemDao.itemHasAttribute(itemId, ItemAttributes.CHARGED)) {
 				for (int i = 0; i < invItemIds.size(); ++i) {
 					if (invItemIds.get(i) == itemId) {
@@ -62,8 +61,10 @@ public class PlayerStorageDao {
 			slot = invItemIds.indexOf(0);
 		
 		if (slot == -1) {
-			// no free slots
-			return false;
+			// no free slots - drop on the floor lol fuck you
+			final Player player = WorldProcessor.getPlayerById(playerId);
+			GroundItemManager.add(player.getFloor(), playerId, itemId, player.getTileId(), count, charges);
+			return true;
 		}
 		
 		if (existingStackableSlot) {
@@ -75,33 +76,21 @@ public class PlayerStorageDao {
 		return true;
 	}
 	
-	public static HashMap<Integer, InventoryItemDto> getStorageDtoMapByPlayerId(int playerId, int storageTypeId) {
-		HashMap<Integer, InventoryItemDto> dtos = new HashMap<>();
-		final String query = "select item_id, slot, count, charges from player_storage where player_id=? and storage_id=? order by slot";
+	public static Map<Integer, InventoryItemDto> getStorageDtoMapByPlayerId(int playerId, StorageTypes storageType) {
+		Map<Integer, InventoryItemDto> dtos = new HashMap<>();
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.setInt(2, storageTypeId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					int count = rs.getInt("count");
-					String friendlyCount = Utils.getFriendlyCount(count);
-					dtos.put(rs.getInt("slot"), new InventoryItemDto(rs.getInt("item_id"), rs.getInt("slot"), count, friendlyCount, rs.getInt("charges")));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		if (!validatePlayerStorageElement(playerId, storageType))
+			return dtos;
+		
+		playerStorage.get(playerId).get(storageType).values()
+			.forEach(e -> dtos.put(e.getSlot(), new InventoryItemDto(e)));
 		
 		return dtos;
 	}
 	
-	public static HashMap<Integer, InventoryItemDto> getStorageDtoMapByPlayerIdExcludingEmpty(int playerId, int storageTypeId) {
-		HashMap<Integer, InventoryItemDto> allDtos = getStorageDtoMapByPlayerId(playerId, storageTypeId);
-		HashMap<Integer, InventoryItemDto> retDtos = new HashMap<>();
+	public static Map<Integer, InventoryItemDto> getStorageDtoMapByPlayerIdExcludingEmpty(int playerId, StorageTypes storageType) {
+		Map<Integer, InventoryItemDto> allDtos = getStorageDtoMapByPlayerId(playerId, storageType);
+		Map<Integer, InventoryItemDto> retDtos = new HashMap<>();
 		for (Map.Entry<Integer, InventoryItemDto> entry : allDtos.entrySet()) {
 			if (entry.getValue().getItemId() > 0)
 				retDtos.put(entry.getKey(), entry.getValue());
@@ -109,279 +98,196 @@ public class PlayerStorageDao {
 		return retDtos;
 	}
 	
-	public static Integer getStoredCoalByPlayerId(int id) {
-		final String query = "select count from player_storage where player_id=? and storage_id=3";
+	public static Integer getStoredCoalByPlayerId(int playerId) {
+		if (!validatePlayerStorageElement(playerId, StorageTypes.FURNACE))
+			return 0;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, id);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("count");
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		return 0;
+		return playerStorage.get(playerId).get(StorageTypes.FURNACE).get(0).getCount();// furnace only has slot 0
 	}
 
 	public static ItemDto getItemFromPlayerIdAndSlot(int playerId, int slot) {
-		return ItemDao.getItem(getItemIdInSlot(playerId, 1, slot));
+		return ItemDao.getItem(getItemIdInSlot(playerId, StorageTypes.INVENTORY, slot));
 	}
 	
-	public static InventoryItemDto getStorageItemFromPlayerIdAndSlot(int playerId, int storageTypeId, int slot) {
-		final String query = "select item_id, slot, count, charges from player_storage where storage_id=? and player_id=? and slot=?";
+	public static InventoryItemDto getStorageItemFromPlayerIdAndSlot(int playerId, StorageTypes storageType, int slot) {
+		if (!validatePlayerStorageElement(playerId, storageType, slot))
+			return null;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, storageTypeId);
-			ps.setInt(2, playerId);
-			ps.setInt(3, slot);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					int count = rs.getInt("count");
-					String friendlyCount = Utils.getFriendlyCount(count);
-					return new InventoryItemDto(rs.getInt("item_id"), rs.getInt("slot"), count, friendlyCount, rs.getInt("charges"));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		return null;
+		return new InventoryItemDto(playerStorage.get(playerId).get(storageType).get(slot));
 	}
 	
-	public static Integer getItemIdInSlot(int playerId, int storageId, int slot) {
-		final String query = "select item_id from player_storage where player_id=? and storage_id=? and slot=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.setInt(2, storageId);
-			ps.setInt(3, slot);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("item_id");
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return null;
+	public static Integer getItemIdInSlot(int playerId, StorageTypes storageType, int slot) {
+		if (!validatePlayerStorageElement(playerId, storageType, slot))
+			return null;
+		
+		return playerStorage.get(playerId).get(storageType).get(slot).getItemId();
 	}
 
-	public static boolean setItemFromPlayerIdAndSlot(int playerId, int storageTypeId, int slot, int itemId, int count, int charges) {
-		final String query = "update player_storage set item_id=?, count=?, charges=? where player_id=? and storage_id=? and slot=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, itemId);
-			ps.setInt(2, count);
-			ps.setInt(3, charges);
-			ps.setInt(4, playerId);
-			ps.setInt(5, storageTypeId);
-			ps.setInt(6, slot);
-			return ps.executeUpdate() == 1;
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+	public static boolean setItemFromPlayerIdAndSlot(int playerId, StorageTypes storageType, int slot, int itemId, int count, int charges) {
+		if (!validatePlayerStorageElement(playerId, storageType, slot))
+			return false;
 		
-		return false;
+		playerStorage.get(playerId).get(storageType).get(slot).setItemId(itemId);
+		playerStorage.get(playerId).get(storageType).get(slot).setCount(count);
+		playerStorage.get(playerId).get(storageType).get(slot).setCharges(charges);
+		
+		DatabaseUpdater.enqueue(UpdatePlayerStorageEntity.builder()
+									.playerId(playerId)
+									.storageId(storageType.getValue())
+									.slot(slot)
+									.itemId(itemId)
+									.count(count)
+									.charges(charges)
+									.build());
+		
+		return true;
 	}
 	
 	public static int getFreeSlotByPlayerId(int playerId) {
-		final String query = "select slot from player_storage where player_id=? and storage_id=1 and item_id=0 order by slot limit 1";
+		if (!validatePlayerStorageElement(playerId, StorageTypes.INVENTORY))
+			return -1;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, playerId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("slot");
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		Optional<PlayerStorageDto> dto = playerStorage.get(playerId).get(StorageTypes.INVENTORY).values().stream()
+				.filter(e -> e.getItemId() == 0)
+				.findFirst();
 		
-		return -1;
+		return dto.isPresent() ? dto.get().getSlot() : -1;
 	}
 	
-	public static boolean clearStorageByPlayerIdStorageTypeId(int playerId, int storageTypeId) {
-		final String query = "update player_storage set item_id=0 where player_id=? and storage_id=?";
+	public static boolean clearStorageByPlayerIdStorageTypeId(int playerId, StorageTypes storageType) {
+		if (!validatePlayerStorageElement(playerId, storageType))
+			return false;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.setInt(2, storageTypeId);
-			return ps.executeUpdate() == 1;
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return false;
+		playerStorage.get(playerId).get(storageType).values().stream()
+		.filter(e -> e.getItemId() != 0)
+		.forEach(e -> {
+			e.setItemId(0);
+			e.setCount(0);
+			e.setCharges(0);
+			
+			// this is a bit slow compared to the single query before, but it's running in a different thread so it's technically faster for the game
+			DatabaseUpdater.enqueue(UpdatePlayerStorageEntity.builder()
+					.playerId(playerId)
+					.storageId(storageType.getValue())
+					.slot(e.getSlot())
+					.itemId(0)
+					.count(0)
+					.charges(0)
+					.build());
+		});
+		
+		return true;
 	}
 	
 	public static void clearPlayerInventoryExceptFirstThreeSlots(int playerId) {
-		final String query = "update player_storage set item_id=0 where player_id=? and slot >= 3 and storage_id=1";
+		if (!validatePlayerStorageElement(playerId, StorageTypes.INVENTORY))
+			return;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		playerStorage.get(playerId).get(StorageTypes.INVENTORY).values().stream()
+			.filter(e -> e.getSlot() >= 3)
+			.forEach(e -> {
+				e.setCount(0);
+				e.setCharges(0);
+				e.setItemId(0);
+				
+				// this is a bit slow compared to the single query before, but it's running in a different thread so it's technically faster for the game
+				DatabaseUpdater.enqueue(UpdatePlayerStorageEntity.builder()
+						.playerId(playerId)
+						.storageId(StorageTypes.INVENTORY.getValue())
+						.slot(e.getSlot())
+						.itemId(0)
+						.count(0)
+						.charges(0)
+						.build());
+			});
 	}
 	
 	// checks the item stack count
-	public static int getStorageItemCountByPlayerIdItemIdStorageTypeId(int playerId, int itemId, int storageTypeId) {
-		final String query = "select count from player_storage where player_id=? and storage_id=? and item_id=?";
+	public static int getStorageItemCountByPlayerIdItemIdStorageTypeId(int playerId, int itemId, StorageTypes storageType) {
+		if (!validatePlayerStorageElement(playerId, storageType))
+			return 0;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.setInt(2, storageTypeId);
-			ps.setInt(3, itemId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("count");
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0;
+		// if it's not stackable it will give us the number of inventory slots with this item (as the item count is 1 for each)
+		// if it is stackable then it'll give us the count of the item (as there can only be a single inventory slot with the count)
+		return playerStorage.get(playerId).get(storageType).values().stream()
+					.filter(e -> e.getItemId() == itemId)
+					.collect(Collectors.summingInt(PlayerStorageDto::getCount));
 	}
 	
-	// checks sum of individual slot counts
-	public static int getNumStorageItemsByPlayerIdItemIdStorageTypeId(int playerId, int itemId, int storageTypeId) {
-		final String query = "select sum(count) cnt from player_storage where player_id=? and storage_id=? and item_id=?";
+	public static boolean removeAllItemsFromInventoryByPlayerIdItemId(int playerId, Items item) {
+		if (!validatePlayerStorageElement(playerId, StorageTypes.INVENTORY))
+			return false;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.setInt(2, storageTypeId);
-			ps.setInt(3, itemId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("cnt");
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
+		// pull all the slots from the inventory that contain this itemId
+		Set<Integer> slotsWithItemId = playerStorage.get(playerId).get(StorageTypes.INVENTORY).entrySet().stream()
+			.filter(e -> e.getValue().getItemId() == item.getValue())
+			.map(Map.Entry::getKey)
+			.collect(Collectors.toSet());
+		
+		for (int slot : slotsWithItemId) {
+			playerStorage.get(playerId).get(StorageTypes.INVENTORY).get(slot).setItemId(0);
+			playerStorage.get(playerId).get(StorageTypes.INVENTORY).get(slot).setCount(0);
+			playerStorage.get(playerId).get(StorageTypes.INVENTORY).get(slot).setCharges(0);
+			
+			DatabaseUpdater.enqueue(UpdatePlayerStorageEntity.builder()
+										.playerId(playerId)
+										.storageId(StorageTypes.INVENTORY.getValue())
+										.slot(slot)
+										.itemId(0)
+										.count(0)
+										.charges(0)
+										.build());
 		}
-		return 0;
-	}
-
-	public static boolean addStorageItemIdCountByPlayerIdStorageIdSlotId(int playerId, int storageId, int slot, int count) {
-		final String query = "update player_storage set count=count + ? where player_id=? and storage_id=? and slot=?";
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, count);
-			ps.setInt(2, playerId);
-			ps.setInt(3, storageId);
-			ps.setInt(4, slot);
-			return ps.executeUpdate() == 1;
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return false;
-		
-	}
-	
-	public static boolean removeAllItemsFromInventoryByPlayerIdItemId(int playerId, int itemId) {
-		final String query = "update player_storage set item_id=0 where player_id=? and storage_id=1 and item_id=?";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.setInt(2, itemId);
-			return ps.executeUpdate() == 1;
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return false;
+		return true;
 	}
 
 	public static boolean itemExistsInPlayerStorage(int playerId, int itemId) {
-		// check inventory, bank, furnace
-		final String query = "select item_id from player_storage where player_id=? and item_id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			ps.setInt(2, itemId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
+		if (!playerStorage.containsKey(playerId))
+			return false;
+		
+		// check inventory, bank, furnace etc
+		for (Map<Integer, PlayerStorageDto> dtoMap : playerStorage.get(playerId).values()) {
+			for (PlayerStorageDto dto : dtoMap.values()) {
+				if (dto.getItemId() == itemId)
 					return true;
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
+		
 		return false;
 	}
 	
-	public static void addCountToStorageItemSlot(int playerId, int storageTypeId, int slot, int count) {
-		final String query = "update player_storage set count = count + ? where player_id=? and storage_id=? and slot=?";
+	public static void addCountToStorageItemSlot(int playerId, StorageTypes storageType, int slot, int count) {
+		if (!validatePlayerStorageElement(playerId, storageType, slot))
+			return;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, count);
-			ps.setInt(2, playerId);
-			ps.setInt(3, storageTypeId);
-			ps.setInt(4, slot);
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		int currentCount = playerStorage.get(playerId).get(storageType).get(slot).getCount();
+		setCountOnSlot(playerId, storageType, slot, currentCount + count);
 	}
 	
-	public static void setCountOnInventorySlot(int playerId, int slot, int count) {
+	public static void setCountOnSlot(int playerId, StorageTypes storageType, int slot, int count) {
+		if (!validatePlayerStorageElement(playerId, storageType, slot))
+			return;
+		
 		if (count == 0) {
-			// should never have a 0-count item; remove it entirely.
-			setItemFromPlayerIdAndSlot(playerId, StorageTypes.INVENTORY.getValue(), slot, 0, 1, 0);
+			// in the case of a stackable, if we are setting the count to zero then remove the item from the inventory (set the item to 0)
+			setItemFromPlayerIdAndSlot(playerId, storageType, slot, 0, 1, 0);
 			return;
 		}
-			
-		final String query = "update player_storage set count = ? where player_id=? and storage_id=1 and slot=?";
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, count);
-			ps.setInt(2, playerId);
-			ps.setInt(3, slot);
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		playerStorage.get(playerId).get(storageType).get(slot).setCount(count);
+		
+		DatabaseUpdater.enqueue(UpdatePlayerStorageEntity.builder()
+									.playerId(playerId)
+									.storageId(storageType.getValue())
+									.slot(slot)
+									.count(count)
+									.build());
 	}
 
+	// TODO this should be done on character creation instead of login?
 	public static void createBankSlotsIfNotExists(int playerId) {
-		if (!getStorageDtoMapByPlayerId(playerId, StorageTypes.BANK.getValue()).isEmpty())
+		if (!getStorageDtoMapByPlayerId(playerId, StorageTypes.BANK).isEmpty())
 			return;
 		
 		String query = "insert into player_storage values ";
@@ -398,5 +304,64 @@ public class PlayerStorageDao {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void cachePlayerStorage() {
+		playerStorage = new HashMap<>();
+		
+		final String query = "select player_id, storage_id, slot, item_id, count, charges from player_storage";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					final int playerId = rs.getInt("player_id");
+					final int storageId = rs.getInt("storage_id");
+					final StorageTypes storageType = StorageTypes.withValue(storageId);
+					
+					if (!playerStorage.containsKey(playerId))
+						playerStorage.put(playerId, new HashMap<>());
+					
+					if (!playerStorage.get(playerId).containsKey(storageType))
+						playerStorage.get(playerId).put(storageType, new HashMap<>());
+					
+					PlayerStorageDto dto = new PlayerStorageDto(playerId, storageId, rs.getInt("slot"), rs.getInt("item_id"), rs.getInt("count"), rs.getInt("charges"));
+					playerStorage.get(playerId).get(storageType).put(rs.getInt("slot"), dto);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static boolean validatePlayerStorageElement(int playerId, StorageTypes storageType, int slot) {
+		if (playerStorage == null)
+			return false;
+		
+		if (!playerStorage.containsKey(playerId))
+			return false;
+		
+		if (!playerStorage.get(playerId).containsKey(storageType))
+			return false;
+		
+		if (!playerStorage.get(playerId).get(storageType).containsKey(slot))
+			return false;
+		
+		return true;
+	}
+	
+	private static boolean validatePlayerStorageElement(int playerId, StorageTypes storageType) {
+		if (playerStorage == null)
+			return false;
+		
+		if (!playerStorage.containsKey(playerId))
+			return false;
+		
+		if (!playerStorage.get(playerId).containsKey(storageType))
+			return false;
+		
+		return true;
 	}
 }

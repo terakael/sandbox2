@@ -1,8 +1,8 @@
 package main.processing;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import main.database.InventoryItemDto;
 import main.database.PlayerStorageDao;
@@ -22,9 +22,9 @@ public class TradeManager {
 			this.p2 = p2;
 		}
 		
-		public HashMap<Integer, InventoryItemDto> getItemsByPlayer(Player p) {
+		public Map<Integer, InventoryItemDto> getItemsByPlayer(Player p) {
 			if (hasPlayer(p))
-				return PlayerStorageDao.getStorageDtoMapByPlayerId(p.getId(), StorageTypes.TRADE.getValue());
+				return PlayerStorageDao.getStorageDtoMapByPlayerId(p.getId(), StorageTypes.TRADE);
 			return null;
 		}
 		

@@ -1,8 +1,8 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
@@ -41,14 +41,14 @@ public class OfferResponse extends Response {
 			return;
 		}
 		
-		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot());
+		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot());
 		if (item == null || item.getItemId() != itemId) {
 			// no message necessary tbh
 			System.out.println("item null");
 			return;
 		}
 		
-		HashSet<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
+		Set<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
 		if (equippedSlots.contains(request.getSlot())) {
 			setRecoAndResponseText(0, "you need to unequip it first.");
 			responseMaps.addClientOnlyResponse(player, this);
@@ -69,13 +69,13 @@ public class OfferResponse extends Response {
 				count = item.getCount();// -1 means all
 			
 			if (count == item.getCount()) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), 0, 1, 0);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot(), 0, 1, 0);
 			} else {
-				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), -count);
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot(), -count);
 			}
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE.getValue(), itemId, count, item.getCharges());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE, itemId, count, item.getCharges());
 		} else {
-			ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			
 			// get rid of equipped items so they don't count
 			for (int i : equippedSlots)
@@ -85,8 +85,8 @@ public class OfferResponse extends Response {
 			if (count == -1)
 				count = 20;// max inventory size
 			
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), 0, 1, 0);
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE.getValue(), itemId, 1, item.getCharges());
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot(), 0, 1, 0);
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE, itemId, 1, item.getCharges());
 			
 			invItemIds.set(request.getSlot(), -1);
 			
@@ -95,10 +95,10 @@ public class OfferResponse extends Response {
 					if (index == -1)
 						break;
 					
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), index, 0, 1, 0);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, index, 0, 1, 0);
 				invItemIds.set(index, -1);
 				
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE.getValue(), itemId, 1, item.getCharges());
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.TRADE, itemId, 1, item.getCharges());
 			}
 		}
 		

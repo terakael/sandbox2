@@ -1,6 +1,7 @@
 package main.responses;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import main.database.ItemDao;
 import main.database.MineableDao;
@@ -10,7 +11,6 @@ import main.database.SmithableDto;
 import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.Request;
-import main.requests.RequestFactory;
 import main.requests.SmithRequest;
 import main.types.Items;
 import main.types.Stats;
@@ -40,30 +40,30 @@ public class FinishSmithResponse extends Response {
 		}
 		
 		// player has the correct materials, remove the materials and add the smithed item
-		ArrayList<Integer> inventoryList = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
-		ArrayList<Integer> material1Slots = getAffectedSlots(inventoryList, dto.getMaterial1(), dto.getCount1());
-		ArrayList<Integer> material2Slots = getAffectedSlots(inventoryList, dto.getMaterial2(), dto.getCount2());
-		ArrayList<Integer> material3Slots = getAffectedSlots(inventoryList, dto.getMaterial3(), dto.getCount3());
+		List<Integer> inventoryList = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+		List<Integer> material1Slots = getAffectedSlots(inventoryList, dto.getMaterial1(), dto.getCount1());
+		List<Integer> material2Slots = getAffectedSlots(inventoryList, dto.getMaterial2(), dto.getCount2());
+		List<Integer> material3Slots = getAffectedSlots(inventoryList, dto.getMaterial3(), dto.getCount3());
 		
 		for (Integer slot : material1Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1, 0);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, 0, 1, 0);
 		if (dto.getMaterial1() == Items.COAL_ORE.getValue() && material1Slots.size() < dto.getCount1()) {
-			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount1() - material1Slots.size()));
+			PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.FURNACE, 0, -(dto.getCount1() - material1Slots.size()));
 		}
 		
 		for (Integer slot : material2Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1, 0);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, 0, 1, 0);
 		if (dto.getMaterial2() == Items.COAL_ORE.getValue() && material2Slots.size() < dto.getCount2()) {
-			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount2() - material2Slots.size()));
+			PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.FURNACE, 0, -(dto.getCount2() - material2Slots.size()));
 		}
 		
 		for (Integer slot : material3Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, 0, 1, 0);
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, 0, 1, 0);
 		if (dto.getMaterial3() == Items.COAL_ORE.getValue() && material3Slots.size() < dto.getCount3()) {
-			PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), StorageTypes.FURNACE.getValue(), 0, -(dto.getCount3() - material3Slots.size()));
+			PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.FURNACE, 0, -(dto.getCount3() - material3Slots.size()));
 		}
 		
-		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), dto.getItemId(), 1, ItemDao.getMaxCharges(dto.getItemId()));
+		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, dto.getItemId(), 1, ItemDao.getMaxCharges(dto.getItemId()));
 		
 		
 		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId())));
@@ -81,8 +81,8 @@ public class FinishSmithResponse extends Response {
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 	}
 
-	ArrayList<Integer> getAffectedSlots(ArrayList<Integer> inventoryList, int itemId, int count) {
-		ArrayList<Integer> affectedSlots = new ArrayList<>();
+	List<Integer> getAffectedSlots(List<Integer> inventoryList, int itemId, int count) {
+		List<Integer> affectedSlots = new ArrayList<>();
 		if (count == 0)
 			return affectedSlots;
 		for (int i = 0; i < inventoryList.size(); ++i) {

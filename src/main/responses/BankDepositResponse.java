@@ -1,8 +1,7 @@
 package main.responses;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import main.database.EquipmentDao;
@@ -17,7 +16,7 @@ import main.types.ItemAttributes;
 import main.types.StorageTypes;
 
 public class BankDepositResponse extends Response {	
-	private HashMap<Integer, InventoryItemDto> items;
+	private Map<Integer, InventoryItemDto> items;
 	
 	public BankDepositResponse() {
 		setAction("deposit");
@@ -36,7 +35,7 @@ public class BankDepositResponse extends Response {
 			return;
 		}
 		
-		InventoryItemDto itemDto = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot());
+		InventoryItemDto itemDto = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot());
 		if (itemDto == null) {
 			// cannot deposit this item (because it doesn't exist).
 			return;
@@ -44,11 +43,11 @@ public class BankDepositResponse extends Response {
 		
 		boolean bankContainsThisItem = false;
 		
-		ArrayList<Integer> bankItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.BANK.getValue());
+		List<Integer> bankItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.BANK);
 		if (ItemDao.itemHasAttribute(itemDto.getItemId(), ItemAttributes.CHARGED)) {
 			// because charged items stack only on those items with the same amount of charges, we need to run through
 			// each of the items to see if there is an item with the same itemId and charges.
-			HashMap<Integer, InventoryItemDto> bankItems = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.BANK.getValue());
+			Map<Integer, InventoryItemDto> bankItems = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.BANK);
 			for (Map.Entry<Integer, InventoryItemDto> entry : bankItems.entrySet()) {
 				if (entry.getValue().getItemId() == itemDto.getItemId() && entry.getValue().getCharges() == itemDto.getCharges()) {
 					bankContainsThisItem = true;
@@ -71,19 +70,19 @@ public class BankDepositResponse extends Response {
 			actualCount = Math.min(itemDto.getCount(), actualCount);
 			if (actualCount >= itemDto.getCount()) {
 				// the whole stack is going into the bank, so clear the inventory space
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), 0, 1, 0);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot(), 0, 1, 0);
 			} else {
-				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), request.getSlot(), -actualCount);
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot(), -actualCount);
 			}
 		} else {
 			
-			ArrayList<Integer> slotsToDeposit = new ArrayList<>();
+			List<Integer> slotsToDeposit = new ArrayList<>();
 			slotsToDeposit.add(request.getSlot());
-			ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			
 			if (ItemDao.itemHasAttribute(itemDto.getItemId(), ItemAttributes.CHARGED)) {
 				// num items in inventory with the same charge
-				HashMap<Integer, InventoryItemDto> invItems = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+				Map<Integer, InventoryItemDto> invItems = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.INVENTORY);
 				for (int i = 0; i < invItemIds.size(); ++i) {
 					if (i == request.getSlot())
 						continue;
@@ -115,16 +114,16 @@ public class BankDepositResponse extends Response {
 			}
 			
 			for (int slotToClear : slotsToDeposit)
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slotToClear, 0, 1, 0);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slotToClear, 0, 1, 0);
 		}
 		
-		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.BANK.getValue(), itemDto.getItemId(), actualCount, itemDto.getCharges());
+		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.BANK, itemDto.getItemId(), actualCount, itemDto.getCharges());
 		
 		// send an inv update to the player
 		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);
 		
 		// send a bank update to the player
-		items = PlayerStorageDao.getStorageDtoMapByPlayerIdExcludingEmpty(player.getId(), StorageTypes.BANK.getValue());
+		items = PlayerStorageDao.getStorageDtoMapByPlayerIdExcludingEmpty(player.getId(), StorageTypes.BANK);
 		responseMaps.addClientOnlyResponse(player, this);
 	}
 

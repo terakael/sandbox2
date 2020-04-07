@@ -1,7 +1,7 @@
 package main.scenery;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import main.database.EquipmentDao;
 import main.database.ItemDao;
@@ -19,7 +19,7 @@ public abstract class Obelisk extends Scenery {
 	protected int enchantChance = 0;
 	
 	protected boolean attemptToEnchant(Items src, Items dest, int slot, Player player, ResponseMaps responseMaps) {
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		
 		if (invItemIds.get(slot) != src.getValue()) {// mismatching slot/itemId, find first slot with correct itemId
 			for (slot = 0; slot < invItemIds.size(); ++slot) {
@@ -29,7 +29,7 @@ public abstract class Obelisk extends Scenery {
 		}
 		
 		if (slot < invItemIds.size()) {
-			HashSet<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
+			Set<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
 			if (equippedSlots.contains(slot)) {
 				MessageResponse resp = new MessageResponse();
 				resp.setRecoAndResponseText(0, "you need to unequip it first.");
@@ -38,7 +38,7 @@ public abstract class Obelisk extends Scenery {
 			}
 			
 			boolean success = RandomUtil.getRandom(0,  100) <= enchantChance;
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, success ? dest.getValue() : 0, 1, ItemDao.getMaxCharges(dest.getValue()));
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, success ? dest.getValue() : 0, 1, ItemDao.getMaxCharges(dest.getValue()));
 			
 			InventoryUpdateResponse updateResponse = new InventoryUpdateResponse();
 			updateResponse.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);

@@ -8,6 +8,8 @@ import main.requests.UseRequest;
 import main.responses.InventoryUpdateResponse;
 import main.responses.ResponseMaps;
 import main.responses.ShowSmithingTableResponse;
+import main.types.Items;
+import main.types.StorageTypes;
 
 public class Furnace extends Scenery {
 
@@ -31,10 +33,10 @@ public class Furnace extends Scenery {
 			return true;
 		case 5: // coal
 			// add all the coal in inventory to the furnace storage
-			int numCoal = PlayerStorageDao.getNumStorageItemsByPlayerIdItemIdStorageTypeId(player.getId(), 5, 1);// 5=coal, 1=inventory
+			int numCoal = PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), 5, StorageTypes.INVENTORY);// 5=coal, 1=inventory
 			if (numCoal > 0) {
-				PlayerStorageDao.removeAllItemsFromInventoryByPlayerIdItemId(player.getId(), 5);
-				PlayerStorageDao.addStorageItemIdCountByPlayerIdStorageIdSlotId(player.getId(), 3, 0, numCoal);
+				PlayerStorageDao.removeAllItemsFromInventoryByPlayerIdItemId(player.getId(), Items.COAL_ORE);
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.FURNACE, 0, numCoal);
 			}
 			
 			InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 

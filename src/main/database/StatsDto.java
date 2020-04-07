@@ -8,5 +8,10 @@ import lombok.Data;
 public class StatsDto {
 	private int playerId;
 	private int statId;
-	private int exp;
+	private Double exp;
+	private int relativeBoost;
+	
+	public void addExp(double exp) {
+		this.exp += exp;
+	}
 }

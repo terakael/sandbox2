@@ -52,7 +52,7 @@ public class CatchResponse extends Response {
 			}
 			
 			int caughtItemId = CatchableDao.getCaughtItem(npc.getId());
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), freeSlot, caughtItemId, 1, ItemDao.getMaxCharges(caughtItemId));
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, freeSlot, caughtItemId, 1, ItemDao.getMaxCharges(caughtItemId));
 			
 			npc.onDeath(player, responseMaps);
 			instanceId = npc.getInstanceId();

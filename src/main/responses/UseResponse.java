@@ -2,6 +2,7 @@ package main.responses;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -122,7 +123,7 @@ public class UseResponse extends Response {
 		}
 		
 		// slot check
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (invItemIds.get(srcSlot) != src) {
 			srcSlot = invItemIds.indexOf(src);
 			if (srcSlot == -1) {
@@ -204,7 +205,7 @@ public class UseResponse extends Response {
 				return false;
 			
 			// before we figure out to do with the item, make sure we have it in our inventory.
-			ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			if (!invItemIds.contains(request.getSrc()))
 				return false;
 			
@@ -239,7 +240,7 @@ public class UseResponse extends Response {
 				// by this point, whether or not we were previously in a fight with the targetNpc, we will be now.
 				if (FightManager.fightingWith(player, targetNpc)) {
 					setRecoAndResponseText(1, "you throw poison in your opponents face!");
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, becomesItemId, 1, ItemDao.getMaxCharges(becomesItemId));
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, becomesItemId, 1, ItemDao.getMaxCharges(becomesItemId));
 					InventoryUpdateResponse.sendUpdate(player, responseMaps);
 					targetNpc.inflictPoison(6);
 				}
@@ -281,7 +282,7 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (!invItemIds.contains(castable.getItemId()))
 			return false;
 		
@@ -294,17 +295,17 @@ public class UseResponse extends Response {
 		// at this point we're good to cast the spell.		
 		castOffensiveSpell(castable, player, targetNpc, responseMaps);
 		
-		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
+		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
 		if (item.getCount() > 1) {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(
 					player.getId(), 
-					StorageTypes.INVENTORY.getValue(), 
+					StorageTypes.INVENTORY, 
 					slot, 
 					item.getItemId(), item.getCount() - 1, item.getCharges());
 		} else {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(
 					player.getId(), 
-					StorageTypes.INVENTORY.getValue(), 
+					StorageTypes.INVENTORY, 
 					slot, 
 					0, 1, 0);
 		}
@@ -388,7 +389,7 @@ public class UseResponse extends Response {
 		
 		int exp = castable.getExp() + (damage * 4);
 		
-		Map<Integer, Integer> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
+		Map<Integer, Double> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
 		AddExpResponse addExpResponse = new AddExpResponse();
 		addExpResponse.addExp(Stats.MAGIC.getValue(), exp);		
 		responseMaps.addClientOnlyResponse(player, addExpResponse);
@@ -422,7 +423,7 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (!invItemIds.contains(castable.getItemId()))
 			return false;
 		
@@ -446,17 +447,17 @@ public class UseResponse extends Response {
 			
 			castOffensiveSpell(castable, player, targetPlayer, responseMaps);
 			
-			InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
+			InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
 			if (item.getCount() > 1) {
 				PlayerStorageDao.setItemFromPlayerIdAndSlot(
 						player.getId(), 
-						StorageTypes.INVENTORY.getValue(), 
+						StorageTypes.INVENTORY, 
 						slot, 
 						item.getItemId(), item.getCount() - 1, item.getCharges());
 			} else {
 				PlayerStorageDao.setItemFromPlayerIdAndSlot(
 						player.getId(), 
-						StorageTypes.INVENTORY.getValue(), 
+						StorageTypes.INVENTORY, 
 						slot, 
 						0, 1, 0);
 			}
@@ -497,24 +498,24 @@ public class UseResponse extends Response {
 		playerUpdate.setSnapToTile(true);
 		responseMaps.addClientOnlyResponse(player, playerUpdate);
 		
-		Map<Integer, Integer> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
+		Map<Integer, Double> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
 		AddExpResponse addExpResponse = new AddExpResponse();
 		addExpResponse.addExp(Stats.MAGIC.getValue(), castable.getExp());		
 		responseMaps.addClientOnlyResponse(player, addExpResponse);
 		StatsDao.addExpToPlayer(player.getId(), Stats.MAGIC, castable.getExp());
 		player.refreshStats(currentStatExp);
 		
-		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot);
+		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
 		if (item.getCount() > 1) {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(
 					player.getId(), 
-					StorageTypes.INVENTORY.getValue(), 
+					StorageTypes.INVENTORY, 
 					slot, 
 					item.getItemId(), item.getCount() - 1, item.getCharges());
 		} else {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(
 					player.getId(), 
-					StorageTypes.INVENTORY.getValue(), 
+					StorageTypes.INVENTORY, 
 					slot, 
 					0, 1, 0);
 		}

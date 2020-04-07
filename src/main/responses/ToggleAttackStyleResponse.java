@@ -1,6 +1,7 @@
 package main.responses;
 
-import main.database.PlayerDao;
+import main.database.entity.update.UpdatePlayerEntity;
+import main.processing.DatabaseUpdater;
 import main.processing.Player;
 import main.requests.Request;
 
@@ -15,7 +16,8 @@ public class ToggleAttackStyleResponse extends Response {
 		attackStyleId = player.getDto().getAttackStyleId() + 1;
 		if (attackStyleId > 3)
 			attackStyleId = 1;
-		PlayerDao.updateAttackStyleId(player.getId(), attackStyleId);
+		
+		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(player.getId()).attackStyleId(attackStyleId).build());
 		player.getDto().setAttackStyleId(attackStyleId);
 		responseMaps.addClientOnlyResponse(player, this);
 	}

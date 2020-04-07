@@ -1,7 +1,7 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import main.database.InventoryItemDto;
 import main.database.ItemDao;
@@ -39,7 +39,7 @@ public class RescindResponse extends Response {
 			return;
 		}
 		
-		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), request.getSlot());
+		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE, request.getSlot());
 		if (item == null || item.getItemId() != itemId) {
 			// no message necessary tbh
 			return;
@@ -51,21 +51,21 @@ public class RescindResponse extends Response {
 				count = item.getCount();
 			
 			if (count == item.getCount()) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), request.getSlot(), 0, 1, 0);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE, request.getSlot(), 0, 1, 0);
 			} else {
-				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.TRADE.getValue(), request.getSlot(), -count);
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.TRADE, request.getSlot(), -count);
 			}
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, count, 0);
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, itemId, count, 0);
 		} else {
-			ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.TRADE.getValue());
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.TRADE);
 			
 			// request amount of -1 means "all"
 			int count = Math.min(Collections.frequency(invItemIds, itemId), request.getAmount());
 			if (count == -1)
 				count = 20;// inventory size
 			
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), request.getSlot(), 0, 1, 0);
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, 1, item.getCharges());
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE, request.getSlot(), 0, 1, 0);
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, itemId, 1, item.getCharges());
 			
 			invItemIds.set(request.getSlot(), -1);
 			
@@ -74,10 +74,10 @@ public class RescindResponse extends Response {
 					if (index == -1)
 						break;
 					
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE.getValue(), index, 0, 1, 0);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE, index, 0, 1, 0);
 				invItemIds.set(index, -1);
 				
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, 1, item.getCharges());
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, itemId, 1, item.getCharges());
 			}
 		}
 		

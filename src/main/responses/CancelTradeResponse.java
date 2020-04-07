@@ -1,17 +1,15 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import main.database.InventoryItemDto;
-import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.processing.TradeManager;
 import main.processing.TradeManager.Trade;
 import main.requests.Request;
 import main.requests.RequestFactory;
-import main.types.ItemAttributes;
 import main.types.StorageTypes;
 
 public class CancelTradeResponse extends Response {
@@ -22,7 +20,7 @@ public class CancelTradeResponse extends Response {
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		// do the requesting player stuff first, just in case the other player logged out
-		HashMap<Integer, InventoryItemDto> playerItems = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.TRADE.getValue());
+		Map<Integer, InventoryItemDto> playerItems = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.TRADE);
 		restoreItemsToPlayer(player, playerItems, responseMaps);
 		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);
 		responseMaps.addClientOnlyResponse(player, this);
@@ -33,7 +31,7 @@ public class CancelTradeResponse extends Response {
 			return;
 		
 		Player otherPlayer = trade.getOtherPlayer(player);
-		HashMap<Integer, InventoryItemDto> otherPlayerItems = trade.getItemsByPlayer(otherPlayer);
+		Map<Integer, InventoryItemDto> otherPlayerItems = trade.getItemsByPlayer(otherPlayer);
 		restoreItemsToPlayer(otherPlayer, otherPlayerItems, responseMaps);
 		
 		TradeManager.cancelTrade(trade);
@@ -45,11 +43,11 @@ public class CancelTradeResponse extends Response {
 		responseMaps.addClientOnlyResponse(otherPlayer, otherPlayerCancelResponse);
 	}
 	
-	private void restoreItemsToPlayer(Player player, HashMap<Integer, InventoryItemDto> items, ResponseMaps responseMaps) {
+	private void restoreItemsToPlayer(Player player, Map<Integer, InventoryItemDto> items, ResponseMaps responseMaps) {
 		for (InventoryItemDto dto : items.values()) {
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), dto.getItemId(), dto.getCount(), dto.getCharges());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, dto.getItemId(), dto.getCount(), dto.getCharges());
 		}
-		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.TRADE.getValue());
+		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.TRADE);
 	}
 
 }

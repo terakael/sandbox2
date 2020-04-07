@@ -38,14 +38,14 @@ public abstract class ConsumableResponse extends Response {
 			return;
 		}
 		
-		Integer slotItemId = PlayerStorageDao.getItemIdInSlot(player.getId(), 1, slot);
+		Integer slotItemId = PlayerStorageDao.getItemIdInSlot(player.getId(), StorageTypes.INVENTORY, slot);
 		if (slotItemId != itemId) {
 			setRecoAndResponseText(0, String.format("you can't %s that.", getAction()));
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		
-		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, ConsumableDao.getBecomesItemId(itemId), 1, ItemDao.getMaxCharges(itemId));
+		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, ConsumableDao.getBecomesItemId(itemId), 1, ItemDao.getMaxCharges(itemId));
 		
 		boolean hpModified = false;
 		HashMap<Stats, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());

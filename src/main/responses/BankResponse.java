@@ -1,6 +1,6 @@
 package main.responses;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import main.database.InventoryItemDto;
 import main.database.PlayerStorageDao;
@@ -13,7 +13,7 @@ import main.requests.Request;
 import main.types.StorageTypes;
 
 public class BankResponse extends Response {
-	HashMap<Integer, InventoryItemDto> items;
+	Map<Integer, InventoryItemDto> items;
 	
 	public BankResponse() {
 		setAction("bank");
@@ -36,7 +36,7 @@ public class BankResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {
-			items = PlayerStorageDao.getStorageDtoMapByPlayerIdExcludingEmpty(player.getId(), StorageTypes.BANK.getValue());
+			items = PlayerStorageDao.getStorageDtoMapByPlayerIdExcludingEmpty(player.getId(), StorageTypes.BANK);
 			
 			// TODO if player isn't next to bank tile and player isn't god then bail
 			responseMaps.addClientOnlyResponse(player, this);

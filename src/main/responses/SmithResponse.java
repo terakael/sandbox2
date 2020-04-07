@@ -74,9 +74,9 @@ public class SmithResponse extends Response {
 		if (materialId == 0)
 			return true;// item doesn't require this material
 		
-		int itemsInInventory = PlayerStorageDao.getNumStorageItemsByPlayerIdItemIdStorageTypeId(playerId, materialId, 1);
+		int itemsInInventory = PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(playerId, materialId, StorageTypes.INVENTORY);
 		if (itemsInInventory < count && materialId == Items.COAL_ORE.getValue()) {// coal is a special case; check coal storage
-			itemsInInventory += PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(playerId, Items.COAL_ORE.getValue(), StorageTypes.FURNACE.getValue());
+			itemsInInventory += PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(playerId, Items.COAL_ORE.getValue(), StorageTypes.FURNACE);
 		}
 		return itemsInInventory >= count;
 	}

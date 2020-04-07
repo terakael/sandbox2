@@ -43,7 +43,7 @@ public class PlayerDao {
 							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
 							rs.getInt("attack_style_id"), 
 							AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")),
-							AnimationDao.getEquipmentAnimationsByPlayerId(rs.getInt("id")));
+							EquipmentDao.getEquipmentAnimationsByPlayerId(rs.getInt("id")));
 				
 				return null;
 			}
@@ -76,36 +76,6 @@ public class PlayerDao {
 		return player.isPresent() ? player.get().getId() : -1;
 	}
 	
-	public static void updateTileId(int id, int tileId) {
-		final String query = "update player set tile_id=? where id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, tileId);
-			ps.setInt(2, id);
-			
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-	}
-	
-	public static void updateFloor(int id, int floor) {
-		final String query = "update player set floor=? where id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, floor);
-			ps.setInt(2, id);
-			
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-	}
-	
 	public static void cacheAttackStyles() {
 		attackStyles = new HashMap<>();
 		
@@ -120,21 +90,6 @@ public class PlayerDao {
 				attackStyles.put(rs.getInt("id"), rs.getString("name"));
 			}
 				
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-	}
-	
-	public static void updateAttackStyleId(int playerId, int attackStyleId) {
-		final String query = "update player set attack_style_id=? where id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, attackStyleId);
-			ps.setInt(2, playerId);
-			
-			ps.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}

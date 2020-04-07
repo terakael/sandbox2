@@ -1,8 +1,7 @@
 package main.responses;
 
-import java.util.ArrayList;
+import java.util.List;
 
-import lombok.Setter;
 import main.database.CookableDao;
 import main.database.CookableDto;
 import main.database.ItemDao;
@@ -48,7 +47,7 @@ public class FinishCookingResponse extends Response {
 				return;
 			}
 			
-			ArrayList<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			List<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			
 			if (inv.get(slot) != cookable.getRawItemId()) {// the passed-in slot doesn't have the correct item?  check other slots
 				for (slot = 0; slot < inv.size(); ++slot) {
@@ -62,7 +61,7 @@ public class FinishCookingResponse extends Response {
 			
 			boolean success = RandomUtil.getRandom(0, 100) >= actualChanceToBurn;
 			
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), slot, success ? cookable.getCookedItemId() : cookable.getBurntItemId(), 1, ItemDao.getMaxCharges(cookable.getCookedItemId()));
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, success ? cookable.getCookedItemId() : cookable.getBurntItemId(), 1, ItemDao.getMaxCharges(cookable.getCookedItemId()));
 			InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
 			invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 			invUpdate.setResponseText(String.format("you %s the %s.", success ? "cook" : "burn", ItemDao.getNameFromId(cookable.getCookedItemId())));

@@ -88,44 +88,6 @@ public class GroundTextureDao {
 		}
 	}
 	
-	public static HashMap<Integer, HashSet<Integer>> getInstancesByGroundTextureId(int textureId) {
-		final String query = "select floor, tile_id from room_ground_textures where ground_texture_id=?";
-		HashMap<Integer, HashSet<Integer>> instances = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, textureId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					if (!instances.containsKey(rs.getInt("floor")))
-						instances.put(rs.getInt("floor"), new HashSet<>());
-					instances.get(rs.getInt("floor")).add(rs.getInt("tile_id"));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return instances;
-	}
-	
-	public static HashSet<Integer> getStandardTileSetSpriteMaps() {
-		HashSet<Integer> spriteMapIds = new HashSet<>();
-		final String query = "select distinct sprite_map_id from ground_textures where id > 100";// 101 and above are all standard tileset sprite maps
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					spriteMapIds.add(rs.getInt("sprite_map_id"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return spriteMapIds;
-	}
-	
 	public static Set<Integer> getAllWalkableTileIdsByFloor(int floor) {
 		Set<Integer> allTileIdsByFloor = new HashSet<>();
 		

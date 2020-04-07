@@ -11,4 +11,6 @@ public class EquipmentDto {
 	private int partId;
 	private int requirement;
 	private EquipmentTypes type;
+	private AnimationDto animations;
+	private EquipmentBonusDto bonuses;
 }

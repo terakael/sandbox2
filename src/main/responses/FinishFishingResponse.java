@@ -36,7 +36,7 @@ public class FinishFishingResponse extends Response {
 		
 		tileId = request.getTileId();// the tile we just finished fishing
 		
-		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), fishable.getItemId(), 1, ItemDao.getMaxCharges(fishable.getItemId()));
+		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, fishable.getItemId(), 1, ItemDao.getMaxCharges(fishable.getItemId()));
 		
 		AddExpRequest addExpReq = new AddExpRequest();
 		addExpReq.setId(player.getId());

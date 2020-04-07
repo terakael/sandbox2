@@ -1,6 +1,7 @@
 package main.responses;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Setter;
 import main.database.InventoryItemDto;
@@ -60,13 +61,13 @@ public class FinishMiningResponse extends Response {
 		}
 		
 		if (mineSuccessful) {
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), mineable.getItemId(), 1, ItemDao.getMaxCharges(mineable.getItemId()));
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, mineable.getItemId(), 1, ItemDao.getMaxCharges(mineable.getItemId()));
 			
 			// as there are multiple pickaxe types, there is a specific order that it uses.
 			// that is: magic golden pickaxe, magic pickaxe, golden pickaxe, pickaxe
 			
 			// if a golden pickaxe is being used, decrease the charge by 1, and destroy it if it hits 0.
-			ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			if (invItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue())) {
 				decreasePickaxeCharge(player.getId(), invItemIds, Items.MAGIC_GOLDEN_PICKAXE.getValue());
 			}
@@ -126,17 +127,17 @@ public class FinishMiningResponse extends Response {
 		responseMaps.addClientOnlyResponse(player, this);
 	}
 	
-	private void decreasePickaxeCharge(int playerId, ArrayList<Integer> invItemIds, int pickaxeId) {
-		InventoryItemDto invItem = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(playerId, StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(pickaxeId));
+	private void decreasePickaxeCharge(int playerId, List<Integer> invItemIds, int pickaxeId) {
+		InventoryItemDto invItem = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(playerId, StorageTypes.INVENTORY, invItemIds.indexOf(pickaxeId));
 		if (invItem.getCharges() > 1) {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(
 					playerId, 
-					StorageTypes.INVENTORY.getValue(), 
+					StorageTypes.INVENTORY, 
 					invItemIds.indexOf(pickaxeId), 
 					pickaxeId, 1, invItem.getCharges() - 1);
 		} else {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(
-					playerId, StorageTypes.INVENTORY.getValue(), invItemIds.indexOf(pickaxeId), 0, 1, 0);
+					playerId, StorageTypes.INVENTORY, invItemIds.indexOf(pickaxeId), 0, 1, 0);
 		}
 	}
 

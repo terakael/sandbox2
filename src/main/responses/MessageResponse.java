@@ -1,7 +1,7 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import lombok.Setter;
 import main.database.ItemDao;
@@ -267,14 +267,14 @@ public class MessageResponse extends Response {
 			} catch (NumberFormatException e) {}
 		}
 		
-		ArrayList<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		
 		if (ItemDao.itemHasAttribute(itemId, ItemAttributes.STACKABLE)) {
 			int invItemIndex = invItemIds.indexOf(itemId);
 			if (invItemIndex >= 0) {
-				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY.getValue(), invItemIndex, count);
+				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY, invItemIndex, count);
 			} else {
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), itemId, count, 0);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, itemId, count, 0);
 			}
 		} else {
 			int numFreeSlots = Collections.frequency(invItemIds, 0);
@@ -283,7 +283,7 @@ public class MessageResponse extends Response {
 			
 			for (int i = 0; i < invItemIds.size() && count > 0; ++i) {
 				if (invItemIds.get(i) == 0) {
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY.getValue(), i, itemId, 1, ItemDao.getMaxCharges(itemId));
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, i, itemId, 1, ItemDao.getMaxCharges(itemId));
 					--count;
 				}
 			}

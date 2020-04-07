@@ -9,15 +9,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Getter;
+import main.database.entity.update.UpdatePlayerStatsEntity;
+import main.processing.DatabaseUpdater;
 import main.types.Stats;
 
 public class StatsDao {
 	private StatsDao() {}
 	
-	private static Map<Integer, String> cachedStats = null;
+	@Getter private static Map<Integer, String> cachedStats = null;
 	@Getter private static HashMap<Integer, Integer> expMap = null;
-	
 	@Getter private static Map<Stats, ArrayList<StatWindowRowDto>> statWindowRows;
+	
+	private static Map<Integer, Map<Integer, StatsDto>> playerStatExpMap; // playerId, <statId, dto>
 	
 	static {
 		expMap = new HashMap<>();
@@ -31,113 +34,96 @@ public class StatsDao {
 		
 		statWindowRows = new HashMap<>();
 		statWindowRows.put(Stats.HERBLORE, getHerbloreStatWindowRows());
+		
+		cacheStats();
+		cachePlayerStatExp();
 	}
 	
-	public static Map<Integer, Integer> getStatsByPlayerId(int id) {
-		final String query = "select stat_id, exp from player_stats where player_id = ?";
+	private static void cachePlayerStatExp() {
+		final String query = "select player_id, stat_id, exp, relative_boost from player_stats";
+		
+		playerStatExpMap = new HashMap<>();
 		
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, id);
-			
+		) {			
 			try (ResultSet rs = ps.executeQuery()) {
-				Map<Integer, Integer> stats = new HashMap<>();
-				while (rs.next())
-					stats.put(rs.getInt("stat_id"), rs.getInt("exp"));
-				return stats;
+				while (rs.next()) {
+					final int playerId = rs.getInt("player_id");
+					final int statId = rs.getInt("stat_id");
+					final double exp = rs.getDouble("exp");
+					final int relativeBoost = rs.getInt("relative_boost");
+					
+					StatsDto dto = new StatsDto(playerId, statId, exp, relativeBoost);
+					
+					if (!playerStatExpMap.containsKey(playerId))
+						playerStatExpMap.put(playerId, new HashMap<>());
+					
+					if (!playerStatExpMap.get(playerId).containsKey(statId))
+						playerStatExpMap.get(playerId).put(statId, dto);
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
-		return null;
 	}
 	
-	public static Map<Integer, Integer> getAllStatExpByPlayerId(int id) {
-		final String query = "select stat_id, exp from player_stats where player_id = ?";
+	public static Map<Integer, Double> getAllStatExpByPlayerId(int id) {
+		if (!playerStatExpMap.containsKey(id))
+			return null;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, id);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				Map<Integer, Integer> stats = new HashMap<>();
-				while (rs.next())
-					stats.put(rs.getInt("stat_id"), rs.getInt("exp"));
-				return stats;
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		Map<Integer, Double> stats = new HashMap<>();
+		for (StatsDto dto : playerStatExpMap.get(id).values())
+			stats.put(dto.getStatId(), dto.getExp());
 
-		return null;
+		return stats;
 	}
 	
 	public static int getStatLevelByStatIdPlayerId(Stats statId, int playerId) {
-		final String query = "select exp from player_stats where stat_id=? and player_id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, statId.getValue());
-			ps.setInt(2, playerId);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return getLevelFromExp(rs.getInt("exp"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		if (!playerStatExpMap.containsKey(playerId))
+			return -1;
 		
-		return -1;
+		if (!playerStatExpMap.get(playerId).containsKey(statId.getValue()))
+			return -1;
+		
+		return getLevelFromExp(playerStatExpMap.get(playerId).get(statId.getValue()).getExp().intValue());
 	}
 	
 	public static void addExpToPlayer(int playerId, Stats statId, double exp) {
-		final String query = "update player_stats set exp=exp+? where player_id=? and stat_id=?";
+		if (!playerStatExpMap.containsKey(playerId))
+			return;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setDouble(1, exp);
-			ps.setInt(2, playerId);
-			ps.setInt(3, statId.getValue());
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		if (!playerStatExpMap.get(playerId).containsKey(statId.getValue()))
+			return;
+		
+		// we want to set it in memory as well as updating the database, as we never read directly from the db
+		playerStatExpMap.get(playerId).get(statId.getValue()).addExp(exp);
+		
+		DatabaseUpdater.enqueue(UpdatePlayerStatsEntity.builder()
+				.playerId(playerId)
+				.statId(statId.getValue())
+				.exp(playerStatExpMap.get(playerId).get(statId.getValue()).getExp())
+				.build());
 	}
 	
-	public static Map<Integer, String> getStats() {
+	private static void cacheStats() {
 		final String query = "select id, short_name from stats";
 		
-		Map<Integer, String> stats = new HashMap<>();
+		cachedStats = new HashMap<>();
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 			ResultSet rs = ps.executeQuery()
 		) {
 			while (rs.next())
-				stats.put(rs.getInt("id"), rs.getString("short_name"));
-			return stats;
+				cachedStats.put(rs.getInt("id"), rs.getString("short_name"));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return null;
 	}
 
 	public static int getStatIdByName(String stat) {
-		if (StatsDao.cachedStats == null) {
-			StatsDao.cachedStats = StatsDao.getStats();
-			if (StatsDao.cachedStats == null)
-				return -1;
-		}
-		
 		for (Map.Entry<Integer, String> entry : StatsDao.cachedStats.entrySet()) {
 			if (entry.getValue().equals(stat))
 				return entry.getKey();
@@ -147,12 +133,6 @@ public class StatsDao {
 	}
 	
 	public static String getStatShortNameByStatId(int id) {
-		if (StatsDao.cachedStats == null) {
-			StatsDao.cachedStats = StatsDao.getStats();
-			if (StatsDao.cachedStats == null)
-				return null;
-		}
-		
 		if (StatsDao.cachedStats.containsKey(id))
 			return StatsDao.cachedStats.get(id);
 		
@@ -160,60 +140,38 @@ public class StatsDao {
 	}
 	
 	public static void setRelativeBoostByPlayerIdStatId(int playerId, Stats statId, int relativeBoost) {
-		final String query = "update player_stats set relative_boost=? where player_id=? and stat_id=?";
+		if (!playerStatExpMap.containsKey(playerId))
+			return;
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, relativeBoost);
-			ps.setInt(2, playerId);
-			ps.setInt(3, statId.getValue());
-			
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
+		if (!playerStatExpMap.get(playerId).containsKey(statId.getValue()))
+			return;
+		
+		playerStatExpMap.get(playerId).get(statId.getValue()).setRelativeBoost(relativeBoost);
+		DatabaseUpdater.enqueue(UpdatePlayerStatsEntity.builder()
+				.playerId(playerId)
+				.statId(statId.getValue())
+				.relativeBoost(relativeBoost)
+				.build());
 	}
 	
 	public static HashMap<Stats, Integer> getRelativeBoostsByPlayerId(int playerId) {
-		final String query = "select stat_id, relative_boost from player_stats where player_id=?";
 		HashMap<Stats, Integer> relativeBoosts = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, playerId);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					relativeBoosts.put(Stats.withValue(rs.getInt("stat_id")), rs.getInt("relative_boost"));
-			}
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
+		
+		if (!playerStatExpMap.containsKey(playerId))
+			return relativeBoosts;
+		
+		for (StatsDto dto : playerStatExpMap.get(playerId).values())
+			relativeBoosts.put(Stats.withValue(dto.getStatId()), dto.getRelativeBoost());
 		
 		return relativeBoosts;
 	}
 	
 	public static int getCurrentHpByPlayerId(int id) {
-		int hp = 0;
-		final String query = "select exp, relative_boost as current_boost from player_stats where player_id = ? and stat_id = 5";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, id);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return getLevelFromExp(rs.getInt("exp")) + rs.getInt("current_boost");
-			}
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
+		if (!playerStatExpMap.containsKey(id))
+			return 0;
 		
-		return hp;
+		StatsDto hpDto = playerStatExpMap.get(id).get(Stats.HITPOINTS.getValue());
+		return getLevelFromExp(hpDto.getExp().intValue()) + hpDto.getRelativeBoost();
 	}
 	
 	public static int getLevelFromExp(int exp) {
@@ -225,34 +183,23 @@ public class StatsDao {
 	}
 
 	public static int getMaxHpByPlayerId(int id) {
-		final String query = "select exp from player_stats where player_id = ? and stat_id = 5";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, id);
-			
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return getLevelFromExp(rs.getInt("exp"));
-			}
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
+		if (!playerStatExpMap.containsKey(id))
+			return 0;
 		
-		return 0;
+		StatsDto hpDto = playerStatExpMap.get(id).get(Stats.HITPOINTS.getValue());
+		return getLevelFromExp(hpDto.getExp().intValue());
 	}
 	
 	public static int getCombatLevelByPlayerId(int id) {
-		Map<Integer, Integer> stats = getStatsByPlayerId(id);
+		Map<Integer, Double> stats = getAllStatExpByPlayerId(id);
 		
 		return getCombatLevelByStats(
-			getLevelFromExp(stats.get(Stats.STRENGTH.getValue())),
-			getLevelFromExp(stats.get(Stats.ACCURACY.getValue())),
-			getLevelFromExp(stats.get(Stats.DEFENCE.getValue())),
-			getLevelFromExp(stats.get(Stats.AGILITY.getValue())),
-			getLevelFromExp(stats.get(Stats.HITPOINTS.getValue())),
-			getLevelFromExp(stats.get(Stats.MAGIC.getValue()))
+			getLevelFromExp(stats.get(Stats.STRENGTH.getValue()).intValue()),
+			getLevelFromExp(stats.get(Stats.ACCURACY.getValue()).intValue()),
+			getLevelFromExp(stats.get(Stats.DEFENCE.getValue()).intValue()),
+			getLevelFromExp(stats.get(Stats.AGILITY.getValue()).intValue()),
+			getLevelFromExp(stats.get(Stats.HITPOINTS.getValue()).intValue()),
+			getLevelFromExp(stats.get(Stats.MAGIC.getValue()).intValue())
 		);
 	}
 	

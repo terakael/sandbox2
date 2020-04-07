@@ -1,8 +1,7 @@
 package main.responses;
 
-import java.util.ArrayList;
+import java.util.List;
 
-import main.database.InventoryItemDto;
 import main.database.MineableDao;
 import main.database.MineableDto;
 import main.database.PlayerStorageDao;
@@ -52,7 +51,7 @@ public class MineResponse extends Response {
 			return;
 		} else {			
 			// does player have a pickaxe in their inventory?
-			ArrayList<Integer> inventoryItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
+			List<Integer> inventoryItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			if (!inventoryItemIds.contains(Items.PICKAXE.getValue()) 
 				&& !inventoryItemIds.contains(Items.GOLDEN_PICKAXE.getValue())
 				&& !inventoryItemIds.contains(Items.MAGIC_PICKAXE.getValue())

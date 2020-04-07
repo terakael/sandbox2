@@ -1,9 +1,9 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import main.database.InventoryItemDto;
 import main.database.PlayerStorageDao;
@@ -44,11 +44,11 @@ public class AcceptTradeOfferResponse extends Response {
 		if (!WorldProcessor.playerSessions.containsKey(otherPlayer.getSession()))
 			return;
 		
-		ArrayList<Integer> p1invItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY.getValue());
-		ArrayList<Integer> p2invItems = PlayerStorageDao.getStorageListByPlayerId(otherPlayer.getId(), StorageTypes.INVENTORY.getValue());
+		List<Integer> p1invItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+		List<Integer> p2invItems = PlayerStorageDao.getStorageListByPlayerId(otherPlayer.getId(), StorageTypes.INVENTORY);
 		
-		HashMap<Integer, InventoryItemDto> p1tradeItems = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.TRADE.getValue());
-		HashMap<Integer, InventoryItemDto> p2tradeItems = PlayerStorageDao.getStorageDtoMapByPlayerId(otherPlayer.getId(), StorageTypes.TRADE.getValue());
+		Map<Integer, InventoryItemDto> p1tradeItems = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.TRADE);
+		Map<Integer, InventoryItemDto> p2tradeItems = PlayerStorageDao.getStorageDtoMapByPlayerId(otherPlayer.getId(), StorageTypes.TRADE);
 		
 		// TODO this doesn't count stackables.
 		// eg. if player has full inventory, including coins, and another player wants to give more coins
@@ -78,12 +78,12 @@ public class AcceptTradeOfferResponse extends Response {
 		}
 		
 		for (InventoryItemDto item : p1tradeItems.values())
-			PlayerStorageDao.addItemToFirstFreeSlot(otherPlayer.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), item.getCount(), item.getCharges());
-		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.TRADE.getValue());
+			PlayerStorageDao.addItemToFirstFreeSlot(otherPlayer.getId(), StorageTypes.INVENTORY, item.getItemId(), item.getCount(), item.getCharges());
+		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.TRADE);
 		
 		for (InventoryItemDto item : p2tradeItems.values())
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY.getValue(), item.getItemId(), item.getCount(), item.getCharges());
-		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(otherPlayer.getId(), StorageTypes.TRADE.getValue());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, item.getItemId(), item.getCount(), item.getCharges());
+		PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(otherPlayer.getId(), StorageTypes.TRADE);
 		
 		TradeManager.cancelTrade(trade);
 		

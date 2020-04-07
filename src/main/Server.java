@@ -4,10 +4,12 @@ import java.util.Scanner;
 
 import javax.websocket.DeploymentException;
 
+import main.database.AnimationDao;
 import main.database.BrewableDao;
 import main.database.CastableDao;
 import main.database.CatchableDao;
 import main.database.ConsumableDao;
+import main.database.ContextOptionsDao;
 import main.database.CookableDao;
 import main.database.EquipmentDao;
 import main.database.FishableDao;
@@ -18,12 +20,14 @@ import main.database.MinimapSegmentDao;
 import main.database.NpcMessageDao;
 import main.database.PickableDao;
 import main.database.PlayerDao;
+import main.database.PlayerStorageDao;
 import main.database.RespawnableDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
 import main.database.SpriteFrameDao;
 import main.database.TeleportableDao;
 import main.database.UseItemOnItemDao;
+import main.processing.DatabaseUpdater;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
 import main.processing.ShopManager;
@@ -40,6 +44,12 @@ public class Server {
 		try {
 			resourceServer.start();
 			server.start();
+
+			System.out.println("caching context options");
+			ContextOptionsDao.cacheAllContextOptions();
+			
+			System.out.println("caching base player animations");
+			AnimationDao.cacheBasePlayerAnimations();
 			
 			System.out.println("caching sprite frames");
 			SpriteFrameDao.setupCaches();
@@ -67,6 +77,9 @@ public class Server {
 			
 			System.out.println("caching items");
 			ItemDao.setupCaches();
+			
+			System.out.println("caching player storage");
+			PlayerStorageDao.cachePlayerStorage();
 			
 			System.out.println("caching ground textures");
 			GroundTextureDao.cacheTextures();
@@ -131,6 +144,9 @@ public class Server {
 			
 			WorldProcessor processor = new WorldProcessor();
 			processor.start();
+			
+			DatabaseUpdater dbUpdater = new DatabaseUpdater();
+			dbUpdater.start();
 			
 			System.out.println("press any key to quit");
 			new Scanner(System.in).nextLine();

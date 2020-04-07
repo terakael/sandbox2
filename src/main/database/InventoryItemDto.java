@@ -4,10 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import main.types.ItemAttributes;
+import main.utils.Utils;
 
 @Getter
 @AllArgsConstructor
 public class InventoryItemDto {
+	
+	public InventoryItemDto(PlayerStorageDto dto) {
+		this.itemId = dto.getItemId();
+		this.slot = dto.getSlot();
+		this.count = dto.getCount();
+		this.friendlyCount = Utils.getFriendlyCount(this.count);
+		this.charges = dto.getCharges();
+	}
+	
 	private int itemId;
 	private int slot;
 	private int count;
