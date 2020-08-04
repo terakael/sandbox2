@@ -23,7 +23,7 @@ import main.types.StorageTypes;
 public class LogonResponse extends Response {
 	private PlayerDto playerDto;
 	
-	private Map<Integer, Double> stats;
+	private Map<Integer, Integer> stats;
 	private Map<Integer, Integer> boosts;
 	private Map<Integer, InventoryItemDto> inventory;
 	private Map<Integer, String> attackStyles;
@@ -61,7 +61,11 @@ public class LogonResponse extends Response {
 				
 		PlayerStorageDao.createBankSlotsIfNotExists(playerDto.getId());
 		
-		stats = StatsDao.getAllStatExpByPlayerId(playerDto.getId());
+		stats = StatsDao.getAllStatExpByPlayerId(playerDto.getId())
+				.entrySet()
+				.stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().intValue()));
+		
 		boosts = StatsDao.getRelativeBoostsByPlayerId(playerDto.getId())
 				.entrySet()
 				.stream()

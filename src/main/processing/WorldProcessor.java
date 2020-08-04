@@ -85,9 +85,21 @@ public class WorldProcessor implements Runnable {
 
 		Stopwatch.start("request map");
 		// pull requestmap contents from Endpoint and clear it so it can collect for the next tick
-		Map<Session, Request> requestMap = new HashMap<>();
-		requestMap.putAll(Endpoint.requestMap);
+		Map<Session, List<Request>> requestMap = new HashMap<>();
+		for (Map.Entry<Session, Request> entry : Endpoint.requestMap.entrySet()) {
+			if (!requestMap.containsKey(entry.getKey()))
+				requestMap.put(entry.getKey(), new ArrayList<>());
+			requestMap.get(entry.getKey()).add(entry.getValue());
+		}
 		Endpoint.requestMap.clear();
+		
+		for (Map.Entry<Session, List<Request>> entry : Endpoint.multiRequestMap.entrySet()) {
+			if (!requestMap.containsKey(entry.getKey()))
+				requestMap.put(entry.getKey(), new ArrayList<>());
+			requestMap.get(entry.getKey()).addAll(entry.getValue());
+		}
+		Endpoint.multiRequestMap.clear();
+		
 		Stopwatch.end("request map");
 		
 		
@@ -96,19 +108,20 @@ public class WorldProcessor implements Runnable {
 
 		Stopwatch.start("player requests");
 		// process player requests for this tick
-		for (Map.Entry<Session, Request> entry : requestMap.entrySet()) {
-			final Request request = entry.getValue();
-			Response response = ResponseFactory.create(request.getAction());
-			
-			if (request.getAction().equals("logon")) {
-				// player isn't created at this point; it's created within this function
-				LogonResponse logonResponse = (LogonResponse)response;
-				logonResponse.processLogon(request, entry.getKey(), responseMaps);
-			} else {
-				// if the player logs out before its requests are processed then don't process
-				Player player = playerSessions.get(entry.getKey());
-				if (player != null)
-					response.processSuper(request, player, responseMaps);
+		for (Map.Entry<Session, List<Request>> entry : requestMap.entrySet()) {
+			for (Request request : entry.getValue()) {// most cases there's only one request, but MultiRequest types exist (equipping etc)
+				Response response = ResponseFactory.create(request.getAction());
+				
+				if (request.getAction().equals("logon")) {
+					// player isn't created at this point; it's created within this function
+					LogonResponse logonResponse = (LogonResponse)response;
+					logonResponse.processLogon(request, entry.getKey(), responseMaps);
+				} else {
+					// if the player logs out before its requests are processed then don't process
+					Player player = playerSessions.get(entry.getKey());
+					if (player != null)
+						response.processSuper(request, player, responseMaps);
+				}
 			}
 		}
 		Stopwatch.end("player requests");

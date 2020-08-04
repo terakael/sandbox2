@@ -36,7 +36,7 @@ public class BankDepositResponse extends Response {
 		}
 		
 		InventoryItemDto itemDto = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot());
-		if (itemDto == null) {
+		if (itemDto == null || itemDto.getItemId() == 0) {
 			// cannot deposit this item (because it doesn't exist).
 			return;
 		}

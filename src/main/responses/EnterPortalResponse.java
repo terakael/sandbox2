@@ -38,7 +38,7 @@ public class EnterPortalResponse extends Response {
 			break;
 		
 		default:
-			return;
+			return; // scenery doesn't exist or isn't a portal, so bail
 		}
 		
 		if (FightManager.fightWithFighterIsBattleLocked(player)) {
@@ -48,8 +48,8 @@ public class EnterPortalResponse extends Response {
 		}
 		FightManager.cancelFight(player, responseMaps);
 		
-		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getTileId(), false));
+		if (player.getTileId() != request.getTileId()) { // must be standing on the portal tile to teleport
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getTileId(), true));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;

@@ -42,7 +42,7 @@ public class OfferResponse extends Response {
 		}
 		
 		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot());
-		if (item == null || item.getItemId() != itemId) {
+		if (item == null || item.getItemId() != itemId || item.getItemId() == 0) {
 			// no message necessary tbh
 			System.out.println("item null");
 			return;

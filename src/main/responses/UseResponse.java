@@ -1,6 +1,5 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,7 @@ import main.database.UseItemOnItemDao;
 import main.database.UseItemOnItemDto;
 import main.processing.Attackable;
 import main.processing.FightManager;
+import main.processing.FightManager.Fight;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
@@ -478,25 +478,60 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
-		// if there is a fight, then cancel it
-		FightManager.cancelFight(player, responseMaps);
+		// we cancel this fight slightly differently because the usual case is the fight ends and sends a local response
+		// but we just teleported so we don't receive the response, therefore we need to send a special client-only response
+		Fight fight = FightManager.getFightByPlayerId(player.getId());
+		if (fight != null) {
+			// if there is a fight, then cancel it
+			if (fight.getFighter2() instanceof NPC) {
+				PvmEndResponse resp = new PvmEndResponse();
+				resp.setPlayerId(((Player)fight.getFighter1()).getId());
+				resp.setMonsterId(((NPC)fight.getFighter2()).getInstanceId());
+//				resp.setPlayerTileId(fight.getFighter1().getTileId());
+				resp.setMonsterTileId(fight.getFighter2().getTileId());
+				responseMaps.addClientOnlyResponse(player, resp);
+			} else {
+				fight.getFighter2().setTarget(null);
+				PvpEndResponse resp = new PvpEndResponse();
+				resp.setPlayer1Id(((Player)fight.getFighter1()).getId());
+				resp.setPlayer2Id(((Player)fight.getFighter2()).getId());
+				
+				// if this is the current player then we don't wanna set the tileId as we're currently teleporting
+				if (fight.getFighter1() != player)
+					resp.setPlayer1TileId(fight.getFighter1().getTileId());
+				
+				if (fight.getFighter2() != player)
+					resp.setPlayer2TileId(fight.getFighter2().getTileId());
+				
+				responseMaps.addClientOnlyResponse(player, resp);
+			}
+			
+			FightManager.cancelFight(player, responseMaps);
+		}
 		
 		TeleportableDto teleportable = TeleportableDao.getTeleportableByItemId(castable.getItemId());
 		if (teleportable == null) {
 			return false;
 		}
 		
-		final int oldRoomId = player.getFloor();
-		final int newRoomId = teleportable.getFloor();
-		player.setFloor(newRoomId);
+		// send teleport explosions to both where the player teleported from, and where they're teleporting to
+		// that way players on both sides of the teleport will see it
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), new TeleportExplosionResponse(player.getTileId()));
+		responseMaps.addLocalResponse(teleportable.getFloor(), teleportable.getTileId(), new TeleportExplosionResponse(teleportable.getTileId()));
 		
-		player.setTileId(teleportable.getTileId());
-		player.clearPath();
+		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
-		playerUpdate.setTileId(player.getTileId());
+		playerUpdate.setTileId(teleportable.getTileId());
 		playerUpdate.setSnapToTile(true);
+		
 		responseMaps.addClientOnlyResponse(player, playerUpdate);
+		responseMaps.addLocalResponse(teleportable.getFloor(), teleportable.getTileId(), playerUpdate);
+		
+		player.setFloor(teleportable.getFloor());
+		player.setTileId(teleportable.getTileId());
+		
+		player.clearPath();
 		
 		Map<Integer, Double> currentStatExp = StatsDao.getAllStatExpByPlayerId(player.getId());
 		AddExpResponse addExpResponse = new AddExpResponse();

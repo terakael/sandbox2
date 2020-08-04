@@ -377,6 +377,9 @@ public class Player extends Attackable {
 				--relativeBoost;
 			else if (relativeBoost < maxBoost)
 				++relativeBoost;
+			else
+				continue;// we're at our default level, don't update
+			
 			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
 		}
 		
@@ -396,6 +399,9 @@ public class Player extends Attackable {
 			
 			if (relativeBoost < maxBoost)
 				++relativeBoost;
+			else
+				continue;
+			
 			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
 		}
 		

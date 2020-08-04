@@ -28,7 +28,7 @@ public class BankWithdrawResponse extends Response {
 		
 		BankWithdrawRequest request = (BankWithdrawRequest)req;
 		InventoryItemDto bankItemDto = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.BANK, request.getSlot());
-		if (bankItemDto == null) {
+		if (bankItemDto == null || bankItemDto.getItemId() == 0) {
 			// cannot withdraw this item (because it doesn't exist).
 			return;
 		}

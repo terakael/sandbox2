@@ -60,7 +60,7 @@ public class ShopBuyResponse extends Response {
 		
 		int price = shop.getShopSellPrice(item);
 		
-		InventoryItemDto coins = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, invItemIds.indexOf(Items.COINS.getValue()));
+		InventoryItemDto coins = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, invItemIds.indexOf(Items.COINS.getValue()));		
 		if (coins.getCount() < price) {// if you can't buy a single item, return this message
 			setRecoAndResponseText(0, "you don't have enough to buy that.");
 			responseMaps.addClientOnlyResponse(player, this);

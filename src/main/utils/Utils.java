@@ -29,4 +29,9 @@ public class Utils {
 		return (secondX >= firstX - radius && secondX <= firstX + radius) &&
 			   (secondY >= firstY - radius && secondY <= firstY + radius);
 	}
+	
+	// find the greatest common denominator of two numbers
+	public static int gcm(int a, int b) {
+	    return b == 0 ? a : gcm(b, a % b);
+	}
 }

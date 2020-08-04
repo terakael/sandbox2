@@ -245,7 +245,72 @@ public class PathFinder {
 		
 		if (!nodes.containsKey(to)) {
 //			System.out.println(String.format("trying to go from %d to tile %d which is outside of range (floor %d)", from, to, floor));
-			return output;
+			// find the closest walkable tile from the "to" tile closest to the "from"
+			
+			int fromX = from % LENGTH;
+			int fromY = from / LENGTH;
+			
+			int toX = to % LENGTH;
+			int toY = to / LENGTH;
+			
+			// get that ratio: if fromX and toX are the same X (i.e. diffY is zero) then only modify X to find the closest.
+			// if diffX and diffY are equal then alternate: modify X, modify Y, modify X, modify Y
+			// if diffX is twice diffY then alternate: modifyX, modifyX, modifyY, modifyX, modifyX, modifyY etc
+			int diffX = fromX - toX;
+			int diffY = fromY - toY;
+			
+			// 469418857
+			// 469318867
+			
+//			int gcm = Utils.gcm(Math.abs(diffX), Math.abs(diffY));
+//			int ratioX = Math.abs(diffX) / gcm;
+//			int ratioY = Math.abs(diffY) / gcm;
+			
+			do {
+				if (diffX != 0) {
+					if (nodes.containsKey(to + (diffX / Math.abs(diffX)))) {
+						to += (diffX / Math.abs(diffX));
+						break;
+					}
+				}
+				
+				if (diffY != 0) {
+					if (nodes.containsKey(to + ((diffY / Math.abs(diffY)) * LENGTH))) {
+						to += (diffY / Math.abs(diffY)) * LENGTH;
+						break;
+					}
+				}
+				
+				
+				if (diffX != 0) {
+					to += (diffX / Math.abs(diffX));
+					diffX -= diffX / Math.abs(diffX);
+				}
+				
+				if (diffY != 0) {
+					to += ((diffY / Math.abs(diffY)) * LENGTH);
+					diffY -= (diffY / Math.abs(diffY));
+				}
+
+//				if (diffX != 0) {
+//					for (int i = 0; i < ratioX; ++i) {
+//						to += diffX / Math.abs(diffX); // +1 or -1 depending on direction
+//						if (nodes.containsKey(to))
+//							break;
+//					}
+//				}
+//				
+//				if (diffY != 0) {
+//					for (int i = 0; i < ratioY; ++i) {
+//						to += (diffY / Math.abs(diffY)) * LENGTH; // up one tile or down one tile depending on direction
+//						if (nodes.containsKey(to))
+//							break;
+//					}
+//				}
+			} while (!(diffX == 0 && diffY == 0));
+			
+			if (to == from || !nodes.containsKey(to)) // we've ended up on the same tile or the start tile was invalid
+				return output;
 		}
 		
 		// cannot move to an impassable tile.

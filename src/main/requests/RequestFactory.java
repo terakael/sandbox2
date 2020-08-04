@@ -58,7 +58,7 @@ public class RequestFactory {
 		return new UnknownRequest();
 	}
 	public static Request create(String action, int id) {
-		Request request = new Request();
+		Request request = new DummyRequest();
 		request.setAction(action);
 		request.setId(id);
 		return request;

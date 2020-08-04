@@ -40,7 +40,7 @@ public class RescindResponse extends Response {
 		}
 		
 		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.TRADE, request.getSlot());
-		if (item == null || item.getItemId() != itemId) {
+		if (item == null || item.getItemId() != itemId || item.getItemId() == 0) {
 			// no message necessary tbh
 			return;
 		}

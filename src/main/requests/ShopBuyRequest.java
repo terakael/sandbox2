@@ -2,7 +2,7 @@ package main.requests;
 
 import lombok.Getter;
 
-public class ShopBuyRequest extends Request {
+public class ShopBuyRequest extends MultiRequest {
 	@Getter private int objectId;
 	@Getter private int amount;
 }

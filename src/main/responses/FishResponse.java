@@ -28,7 +28,7 @@ public class FishResponse extends Response {
 		FishRequest request = (FishRequest)req;
 		
 		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getTileId(), false));
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getTileId(), true));
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;
