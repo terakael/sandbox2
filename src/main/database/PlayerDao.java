@@ -42,7 +42,7 @@ public class PlayerDao {
 							StatsDao.getMaxHpByPlayerId(rs.getInt("id")), 
 							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
 							rs.getInt("attack_style_id"), 
-							AnimationDao.loadAnimationsByPlayerId(rs.getInt("id")),
+							PlayerAnimationDao.loadAnimationsByPlayerId(rs.getInt("id")),
 							EquipmentDao.getEquipmentAnimationsByPlayerId(rs.getInt("id")));
 				
 				return null;

@@ -5,8 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import main.database.AnimationDao;
-import main.database.AnimationDto;
+import main.database.PlayerAnimationDto;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.EquipmentDto;
@@ -21,7 +20,7 @@ import main.types.Stats;
 
 public class EquipResponse extends Response {
 	private Set<Integer> equippedSlots = new HashSet<>();
-	private Map<PlayerPartType, AnimationDto> equipAnimations = new HashMap<>();
+	private Map<PlayerPartType, PlayerAnimationDto> equipAnimations = new HashMap<>();
 	private EquipmentBonusDto bonuses = null;
 
 	public EquipResponse() {

@@ -32,7 +32,7 @@ public class MinimapSegmentDao {
 				while (rs.next()) {
 					if (!minimapSegments.containsKey(rs.getInt("floor")))
 						minimapSegments.put(rs.getInt("floor"), new HashMap<>());
-					minimapSegments.get(rs.getInt("floor")).put(rs.getInt("segment"), rs.getString("data"));
+					minimapSegments.get(rs.getInt("floor")).put(rs.getInt("segment"), rs.getString("data").replace("\n", ""));
 				}
 			}
 		} catch (SQLException e) {

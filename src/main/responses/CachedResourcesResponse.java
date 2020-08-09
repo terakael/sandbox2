@@ -54,7 +54,7 @@ public class CachedResourcesResponse extends Response {
 	}
 	
 	private void loadCachedResources() {
-		spriteMaps = SpriteMapDao.getAllSpriteMaps();
+		spriteMaps = SpriteMapDao.getSpriteMaps();
 		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
 		items = ItemDao.getAllItems();
 		contextOptions = ContextOptionsDao.getAllContextOptions();

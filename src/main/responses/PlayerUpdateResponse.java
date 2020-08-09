@@ -4,7 +4,7 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.database.AnimationDto;
+import main.database.PlayerAnimationDto;
 import main.processing.Player;
 import main.requests.Request;
 import main.types.PlayerPartType;
@@ -22,8 +22,8 @@ public class PlayerUpdateResponse extends Response {
 	@Setter Boolean loggedIn = null;
 	@Setter Boolean snapToTile = null;
 	@Setter Boolean respawn = null;
-	@Setter private Map<PlayerPartType, AnimationDto> baseAnimations = null;
-	@Setter private Map<PlayerPartType, AnimationDto> equipAnimations = null;
+	@Setter private Map<PlayerPartType, PlayerAnimationDto> baseAnimations = null;
+	@Setter private Map<PlayerPartType, PlayerAnimationDto> equipAnimations = null;
 
 	public PlayerUpdateResponse() {
 		setAction("player_update");

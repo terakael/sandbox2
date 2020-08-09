@@ -1,15 +1,18 @@
 package main.database;
 
 import lombok.AllArgsConstructor;
-import lombok.Setter;
+import lombok.Getter;
 
-@Setter
 @AllArgsConstructor
+@Getter
 public class AnimationDto {
-	private int up;
-	private int down;
-	private int left;
-	private int right;
-	private int attack_left;
-	private int attack_right;
+	private int id;
+	private int spriteMapId;
+	
+	private int upId;
+	private int downId;
+	private int leftId;
+	private int rightId;
+	private int attackLeftId;
+	private int attackRightId;
 }

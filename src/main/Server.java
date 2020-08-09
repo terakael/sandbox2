@@ -1,5 +1,6 @@
 package main;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 import javax.websocket.DeploymentException;
@@ -19,12 +20,14 @@ import main.database.MineableDao;
 import main.database.MinimapSegmentDao;
 import main.database.NpcMessageDao;
 import main.database.PickableDao;
+import main.database.PlayerAnimationDao;
 import main.database.PlayerDao;
 import main.database.PlayerStorageDao;
 import main.database.RespawnableDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
 import main.database.SpriteFrameDao;
+import main.database.SpriteMapDao;
 import main.database.TeleportableDao;
 import main.database.UseItemOnItemDao;
 import main.processing.DatabaseUpdater;
@@ -44,15 +47,21 @@ public class Server {
 		try {
 			resourceServer.start();
 			server.start();
+			
+			System.out.println("caching sprite frames");
+			SpriteFrameDao.setupCaches();
+			
+			System.out.println("caching animations");
+			AnimationDao.setupCaches();
+			
+			System.out.println("caching sprite maps");
+			SpriteMapDao.setupCaches();
 
 			System.out.println("caching context options");
 			ContextOptionsDao.cacheAllContextOptions();
 			
 			System.out.println("caching base player animations");
-			AnimationDao.cacheBasePlayerAnimations();
-			
-			System.out.println("caching sprite frames");
-			SpriteFrameDao.setupCaches();
+			PlayerAnimationDao.cacheBasePlayerAnimations();
 			
 			System.out.println("caching distinct roomIds");
 			GroundTextureDao.cacheDistinctFloors(); // what constitutes a room is having at least one ground texture: no ground textures, the room doesnt exist.
@@ -154,6 +163,9 @@ public class Server {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {

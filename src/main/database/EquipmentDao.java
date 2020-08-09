@@ -1,11 +1,15 @@
 package main.database;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,6 +29,9 @@ public class EquipmentDao {
 	
 	private static Map<Integer, HashMap<Integer, Integer>> playerEquipment; // playerId, <equipmentId, slot>
 	
+//	private static Map<Integer, String> dynamicallyGeneratedSpriteMaps = null;
+//	private static Map<Integer, List<Integer>> equipmentBySpriteMap = null;
+	
 	public static void setupCaches() {
 		cacheEquipmentByType();
 		cacheEquipment();
@@ -33,20 +40,59 @@ public class EquipmentDao {
 	}
 	
 	private static void cacheEquipment() {
-		final String query = "select item_id, player_part_id, up_id, down_id, left_id, right_id, attack_left_id, attack_right_id, requirement, acc, str, def, agil, mage, hp, speed from equipment";
+//		final String query = "select item_id, player_part_id, up_id, down_id, left_id, right_id, attack_left_id, attack_right_id, requirement, acc, str, def, agil, mage, hp, speed from equipment";
+		final String query = "select item_id, player_part_id, animation_id, color, requirement, acc, str, def, agil, mage, hp, speed from equipment";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
 		) {
+			Map<List<Integer>, PlayerAnimationDto> dynamicallyGeneratedAnimations = new HashMap<>();
+			
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
+					
+					if (!dynamicallyGeneratedAnimations.containsKey(Arrays.asList(rs.getInt("animation_id"), rs.getInt("color")))) {
+						AnimationDto originalAnimation = AnimationDao.getAnimationDtoById(rs.getInt("animation_id"));
+		
+						PlayerAnimationDto animation;
+						if (rs.getInt("color") > 0) {
+							// create a new sprite map
+							SpriteMapDto originalSpriteMap = SpriteMapDao.getSpriteMapDataById(originalAnimation.getSpriteMapId());
+							String tintedBase64 = SpriteMapDao.tintImage(originalSpriteMap.getDataBase64(), rs.getInt("color"));
+							int newSpriteMapId = SpriteMapDao.addSpriteMap("", tintedBase64);
+							
+							// create new sprite frames
+							animation = new PlayerAnimationDto(
+								SpriteFrameDao.addSpriteFrame(newSpriteMapId, SpriteFrameDao.getSpriteFrameDtoById(originalAnimation.getUpId())),
+								SpriteFrameDao.addSpriteFrame(newSpriteMapId, SpriteFrameDao.getSpriteFrameDtoById(originalAnimation.getDownId())),
+								SpriteFrameDao.addSpriteFrame(newSpriteMapId, SpriteFrameDao.getSpriteFrameDtoById(originalAnimation.getLeftId())),
+								SpriteFrameDao.addSpriteFrame(newSpriteMapId, SpriteFrameDao.getSpriteFrameDtoById(originalAnimation.getRightId())),
+								SpriteFrameDao.addSpriteFrame(newSpriteMapId, SpriteFrameDao.getSpriteFrameDtoById(originalAnimation.getAttackLeftId())),
+								SpriteFrameDao.addSpriteFrame(newSpriteMapId, SpriteFrameDao.getSpriteFrameDtoById(originalAnimation.getAttackRightId()))
+							);
+						} else {
+							animation = new PlayerAnimationDto(
+									originalAnimation.getUpId(),
+									originalAnimation.getDownId(),
+									originalAnimation.getLeftId(),
+									originalAnimation.getRightId(),
+									originalAnimation.getAttackLeftId(),
+									originalAnimation.getAttackRightId()
+							);
+						}
+						
+						dynamicallyGeneratedAnimations.put(Collections.unmodifiableList(Arrays.asList(rs.getInt("animation_id"), rs.getInt("color"))), animation);
+					}
+					
+					
 					int itemId = rs.getInt("item_id");
 					equipment.put(itemId, 
 								new EquipmentDto(itemId, 
 												 rs.getInt("player_part_id"), 
 												 rs.getInt("requirement"), 
 												 getEquipmentTypeByEquipmentId(itemId),
-												 new AnimationDto(rs.getInt("up_id"), rs.getInt("down_id"), rs.getInt("left_id"), rs.getInt("right_id"), rs.getInt("attack_left_id"), rs.getInt("attack_right_id")),
+//												 new PlayerAnimationDto(rs.getInt("up_id"), rs.getInt("down_id"), rs.getInt("left_id"), rs.getInt("right_id"), rs.getInt("attack_left_id"), rs.getInt("attack_right_id")),
+												 dynamicallyGeneratedAnimations.get(Arrays.asList(rs.getInt("animation_id"), rs.getInt("color"))),
 												 new EquipmentBonusDto(rs.getInt("acc"), rs.getInt("str"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("mage"), rs.getInt("hp"), rs.getInt("speed"))));
 				}
 			}
@@ -266,8 +312,8 @@ public class EquipmentDao {
 		}
 	}
 	
-	public static Map<PlayerPartType, AnimationDto> getEquipmentAnimationsByPlayerId(int playerId) {
-		Map<PlayerPartType, AnimationDto> animationMap = new HashMap<>();
+	public static Map<PlayerPartType, PlayerAnimationDto> getEquipmentAnimationsByPlayerId(int playerId) {
+		Map<PlayerPartType, PlayerAnimationDto> animationMap = new HashMap<>();
 		
 		if (!playerEquipment.containsKey(playerId))
 			return animationMap;

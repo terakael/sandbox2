@@ -18,6 +18,6 @@ public class PlayerDto {
 	private int maxHp;
 	private int combatLevel;
 	private int attackStyleId;
-	private Map<PlayerPartType, AnimationDto> baseAnimations;
-	private Map<PlayerPartType, AnimationDto> equipAnimations;
+	private Map<PlayerPartType, PlayerAnimationDto> baseAnimations;
+	private Map<PlayerPartType, PlayerAnimationDto> equipAnimations;
 }

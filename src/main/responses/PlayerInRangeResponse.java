@@ -3,8 +3,8 @@ package main.responses;
 import java.util.ArrayList;
 import java.util.Set;
 
-import main.database.AnimationDao;
 import main.database.EquipmentDao;
+import main.database.PlayerAnimationDao;
 import main.database.StatsDao;
 import main.processing.Player;
 import main.processing.WorldProcessor;
@@ -35,7 +35,7 @@ public class PlayerInRangeResponse extends Response {
 			playerUpdate.setMaxHp(localPlayer.getStats().get(Stats.HITPOINTS));
 			playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(localPlayer.getId()));
 			playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(localPlayer.getId()));
-			playerUpdate.setBaseAnimations(AnimationDao.loadAnimationsByPlayerId(localPlayer.getId()));
+			playerUpdate.setBaseAnimations(PlayerAnimationDao.loadAnimationsByPlayerId(localPlayer.getId()));
 			players.add(playerUpdate);
 		}
 	}
