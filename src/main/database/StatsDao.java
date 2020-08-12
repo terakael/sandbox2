@@ -204,9 +204,9 @@ public class StatsDao {
 	}
 	
 	public static int getCombatLevelByStats(int str, int att, int def, int agil, int hp, int magic) {
-		return (int)Math.ceil(((double)str + att) / 4) 
-				+ (int)Math.ceil(((double)def + agil) / 5) 
-				+ (int)Math.ceil(((double)hp + magic) / 6);
+		return (int)Math.ceil(((double)str + att) / 3) 
+				+ (int)Math.ceil(((double)def + hp) / 4) 
+				+ (int)Math.ceil(((double)magic) / 5);
 	}
 	
 	public static int getCombatLevelByStats(HashMap<Stats, Integer> stats) {

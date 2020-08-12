@@ -93,7 +93,7 @@ public class SpriteMapDao {
 	}
 	
 	private static void cacheSpriteMaps() {
-		final String query = "select id, name, to_base64(data) data from sprite_maps";
+		final String query = "select id, name, to_base64(data) data from sprite_maps where id > 0";
 		
 		spriteMaps = new HashMap<>();
 		

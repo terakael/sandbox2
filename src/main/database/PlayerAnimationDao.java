@@ -47,7 +47,8 @@ public class PlayerAnimationDao {
 									rs.getInt("left_id"),
 									rs.getInt("right_id"),
 									rs.getInt("attack_left_id"),
-									rs.getInt("attack_right_id")));
+									rs.getInt("attack_right_id"),
+									null));
 				}
 			}
 		} catch (SQLException e) {

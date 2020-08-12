@@ -12,31 +12,14 @@ import java.util.Map;
 public class SpriteFrameDao {
 	private static Map<Integer, SpriteFrameDto> allSpriteFrames;
 	
-	private static int nextFreeId = -1;
-	
 	private SpriteFrameDao() {};
 	
 	public static void setupCaches() {
 		cacheAllSpriteFrames();
-		cacheNextFreeId();
 	}
 	
 	public static List<SpriteFrameDto> getAllSpriteFrames() {
 		return new ArrayList<>(allSpriteFrames.values());
-	}
-	
-	private static void cacheNextFreeId() {
-		final String query = "select max(id) id from sprite_frames";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery();
-		) {
-			if (rs.next())
-				nextFreeId = rs.getInt("id") + 1;
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	private static void cacheAllSpriteFrames() {
@@ -69,26 +52,6 @@ public class SpriteFrameDao {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public static int addSpriteFrame(int spriteMapId, SpriteFrameDto original) {
-		int newId = nextFreeId++;
-		SpriteFrameDto newDto = new SpriteFrameDto(newId, 
-													spriteMapId, 
-													original.getX(), 
-													original.getY(), 
-													original.getW(), 
-													original.getH(),
-													original.getAnchorX(),
-													original.getAnchorY(),
-													original.getScaleX(),
-													original.getScaleY(),
-													original.getMargin(),
-													original.getFrame_count(),
-													original.getFramerate(),
-													original.getAnimation_type_id());
-		allSpriteFrames.put(newId, newDto);
-		return newId;
 	}
 	
 	public static SpriteFrameDto getSpriteFrameDtoById(int id) {

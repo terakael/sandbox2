@@ -18,6 +18,8 @@ import main.database.ItemDao;
 import main.database.NpcDialogueDto;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
+import main.database.ReinforcementBonusesDao;
+import main.database.ReinforcementBonusesDto;
 import main.database.StatsDao;
 import main.database.TeleportableDao;
 import main.database.TeleportableDto;
@@ -45,10 +47,12 @@ import main.responses.ResponseMaps;
 import main.responses.StatBoostResponse;
 import main.types.Buffs;
 import main.types.DamageTypes;
+import main.types.EquipmentTypes;
 import main.types.ItemAttributes;
 import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
+import main.utils.RandomUtil;
 import main.utils.Utils;
 
 public class Player extends Attackable {
@@ -613,14 +617,15 @@ public class Player extends Attackable {
 		
 		int hpLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId());
 		int hpBoost = StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(Stats.HITPOINTS);
+		
+		if (type != DamageTypes.POISON) // only for a standard/magic hit, poison doesn't degrade the reinforced armour
+			damage = handleReinforcedItemDegradation(damage, responseMaps);
+		
 		hpBoost -= damage;
 		if (hpBoost < -hpLevel)
 			hpBoost = -hpLevel;
 		
 		currentHp = hpLevel + hpBoost;
-		
-		if (type != DamageTypes.POISON) // only for a standard/magic hit, poison doesn't degrade the reinforced armour
-			handleReinforcedItemDegradation(damage, responseMaps);
 		
 		// you have 10 hp max, 1hp remaining
 		// relative boost should be -9
@@ -637,35 +642,67 @@ public class Player extends Attackable {
 		new StatBoostResponse().process(null, this, responseMaps);
 	}
 	
-	private void handleReinforcedItemDegradation(int damage, ResponseMaps responseMaps) {
+	private int handleReinforcedItemDegradation(int damage, ResponseMaps responseMaps) {
+		// reinforced armour has a chance each hit to soak part of the damage.
+		// the damage that it soaks will come out of its charges, and once the
+		// charges run out then the armour reverts to its base form.
+		// chance to soak part of the damage (see reinforcement_bonuses table):
+		// helmets: 5%
+		// platelegs: 10%
+		// platebody: 15%
+		// shield: 20%
+		// each piece is chosen randomly to soak, and multiple pieces can be chosen on the same hit.
+		// amount the armour will soak (in pct, rounded UP to nearest int):
+		// copper: 1, 2, 3, 4
+		// iron: 2, 3, 4, 5
+		// steel: 3, 4, 5, 6
+		// mithril: 5, 7, 9, 11
+		// addy, 7, 9, 11, 13
+		// rune: 10, 13, 15, 18
+		// dragon: doesn't soak as it cannot be reinforced
+
 		boolean itemUpdated = false;
 		boolean itemCleared = false;
 		for (Map.Entry<Integer, Integer> entry : equippedSlotsByItemId.entrySet()) {
+			ReinforcementBonusesDto reinforcementBonuses = ReinforcementBonusesDao.getReinforcementBonusesById(entry.getKey());
+			if (reinforcementBonuses == null)
+				continue;
+			
 			int degradedItemId = EquipmentDao.getBaseItemFromReinforcedItem(entry.getKey());
-			if (degradedItemId > 0) {
-				InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY, entry.getValue());
-				if (item.getCharges() > damage) {
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(
-							getId(), 
-							StorageTypes.INVENTORY, 
-							entry.getValue(), 
-							entry.getKey(), 1, item.getCharges() - damage);
-				} else {
-					// ran out of charges; degrade to the base item
-					PlayerStorageDao.setItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY, entry.getValue(), degradedItemId, 1, ItemDao.getMaxCharges(degradedItemId));
+			if (degradedItemId > 0 && damage > 0) {
+				if (RandomUtil.getRandom(0, 100) < reinforcementBonuses.getProcChance()) {
+					// proc chance activated, soak some of the damage	
+					int damageToSoak = (int)Math.ceil(damage * reinforcementBonuses.getSoakPct());
+					if (damageToSoak > damage)
+						damageToSoak = damage;// can only block the remainder of the damage
+					InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY, entry.getValue());
+					if (damageToSoak > item.getCharges())
+						damageToSoak = item.getCharges();
+					damage -= damageToSoak;
 					
-					// clear the equipped item first then reset it with the degraded base item
-					EquipmentDao.clearEquippedItem(getId(), entry.getValue());
-					EquipmentDao.setEquippedItem(getId(), entry.getValue(), degradedItemId);
-					itemCleared = true;
-					
-					// it degraded so throw up a message
-					MessageResponse messageResponse = new MessageResponse();
-					messageResponse.setRecoAndResponseText(0, String.format("Your %s degraded!", ItemDao.getNameFromId(item.getItemId())));
-					messageResponse.setColour("white");
-					responseMaps.addClientOnlyResponse(this, messageResponse);
+					if (item.getCharges() > damageToSoak) {
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(
+								getId(), 
+								StorageTypes.INVENTORY, 
+								entry.getValue(), 
+								entry.getKey(), 1, item.getCharges() - damageToSoak);
+					} else {
+						// ran out of charges; degrade to the base item
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY, entry.getValue(), degradedItemId, 1, ItemDao.getMaxCharges(degradedItemId));
+						
+						// clear the equipped item first then reset it with the degraded base item
+						EquipmentDao.clearEquippedItem(getId(), entry.getValue());
+						EquipmentDao.setEquippedItem(getId(), entry.getValue(), degradedItemId);
+						itemCleared = true;
+						
+						// it degraded so throw up a message
+						MessageResponse messageResponse = new MessageResponse();
+						messageResponse.setRecoAndResponseText(0, String.format("Your %s degraded!", ItemDao.getNameFromId(item.getItemId())));
+						messageResponse.setColour("white");
+						responseMaps.addClientOnlyResponse(this, messageResponse);
+					}
+					itemUpdated = true;
 				}
-				itemUpdated = true;
 			}
 		}
 		
@@ -676,6 +713,8 @@ public class Player extends Attackable {
 				new EquipResponse().process(null, WorldProcessor.getPlayerById(getId()), responseMaps);
 			}
 		}
+		
+		return damage;
 	}
 	
 	@Override

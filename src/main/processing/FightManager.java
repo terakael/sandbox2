@@ -9,6 +9,8 @@ import main.responses.PvmEndResponse;
 import main.responses.PvpEndResponse;
 import main.responses.ResponseMaps;
 import main.types.DamageTypes;
+import main.types.Stats;
+import main.utils.RandomUtil;
 
 public class FightManager {
 	private FightManager() {}
@@ -73,7 +75,19 @@ public class FightManager {
 			attackable.setStatsAndBonuses();
 			other.setStatsAndBonuses();
 			
-			int hit = Math.max(attackable.hit() - (attackable.hit() * other.block() / 100), 0);
+//			int hit = Math.max(attackable.hit() - (attackable.hit() * other.block() / 100), 0);
+			
+//			int hit = Math.max(0, attackable.hit() - other.block());
+			
+			int hit = attackable.hit();
+			int attackBonus = attackable.getStats().get(Stats.ACCURACY) + attackable.getBoosts().get(Stats.ACCURACY) + attackable.getBonuses().get(Stats.ACCURACY);
+			int defenceBonus = other.getStats().get(Stats.DEFENCE) + other.getBoosts().get(Stats.DEFENCE) + other.getBonuses().get(Stats.DEFENCE);
+			
+			int baseBlockChance = 25;
+			int blockChance = baseBlockChance + Math.max(-baseBlockChance, (defenceBonus - attackBonus) / 2);
+			
+			if (RandomUtil.getRandom(0, 100) < blockChance)
+				hit = 0;
 			
 			//int hit = Math.max(attackable.hit() - other.block(), 0);
 			other.onHit(hit, DamageTypes.STANDARD, responseMaps);

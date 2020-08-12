@@ -3,15 +3,16 @@ package main.processing;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Setter;
 import main.responses.ResponseMaps;
 import main.types.DamageTypes;
 import main.types.Stats;
-import main.utils.RandomUtil;
 
 public abstract class Attackable {
 	private static Random rand = new Random();
@@ -19,7 +20,7 @@ public abstract class Attackable {
 	@Setter protected Stack<Integer> path = new Stack<>();// stack of tile_ids
 	@Setter @Getter protected HashMap<Stats, Integer> stats = new HashMap<>();
 	@Setter @Getter protected HashMap<Stats, Integer> bonuses = new HashMap<>();
-	@Setter private HashMap<Stats, Integer> boosts = null;
+	@Setter @Getter private HashMap<Stats, Integer> boosts = null;
 	@Setter @Getter protected int currentHp;
 	@Setter @Getter protected int tileId;
 	@Setter @Getter protected int floor;
@@ -58,43 +59,63 @@ public abstract class Attackable {
 	
 	public int hit() {
 		cooldown = maxCooldown;
-		int maxHit = (int)Math.ceil((stats.get(Stats.STRENGTH) + boosts.get(Stats.STRENGTH)) * 0.18) + (int)Math.ceil(bonuses.get(Stats.STRENGTH) * 0.10);
+		
+		int maxHitFromLevel = ((stats.get(Stats.STRENGTH) + boosts.get(Stats.STRENGTH)) / 6) + 1;
+		int maxHitFromBonus = (bonuses.get(Stats.STRENGTH) * 2) / 10;
+		
+		int maxHit = maxHitFromLevel + maxHitFromBonus;
+		
+//		int bonus = (int)Math.ceil(bonuses.get(Stats.STRENGTH) * 0.10);
+		
+//		int maxHit = (int)Math.ceil((stats.get(Stats.STRENGTH) + boosts.get(Stats.STRENGTH)) * 0.18) + (int)Math.ceil(bonuses.get(Stats.STRENGTH) * 0.10);
 		// number line starts with 100 evenly distributed elements
 		// e.g. if your max hit is 1, it will have 50 0s and 50 1s
 		// if your max hit is 9, it will have 10 0s, 10 1s etc
 		
 		// include 0 so maxHit + 1
 		int distribution = 100 / (maxHit + 1);
-		ArrayList<Integer> numberLine = new ArrayList<>();
+		List<Integer> numberLine = new ArrayList<>();
 		for (int i = 0; i <= maxHit; ++i) {
 			for (int j = 0; j < distribution; ++j)
 				numberLine.add(i);
 		}
 		
-		ArrayList<Integer> numbersToBoost = new ArrayList<>();
-		int acc = (int)Math.ceil((stats.get(Stats.ACCURACY) + boosts.get(Stats.ACCURACY)) * 0.08) + (int)Math.ceil(bonuses.get(Stats.ACCURACY) * 0.05);
-		for (int i = numberLine.size() - 1; i >= Math.max((numberLine.size() - acc), 0); --i) {
-			numbersToBoost.add(numberLine.get(i));
-		}
-		Collections.sort(numbersToBoost, Collections.reverseOrder());
+		while (numberLine.size() < 100)
+			numberLine.add(0);
+		Collections.sort(numberLine);
 		
-		for (int numberToBoost : numbersToBoost) {
-			for (int j = 0; j < acc; ++j) {
-				numberLine.add(numberToBoost);
+		int totalAccuracy = (stats.get(Stats.ACCURACY) + boosts.get(Stats.ACCURACY));
+		int totalDamage = (stats.get(Stats.STRENGTH) + boosts.get(Stats.STRENGTH));
+		int spread = (stats.get(Stats.ACCURACY) + boosts.get(Stats.ACCURACY) + bonuses.get(Stats.ACCURACY)) / 10;
+		int origin = (maxHit/2) + Math.min((maxHit/2), Math.max(-(maxHit/2) + spread, totalAccuracy - totalDamage));
+		
+		
+		final List<Integer> distinctNumberLine = numberLine.stream().distinct().collect(Collectors.toList());
+		List<Integer> numbersToBoost = new ArrayList<>();
+		for (int i = spread, counter = 0; i >= 0; --i, ++counter) {
+			if (origin + counter < distinctNumberLine.size()) {
+				for (int j = 0; j < i; ++j)
+					numbersToBoost.add(distinctNumberLine.get(origin + counter));
 			}
-			--acc;
+			
+			if (origin - (counter + 1) >= 0) {
+				for (int j = 0; j < i; ++j)
+					numbersToBoost.add(distinctNumberLine.get(origin - (counter + 1)));
+			}
 		}
-		
+		numberLine.addAll(numbersToBoost);
+		Collections.sort(numberLine);
+
 		return numberLine.get(rand.nextInt(numberLine.size()));
 	}
 	
 	public int block() {
-		// agility gives a chance to completely block the damage
-		int chanceInThousand = stats.get(Stats.AGILITY) + boosts.get(Stats.AGILITY) + (bonuses.get(Stats.AGILITY) * 4);
-		if (RandomUtil.getRandom(0, 1000) < chanceInThousand)
-			return 100; // 100% block
+//		int maxBlock = (int)Math.ceil((stats.get(Stats.DEFENCE) + boosts.get(Stats.DEFENCE)) * 0.22) + (int)Math.ceil(bonuses.get(Stats.DEFENCE) * 0.25);
 		
-		int maxBlock = (int)Math.ceil((stats.get(Stats.DEFENCE) + boosts.get(Stats.DEFENCE)) * 0.22) + (int)Math.ceil(bonuses.get(Stats.DEFENCE) * 0.25);
+		int blockFromLevel = ((stats.get(Stats.DEFENCE) + boosts.get(Stats.DEFENCE)) / 6) + 1;
+		int blockFromBonus = (bonuses.get(Stats.DEFENCE) * 2) / 10;
+		
+		int maxBlock = blockFromLevel + blockFromBonus;
 
 		int distribution = 100 / (maxBlock + 1);
 		ArrayList<Integer> numberLine = new ArrayList<>();
@@ -104,7 +125,10 @@ public abstract class Attackable {
 		}
 		
 		ArrayList<Integer> numbersToBoost = new ArrayList<>();
-		int acc = (int)Math.ceil((stats.get(Stats.AGILITY) + boosts.get(Stats.AGILITY)) * 0.22) + (int)Math.ceil(bonuses.get(Stats.AGILITY) * 0.25);
+		int accuracyFromLevel = ((stats.get(Stats.AGILITY) + boosts.get(Stats.AGILITY)) / 5) + 1;
+		int accuracyFromBonus = (bonuses.get(Stats.AGILITY) * 3) / 10;
+//		int acc = (int)Math.ceil((stats.get(Stats.AGILITY) + boosts.get(Stats.AGILITY)) * 0.22) + (int)Math.ceil(bonuses.get(Stats.AGILITY) * 0.25);
+		int acc = accuracyFromLevel + accuracyFromBonus;
 		for (int i = numberLine.size() - 1; i >= Math.max((numberLine.size() - acc), 0); --i) {
 			numbersToBoost.add(numberLine.get(i));
 		}

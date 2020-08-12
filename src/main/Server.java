@@ -23,6 +23,7 @@ import main.database.PickableDao;
 import main.database.PlayerAnimationDao;
 import main.database.PlayerDao;
 import main.database.PlayerStorageDao;
+import main.database.ReinforcementBonusesDao;
 import main.database.RespawnableDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
@@ -146,6 +147,9 @@ public class Server {
 			
 			System.out.println("caching fishables");
 			FishableDao.setupCaches();
+			
+			System.out.println("caching reinforcement bonuses");
+			ReinforcementBonusesDao.setupCaches();
 			
 			System.out.println("caching client resources");
 			// should be last after all the other caches are set up
