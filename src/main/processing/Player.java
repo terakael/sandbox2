@@ -18,6 +18,7 @@ import main.database.ItemDao;
 import main.database.NpcDialogueDto;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
+import main.database.PrayerDao;
 import main.database.ReinforcementBonusesDao;
 import main.database.ReinforcementBonusesDto;
 import main.database.StatsDao;
@@ -45,11 +46,12 @@ import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
 import main.responses.StatBoostResponse;
+import main.responses.TogglePrayerResponse;
 import main.types.Buffs;
 import main.types.DamageTypes;
-import main.types.EquipmentTypes;
 import main.types.ItemAttributes;
 import main.types.Items;
+import main.types.Prayers;
 import main.types.Stats;
 import main.types.StorageTypes;
 import main.utils.RandomUtil;
@@ -87,6 +89,9 @@ public class Player extends Attackable {
 	@Getter @Setter private Set<Integer> localTiles = new HashSet<>();
 	@Getter @Setter private int loadedFloor = 0;
 	@Getter @Setter private Set<Integer> loadedMinimapSegments = new HashSet<>();
+	@Getter private Set<Integer> activePrayers = new HashSet<>();
+	@Getter private float prayerPoints = 0;
+	private boolean slowburnBlockedStatDrain = false;
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
@@ -105,6 +110,7 @@ public class Player extends Attackable {
 			refreshStats();
 			refreshBoosts();
 			
+			prayerPoints = StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(Stats.PRAYER);
 			currentHp = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId()) + StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(Stats.HITPOINTS);
 			setPostFightCooldown();
 		}
@@ -145,7 +151,7 @@ public class Player extends Attackable {
 		bonuses.put(Stats.STRENGTH, equipment.getStr());
 		bonuses.put(Stats.ACCURACY, equipment.getAcc());
 		bonuses.put(Stats.DEFENCE, equipment.getDef());
-		bonuses.put(Stats.AGILITY, equipment.getAgil());
+		bonuses.put(Stats.PRAYER, equipment.getPray());
 		bonuses.put(Stats.HITPOINTS, equipment.getHp());
 		bonuses.put(Stats.MAGIC, equipment.getMage());
 	}
@@ -159,6 +165,11 @@ public class Player extends Attackable {
 			statRestoreTicks = MAX_STAT_RESTORE_TICKS;
 			restoreStats(responseMaps);
 		}
+		
+		processPoison(responseMaps);
+		
+		if (prayerPoints > 0)
+			processPrayer(responseMaps);
 		
 		// decrement the remaining ticks on every active buff
 		activeBuffs.replaceAll((k, v) -> v -= 1);
@@ -352,8 +363,13 @@ public class Player extends Attackable {
 				playerUpdate.setSnapToTile(true);
 				playerUpdate.setCurrentHp(currentHp);
 				playerUpdate.setMaxHp(currentHp);
+				playerUpdate.setCurrentPrayer((int)prayerPoints);
 				playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(getId()));
 				playerUpdate.setRespawn(true);
+				
+				TogglePrayerResponse togglePrayerResponse = new TogglePrayerResponse();
+				togglePrayerResponse.setActivePrayers(activePrayers);
+				responseMaps.addClientOnlyResponse(this, togglePrayerResponse);
 				
 				// the reason this is local is so the other players know the player respawned
 				// (they also receive the player_in_range response automatically but if they're around the spawn point it will be missing respawn data)
@@ -369,18 +385,55 @@ public class Player extends Attackable {
 		}
 	}
 	
+	private void processPrayer(ResponseMaps responseMaps) {
+		float prayerBonus = 1 - ((float)Math.min(49, bonuses.get(Stats.PRAYER)) / 50); // each prayer point is 2% pray reduction
+		float currentPrayerPoints = prayerPoints;
+		for (int prayerId : activePrayers) {
+			currentPrayerPoints -= PrayerDao.getPrayerById(prayerId).getDrainRate() * prayerBonus;
+		}
+		
+		if ((int)currentPrayerPoints < (int)prayerPoints)
+			setPrayerPoints(currentPrayerPoints, responseMaps);
+		else
+			prayerPoints = currentPrayerPoints;
+
+		if (prayerPoints <= 0) {
+			activePrayers.clear();
+			TogglePrayerResponse togglePrayerResponse = new TogglePrayerResponse();
+			togglePrayerResponse.setActivePrayers(activePrayers);
+			togglePrayerResponse.setResponseText("you have run out of prayer points.");
+			responseMaps.addClientOnlyResponse(this, togglePrayerResponse);
+		}
+	}
+	
 	private void restoreStats(ResponseMaps responseMaps) {
 		HashMap<Stats, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
 		
 		for (Map.Entry<Stats, Integer> entry : boosts.entrySet()) {
+			if (entry.getKey().equals(Stats.PRAYER))
+				continue;// prayer doesn't regenerate
+			
 			// max hitpoints depends on the hitpoints bonus (i.e. +5 means we can heal +5 over max hitpoints)
 			int maxBoost = entry.getKey().equals(Stats.HITPOINTS) ? getBonuses().get(Stats.HITPOINTS) : 0;
 						
 			int relativeBoost = entry.getValue();
-			if (relativeBoost > maxBoost)
-				--relativeBoost;
-			else if (relativeBoost < maxBoost)
+			if (relativeBoost > maxBoost) {
+				if (prayerIsActive(Prayers.SLOW_BURN))
+					slowburnBlockedStatDrain = !slowburnBlockedStatDrain;
+				else
+					slowburnBlockedStatDrain = false;
+				
+				if (!slowburnBlockedStatDrain)
+					--relativeBoost;
+			}
+			else if (relativeBoost < maxBoost) {
 				++relativeBoost;
+				
+				if (relativeBoost < maxBoost 
+						&& ((entry.getKey().equals(Stats.HITPOINTS) && prayerIsActive(Prayers.RAPID_HEAL)) 
+						|| (!entry.getKey().equals(Stats.HITPOINTS) && prayerIsActive(Prayers.RAPID_RESTORE))))
+					++relativeBoost;
+			}
 			else
 				continue;// we're at our default level, don't update
 			
@@ -452,9 +505,15 @@ public class Player extends Attackable {
 		// unequip and drop all the items in inventory
 		EquipmentDao.clearAllEquppedItems(getId());
 		
+		int itemsToProtect = 3; // TODO 0 if skulled
+		if (prayerIsActive(Prayers.PROTECT_SLOT))
+			itemsToProtect += 1;
+		else if (prayerIsActive(Prayers.PROTECT_SLOT_LVL_2))
+			itemsToProtect += 2;
+		
 		Map<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.INVENTORY);
 		for (InventoryItemDto dto : inventoryList.values()) {
-			if (dto.getSlot() < 3)
+			if (dto.getSlot() < itemsToProtect)
 				continue;// you always protect your items in the first three slots (0, 1, 2)
 			
 			if (dto.getItemId() != 0) {
@@ -476,10 +535,15 @@ public class Player extends Attackable {
 				}
 			}
 		}
-		PlayerStorageDao.clearPlayerInventoryExceptFirstThreeSlots(getId());
+		PlayerStorageDao.clearPlayerInventoryExceptFirstSlots(getId(), itemsToProtect);
 		
 		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.HITPOINTS, 0);
 		currentHp = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId());
+		
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.PRAYER, 0);
+		prayerPoints = StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, dto.getId());
+		
+		activePrayers.clear();
 		
 		// let everyone around the dead player know they died 
 		responseMaps.addLocalResponse(getFloor(), getTileId(), new DeathResponse(dto.getId()));
@@ -556,19 +620,19 @@ public class Player extends Attackable {
 					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 				break;
 				case 2: // defensive
-					StatsDao.addExpToPlayer(getId(), Stats.AGILITY, points * 4);
+					StatsDao.addExpToPlayer(getId(), Stats.DEFENCE, points * 4);
 					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 					break;
 				default: // shared or other
 					StatsDao.addExpToPlayer(getId(), Stats.ACCURACY, points * 2);
-					StatsDao.addExpToPlayer(getId(), Stats.AGILITY, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.DEFENCE, points * 2);
 					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 					break;
 			}
 		}
 		
 		// sword/aggressive: 2str, 2acc, 1hp
-		// sword/defensive: 2def, 2agil, 1hp
+		// sword/defensive: 2def, 1hp
 		// sword/shared: 1str, 1acc, 1def, 1agil, 1hp
 		else {
 			switch (getDto().getAttackStyleId()) {
@@ -578,16 +642,14 @@ public class Player extends Attackable {
 					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 				break;
 				case 2: // defensive
-					StatsDao.addExpToPlayer(getId(), Stats.DEFENCE, points * 2);
-					StatsDao.addExpToPlayer(getId(), Stats.AGILITY, points * 2);
+					StatsDao.addExpToPlayer(getId(), Stats.DEFENCE, points * 4);
 					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
 					break;
 				default: // shared or other
 					StatsDao.addExpToPlayer(getId(), Stats.STRENGTH, points);
 					StatsDao.addExpToPlayer(getId(), Stats.ACCURACY, points);
 					StatsDao.addExpToPlayer(getId(), Stats.DEFENCE, points);
-					StatsDao.addExpToPlayer(getId(), Stats.AGILITY, points);
-					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points);
+					StatsDao.addExpToPlayer(getId(), Stats.HITPOINTS, points * 2);
 					break;
 			}
 		}
@@ -614,6 +676,19 @@ public class Player extends Attackable {
 		// remove any buffs that don't work in combat
 		if (activeBuffs.containsKey(Buffs.RESTORATION) && type != DamageTypes.POISON)// don't kill the buff if it's due to poison
 			activeBuffs.put(Buffs.RESTORATION, 1);// kill it next tick
+		
+		if (type == DamageTypes.POISON && prayerIsActive(Prayers.FAITH_HEALING)) {
+			int damageToPrayer = (int)prayerPoints - damage;
+			if (damageToPrayer > 0) {
+				// pull all the damage out of prayer and don't hit anything
+				setPrayerPoints(prayerPoints - damage, responseMaps);
+				damage = 1;
+			} else {
+				// drain the remainder of the prayer points, remainder of the damage still gets hit
+				setPrayerPoints(0, responseMaps);
+				damage += damageToPrayer; // damageToPrayer is negative
+			}
+		}
 		
 		int hpLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId());
 		int hpBoost = StatsDao.getRelativeBoostsByPlayerId(dto.getId()).get(Stats.HITPOINTS);
@@ -752,5 +827,69 @@ public class Player extends Attackable {
 	
 	public void clearPath() {
 		path.clear();
+	}
+	
+	public boolean prayerIsActive(Prayers prayerId) {
+		return activePrayers.contains(prayerId.getValue());
+	}
+	
+	public void togglePrayer(Prayers prayer) {
+		if (activePrayers.contains(prayer.getValue()))
+			activePrayers.remove(prayer.getValue());
+		else
+			activePrayers.add(prayer.getValue());
+	}
+	
+	@Override
+	protected int postMaxHitModifications(int maxHit) {
+		if (prayerIsActive(Prayers.BURST_OF_STRENGTH)) {
+			float newBonus = (float)maxHit * 1.05f;
+			maxHit = (int)Math.ceil(newBonus);
+		} else if (prayerIsActive(Prayers.SUPERIOR_STRENGTH)) {
+			float newBonus = (float)maxHit * 1.1f;
+			maxHit = (int)Math.ceil(newBonus);
+		} else if (prayerIsActive(Prayers.ULTIMATE_STRENGTH)) {
+			float newBonus = (float)maxHit * 1.2f;
+			maxHit = (int)Math.ceil(newBonus);
+		}
+		return maxHit;
+	}
+	
+	@Override
+	protected int postAccuracyModifications(int accuracy) {
+		if (prayerIsActive(Prayers.CALM_MIND)) {
+			float newBonus = (float)accuracy * 1.05f;
+			accuracy = (int)Math.ceil(newBonus);
+		} else if (prayerIsActive(Prayers.FOCUSSED_MIND)) {
+			float newBonus = (float)accuracy * 1.1f;
+			accuracy = (int)Math.ceil(newBonus);
+		} else if (prayerIsActive(Prayers.ZEN_MIND)) {
+			float newBonus = (float)accuracy * 1.2f;
+			accuracy = (int)Math.ceil(newBonus);
+		}
+		return accuracy;
+	}
+	
+	@Override
+	protected int postBlockChanceModifications(int blockChance) {
+		if (prayerIsActive(Prayers.THICK_SKIN)) {
+			blockChance += 5;
+		} else if (prayerIsActive(Prayers.STONE_SKIN)) {
+			blockChance += 10;
+		} else if (prayerIsActive(Prayers.STEEL_SKIN)) {
+			blockChance += 15;
+		}
+		return blockChance;
+	}
+	
+	public void setPrayerPoints(float newPrayerPoints, ResponseMaps responseMaps) {
+		prayerPoints = Math.max(0, newPrayerPoints);
+		
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.PRAYER, -StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, getId()) + (int)prayerPoints);
+		
+		PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+		playerUpdateResponse.setId(getId());
+		playerUpdateResponse.setCurrentPrayer((int)prayerPoints);
+		responseMaps.addClientOnlyResponse(this, playerUpdateResponse);
 	}
 }

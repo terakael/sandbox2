@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import main.responses.ResponseMaps;
 import main.types.DamageTypes;
+import main.types.Prayers;
 import main.types.Stats;
 
 public abstract class Attackable {
@@ -60,10 +61,11 @@ public abstract class Attackable {
 	public int hit() {
 		cooldown = maxCooldown;
 		
-		int maxHitFromLevel = ((stats.get(Stats.STRENGTH) + boosts.get(Stats.STRENGTH)) / 6) + 1;
+		int maxHitFromLevel = ((getStats().get(Stats.STRENGTH) + getBoosts().get(Stats.STRENGTH)) / 6) + 1;
 		int maxHitFromBonus = (bonuses.get(Stats.STRENGTH) * 2) / 10;
 		
 		int maxHit = maxHitFromLevel + maxHitFromBonus;
+		maxHit = postMaxHitModifications(maxHit);
 		
 //		int bonus = (int)Math.ceil(bonuses.get(Stats.STRENGTH) * 0.10);
 		
@@ -84,10 +86,11 @@ public abstract class Attackable {
 			numberLine.add(0);
 		Collections.sort(numberLine);
 		
-		int totalAccuracy = (stats.get(Stats.ACCURACY) + boosts.get(Stats.ACCURACY));
-		int totalDamage = (stats.get(Stats.STRENGTH) + boosts.get(Stats.STRENGTH));
-		int spread = (stats.get(Stats.ACCURACY) + boosts.get(Stats.ACCURACY) + bonuses.get(Stats.ACCURACY)) / 10;
+		int totalAccuracy = getStats().get(Stats.ACCURACY) + getBoosts().get(Stats.ACCURACY);
+		int totalDamage = getStats().get(Stats.STRENGTH) + getBoosts().get(Stats.STRENGTH);
+		int spread = (totalAccuracy + bonuses.get(Stats.ACCURACY)) / 10;
 		int origin = (maxHit/2) + Math.min((maxHit/2), Math.max(-(maxHit/2) + spread, totalAccuracy - totalDamage));
+		origin = postAccuracyModifications(origin);
 		
 		
 		final List<Integer> distinctNumberLine = numberLine.stream().distinct().collect(Collectors.toList());
@@ -109,39 +112,12 @@ public abstract class Attackable {
 		return numberLine.get(rand.nextInt(numberLine.size()));
 	}
 	
+	public int castSpell(int spellId, Attackable target, ResponseMaps responseMaps) {
+		return 0;
+	}
+	
 	public int block() {
-//		int maxBlock = (int)Math.ceil((stats.get(Stats.DEFENCE) + boosts.get(Stats.DEFENCE)) * 0.22) + (int)Math.ceil(bonuses.get(Stats.DEFENCE) * 0.25);
-		
-		int blockFromLevel = ((stats.get(Stats.DEFENCE) + boosts.get(Stats.DEFENCE)) / 6) + 1;
-		int blockFromBonus = (bonuses.get(Stats.DEFENCE) * 2) / 10;
-		
-		int maxBlock = blockFromLevel + blockFromBonus;
-
-		int distribution = 100 / (maxBlock + 1);
-		ArrayList<Integer> numberLine = new ArrayList<>();
-		for (int i = 0; i <= maxBlock; ++i) {
-			for (int j = 0; j < distribution; ++j)
-				numberLine.add(i);
-		}
-		
-		ArrayList<Integer> numbersToBoost = new ArrayList<>();
-		int accuracyFromLevel = ((stats.get(Stats.AGILITY) + boosts.get(Stats.AGILITY)) / 5) + 1;
-		int accuracyFromBonus = (bonuses.get(Stats.AGILITY) * 3) / 10;
-//		int acc = (int)Math.ceil((stats.get(Stats.AGILITY) + boosts.get(Stats.AGILITY)) * 0.22) + (int)Math.ceil(bonuses.get(Stats.AGILITY) * 0.25);
-		int acc = accuracyFromLevel + accuracyFromBonus;
-		for (int i = numberLine.size() - 1; i >= Math.max((numberLine.size() - acc), 0); --i) {
-			numbersToBoost.add(numberLine.get(i));
-		}
-		Collections.sort(numbersToBoost, Collections.reverseOrder());
-		
-		for (int numberToBoost : numbersToBoost) {
-			for (int j = 0; j < acc; ++j) {
-				numberLine.add(numberToBoost);
-			}
-			--acc;
-		}
-
-		return numberLine.get(rand.nextInt(numberLine.size()));
+		return 0;
 	}
 	
 	public boolean isInCombat() {
@@ -188,5 +164,17 @@ public abstract class Attackable {
 		
 		if (target != null)
 			this.lastTarget = target;// this one remains until death (in case the player dies of poison or in some way when they're not under attack)
+	}
+	
+	protected int postMaxHitModifications(int maxHit) {
+		return maxHit;
+	}
+	
+	protected int postAccuracyModifications(int accuracy) {
+		return accuracy;
+	}
+	
+	protected int postBlockChanceModifications(int blockChance) {
+		return blockChance;
 	}
 }

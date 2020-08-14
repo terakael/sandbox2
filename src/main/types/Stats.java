@@ -6,7 +6,7 @@ public enum Stats {
 	STRENGTH(1), 
 	ACCURACY(2), 
 	DEFENCE(3), 
-	AGILITY(4), 
+	PRAYER(4), 
 	HITPOINTS(5), 
 	MINING(6),
 	SMITHING(7),

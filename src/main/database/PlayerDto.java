@@ -16,6 +16,7 @@ public class PlayerDto {
 	private int floor;
 	private int currentHp;
 	private int maxHp;
+	private int currentPrayer;
 	private int combatLevel;
 	private int attackStyleId;
 	private Map<PlayerPartType, PlayerAnimationDto> baseAnimations;

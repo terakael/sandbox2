@@ -1,6 +1,5 @@
 package main.responses;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -87,6 +86,8 @@ public class LogonResponse extends Response {
 		
 		WorldProcessor.playerSessions.put(client, player);
 		responseMaps.addClientOnlyResponse(player, this);
+		
+		new LoadPrayersResponse().process(null, player, responseMaps);
 		
 		new PlayerEnterResponse().process(null, player, responseMaps);
 	}

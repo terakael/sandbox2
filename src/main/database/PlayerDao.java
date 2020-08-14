@@ -40,6 +40,7 @@ public class PlayerDao {
 							rs.getInt("floor"),
 							StatsDao.getCurrentHpByPlayerId(rs.getInt("id")), 
 							StatsDao.getMaxHpByPlayerId(rs.getInt("id")), 
+							StatsDao.getCurrentPrayerByPlayerId(rs.getInt("id")),
 							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
 							rs.getInt("attack_style_id"), 
 							PlayerAnimationDao.loadAnimationsByPlayerId(rs.getInt("id")),

@@ -26,12 +26,12 @@ public class NPCDto {
 	private transient int acc;
 	private transient int str;
 	private transient int def;
-	private transient int agil;
+	private transient int pray;
 	private transient int magic;
 	private transient int accBonus;
 	private transient int strBonus;
 	private transient int defBonus;
-	private transient int agilBonus;
+	private transient int prayBonus;
 	private transient int attackSpeed;
 	private transient int roamRadius;
 	private transient int attributes;

@@ -47,18 +47,18 @@ public class NPC extends Attackable {
 		stats.put(Stats.STRENGTH, dto.getStr());
 		stats.put(Stats.ACCURACY, dto.getAcc());
 		stats.put(Stats.DEFENCE, dto.getDef());
-		stats.put(Stats.AGILITY, dto.getAgil());
+		stats.put(Stats.PRAYER, dto.getPray());
 		stats.put(Stats.HITPOINTS, dto.getHp());
 		stats.put(Stats.MAGIC, dto.getMagic());
 		setStats(stats);
 		
-		combatLevel = StatsDao.getCombatLevelByStats(dto.getStr(), dto.getAcc(), dto.getDef(), dto.getAgil(), dto.getHp(), dto.getMagic());
+		combatLevel = StatsDao.getCombatLevelByStats(dto.getStr(), dto.getAcc(), dto.getDef(), dto.getPray(), dto.getHp(), dto.getMagic());
 		
 		HashMap<Stats, Integer> bonuses = new HashMap<>();
 		bonuses.put(Stats.STRENGTH, dto.getStrBonus());
 		bonuses.put(Stats.ACCURACY, dto.getAccBonus());
 		bonuses.put(Stats.DEFENCE, dto.getDefBonus());
-		bonuses.put(Stats.AGILITY, dto.getAgilBonus());
+		bonuses.put(Stats.PRAYER, dto.getPrayBonus());
 //		bonuses.put(Stats.HITPOINTS, dto.getHpBonus());
 		setBonuses(bonuses);
 		
@@ -66,7 +66,7 @@ public class NPC extends Attackable {
 		boosts.put(Stats.STRENGTH, 0);
 		boosts.put(Stats.ACCURACY, 0);
 		boosts.put(Stats.DEFENCE, 0);
-		boosts.put(Stats.AGILITY, 0);
+		boosts.put(Stats.PRAYER, 0);
 		boosts.put(Stats.MAGIC, 0);
 		setBoosts(boosts);
 		

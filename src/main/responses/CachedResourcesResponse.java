@@ -1,5 +1,6 @@
 package main.responses;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +13,8 @@ import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.NPCDao;
 import main.database.NPCDto;
+import main.database.PrayerDao;
+import main.database.PrayerDto;
 import main.database.SceneryDao;
 import main.database.SceneryDto;
 import main.database.SpriteFrameDao;

@@ -7,6 +7,7 @@ import javax.websocket.DeploymentException;
 
 import main.database.AnimationDao;
 import main.database.BrewableDao;
+import main.database.BuryableDao;
 import main.database.CastableDao;
 import main.database.CatchableDao;
 import main.database.ConsumableDao;
@@ -23,6 +24,7 @@ import main.database.PickableDao;
 import main.database.PlayerAnimationDao;
 import main.database.PlayerDao;
 import main.database.PlayerStorageDao;
+import main.database.PrayerDao;
 import main.database.ReinforcementBonusesDao;
 import main.database.RespawnableDao;
 import main.database.SceneryDao;
@@ -150,6 +152,12 @@ public class Server {
 			
 			System.out.println("caching reinforcement bonuses");
 			ReinforcementBonusesDao.setupCaches();
+			
+			System.out.println("caching prayers");
+			PrayerDao.setupCaches();
+			
+			System.out.println("caching buryables");
+			BuryableDao.setupCaches();
 			
 			System.out.println("caching client resources");
 			// should be last after all the other caches are set up

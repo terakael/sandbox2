@@ -48,19 +48,19 @@ public class NPCDao {
 						rs.getFloat("scale_y"),
 						0,// tileId (not used in this map as this is not the instance list, just all npc types)
 						rs.getInt("hp"),
-						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("hp"), 0),
+						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), 0),
 						rs.getInt("leftclick_option"),
 						rs.getInt("other_options"),
 						0,// floor (not used in this map as this is not the instance list, just all npc types)
 						rs.getInt("acc"),
 						rs.getInt("str"),
 						rs.getInt("def"),
-						rs.getInt("agil"),
+						rs.getInt("pray"),
 						rs.getInt("magic"),
 						rs.getInt("acc_bonus"),
 						rs.getInt("str_bonus"),
 						rs.getInt("def_bonus"),
-						rs.getInt("agil_bonus"),
+						rs.getInt("pray_bonus"),
 						rs.getInt("attack_speed"),
 						rs.getInt("roam_radius"),
 						rs.getInt("attributes"),
@@ -77,7 +77,7 @@ public class NPCDao {
 	
 	public static List<NPCDto> getAllNpcsByFloor(int floor) {
 		final String query = 
-			"select id, name, up_id, down_id, left_id, right_id, attack_id, scale_x, scale_y, acc, str, def, agil, hp, magic, acc_bonus, str_bonus, def_bonus, agil_bonus, attack_speed, tile_id, leftclick_option, other_options, roam_radius, attributes, respawn_ticks from npcs" + 
+			"select id, name, up_id, down_id, left_id, right_id, attack_id, scale_x, scale_y, acc, str, def, pray, hp, magic, acc_bonus, str_bonus, def_bonus, pray_bonus, attack_speed, tile_id, leftclick_option, other_options, roam_radius, attributes, respawn_ticks from npcs" + 
 			" inner join room_npcs on room_npcs.npc_id = id" + 
 			" where floor=?";
 		
@@ -102,19 +102,19 @@ public class NPCDao {
 						rs.getFloat("scale_y"),
 						rs.getInt("tile_id"),
 						rs.getInt("hp"),
-						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("hp"), 0),
+						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), 0),
 						rs.getInt("leftclick_option"),
 						rs.getInt("other_options"),
 						floor,
 						rs.getInt("acc"),
 						rs.getInt("str"),
 						rs.getInt("def"),
-						rs.getInt("agil"),
+						rs.getInt("pray"),
 						rs.getInt("magic"),
 						rs.getInt("acc_bonus"),
 						rs.getInt("str_bonus"),
 						rs.getInt("def_bonus"),
-						rs.getInt("agil_bonus"),
+						rs.getInt("pray_bonus"),
 						rs.getInt("attack_speed"),
 						rs.getInt("roam_radius"),
 						rs.getInt("attributes"),

@@ -156,6 +156,15 @@ public class ResponseFactory {
 		case "enter":
 			response = new EnterPortalResponse();
 			break;
+		case "toggle_prayer":
+			response = new TogglePrayerResponse();
+			break;
+		case "pray at":
+			response = new PrayAtResponse();
+			break;
+		case "bury":
+			response = new BuryResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

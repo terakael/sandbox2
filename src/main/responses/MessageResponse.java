@@ -73,7 +73,7 @@ public class MessageResponse extends Response {
 			return;
 		}
 		
-		if (msgParts[0].matches("^att|str|def|hp|agil|acc|mage|herb|mine|smith|fish|cook$")) {
+		if (msgParts[0].matches("^att|str|def|hp|pray|acc|mage|herb|mine|smith|fish|cook$")) {
 			
 			if (msgParts.length >= 2) {
 				handleAddExp(player, msgParts, responseMaps);
@@ -234,6 +234,9 @@ public class MessageResponse extends Response {
 		responseMaps.addBroadcastResponse(playerUpdate);// should be local
 		
 		targetPlayer.refreshStats();
+		
+		if (statId == Stats.PRAYER.getValue())// prayers change based on level so reload them
+			new LoadPrayersResponse().process(null, targetPlayer, responseMaps);
 	}
 	
 	private void handleGive(Player player, String[] msgParts, ResponseMaps responseMaps) {

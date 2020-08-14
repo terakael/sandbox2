@@ -179,12 +179,12 @@ public class PlayerStorageDao {
 		return true;
 	}
 	
-	public static void clearPlayerInventoryExceptFirstThreeSlots(int playerId) {
+	public static void clearPlayerInventoryExceptFirstSlots(int playerId, int exceptionSlotCount) {
 		if (!validatePlayerStorageElement(playerId, StorageTypes.INVENTORY))
 			return;
 		
 		playerStorage.get(playerId).get(StorageTypes.INVENTORY).values().stream()
-			.filter(e -> e.getSlot() >= 3)
+			.filter(e -> e.getSlot() >= exceptionSlotCount)
 			.forEach(e -> {
 				e.setCount(0);
 				e.setCharges(0);

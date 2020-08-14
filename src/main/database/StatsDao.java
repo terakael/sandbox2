@@ -174,6 +174,14 @@ public class StatsDao {
 		return getLevelFromExp(hpDto.getExp().intValue()) + hpDto.getRelativeBoost();
 	}
 	
+	public static int getCurrentPrayerByPlayerId(int id) {
+		if (!playerStatExpMap.containsKey(id))
+			return 0;
+		
+		StatsDto prayerDto = playerStatExpMap.get(id).get(Stats.PRAYER.getValue());
+		return getLevelFromExp(prayerDto.getExp().intValue()) + prayerDto.getRelativeBoost();
+	}
+	
 	public static int getLevelFromExp(int exp) {
 		for (Map.Entry<Integer, Integer> entry : expMap.entrySet()) {
 			if (exp < entry.getValue())
@@ -197,24 +205,24 @@ public class StatsDao {
 			getLevelFromExp(stats.get(Stats.STRENGTH.getValue()).intValue()),
 			getLevelFromExp(stats.get(Stats.ACCURACY.getValue()).intValue()),
 			getLevelFromExp(stats.get(Stats.DEFENCE.getValue()).intValue()),
-			getLevelFromExp(stats.get(Stats.AGILITY.getValue()).intValue()),
+			getLevelFromExp(stats.get(Stats.PRAYER.getValue()).intValue()),
 			getLevelFromExp(stats.get(Stats.HITPOINTS.getValue()).intValue()),
 			getLevelFromExp(stats.get(Stats.MAGIC.getValue()).intValue())
 		);
 	}
 	
-	public static int getCombatLevelByStats(int str, int att, int def, int agil, int hp, int magic) {
-		return (int)Math.ceil(((double)str + att) / 3) 
-				+ (int)Math.ceil(((double)def + hp) / 4) 
-				+ (int)Math.ceil(((double)magic) / 5);
+	public static int getCombatLevelByStats(int str, int att, int def, int pray, int hp, int magic) {
+		return (int)Math.ceil(((double)str + att) / 4) 
+				+ (int)Math.ceil(((double)def + hp) / 5) 
+				+ (int)Math.ceil(((double)magic + pray) / 6);
 	}
 	
-	public static int getCombatLevelByStats(HashMap<Stats, Integer> stats) {
+	public static int getCombatLevelByStats(Map<Stats, Integer> stats) {
 		return getCombatLevelByStats(
 				stats.get(Stats.STRENGTH),
 				stats.get(Stats.ACCURACY),
 				stats.get(Stats.DEFENCE),
-				stats.get(Stats.AGILITY),
+				stats.get(Stats.PRAYER),
 				stats.get(Stats.HITPOINTS),
 				stats.get(Stats.MAGIC)
 			);

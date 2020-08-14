@@ -56,14 +56,22 @@ public abstract class ConsumableResponse extends Response {
 				continue;
 			
 			int newRelativeBoost;
-			if (dto.getStatId() == Stats.HITPOINTS.getValue()) {
+			switch (Stats.withValue(dto.getStatId())) {
+			case HITPOINTS: {
 				newRelativeBoost = relativeBoosts.get(stat) + dto.getAmount();
 				
 				if (newRelativeBoost > player.getBonuses().get(Stats.HITPOINTS))// the hp relative boost is negative for how many hp lost
 					newRelativeBoost = player.getBonuses().get(Stats.HITPOINTS);
 				hpModified = true;
 				player.setCurrentHp(player.getDto().getMaxHp() + newRelativeBoost);
-			} else {
+				break;
+			}
+			case PRAYER: {
+				newRelativeBoost = Math.min(0, relativeBoosts.get(stat) + dto.getAmount());// prayer cannot boost over max so the boost must always be negative
+				player.setPrayerPoints(StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, player.getId()) + newRelativeBoost, responseMaps);
+				break;
+			}
+			default: {
 				// for example lets say you're 60 strength with a strength pot.
 				//the strength pot gives +6 strength, therefore your newRelativeBoost should max at 6.
 				// if you're currently somehow boosted to 70 strength, then the strength pot should take no effect.
@@ -84,8 +92,9 @@ public abstract class ConsumableResponse extends Response {
 				int statLevel = StatsDao.getStatLevelByStatIdPlayerId(stat, player.getId());
 				if (statLevel + newRelativeBoost < 0)
 					newRelativeBoost = -statLevel;
+				break;
 			}
-			
+			}
 			StatsDao.setRelativeBoostByPlayerIdStatId(player.getId(), stat, newRelativeBoost);
 		}
 		

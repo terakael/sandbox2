@@ -33,7 +33,7 @@ public class EquipmentDao {
 	}
 	
 	private static void cacheEquipment() {
-		final String query = "select item_id, player_part_id, animation_id, color, requirement, acc, str, def, agil, mage, hp, speed from equipment";
+		final String query = "select item_id, player_part_id, animation_id, color, requirement, acc, str, def, pray, mage, hp, speed from equipment";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -47,7 +47,7 @@ public class EquipmentDao {
 												 rs.getInt("requirement"), 
 												 getEquipmentTypeByEquipmentId(itemId),
 												 new PlayerAnimationDto(AnimationDao.getAnimationDtoById(rs.getInt("animation_id")), rs.getInt("color") == 0 ? null : rs.getInt("color")),
-												 new EquipmentBonusDto(rs.getInt("acc"), rs.getInt("str"), rs.getInt("def"), rs.getInt("agil"), rs.getInt("mage"), rs.getInt("hp"), rs.getInt("speed"))));
+												 new EquipmentBonusDto(rs.getInt("acc"), rs.getInt("str"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("mage"), rs.getInt("hp"), rs.getInt("speed"))));
 				}
 			}
 		} catch (SQLException e) {

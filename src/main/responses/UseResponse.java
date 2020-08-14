@@ -37,8 +37,10 @@ import main.scenery.SceneryManager;
 import main.types.DamageTypes;
 import main.types.Items;
 import main.types.NpcAttributes;
+import main.types.Prayers;
 import main.types.Stats;
 import main.types.StorageTypes;
+import main.utils.RandomUtil;
 
 public class UseResponse extends Response {
 	public UseResponse() {
@@ -93,6 +95,10 @@ public class UseResponse extends Response {
 		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getDest());
 		Scenery scenery = SceneryManager.getScenery(sceneryId);
 		if (scenery == null)
+			return false;
+		
+		int itemIdInSlot = PlayerStorageDao.getItemIdInSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot());
+		if (itemIdInSlot != request.getSrc())// the item in the requested slot isn't what we expect...
 			return false;
 		
 		if (!scenery.use(request, player, responseMaps))
@@ -295,21 +301,31 @@ public class UseResponse extends Response {
 		// at this point we're good to cast the spell.		
 		castOffensiveSpell(castable, player, targetNpc, responseMaps);
 		
-		InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
-		if (item.getCount() > 1) {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(
-					player.getId(), 
-					StorageTypes.INVENTORY, 
-					slot, 
-					item.getItemId(), item.getCount() - 1, item.getCharges());
-		} else {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(
-					player.getId(), 
-					StorageTypes.INVENTORY, 
-					slot, 
-					0, 1, 0);
-		}
-		InventoryUpdateResponse.sendUpdate(player, responseMaps);
+		int chanceToSaveRune = 0;
+		if (player.prayerIsActive(Prayers.RUNELESS_MAGIC))
+			chanceToSaveRune = 15;
+		else if (player.prayerIsActive(Prayers.RUNELESS_MAGIC_LVL_2))
+			chanceToSaveRune = 30;
+		else if (player.prayerIsActive(Prayers.RUNELESS_MAGIC_LVL_3))
+			chanceToSaveRune = 45;
+		
+		if (RandomUtil.getRandom(0, 100) > chanceToSaveRune) { // chance failed, so use up the rune
+			InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
+			if (item.getCount() > 1) {
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(
+						player.getId(), 
+						StorageTypes.INVENTORY, 
+						slot, 
+						item.getItemId(), item.getCount() - 1, item.getCharges());
+			} else {
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(
+						player.getId(), 
+						StorageTypes.INVENTORY, 
+						slot, 
+						0, 1, 0);
+			}
+			InventoryUpdateResponse.sendUpdate(player, responseMaps);
+			}
 		
 		CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId());
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), castSpellResponse);

@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import main.database.StatsDao;
+import main.responses.PlayerUpdateResponse;
 import main.responses.PvmEndResponse;
 import main.responses.PvpEndResponse;
 import main.responses.ResponseMaps;
 import main.types.DamageTypes;
+import main.types.Prayers;
 import main.types.Stats;
 import main.utils.RandomUtil;
 
@@ -74,23 +77,34 @@ public class FightManager {
 			// update the stats/bonuses in case the player has switched weapons/armour etc
 			attackable.setStatsAndBonuses();
 			other.setStatsAndBonuses();
-			
-//			int hit = Math.max(attackable.hit() - (attackable.hit() * other.block() / 100), 0);
-			
-//			int hit = Math.max(0, attackable.hit() - other.block());
-			
+
 			int hit = attackable.hit();
 			int attackBonus = attackable.getStats().get(Stats.ACCURACY) + attackable.getBoosts().get(Stats.ACCURACY) + attackable.getBonuses().get(Stats.ACCURACY);
 			int defenceBonus = other.getStats().get(Stats.DEFENCE) + other.getBoosts().get(Stats.DEFENCE) + other.getBonuses().get(Stats.DEFENCE);
 			
 			int baseBlockChance = 25;
 			int blockChance = baseBlockChance + Math.max(-baseBlockChance, (defenceBonus - attackBonus) / 2);
+			blockChance = other.postBlockChanceModifications(blockChance);
 			
 			if (RandomUtil.getRandom(0, 100) < blockChance)
 				hit = 0;
 			
-			//int hit = Math.max(attackable.hit() - other.block(), 0);
 			other.onHit(hit, DamageTypes.STANDARD, responseMaps);
+			
+			// smite code... pretty awkward to have it here...
+			if (attackable instanceof Player && other instanceof Player) {
+				Player a = (Player)attackable;
+				Player o = (Player)other;
+				int smiteAmount = 0;
+				if (a.prayerIsActive(Prayers.SMITE))
+					smiteAmount = hit / 4;
+				else if (a.prayerIsActive(Prayers.ULTRASMITE))
+					smiteAmount = hit / 3;
+				
+				if (smiteAmount > 0) {
+					o.setPrayerPoints(o.getPrayerPoints() - smiteAmount, responseMaps);
+				}
+			}
 			
 			return other.getCurrentHp() == 0;
 		}

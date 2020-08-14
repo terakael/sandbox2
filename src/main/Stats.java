@@ -6,7 +6,7 @@ public class Stats {
 	int strength = 0;
 	int accuracy = 0;
 	int defence = 0;
-	int agility = 0;
+	int prayer = 0;
 	int hitpoints = 10;
 	int magic = 0;
 	int mining = 0;
@@ -19,7 +19,7 @@ public class Stats {
 		this.strength = statList.get("strength");
 		this.accuracy = statList.get("accuracy");
 		this.defence = statList.get("defence");
-		this.agility = statList.get("agility");
+		this.prayer = statList.get("prayer");
 		this.hitpoints = statList.get("hitpoints");
 		this.magic = statList.get("magic");
 		this.mining = statList.get("mining");

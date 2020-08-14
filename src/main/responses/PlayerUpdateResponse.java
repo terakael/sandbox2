@@ -18,6 +18,7 @@ public class PlayerUpdateResponse extends Response {
 	@Setter Integer damage = null;
 	@Setter Integer damageType = null;
 	@Setter Integer currentHp = null;
+	@Setter Integer currentPrayer = null;
 	@Setter Integer maxHp = null;
 	@Setter Boolean loggedIn = null;
 	@Setter Boolean snapToTile = null;

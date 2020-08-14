@@ -51,6 +51,9 @@ public class RequestFactory {
 		map.put("show_stat_window", ShowStatWindowRequest.class);
 		map.put("fish", FishRequest.class);
 		map.put("enter", EnterPortalRequest.class);
+		map.put("toggle_prayer", TogglePrayerRequest.class);
+		map.put("pray at", PrayAtRequest.class);
+		map.put("bury", BuryRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))
