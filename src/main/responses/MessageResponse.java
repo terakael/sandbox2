@@ -68,7 +68,7 @@ public class MessageResponse extends Response {
 		
 		// below are the god-only commands
 		if (!player.isGod()) {
-			setRecoAndResponseText(0, "You can't do that.  You're not god.");
+			setRecoAndResponseText(0, "You can't do that.  You're not god.  Hurrrr.  Wololololo!");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}

@@ -30,7 +30,7 @@ public class NPC extends Attackable {
 	
 	private final transient int maxTickCount = 15;
 	private final transient int minTickCount = 5;
-	private transient int tickCounter = maxTickCount;
+	private transient int tickCounter = 0;
 	private int deathTimer = 0;
 	private final transient int MAX_HUNT_TIMER = 5;
 	private transient int huntTimer = 0;
@@ -74,6 +74,7 @@ public class NPC extends Attackable {
 		setMaxCooldown(dto.getAttackSpeed());
 		
 		huntTimer = RandomUtil.getRandom(0, MAX_HUNT_TIMER);// just so all the NPCs aren't hunting on the same tick
+//		tickCounter = RandomUtil.getRandom(1, maxTickCount);
 	}
 	
 	public void process(ResponseMaps responseMaps) {

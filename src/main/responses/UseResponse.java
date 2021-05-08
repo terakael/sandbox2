@@ -97,9 +97,10 @@ public class UseResponse extends Response {
 		if (scenery == null)
 			return false;
 		
-		int itemIdInSlot = PlayerStorageDao.getItemIdInSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot());
-		if (itemIdInSlot != request.getSrc())// the item in the requested slot isn't what we expect...
-			return false;
+//		int itemIdInSlot = PlayerStorageDao.getItemIdInSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot());
+//		if (itemIdInSlot != request.getSrc()) {// the item in the requested slot isn't what we expect...
+//			return false;
+//		}
 		
 		if (!scenery.use(request, player, responseMaps))
 			return false;

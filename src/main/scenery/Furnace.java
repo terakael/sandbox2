@@ -33,7 +33,7 @@ public class Furnace extends Scenery {
 			return true;
 		case 5: // coal
 			// add all the coal in inventory to the furnace storage
-			int numCoal = PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), 5, StorageTypes.INVENTORY);// 5=coal, 1=inventory
+			int numCoal = PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), Items.COAL_ORE.getValue(), StorageTypes.INVENTORY);
 			if (numCoal > 0) {
 				PlayerStorageDao.removeAllItemsFromInventoryByPlayerIdItemId(player.getId(), Items.COAL_ORE);
 				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.FURNACE, 0, numCoal);

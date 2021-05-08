@@ -82,6 +82,7 @@ public class WorldProcessor implements Runnable {
 	
 	public void process() {		
 		Stopwatch.reset();
+		Stopwatch.start("total");
 
 		Stopwatch.start("request map");
 		// pull requestmap contents from Endpoint and clear it so it can collect for the next tick
@@ -126,17 +127,28 @@ public class WorldProcessor implements Runnable {
 		}
 		Stopwatch.end("player requests");
 		
+		Map<Integer, Set<Integer>> npcsToProcess = new HashMap<>(); // floor, list<id>
 		Stopwatch.start("process players");
 		// process players
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			entry.getValue().process(responseMaps);
+			
+			// while we iterate the players, pull out the npcs near each player as these are the only npcs we need to process.
+			Set<Integer> npcIdsNearPlayer = NPCManager.get().getNpcsNearTile(entry.getValue().getFloor(), entry.getValue().getTileId(), 15)
+				    .stream()
+				    .map(NPC::getInstanceId)
+				    .collect(Collectors.toSet());
+			
+			if (!npcsToProcess.containsKey(entry.getValue().getFloor()))
+				npcsToProcess.put(entry.getValue().getFloor(), new HashSet<>());
+			npcsToProcess.get(entry.getValue().getFloor()).addAll(npcIdsNearPlayer);
 		}
 		Stopwatch.end("process players");
 		
 		updateInRangePlayers(responseMaps);
 		
 		Stopwatch.start("process npcs");
-		NPCManager.get().process(responseMaps);
+		NPCManager.get().process(npcsToProcess, responseMaps);
 		Stopwatch.end("process npcs");
 		
 		// process fight manager
@@ -181,7 +193,8 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("send responses");
 		for (Map.Entry<Player, List<Response>> responses : clientResponses.entrySet()) {
 			try {
-				responses.getKey().getSession().getBasicRemote().sendText(gson.toJson(responses.getValue()));
+				if (responses.getKey().getSession().isOpen())
+					responses.getKey().getSession().getBasicRemote().sendText(gson.toJson(responses.getValue()));
 				
 				// if there were any failed logon responses then kill the connection
 				for (Response response : responses.getValue()) {
@@ -207,6 +220,8 @@ public class WorldProcessor implements Runnable {
 			}
 		}
 		Stopwatch.end("kill sessions");
+		
+		Stopwatch.end("total");
 	}
 	
 	private void compileBroadcastResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {

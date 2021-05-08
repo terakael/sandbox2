@@ -329,7 +329,7 @@ public class PathFinder {
 
 			open.remove(q);
 			closed.add(q);
-			if (closed.size() > 100) {
+			if (closed.size() > 500) {
 				// if we hit 500 checked tiles then bail, thats way too many and its probably an impossible path
 				//System.out.println(String.format("500+ closed: ms=%d, open=%d, closed=%d, from=%d, to=%d", Stopwatch.getMs("find path"), open.size(), closed.size(), from, to));
 				return output;

@@ -11,6 +11,8 @@ import javax.websocket.Session;
 import lombok.Getter;
 import lombok.Setter;
 import main.GroundItemManager;
+import main.database.CastableDao;
+import main.database.CastableDto;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
@@ -880,6 +882,45 @@ public class Player extends Attackable {
 			blockChance += 15;
 		}
 		return blockChance;
+	}
+	
+	@Override
+	public DamageTypes getDamageType() {
+		switch (Items.withValue(EquipmentDao.getWeaponIdByPlayerId(getId()))) {
+		case WHIRLWIND_WAND:
+			return DamageTypes.MAGIC;
+			
+		default:
+			return DamageTypes.STANDARD;
+		}
+	}
+	
+	@Override
+	public int hit(Attackable target, ResponseMaps responseMaps) {
+		switch (getDamageType()) {
+		case STANDARD:
+			return super.hit(target, responseMaps);
+			
+		case MAGIC: {
+			CastableDto castable = CastableDao.getCastableByItemId(Items.WHIRLWIND_RUNE.getValue());
+			return castSpell(castable, target, responseMaps);
+		}
+		
+		default:
+			return 0;
+		}
+	}
+	
+	public int castSpell(CastableDto castable, Attackable target, ResponseMaps responseMaps) {
+		int playerMagicLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.MAGIC, getId());
+		if (playerMagicLevel < castable.getLevel()) {
+			MessageResponse response = new MessageResponse();
+			response.setColour("white");
+			response.setRecoAndResponseText(0, String.format("you need %d magic to cast that.", castable.getLevel()));
+			responseMaps.addClientOnlyResponse(this, response);
+			return 0;
+		}
+		return 0;
 	}
 	
 	public void setPrayerPoints(float newPrayerPoints, ResponseMaps responseMaps) {

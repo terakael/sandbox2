@@ -3,6 +3,7 @@ package main.responses;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
@@ -80,9 +81,19 @@ public class BankDepositResponse extends Response {
 			slotsToDeposit.add(request.getSlot());
 			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			
+			// remove any equipped items from consideration
+			Set<Integer> equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
+			for (Integer slot : equippedSlots) {
+				if (invItemIds.get(slot) == itemDto.getItemId()) {
+					invItemIds.set(slot, 0);// exclude the equipped item from the list
+				}
+			}
+			
 			if (ItemDao.itemHasAttribute(itemDto.getItemId(), ItemAttributes.CHARGED)) {
 				// num items in inventory with the same charge
 				Map<Integer, InventoryItemDto> invItems = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.INVENTORY);
+				
+				
 				for (int i = 0; i < invItemIds.size(); ++i) {
 					if (i == request.getSlot())
 						continue;

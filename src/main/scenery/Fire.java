@@ -57,9 +57,8 @@ public class Fire extends Scenery {
 				player.setSavedRequest(request);
 				player.setState(PlayerState.cooking);
 				player.setTickCounter(5);
+				return true;
 			}
-			
-			return true;
 		}
 		
 		return false;

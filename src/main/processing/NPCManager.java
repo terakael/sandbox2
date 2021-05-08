@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.database.NPCDao;
@@ -46,12 +48,21 @@ public class NPCManager {
 		return null;
 	}
 	
-	public void process(ResponseMaps responseMaps) {
-		for (Map.Entry<Integer, List<NPC>> entry : npcs.entrySet()) {
-			for (NPC npc : entry.getValue()) {
-				npc.process(responseMaps);
-			}
+	public void process(Map<Integer, Set<Integer>> npcIds, ResponseMaps responseMaps) {
+		for (Map.Entry<Integer, Set<Integer>> entry : npcIds.entrySet()) {
+			if (!npcs.containsKey(entry.getKey()))
+				continue;
+			
+			npcs.get(entry.getKey()).stream()
+				.filter(e -> entry.getValue().contains(e.getInstanceId()))
+				.forEach(e -> e.process(responseMaps));
 		}
+		
+//		for (Map.Entry<Integer, List<NPC>> entry : npcs.entrySet()) {
+//			for (NPC npc : entry.getValue()) {
+//				npc.process(responseMaps);
+//			}
+//		}
 	}
 	
 	public List<NPC> getNpcsNearTile(int floor, int tileId, int radius) {

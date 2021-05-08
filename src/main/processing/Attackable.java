@@ -14,6 +14,7 @@ import main.responses.ResponseMaps;
 import main.types.DamageTypes;
 import main.types.Prayers;
 import main.types.Stats;
+import main.utils.RandomUtil;
 
 public abstract class Attackable {
 	private static Random rand = new Random();
@@ -58,7 +59,7 @@ public abstract class Attackable {
 		return --cooldown == 0;
 	}
 	
-	public int hit() {
+	public int hit(Attackable target, ResponseMaps responseMaps) {
 		cooldown = maxCooldown;
 		
 		int maxHitFromLevel = ((getStats().get(Stats.STRENGTH) + getBoosts().get(Stats.STRENGTH)) / 6) + 1;
@@ -112,12 +113,19 @@ public abstract class Attackable {
 		return numberLine.get(rand.nextInt(numberLine.size()));
 	}
 	
-	public int castSpell(int spellId, Attackable target, ResponseMaps responseMaps) {
-		return 0;
+	public boolean block(Attackable attacker) {
+		int attackBonus = attacker.getStats().get(Stats.ACCURACY) + attacker.getBoosts().get(Stats.ACCURACY) + attacker.getBonuses().get(Stats.ACCURACY);
+		int defenceBonus = getStats().get(Stats.DEFENCE) + getBoosts().get(Stats.DEFENCE) + getBonuses().get(Stats.DEFENCE);
+		
+		int baseBlockChance = 25;
+		int blockChance = baseBlockChance + Math.max(-baseBlockChance, (defenceBonus - attackBonus) / 2);
+		blockChance = postBlockChanceModifications(blockChance);
+		
+		return RandomUtil.getRandom(0, 100) < blockChance;
 	}
 	
-	public int block() {
-		return 0;
+	public DamageTypes getDamageType() {
+		return DamageTypes.STANDARD;
 	}
 	
 	public boolean isInCombat() {

@@ -47,9 +47,9 @@ public class ShopValueResponse extends Response {
 		if (request.getValueTypeId() == 1)
 			value = shop.getShopBuyPrice(shopItem);
 		
-		setRecoAndResponseText(1, String.format("%s is %s for %d coin%s.", 
+		setRecoAndResponseText(1, String.format("%s can be %s for %d coin%s.", 
 				ItemDao.getNameFromId(item.getId()), 
-				request.getValueTypeId() == 0 ? "sold" : "bought",
+				request.getValueTypeId() == 0 ? "bought" : "sold",
 				value, 
 				value == 1 ? "" : "s"));
 		

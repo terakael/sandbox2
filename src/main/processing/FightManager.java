@@ -78,18 +78,11 @@ public class FightManager {
 			attackable.setStatsAndBonuses();
 			other.setStatsAndBonuses();
 
-			int hit = attackable.hit();
-			int attackBonus = attackable.getStats().get(Stats.ACCURACY) + attackable.getBoosts().get(Stats.ACCURACY) + attackable.getBonuses().get(Stats.ACCURACY);
-			int defenceBonus = other.getStats().get(Stats.DEFENCE) + other.getBoosts().get(Stats.DEFENCE) + other.getBonuses().get(Stats.DEFENCE);
-			
-			int baseBlockChance = 25;
-			int blockChance = baseBlockChance + Math.max(-baseBlockChance, (defenceBonus - attackBonus) / 2);
-			blockChance = other.postBlockChanceModifications(blockChance);
-			
-			if (RandomUtil.getRandom(0, 100) < blockChance)
+			int hit = attackable.hit(other, responseMaps);
+			if (other.block(attackable))
 				hit = 0;
-			
-			other.onHit(hit, DamageTypes.STANDARD, responseMaps);
+						
+			other.onHit(hit, attackable.getDamageType(), responseMaps);
 			
 			// smite code... pretty awkward to have it here...
 			if (attackable instanceof Player && other instanceof Player) {
