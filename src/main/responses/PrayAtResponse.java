@@ -36,7 +36,7 @@ public class PrayAtResponse extends Response {
 			player.faceDirection(request.getTileId(), responseMaps);
 			int maxPrayer = StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, player.getId());
 			
-			if (player.getFloor() == 1 && request.getTileId() == 470543804) {
+			if (player.getFloor() == 1 && request.getTileId() == 871901629) {
 				// this is the altar in the upper floor of the monk's guild.
 				// tbh this should be a different scenery id, "monk's guild altar" or something, in case the altar is moved at some point.
 				maxPrayer += 2;

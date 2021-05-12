@@ -7,25 +7,26 @@ import lombok.Setter;
 import main.database.PlayerAnimationDto;
 import main.processing.Player;
 import main.requests.Request;
+import main.types.DamageTypes;
 import main.types.PlayerPartType;
 
 
 public class PlayerUpdateResponse extends Response {
-	@Getter @Setter Integer id = null;
-	@Setter String name = null;
-	@Setter Integer combatLevel = null;
-	@Setter Integer tileId = null;
-	@Setter Integer damage = null;
-	@Setter Integer damageType = null;
-	@Setter Integer currentHp = null;
-	@Setter Integer currentPrayer = null;
-	@Setter Integer maxHp = null;
-	@Setter Boolean loggedIn = null;
-	@Setter Boolean snapToTile = null;
-	@Setter Boolean respawn = null;
-	@Setter String faceDirection = null;
+	@Getter @Setter private Integer id = null;
+	@Setter private String name = null;
+	@Setter private Integer combatLevel = null;
+	@Setter private Integer tileId = null;
+	@Setter private Integer currentHp = null;
+	@Setter private Integer currentPrayer = null;
+	@Setter private Integer maxHp = null;
+	@Setter private Boolean loggedIn = null;
+	@Setter private Boolean snapToTile = null;
+	@Setter private Boolean respawn = null;
+	@Setter private String faceDirection = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> baseAnimations = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> equipAnimations = null;
+	private Integer damage = null;
+	private Integer damageSpriteFrameId = null;
 
 	public PlayerUpdateResponse() {
 		setAction("player_update");
@@ -34,6 +35,22 @@ public class PlayerUpdateResponse extends Response {
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 
+	}
+	
+	public void setDamage(int damage, DamageTypes type) {
+		this.damage = damage;
+		
+		switch (type) {
+		case STANDARD:
+			damageSpriteFrameId = damage == 0 ? 1025 : 1024;
+			break;
+		case POISON:
+			damageSpriteFrameId = 1026;
+			break;
+		case MAGIC:
+			damageSpriteFrameId = 1027;
+			break;
+		}
 	}
 
 }

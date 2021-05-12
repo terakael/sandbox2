@@ -40,6 +40,8 @@ public class NPC extends Attackable {
 		
 	private int combatLevel = 0;
 	
+	private int lastProcessedTick = 0;
+	
 	public NPC(NPCDto dto) {
 		this.dto = dto;
 		tileId = dto.getTileId();
@@ -79,9 +81,16 @@ public class NPC extends Attackable {
 //		tickCounter = RandomUtil.getRandom(1, maxTickCount);
 	}
 	
-	public void process(ResponseMaps responseMaps) {
+	public void process(int currentTick, ResponseMaps responseMaps) {
+		// when the npc is out of range of all players, it is not being processed.
+		// this can cause issues if, for example, a monster is dead and the player leaves its range.
+		// the monster will stay dead and resume it's death count once the player returns.
+		// to remedy this, we record the last tick it was processed, so we can figure out how long it has been since the last process.
+		final int deltaTicks = currentTick - lastProcessedTick;
+		lastProcessedTick = currentTick;
+		
 		if (currentHp == 0) {
-			handleRespawn(responseMaps);			
+			handleRespawn(responseMaps, deltaTicks);			
 			return;
 		}
 		
@@ -89,7 +98,7 @@ public class NPC extends Attackable {
 		
 		if ((dto.getAttributes() & NpcAttributes.AGGRESSIVE.getValue()) == NpcAttributes.AGGRESSIVE.getValue() && !isInCombat()) {
 			// aggressive monster; look for targets
-			if (--huntTimer <= 0) {
+			if (--huntTimer <= 0) { // technically could use the deltaTick here but who cares, it's not really noticeable.
 				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(floor, tileId, dto.getRoamRadius()/2);
 				
 				if (dto.getId() == 18 || dto.getId() == 22) { // goblins won't attack anyone with the goblin stank buff
@@ -196,6 +205,7 @@ public class NPC extends Attackable {
 	
 	@Override
 	public void onDeath(Attackable killer, ResponseMaps responseMaps) {
+		currentHp = 0;
 		deathTimer = dto.getRespawnTicks();
 		target = null;
 		lastTarget = null;
@@ -242,8 +252,7 @@ public class NPC extends Attackable {
 		
 		NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 		updateResponse.setInstanceId(dto.getTileId());
-		updateResponse.setDamage(damage);
-		updateResponse.setDamageType(type.getValue());
+		updateResponse.setDamage(damage, type);
 		updateResponse.setHp(currentHp);
 		responseMaps.addLocalResponse(floor, tileId, updateResponse);
 	}
@@ -266,8 +275,9 @@ public class NPC extends Attackable {
 		return deathTimer > 0 && deathTimer < dto.getRespawnTicks() - 2;
 	}
 	
-	private void handleRespawn(ResponseMaps responseMaps) {
-		if (--deathTimer <= 0) {
+	private void handleRespawn(ResponseMaps responseMaps, int deltaTicks) {
+		deathTimer -= deltaTicks;
+		if (deathTimer <= 0) {
 			deathTimer = 0;
 			currentHp = dto.getHp();
 			tileId = dto.getTileId();

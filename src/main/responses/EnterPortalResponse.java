@@ -23,17 +23,17 @@ public class EnterPortalResponse extends Response {
 		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId());
 		switch (sceneryId) {
 		case 85:// blue
-			teleTileId = 469593844;
+			teleTileId = 870141319;
 			teleFloor = -1;
 			break;
 			
 		case 86:// red
-			teleTileId = 469493964;
+			teleTileId = 869956139;
 			teleFloor = 0;
 			break;
 			
 		case 87:// yellow
-			teleTileId = 470568804;
+			teleTileId = 871947954;
 			teleFloor = 0;
 			break;
 		

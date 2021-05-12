@@ -360,6 +360,9 @@ public enum Items {
 	
 	WAND(315),
 	
+	HALLOWED_SHIELD(316),
+	HALLOWED_AXE(317),
+	
 	
 	BONES(318),
 	WHIRLWIND_WAND(323),

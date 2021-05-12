@@ -9,6 +9,7 @@ import main.database.StatsDao;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.Request;
+import main.types.Prayers;
 import main.types.Stats;
 
 public class PlayerInRangeResponse extends Response {

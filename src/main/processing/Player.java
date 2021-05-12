@@ -719,8 +719,7 @@ public class Player extends Attackable {
 		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.HITPOINTS, hpBoost);
 		PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 		playerUpdateResponse.setId(getId());
-		playerUpdateResponse.setDamage(damage);
-		playerUpdateResponse.setDamageType(type.getValue());
+		playerUpdateResponse.setDamage(damage, type);
 		playerUpdateResponse.setCurrentHp(currentHp);
 		responseMaps.addBroadcastResponse(playerUpdateResponse);	
 		

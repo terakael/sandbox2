@@ -13,4 +13,5 @@ public class ItemDto {
 	private int otherOptions;
 	private int attributes;
 	private int price;
+	private int shiftclickOption;
 }

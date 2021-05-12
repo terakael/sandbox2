@@ -48,14 +48,14 @@ public class NPCManager {
 		return null;
 	}
 	
-	public void process(Map<Integer, Set<Integer>> npcIds, ResponseMaps responseMaps) {
+	public void process(Map<Integer, Set<Integer>> npcIds, ResponseMaps responseMaps, int tick) {
 		for (Map.Entry<Integer, Set<Integer>> entry : npcIds.entrySet()) {
 			if (!npcs.containsKey(entry.getKey()))
 				continue;
 			
 			npcs.get(entry.getKey()).stream()
 				.filter(e -> entry.getValue().contains(e.getInstanceId()))
-				.forEach(e -> e.process(responseMaps));
+				.forEach(e -> e.process(tick, responseMaps));
 		}
 		
 //		for (Map.Entry<Integer, List<NPC>> entry : npcs.entrySet()) {

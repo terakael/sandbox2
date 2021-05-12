@@ -58,11 +58,14 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	@Override
-	public void run() {		
+	public void run() {
+		// the tick is used so we can omit processing of things such as out-of-range 
+		// npcs, then figure out how many ticks have passed next time it's in range
+		int tick = 0;
 		while (true) {
 			long prevTime = System.nanoTime();
 			
-			process();
+			process(tick++); // will take something like 40 years to get to max int so don't bother handling the wrapping
 			
 			try {
 				// run for 0.6 seconds, minus the processing time so the ticks are always 0.6s.
@@ -80,7 +83,7 @@ public class WorldProcessor implements Runnable {
 		}
 	}
 	
-	public void process() {		
+	public void process(int tick) {		
 		Stopwatch.reset();
 		Stopwatch.start("total");
 
@@ -148,7 +151,7 @@ public class WorldProcessor implements Runnable {
 		updateInRangePlayers(responseMaps);
 		
 		Stopwatch.start("process npcs");
-		NPCManager.get().process(npcsToProcess, responseMaps);
+		NPCManager.get().process(npcsToProcess, responseMaps, tick);
 		Stopwatch.end("process npcs");
 		
 		// process fight manager
