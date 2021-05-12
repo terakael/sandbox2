@@ -23,6 +23,7 @@ public class PlayerUpdateResponse extends Response {
 	@Setter Boolean loggedIn = null;
 	@Setter Boolean snapToTile = null;
 	@Setter Boolean respawn = null;
+	@Setter String faceDirection = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> baseAnimations = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> equipAnimations = null;
 

@@ -15,6 +15,7 @@ import main.database.NpcDropDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
 import main.processing.Player.PlayerState;
+import main.responses.MessageResponse;
 import main.responses.NpcUpdateResponse;
 import main.responses.PvmStartResponse;
 import main.responses.ResponseMaps;
@@ -22,6 +23,7 @@ import main.types.Buffs;
 import main.types.DamageTypes;
 import main.types.ItemAttributes;
 import main.types.NpcAttributes;
+import main.types.Prayers;
 import main.types.Stats;
 import main.utils.RandomUtil;
 
@@ -91,17 +93,34 @@ public class NPC extends Attackable {
 				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(floor, tileId, dto.getRoamRadius()/2);
 				
 				if (dto.getId() == 18 || dto.getId() == 22) { // goblins won't attack anyone with the goblin stank buff
-					closePlayers = closePlayers.stream().filter(player -> !player.hasBuff(Buffs.GOBLIN_STANK)).collect(Collectors.toList());
+					closePlayers = closePlayers.stream()
+						.filter(player -> !player.hasBuff(Buffs.GOBLIN_STANK))
+						.collect(Collectors.toList());
 				}
 				
 				if (target != null && !closePlayers.contains(target))
 					target = null;
 				
 				if (target == null) {
-					for (Attackable player : closePlayers) {
-						int playerCombat = StatsDao.getCombatLevelByStats(player.getStats());
-						if (!player.isInCombat() && playerCombat < combatLevel * 2) { 
-							target = player;
+					// filter out of the list players that are in combat and players too high level to attack
+					closePlayers = closePlayers.stream()
+						.filter(player -> !player.isInCombat() && (StatsDao.getCombatLevelByStats(player.getStats()) < (combatLevel * 2)))
+						.collect(Collectors.toList());
+					
+					while (!closePlayers.isEmpty()) {
+						final int targetPlayer = RandomUtil.getRandom(0, closePlayers.size());
+						
+						if (closePlayers.get(targetPlayer).prayerIsActive(Prayers.STEALTH) && RandomUtil.getRandom(0, 100) < 85) {
+							MessageResponse messageResponse = MessageResponse.newMessageResponse("the " + dto.getName() + " fails to notice you.", "white");
+							responseMaps.addClientOnlyResponse(closePlayers.get(targetPlayer), messageResponse);
+							closePlayers.remove(targetPlayer);
+						}
+						else {
+							if (closePlayers.get(targetPlayer).prayerIsActive(Prayers.STEALTH)) {
+								MessageResponse messageResponse = MessageResponse.newMessageResponse("the " + dto.getName() + " spotted you!", "red");
+								responseMaps.addClientOnlyResponse(closePlayers.get(targetPlayer), messageResponse);
+							}
+							target = closePlayers.get(targetPlayer);
 							break;
 						}
 					}

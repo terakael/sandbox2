@@ -239,6 +239,9 @@ public class Player extends Attackable {
 			break;
 		}
 		case chasing: {
+			if (target != null && floor != target.getFloor())// if the target goes down a ladder or something then stop following
+				target = null;
+			
 			if (target == null) {
 				// player could have logged out/died as they were chasing
 				state = PlayerState.idle;
@@ -366,7 +369,7 @@ public class Player extends Attackable {
 				playerUpdate.setCurrentHp(currentHp);
 				playerUpdate.setMaxHp(currentHp);
 				playerUpdate.setCurrentPrayer((int)prayerPoints);
-				playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(getId()));
+//				playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(getId()));
 				playerUpdate.setRespawn(true);
 				
 				TogglePrayerResponse togglePrayerResponse = new TogglePrayerResponse();
@@ -376,6 +379,9 @@ public class Player extends Attackable {
 				// the reason this is local is so the other players know the player respawned
 				// (they also receive the player_in_range response automatically but if they're around the spawn point it will be missing respawn data)
 				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdate);
+				
+				// mainly to reset the bonuses
+				new EquipResponse().process(null, this, responseMaps);
 				
 				state = PlayerState.idle;
 			}
@@ -401,6 +407,8 @@ public class Player extends Attackable {
 
 		if (prayerPoints <= 0) {
 			activePrayers.clear();
+			prayerPoints = 0;
+			
 			TogglePrayerResponse togglePrayerResponse = new TogglePrayerResponse();
 			togglePrayerResponse.setActivePrayers(activePrayers);
 			togglePrayerResponse.setResponseText("you have run out of prayer points.");
@@ -932,5 +940,15 @@ public class Player extends Attackable {
 		playerUpdateResponse.setId(getId());
 		playerUpdateResponse.setCurrentPrayer((int)prayerPoints);
 		responseMaps.addClientOnlyResponse(this, playerUpdateResponse);
+	}
+	
+	public void faceDirection(int neighbouringTileId, ResponseMaps responseMaps) {
+		final String direction = PathFinder.getDirection(tileId, neighbouringTileId);
+		if (!direction.isEmpty()) {
+			PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+			playerUpdateResponse.setId(getId());
+			playerUpdateResponse.setFaceDirection(direction);
+			responseMaps.addLocalResponse(floor, tileId, playerUpdateResponse);
+		}
 	}
 }

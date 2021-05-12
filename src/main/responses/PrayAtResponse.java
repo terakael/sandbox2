@@ -33,6 +33,7 @@ public class PrayAtResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else if (altarId == 106) {// bit fucky but that's the sceneryId of the altar
+			player.faceDirection(request.getTileId(), responseMaps);
 			int maxPrayer = StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, player.getId());
 			
 			if (player.getFloor() == 1 && request.getTileId() == 470543804) {

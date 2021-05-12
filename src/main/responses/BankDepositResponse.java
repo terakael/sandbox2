@@ -98,13 +98,13 @@ public class BankDepositResponse extends Response {
 					if (i == request.getSlot())
 						continue;
 					
+					if (slotsToDeposit.size() >= actualCount)
+						break;
+					
 					if (invItemIds.get(i) == itemDto.getItemId()) {
 						if (invItems.get(i).getCharges() == itemDto.getCharges())
 							slotsToDeposit.add(i);
 					}
-					
-					if (slotsToDeposit.size() >= actualCount)
-						break;
 				}
 				actualCount = slotsToDeposit.size();
 				
@@ -114,12 +114,12 @@ public class BankDepositResponse extends Response {
 					if (i == request.getSlot())
 						continue;
 					
+					if (slotsToDeposit.size() >= actualCount)
+						break;
+					
 					if (invItemIds.get(i) == itemDto.getItemId()) {
 						slotsToDeposit.add(i);
 					}
-					
-					if (slotsToDeposit.size() >= actualCount)
-						break;
 				}
 				actualCount = slotsToDeposit.size();
 			}

@@ -52,23 +52,7 @@ public class FinishClimbResponse extends Response {
 			playerUpdate.setTileId(player.getTileId());
 			playerUpdate.setSnapToTile(true);
 			responseMaps.addClientOnlyResponse(player, playerUpdate);
-			
-//			for (LadderConnectionDto dto : LadderConnectionDao.getLadderConnections()) {
-//				if (dto.getFromFloor() == player.getFloor() && dto.getFromTileId() == request.getTileId()) {
-//					player.setTileId(dto.getToTileId());
-//					player.setFloor(dto.getToFloor());
-//					player.clearPath();
-//					
-//					// local players will receive a player_update message regardless, but the current player will not receive one for himself automatically.
-//					PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
-//					playerUpdate.setId(player.getId());
-//					playerUpdate.setTileId(player.getTileId());
-//					playerUpdate.setSnapToTile(true);
-//					responseMaps.addClientOnlyResponse(player, playerUpdate);
-//					
-//					break;
-//				}
-//			}
+
 			player.setState(PlayerState.idle);
 		}
 	}

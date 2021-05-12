@@ -38,6 +38,8 @@ public class CatchResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {
+			player.faceDirection(npc.getTileId(), responseMaps);
+			
 			if (!CatchableDao.isCatchable(npc.getId())) {
 				setRecoAndResponseText(0, "you can't catch that.");
 				responseMaps.addClientOnlyResponse(player, this);

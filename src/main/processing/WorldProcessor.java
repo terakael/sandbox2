@@ -303,13 +303,13 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	public static Set<Integer> getLocalTiles(int tileId, int radius) {
-		int topLeft = tileId - radius - (radius * 25000);
+		int topLeft = tileId - radius - (radius * PathFinder.LENGTH);
 		
 		Set<Integer> localTiles = new HashSet<>();
 		
 		for (int y = 0; y < radius * 2; ++y) {
 			for (int x = 0; x < radius * 2; ++x)
-				localTiles.add(topLeft + (y * 25000) + x);
+				localTiles.add(topLeft + (y * PathFinder.LENGTH) + x);
 		}
 		
 		return localTiles;

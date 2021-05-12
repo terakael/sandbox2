@@ -29,6 +29,7 @@ public class ClimbResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {
+			player.faceDirection(request.getTileId(), responseMaps);
 			player.setState(PlayerState.climbing);
 			player.setTickCounter(1);
 			player.setSavedRequest(req);

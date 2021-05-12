@@ -36,6 +36,7 @@ public class BankResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {
+			player.faceDirection(request.getTileId(), responseMaps);
 			items = PlayerStorageDao.getStorageDtoMapByPlayerIdExcludingEmpty(player.getId(), StorageTypes.BANK);
 			
 			// TODO if player isn't next to bank tile and player isn't god then bail

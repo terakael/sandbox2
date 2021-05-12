@@ -102,7 +102,7 @@ public abstract class Attackable {
 					numbersToBoost.add(distinctNumberLine.get(origin + counter));
 			}
 			
-			if (origin - (counter + 1) >= 0) {
+			if (origin - (counter + 1) >= 0 && origin - (counter + 1) < distinctNumberLine.size()) {
 				for (int j = 0; j < i; ++j)
 					numbersToBoost.add(distinctNumberLine.get(origin - (counter + 1)));
 			}

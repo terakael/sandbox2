@@ -9,8 +9,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import main.processing.PathFinder;
+
 public class MinimapSegmentDao {
-	private static final int segmentsPerRow = 1000;
+	private static final int tilesPerSegment = 25;
+	private static final int segmentsPerRow = PathFinder.LENGTH / tilesPerSegment;
 	private static Map<Integer, Map<Integer, String>> minimapSegments; // floor, <segment, base64>
 	
 	private static Map<Integer, Map<Integer, Map<Integer, Set<Integer>>>> tileIdsByFloorAndSegmentAndSpriteFrameId; // floor, <segment, <iconId, <tileIds>>>
@@ -93,10 +96,10 @@ public class MinimapSegmentDao {
 	}
 	
 	public static int getSegmentIdFromTileId(int tileId) {
-		int tileX = tileId % 25000;
-		int tileY = tileId / 25000;
-		int segmentX = tileX / 25;
-		int segmentY = tileY / 25;
+		int tileX = tileId % PathFinder.LENGTH;
+		int tileY = tileId / PathFinder.LENGTH;
+		int segmentX = tileX / tilesPerSegment;
+		int segmentY = tileY / tilesPerSegment;
 		return (segmentY * segmentsPerRow) + segmentX;
 	}
 	

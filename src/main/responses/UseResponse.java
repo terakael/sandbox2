@@ -92,6 +92,8 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
+		player.faceDirection(request.getDest(), responseMaps);
+		
 		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getDest());
 		Scenery scenery = SceneryManager.getScenery(sceneryId);
 		if (scenery == null)

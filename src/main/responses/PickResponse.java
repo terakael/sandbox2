@@ -28,6 +28,7 @@ public class PickResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {
+			player.faceDirection(request.getTileId(), responseMaps);
 			PickableDto pickable = PickableDao.getPickableByTileId(request.getTileId());
 			if (pickable == null) {
 				setRecoAndResponseText(0, "you can't pick that.");

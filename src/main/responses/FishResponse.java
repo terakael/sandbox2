@@ -33,6 +33,7 @@ public class FishResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {
+			player.faceDirection(request.getTileId(), responseMaps);
 			FishableDto fishable = FishableDao.getFishableDtoByTileId(request.getTileId());
 			if (fishable == null) {
 				setRecoAndResponseText(0, "you can't fish this.");

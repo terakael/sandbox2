@@ -362,7 +362,9 @@ public enum Items {
 	
 	
 	BONES(318),
-	WHIRLWIND_WAND(323);
+	WHIRLWIND_WAND(323),
+	
+	HOLY_SYMBOL(324);
 
 	@Getter private int value;
 	Items(int value) {

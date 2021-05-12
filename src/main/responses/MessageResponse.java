@@ -59,6 +59,13 @@ public class MessageResponse extends Response {
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), this);
 	}
 	
+	public static MessageResponse newMessageResponse(String message, String color) {
+		MessageResponse response = new MessageResponse();
+		response.setColour(color);
+		response.setRecoAndResponseText(1, message);
+		return response;
+	}
+	
 	private void handleDebugCommand(Player player, String msg, ResponseMaps responseMaps) {
 		String[] msgParts = msg.split(" (?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");// the :: prefix should already be removed here
 		if (msgParts[0].equals("tele") || msgParts[0].equals("home")) {

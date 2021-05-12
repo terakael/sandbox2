@@ -25,7 +25,7 @@ import main.utils.Utils;
 public class PathFinder {
 	private static PathFinder instance;
 	
-	public static final int LENGTH = 25000;
+	public static final int LENGTH = 46325;
 	private static Map<Integer, Map<Integer, PathNode>> nodesByFloor; // floor, <tileId, node> (the tileId map is so we can quickly retrieve by tileId)
 	
 	private PathFinder() {
@@ -506,5 +506,19 @@ public class PathFinder {
 			return false;
 		
 		return nodesByFloor.get(floor).containsKey(tileId);
+	}
+	
+	public static String getDirection(int srcTileId, int destTileId) {
+		String direction = "";
+		if (srcTileId + 1 == destTileId)
+			direction = "right";
+		else if (srcTileId - 1 == destTileId)
+			direction = "left";
+		else if (srcTileId + LENGTH == destTileId)
+			direction = "down";
+		else if (srcTileId - LENGTH == destTileId)
+			direction = "up";
+		
+		return direction;
 	}
 }

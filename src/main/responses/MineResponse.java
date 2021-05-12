@@ -50,6 +50,8 @@ public class MineResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {			
+			player.faceDirection(request.getTileId(), responseMaps);
+			
 			// does player have a pickaxe in their inventory?
 			List<Integer> inventoryItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			if (!inventoryItemIds.contains(Items.PICKAXE.getValue()) 

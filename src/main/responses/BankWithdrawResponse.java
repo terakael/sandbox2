@@ -67,7 +67,18 @@ public class BankWithdrawResponse extends Response {
 		
 		if (actualCount >= bankItemDto.getCount()) {
 			// the whole stack is going into the bank, so clear the inventory space
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.BANK, request.getSlot(), 0, 1, 0);
+//			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.BANK, request.getSlot(), 0, 1, 0);
+			
+			Map<Integer, InventoryItemDto> bankList = PlayerStorageDao.getStorageDtoMapByPlayerIdExcludingEmpty(player.getId(), StorageTypes.BANK);
+			PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.BANK);
+			
+			int newslot = 0;
+			bankList.remove(request.getSlot());
+			for (InventoryItemDto dto : bankList.values()) {
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.BANK, newslot++, dto.getItemId(), dto.getCount(), dto.getCharges());
+			}
+			
+			
 			
 			// TODO shuffle all the bank slots back by one to fill the gap
 			// TODO should the shuffle happen in real-time or when the player closes their bank?

@@ -58,6 +58,8 @@ public abstract class PlayerResponse extends Response {
 			return;
 		}
 		
+		player.faceDirection(otherPlayer.getTileId(), responseMaps);
+		
 		boolean exists = PlayerRequestManager.requestExists(playerReq.getObjectId(), playerReq.getId(), playerReq.getRequestType());
 		PlayerResponse otherResponse = (PlayerResponse)ResponseFactory.create(playerReq.getAction());
 		

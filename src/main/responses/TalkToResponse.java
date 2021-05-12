@@ -46,6 +46,7 @@ public class TalkToResponse extends Response {
 			player.setSavedRequest(request);
 		} else {
 			// talk to it
+			player.faceDirection(npc.getTileId(), responseMaps);
 			handleTalkTo(npc, player, responseMaps);
 		}
 		

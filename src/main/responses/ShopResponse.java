@@ -49,6 +49,7 @@ public class ShopResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {
+			player.faceDirection(npc.getTileId(), responseMaps);
 			Store shop = ShopManager.getShopByOwnerId(npc.getId());
 			if (shop != null) {
 				player.setShopId(shop.getShopId());
