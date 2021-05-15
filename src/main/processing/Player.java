@@ -202,14 +202,17 @@ public class Player extends Attackable {
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTileId(getTileId());
 				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
+			} else if (state != PlayerState.idle){
+				state = PlayerState.idle;
 				
-				if (path.isEmpty()) {
-					if (savedRequest == null) // if not null then reprocess the saved request; this is a walkandaction.
-						state = PlayerState.idle;
-					else {
-						Response response = ResponseFactory.create(savedRequest.getAction());
-						response.process(savedRequest, this, responseMaps);
-					}
+				// we do this because some requests set the saved request, but some don't.
+				// we want to clear the saved request beforehand so we don't overwrite it if it sets it,
+				// but we still want to pass it into the response's process.
+				Request requestToUse = savedRequest;
+				savedRequest = null;
+				if (requestToUse != null) {
+					Response response = ResponseFactory.create(requestToUse.getAction());
+					response.process(requestToUse, this, responseMaps);
 				}
 			}
 			

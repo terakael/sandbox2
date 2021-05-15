@@ -1,5 +1,7 @@
 package main.database;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,4 +22,5 @@ public class SpriteFrameDto {
 	private int frame_count;
 	private int framerate;
 	private int animation_type_id;
+	private Map<Integer, CustomBoundingBoxDto> customBoundingBoxes;
 }

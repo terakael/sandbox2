@@ -13,6 +13,7 @@ import main.database.CatchableDao;
 import main.database.ConsumableDao;
 import main.database.ContextOptionsDao;
 import main.database.CookableDao;
+import main.database.DoorDao;
 import main.database.EquipmentDao;
 import main.database.FishableDao;
 import main.database.GroundTextureDao;
@@ -77,6 +78,9 @@ public class Server {
 			
 			System.out.println("caching minimap segments");
 			MinimapSegmentDao.setupCaches();
+			
+			System.out.println("caching doors");
+			DoorDao.setupCaches();
 			
 			System.out.println("initializing pathfinder");
 			PathFinder.get();// init the path nodes and relationships

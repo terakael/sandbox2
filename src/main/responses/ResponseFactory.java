@@ -165,6 +165,9 @@ public class ResponseFactory {
 		case "bury":
 			response = new BuryResponse();
 			break;
+		case "open":
+			response = new OpenCloseResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

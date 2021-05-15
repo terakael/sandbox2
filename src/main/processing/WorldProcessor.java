@@ -16,6 +16,7 @@ import com.google.gson.Gson;
 
 import main.Endpoint;
 import main.GroundItemManager;
+import main.database.DoorDao;
 import main.database.GroundTextureDao;
 import main.database.MinimapSegmentDao;
 import main.database.SceneryDao;
@@ -510,7 +511,15 @@ public class WorldProcessor implements Runnable {
 														.filter(flowerTileId -> newLocalTiles.contains(flowerTileId))
 														.collect(Collectors.toSet()));
 					
+					
 					addSceneryResponse.setDepletedScenery(depletedScenery);
+					
+					HashSet<Integer> openDoors = new HashSet<>();
+					openDoors.addAll(DoorDao.getOpenDoorTileIds(player.getFloor())
+							  .stream()
+							  .filter(tileId -> newLocalTiles.contains(tileId))
+							  .collect(Collectors.toSet()));
+					addSceneryResponse.setOpenDoors(openDoors);
 				}
 			}
 			

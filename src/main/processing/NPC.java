@@ -271,6 +271,8 @@ public class NPC extends Attackable {
 		return deathTimer > 0;
 	}
 	
+	// first two seconds of death; we don't want to send the clients that the npc is dead
+	// (and therefore should no longer be drawn) as we want to show the death animation on the client.
 	public boolean isDeadWithDelay() {
 		return deathTimer > 0 && deathTimer < dto.getRespawnTicks() - 2;
 	}

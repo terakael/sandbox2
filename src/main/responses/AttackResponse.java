@@ -32,6 +32,9 @@ public class AttackResponse extends Response {
 			return;
 		}
 		
+		if (npc.isDead())
+			return;
+		
 		if (FightManager.fightWithFighterExists(npc)) {
 			setRecoAndResponseText(0, "someone is already fighting that.");
 			responseMaps.addClientOnlyResponse(player, this);

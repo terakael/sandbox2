@@ -9,6 +9,7 @@ import main.requests.Request;
 public class AddSceneryInstancesResponse extends Response {
 	@Setter private Map<Integer, Set<Integer>> instances; // <sceneryId, <tileIds>>>
 	@Setter private Set<Integer> depletedScenery = null;
+	@Setter private Set<Integer> openDoors = null;
 	
 	public AddSceneryInstancesResponse() {
 		setAction("add_scenery_instances");
