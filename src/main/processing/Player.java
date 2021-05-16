@@ -194,10 +194,8 @@ public class Player extends Attackable {
 		
 		switch (state) {
 		case walking: {
-			// if the player path stack isn't empty, then pop one off and create a player_updates response entry.
-			if (!path.isEmpty()) {	
-				popPath();
-
+			// popPath returns true if we've successfully moved to the next tile; false if a door is in the way or the path is empty
+			if (popPath()) {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTileId(getTileId());
@@ -219,8 +217,7 @@ public class Player extends Attackable {
 			break;
 		}
 		case following: {
-			if (!path.isEmpty()) {
-				popPath();
+			if (popPath()) {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(getId());
 				playerUpdateResponse.setTileId(getTileId());
@@ -267,8 +264,7 @@ public class Player extends Attackable {
 			}
 			
 			// similar to walking, but need to recalculate path each tick due to moving target
-			if (!path.isEmpty()) {
-				popPath();
+			if (popPath()) {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTileId(getTileId());

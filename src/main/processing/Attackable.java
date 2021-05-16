@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Setter;
+import main.database.DoorDao;
 import main.responses.ResponseMaps;
 import main.types.DamageTypes;
 import main.types.Prayers;
@@ -48,9 +49,28 @@ public abstract class Attackable {
 	public abstract void setStatsAndBonuses();
 	public abstract int getExp();
 	
-	protected void popPath() {
-		int nextTile = path.pop();
-		setTileId(nextTile);
+	protected boolean popPath() {
+		if (path.isEmpty())
+			return false;
+		
+		int nextTileId = path.peek();
+		
+		int currentTileDoorStatus = DoorDao.getDoorImpassableByTileId(floor, tileId);
+		int nextTileDoorStatus = DoorDao.getDoorImpassableByTileId(floor, nextTileId);
+		
+		if (currentTileDoorStatus > 0 || nextTileDoorStatus > 0) {
+			// one of these tiles is a door; check if we can pass through.
+			// if it's diagonal we won't bother re-checking, I don't think it's possible for a door opening to mess up a diagonal move?
+			if (!PathFinder.isDiagonal(tileId, nextTileId) && !PathFinder.isNextTo(floor, tileId, nextTileId))
+				path.clear();
+		}
+		
+		if (!path.isEmpty()) {
+			setTileId(path.pop());
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public boolean readyToHit() {

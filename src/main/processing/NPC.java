@@ -139,11 +139,8 @@ public class NPC extends Attackable {
 			}
 		}
 		
-		moving = false;
-		if (!path.isEmpty()) {
-			popPath();
-			moving = true;
-			
+		moving = popPath();
+		if (moving) {
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 			updateResponse.setInstanceId(getInstanceId());
 			updateResponse.setTileId(tileId);

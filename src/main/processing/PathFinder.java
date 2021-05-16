@@ -547,4 +547,11 @@ public class PathFinder {
 		
 		return direction;
 	}
+	
+	public static boolean isDiagonal(int src, int dest) {
+		return src == (dest - LENGTH - 1) // top-left 
+				|| src == (dest - LENGTH + 1)  // top-right
+				|| src == (dest + LENGTH - 1)  // bottom-left
+				|| src == (dest + LENGTH + 1); // bottom-right
+	}
 }
