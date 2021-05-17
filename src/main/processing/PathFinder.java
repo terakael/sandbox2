@@ -1,18 +1,13 @@
 package main.processing;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,12 +16,11 @@ import main.database.GroundTextureDao;
 import main.database.SceneryDao;
 import main.types.ImpassableTypes;
 import main.utils.Stopwatch;
-import main.utils.Utils;
 
 public class PathFinder {
 	private static PathFinder instance;
 	
-	public static final int LENGTH = 46325;
+	public static final int LENGTH = 46325; // the biggest number divisible by minimap segments whose square fits in a max int (albeit signed) TODO look unto unsigned int
 	private static Map<Integer, Map<Integer, PathNode>> nodesByFloor; // floor, <tileId, node> (the tileId map is so we can quickly retrieve by tileId)
 	
 	private PathFinder() {

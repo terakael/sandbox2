@@ -57,7 +57,7 @@ public class CachedResourcesResponse extends Response {
 	}
 	
 	private void loadCachedResources() {
-		spriteMaps = SpriteMapDao.getSpriteMaps();
+		spriteMaps = SpriteMapDao.getSpriteMaps(); // TODO pull sprite maps local to the player and request new ones as needed
 		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
 		items = ItemDao.getAllItems();
 		contextOptions = ContextOptionsDao.getAllContextOptions();
