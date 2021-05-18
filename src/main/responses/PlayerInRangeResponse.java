@@ -6,6 +6,7 @@ import java.util.Set;
 import main.database.EquipmentDao;
 import main.database.PlayerAnimationDao;
 import main.database.StatsDao;
+import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.Request;
@@ -37,6 +38,7 @@ public class PlayerInRangeResponse extends Response {
 			playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(localPlayer.getId()));
 			playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(localPlayer.getId()));
 			playerUpdate.setBaseAnimations(PlayerAnimationDao.loadAnimationsByPlayerId(localPlayer.getId()));
+			
 			players.add(playerUpdate);
 		}
 	}

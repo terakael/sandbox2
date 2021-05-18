@@ -65,7 +65,7 @@ public class Server {
 			ContextOptionsDao.cacheAllContextOptions();
 			
 			System.out.println("caching base player animations");
-			PlayerAnimationDao.cacheBasePlayerAnimations();
+			PlayerAnimationDao.setupCaches();
 			
 			System.out.println("caching distinct roomIds");
 			GroundTextureDao.cacheDistinctFloors(); // what constitutes a room is having at least one ground texture: no ground textures, the room doesnt exist.

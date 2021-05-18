@@ -4,11 +4,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.Setter;
 import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
 import main.database.PlayerStorageDao;
+import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.requests.InventoryMoveRequest;
 import main.requests.Request;
@@ -37,6 +39,9 @@ public class InventoryUpdateResponse extends Response {
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(req.getId());
 		
 		responseMaps.addClientOnlyResponse(player, this);
+		
+		// if we've never sent the item before, we need to send the corresponding sprite map
+		ClientResourceManager.addItems(player, inventory.values().stream().map(InventoryItemDto::getItemId).collect(Collectors.toSet()));
 	}
 	
 	private void processInventoryMoveRequest(InventoryMoveRequest req, Player player) {

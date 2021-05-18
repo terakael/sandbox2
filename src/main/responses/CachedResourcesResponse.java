@@ -1,6 +1,5 @@
 package main.responses;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,8 +12,6 @@ import main.database.ItemDao;
 import main.database.ItemDto;
 import main.database.NPCDao;
 import main.database.NPCDto;
-import main.database.PrayerDao;
-import main.database.PrayerDto;
 import main.database.SceneryDao;
 import main.database.SceneryDto;
 import main.database.SpriteFrameDao;
@@ -57,7 +54,7 @@ public class CachedResourcesResponse extends Response {
 	}
 	
 	private void loadCachedResources() {
-		spriteMaps = SpriteMapDao.getSpriteMaps(); // TODO pull sprite maps local to the player and request new ones as needed
+		spriteMaps = SpriteMapDao.getAlwaysLoadedSpriteMaps();
 		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
 		items = ItemDao.getAllItems();
 		contextOptions = ContextOptionsDao.getAllContextOptions();

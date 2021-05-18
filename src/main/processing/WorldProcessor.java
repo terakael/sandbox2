@@ -26,6 +26,7 @@ import main.processing.Player.PlayerState;
 import main.requests.Request;
 import main.responses.AddGroundTextureInstancesResponse;
 import main.responses.AddMinimapSegmentsResponse;
+import main.responses.AddResourceResponse;
 import main.responses.AddSceneryInstancesResponse;
 import main.responses.GroundItemInRangeResponse;
 import main.responses.GroundItemOutOfRangeResponse;
@@ -137,8 +138,10 @@ public class WorldProcessor implements Runnable {
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			entry.getValue().process(responseMaps);
 			
+			List<NPC> npcs = NPCManager.get().getNpcsNearTile(entry.getValue().getFloor(), entry.getValue().getTileId(), 15);
+			
 			// while we iterate the players, pull out the npcs near each player as these are the only npcs we need to process.
-			Set<Integer> npcIdsNearPlayer = NPCManager.get().getNpcsNearTile(entry.getValue().getFloor(), entry.getValue().getTileId(), 15)
+			Set<Integer> npcIdsNearPlayer = npcs
 				    .stream()
 				    .map(NPC::getInstanceId)
 				    .collect(Collectors.toSet());
@@ -146,6 +149,11 @@ public class WorldProcessor implements Runnable {
 			if (!npcsToProcess.containsKey(entry.getValue().getFloor()))
 				npcsToProcess.put(entry.getValue().getFloor(), new HashSet<>());
 			npcsToProcess.get(entry.getValue().getFloor()).addAll(npcIdsNearPlayer);
+			
+			ClientResourceManager.addNpcs(entry.getValue(), npcs
+				    .stream()
+				    .map(NPC::getId)
+				    .collect(Collectors.toSet()));
 		}
 		Stopwatch.end("process players");
 		
@@ -184,6 +192,7 @@ public class WorldProcessor implements Runnable {
 		
 		// take all the responseMaps and compile the responses to send to each player
 		Stopwatch.start("compile response maps");
+		ClientResourceManager.compileToResponseMaps(responseMaps);
 		Map<Player, List<Response>> clientResponses = new HashMap<>();
 		compileBroadcastResponses(clientResponses, responseMaps);
 		compileBroadcastExcludeResponses(clientResponses, responseMaps);
@@ -340,6 +349,8 @@ public class WorldProcessor implements Runnable {
 				PlayerInRangeResponse playerInRangeResponse = new PlayerInRangeResponse();
 				playerInRangeResponse.addPlayers(addedPlayers);
 				responseMaps.addClientOnlyResponse(entry.getValue(), playerInRangeResponse);
+				
+				ClientResourceManager.addAnimations(entry.getValue(), addedPlayers);
 			}
 			entry.getValue().setInRangePlayers(newInRangePlayers);
 			
@@ -430,6 +441,11 @@ public class WorldProcessor implements Runnable {
 				responseMaps.addClientOnlyResponse(entry.getValue(), groundItemInRangeResponse);
 			}
 			
+			Set<Integer> allItemIds = addedGroundItems.values().stream().
+					flatMap(List::stream)
+					.collect(Collectors.toSet());
+			ClientResourceManager.addItems(entry.getValue(), allItemIds);
+			
 			entry.getValue().setInRangeGroundItems(newInRangeGroundItems);
 		}
 		Stopwatch.end("refresh ground items");
@@ -493,6 +509,7 @@ public class WorldProcessor implements Runnable {
 				AddGroundTextureInstancesResponse addResponse = new AddGroundTextureInstancesResponse();
 				addResponse.setInstances(tileIdsByGroundTextureId);
 				responseMaps.addClientOnlyResponse(player, addResponse);
+				ClientResourceManager.addGroundTextures(player, tileIdsByGroundTextureId.keySet());
 				
 				if (!addedSceneryIds.isEmpty()) {
 					AddSceneryInstancesResponse addSceneryResponse = new AddSceneryInstancesResponse();
@@ -520,6 +537,9 @@ public class WorldProcessor implements Runnable {
 							  .filter(tileId -> newLocalTiles.contains(tileId))
 							  .collect(Collectors.toSet()));
 					addSceneryResponse.setOpenDoors(openDoors);
+					
+					// if the scenery has never been sent to the player, then also send the corresponding sprite map to them
+					ClientResourceManager.addScenery(player, addedSceneryIds.keySet());
 				}
 			}
 			
@@ -549,7 +569,6 @@ public class WorldProcessor implements Runnable {
 						minimapIconLocations.get(entry.getKey()).addAll(entry.getValue());
 					}
 				}
-				
 				
 				AddMinimapSegmentsResponse minimapResponse = new AddMinimapSegmentsResponse();
 				minimapResponse.setSegments(segments);

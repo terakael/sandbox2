@@ -17,6 +17,7 @@ public class GroundTextureDao {
 	@Getter private static HashSet<Integer> distinctFloors = new HashSet<>();
 	
 	private static Map<Integer, Map<Integer, Set<Integer>>> tileIdsByGroundTextureId = new HashMap<>(); // floor, <groundTextureId, tileId>
+	private static Map<Integer, Integer> spriteMapIdsByGroundTextureId = new HashMap<>();
 	
 	public static void cacheTileIdsByGroundTextureId() {
 		final String query = "select floor, ground_texture_id, tile_id from room_ground_textures";
@@ -81,6 +82,7 @@ public class GroundTextureDao {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
 					groundTextures.add(new GroundTextureDto(rs.getInt("id"), rs.getInt("sprite_map_id"), rs.getInt("x"), rs.getInt("y"), rs.getBoolean("walkable")));
+					spriteMapIdsByGroundTextureId.put(rs.getInt("id"), rs.getInt("sprite_map_id"));
 				}
 			}
 		} catch (SQLException e) {
@@ -109,5 +111,15 @@ public class GroundTextureDao {
 		}
 		
 		return allTileIdsByFloor;
+	}
+	
+	public static Set<Integer> getSpriteMapIdsByGroundTextureIds(Set<Integer> groundTextureIds) {
+		Set<Integer> spriteMapIds = new HashSet<>();
+		
+		for (Integer groundTextureId : groundTextureIds) {
+			spriteMapIds.add(spriteMapIdsByGroundTextureId.get(groundTextureId));
+		}
+		
+		return spriteMapIds;
 	}
 }

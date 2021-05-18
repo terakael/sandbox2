@@ -8,6 +8,7 @@ import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
+import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.processing.TradeManager;
 import main.processing.TradeManager.Trade;
@@ -62,6 +63,9 @@ public class OfferResponse extends Response {
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
+		
+		// if the potential receiver has never loaded the item before, load it now
+		ClientResourceManager.addItems(trade.getOtherPlayer(player), Collections.singleton(item.getItemId()));
 		
 		if (ItemDao.itemHasAttribute(itemId, ItemAttributes.STACKABLE)) {
 			int count = Math.min(item.getCount(), request.getAmount());

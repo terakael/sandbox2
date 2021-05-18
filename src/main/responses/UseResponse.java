@@ -21,6 +21,7 @@ import main.database.TeleportableDto;
 import main.database.UseItemOnItemDao;
 import main.database.UseItemOnItemDto;
 import main.processing.Attackable;
+import main.processing.ClientResourceManager;
 import main.processing.FightManager;
 import main.processing.FightManager.Fight;
 import main.processing.NPC;
@@ -420,6 +421,8 @@ public class UseResponse extends Response {
 		playerUpdate.setId(player.getId());
 		playerUpdate.setCombatLevel(StatsDao.getCombatLevelByPlayerId(player.getId()));
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), playerUpdate);// should be local
+		
+		ClientResourceManager.addSpell(player, castable.getItemId());
 	}
 	
 	private boolean handleUseOnPlayer(UseRequest request, Player player, ResponseMaps responseMaps) {

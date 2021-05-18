@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.types.NpcAttributes;
@@ -16,6 +18,8 @@ public class NPCDao {
 	@Getter private static Map<Integer, List<NPCDto>> npcInstanceList = null; // floor, npcList
 	@Getter private static List<NPCDto> npcList = null;
 	private static Map<Integer, List<NpcDropDto>> npcDrops = null;
+	private static HashMap<Integer, Integer> spriteMapIdsByNpcId = new HashMap<>();
+	
 	
 	public static void setupCaches() {
 		npcList = getNpcs();
@@ -23,6 +27,7 @@ public class NPCDao {
 		for (int floor : GroundTextureDao.getDistinctFloors())
 			npcInstanceList.put(floor, getAllNpcsByFloor(floor));
 		cacheNpcDrops();
+		cacheNpcSpriteMaps();
 	}
 	
 	private static List<NPCDto> getNpcs() {
@@ -178,6 +183,25 @@ public class NPCDao {
 		}
 	}
 	
+	public static void cacheNpcSpriteMaps() {
+		final String query = "select npcs.id, sprite_maps.id as sprite_map_id from npcs " + 
+				"inner join sprite_frames on sprite_frames.id = npcs.up_id " + 
+				"inner join sprite_maps on sprite_maps.id = sprite_frames.sprite_map_id";
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					spriteMapIdsByNpcId.put(rs.getInt("id"), rs.getInt("sprite_map_id"));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static List<NpcDropDto> getDropsByNpcId(int npcId) {
 		if (npcDrops.containsKey(npcId))
 			return npcDrops.get(npcId);
@@ -199,5 +223,12 @@ public class NPCDao {
 			}
 		}
 		return false;
+	}
+	
+	public static Set<Integer> getSpriteMapIdsByNpcIds(Set<Integer> npcIds) {
+		return spriteMapIdsByNpcId.entrySet().stream()
+				.filter(map -> npcIds.contains(map.getKey()))
+				.map(map -> map.getValue())
+				.collect(Collectors.toSet());
 	}
 }

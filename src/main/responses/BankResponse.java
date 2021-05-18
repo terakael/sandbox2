@@ -1,10 +1,12 @@
 package main.responses;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import main.database.InventoryItemDto;
 import main.database.PlayerStorageDao;
 import main.database.SceneryDao;
+import main.processing.ClientResourceManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
@@ -41,6 +43,7 @@ public class BankResponse extends Response {
 			
 			// TODO if player isn't next to bank tile and player isn't god then bail
 			responseMaps.addClientOnlyResponse(player, this);
+			ClientResourceManager.addItems(player, items.values().stream().map(InventoryItemDto::getItemId).collect(Collectors.toSet()));
 		}
 	}
 	

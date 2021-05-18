@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.websocket.Session;
 
@@ -94,6 +95,8 @@ public class Player extends Attackable {
 	@Getter private Set<Integer> activePrayers = new HashSet<>();
 	@Getter private float prayerPoints = 0;
 	private boolean slowburnBlockedStatDrain = false;
+	
+	private Set<Integer> loadedSpriteMapIds = new HashSet<>();
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
@@ -948,5 +951,19 @@ public class Player extends Attackable {
 			playerUpdateResponse.setFaceDirection(direction);
 			responseMaps.addLocalResponse(floor, tileId, playerUpdateResponse);
 		}
+	}
+	
+	public boolean hasLoadedSpriteMapId(int spriteMapId) {
+		return loadedSpriteMapIds.contains(spriteMapId);
+	}
+	
+	public Set<Integer> notLoadedSpriteMapIds(Set<Integer> spriteMapIds) {
+		return spriteMapIds.stream()
+				.filter(e -> !loadedSpriteMapIds.contains(e))
+				.collect(Collectors.toSet());
+	}
+	
+	public void addLoadedSpriteMapId(int spriteMapId) {
+		loadedSpriteMapIds.add(spriteMapId);
 	}
 }

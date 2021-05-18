@@ -1,7 +1,9 @@
 package main.database;
 
+import lombok.Getter;
 import lombok.Setter;
 
+@Getter
 @Setter
 public class StatWindowRowDto {
 	public StatWindowRowDto(int level, int itemId) {

@@ -21,6 +21,8 @@ public class SceneryDao {
 	private static Map<Integer, Map<Integer, Set<Integer>>> sceneryInstancesByFloor; // floor, <sceneryId, tileids>
 	@Getter private static HashMap<Integer, HashMap<Integer, Integer>> impassableTileIds = new HashMap<>();// floor, <tile_id, impassable_type>
 	
+	private static Map<Integer, Integer> spriteMapIdsBySceneryId;
+	
 	public static void setupCaches() {
 		allScenery = loadAllScenery();
 		allSceneryByFloor = new HashMap<>();
@@ -31,6 +33,7 @@ public class SceneryDao {
 			
 			cacheImpassableTileIdsByFloor(floor);
 		}
+		cacheSpriteMapIdsBySceneryId();
 	}
 	
 	private static List<SceneryDto> loadAllScenery() {
@@ -90,6 +93,27 @@ public class SceneryDao {
 			e.printStackTrace();
 		}
 		return sceneryList;
+	}
+	
+	private static void cacheSpriteMapIdsBySceneryId() {
+		final String query = "select scenery.id, sprite_maps.id as sprite_map_id From scenery " + 
+				"inner join sprite_frames on sprite_frames.id = scenery.sprite_frame_id " + 
+				"inner join sprite_maps on sprite_maps.id = sprite_frames.sprite_map_id";
+		
+		spriteMapIdsBySceneryId = new HashMap<>();
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					spriteMapIdsBySceneryId.put(rs.getInt("id"), rs.getInt("sprite_map_id"));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private static Map<Integer, Set<Integer>> loadSceneryInstancesByFloor(int floor) {
@@ -200,5 +224,18 @@ public class SceneryDao {
 		if (!impassableTileIds.containsKey(floor))
 			return null;
 		return impassableTileIds.get(floor);
+	}
+	
+	public static Integer getSpriteMapIdsBySceneryId(int sceneryId) {
+		return spriteMapIdsBySceneryId.get(sceneryId);
+	}
+	
+	public static Set<Integer> getSpriteMapIdsBySceneryIds(Set<Integer> sceneryIds) {
+		Set<Integer> spriteMapIds = new HashSet<>();
+		
+		for (Integer sceneryId : sceneryIds)
+			spriteMapIds.add(getSpriteMapIdsBySceneryId(sceneryId));
+		
+		return spriteMapIds;
 	}
 }

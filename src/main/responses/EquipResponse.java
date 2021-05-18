@@ -1,5 +1,6 @@
 package main.responses;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -11,6 +12,7 @@ import main.database.EquipmentDao;
 import main.database.EquipmentDto;
 import main.database.ItemDto;
 import main.database.PlayerStorageDao;
+import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.requests.EquipRequest;
 import main.requests.Request;
@@ -75,6 +77,8 @@ public class EquipResponse extends Response {
 		playerUpdate.setId(player.getId());
 		playerUpdate.setEquipAnimations(equipAnimations);
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), playerUpdate);
+		
+		ClientResourceManager.addLocalAnimations(player, Collections.singleton(player.getId()));
 	}
 	
 	private boolean playerHasRequirements(Player player, EquipmentDto equip, ResponseMaps responseMaps) {

@@ -1,5 +1,6 @@
 package main.responses;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ import main.database.PlayerDao;
 import main.database.PlayerDto;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
+import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.LogonRequest;
@@ -24,9 +26,7 @@ public class LogonResponse extends Response {
 	
 	private Map<Integer, Integer> stats;
 	private Map<Integer, Integer> boosts;
-	private Map<Integer, InventoryItemDto> inventory;
 	private Map<Integer, String> attackStyles;
-	private Set<Integer> equippedSlots;
 	private EquipmentBonusDto bonuses;
 
 	public LogonResponse() {
@@ -70,8 +70,6 @@ public class LogonResponse extends Response {
 				.stream()
 				.collect(Collectors.toMap(e -> e.getKey().getValue(), Map.Entry::getValue));
 		
-		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(playerDto.getId());
-		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(playerDto.getId(), StorageTypes.INVENTORY);
 		attackStyles = PlayerDao.getAttackStyles();
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(playerDto.getId());
 		player.refreshBonuses(bonuses);
@@ -87,8 +85,9 @@ public class LogonResponse extends Response {
 		WorldProcessor.playerSessions.put(client, player);
 		responseMaps.addClientOnlyResponse(player, this);
 		
+		ClientResourceManager.addAnimations(player, Collections.singleton(player.getId()));
+		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		new LoadPrayersResponse().process(null, player, responseMaps);
-		
 		new PlayerEnterResponse().process(null, player, responseMaps);
 	}
 	

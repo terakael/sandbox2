@@ -1,7 +1,13 @@
 package main.scenery;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 import main.database.PlayerStorageDao;
 import main.database.SmithableDao;
+import main.database.SmithableDto;
+import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.requests.RequestFactory;
 import main.requests.UseRequest;
@@ -25,11 +31,24 @@ public class Furnace extends Scenery {
 		case 180: // runite
 			// note that coal isn't in this list as you cannot use coal with the furnace.
 			// you need to use a primary ore; coal is used as a secondary ore for the other ores.
+			ArrayList<SmithableDto> smithingOptions = SmithableDao.getAllItemsThatUseMaterial(srcItemId);
+			
 			ShowSmithingTableResponse response = new ShowSmithingTableResponse();
 			response.setOreId(srcItemId);
-			response.setSmithingOptions(SmithableDao.getAllItemsThatUseMaterial(srcItemId));
+			response.setSmithingOptions(smithingOptions);
 			response.setStoredCoal(PlayerStorageDao.getStoredCoalByPlayerId(player.getId()));
 			responseMaps.addClientOnlyResponse(player, response);
+			
+			// if the client has never been sent the material information, send it now.
+			Set<Integer> itemIds = new HashSet<>(); 
+			itemIds.add(srcItemId);
+			for (SmithableDto dto : smithingOptions) {
+				itemIds.add(dto.getItemId());
+				itemIds.add(dto.getMaterial1());
+				itemIds.add(dto.getMaterial2());
+				itemIds.add(dto.getMaterial3());
+			}
+			ClientResourceManager.addItems(player, itemIds);
 			return true;
 		case 5: // coal
 			// add all the coal in inventory to the furnace storage
