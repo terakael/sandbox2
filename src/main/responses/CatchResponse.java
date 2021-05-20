@@ -3,6 +3,7 @@ package main.responses;
 import main.database.CatchableDao;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
+import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
@@ -20,6 +21,13 @@ public class CatchResponse extends Response {
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof CatchRequest))
 			return;
+		
+		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+			setRecoAndResponseText(0, "you can't do that during combat.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		FightManager.cancelFight(player, responseMaps);
 		
 		CatchRequest request = (CatchRequest)req;
 		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());

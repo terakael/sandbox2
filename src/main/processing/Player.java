@@ -36,7 +36,6 @@ import main.requests.SmithRequest;
 import main.responses.AddExpResponse;
 import main.responses.DeathResponse;
 import main.responses.EquipResponse;
-import main.responses.FinishClimbResponse;
 import main.responses.FinishCookingResponse;
 import main.responses.FinishFishingResponse;
 import main.responses.FinishMiningResponse;
@@ -335,18 +334,6 @@ public class Player extends Attackable {
 				state = PlayerState.idle;
 			}
 			break;
-		case fighting:
-			if (--tickCounter <= 0) {
-				// calculate the actual attack, create hitspat_update response, reset tickCounter.
-			}
-			break;
-		case climbing: {
-			if (--tickCounter <= 0) {
-				new FinishClimbResponse().process(savedRequest, this, responseMaps);
-				savedRequest = null;
-			}
-			break;
-		}
 			
 		case using:
 			if (--tickCounter <= 0) {
