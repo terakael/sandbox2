@@ -21,6 +21,7 @@ import main.database.GroundTextureDao;
 import main.database.MinimapSegmentDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
+import main.database.ShopItemDto;
 import main.processing.FightManager.Fight;
 import main.processing.Player.PlayerState;
 import main.requests.Request;
@@ -150,10 +151,10 @@ public class WorldProcessor implements Runnable {
 				npcsToProcess.put(entry.getValue().getFloor(), new HashSet<>());
 			npcsToProcess.get(entry.getValue().getFloor()).addAll(npcIdsNearPlayer);
 			
-			ClientResourceManager.addNpcs(entry.getValue(), npcs
-				    .stream()
-				    .map(NPC::getId)
-				    .collect(Collectors.toSet()));
+//			ClientResourceManager.addNpcs(entry.getValue(), npcs
+//				    .stream()
+//				    .map(NPC::getId)
+//				    .collect(Collectors.toSet()));
 		}
 		Stopwatch.end("process players");
 		
@@ -192,8 +193,17 @@ public class WorldProcessor implements Runnable {
 		
 		// take all the responseMaps and compile the responses to send to each player
 		Stopwatch.start("compile response maps");
-		ClientResourceManager.compileToResponseMaps(responseMaps);
 		Map<Player, List<Response>> clientResponses = new HashMap<>();
+		
+		// resources must go first
+		ResponseMaps resourceMap = new ResponseMaps();
+		ClientResourceManager.compileToResponseMaps(resourceMap);
+		compileBroadcastResponses(clientResponses, resourceMap);
+		compileBroadcastExcludeResponses(clientResponses, resourceMap);
+		compileLocalResponses(clientResponses, resourceMap);
+		compileClientOnlyResponses(clientResponses, resourceMap);
+		
+		// other responses can go after the resources
 		compileBroadcastResponses(clientResponses, responseMaps);
 		compileBroadcastExcludeResponses(clientResponses, responseMaps);
 		compileLocalResponses(clientResponses, responseMaps);
@@ -436,15 +446,15 @@ public class WorldProcessor implements Runnable {
 					addedGroundItems.put(newEntry.getKey(), newList);
 			}
 			if (!addedGroundItems.isEmpty()) {
+				Set<Integer> allItemIds = addedGroundItems.values().stream().
+						flatMap(List::stream)
+						.collect(Collectors.toSet());
+				ClientResourceManager.addItems(entry.getValue(), allItemIds);
+				
 				GroundItemInRangeResponse groundItemInRangeResponse = new GroundItemInRangeResponse();
 				groundItemInRangeResponse.setGroundItems(addedGroundItems);
 				responseMaps.addClientOnlyResponse(entry.getValue(), groundItemInRangeResponse);
 			}
-			
-			Set<Integer> allItemIds = addedGroundItems.values().stream().
-					flatMap(List::stream)
-					.collect(Collectors.toSet());
-			ClientResourceManager.addItems(entry.getValue(), allItemIds);
 			
 			entry.getValue().setInRangeGroundItems(newInRangeGroundItems);
 		}
@@ -461,6 +471,7 @@ public class WorldProcessor implements Runnable {
 				
 				for (Player player : playerSessions.values()) {
 					if (player.getShopId() == store.getShopId()) {
+						ClientResourceManager.addItems(player, store.getStock().values().stream().map(ShopItemDto::getItemId).collect(Collectors.toSet()));
 						responseMaps.addClientOnlyResponse(player, shopResponse);
 					}
 				}
@@ -587,26 +598,30 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("refresh npc locations");
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			Set<Integer> currentInRangeNpcs = entry.getValue().getInRangeNpcs();
-			Set<Integer> newInRangeNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getFloor(), entry.getValue().getTileId(), 15)
+			Set<NPC> newInRangeNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getFloor(), entry.getValue().getTileId(), 15)
 												    .stream()
 												    .filter(e -> !e.isDeadWithDelay())	// the delay of two ticks gives the client time for the death animation
-												    .map(NPC::getInstanceId)
+//												    .map(NPC::getInstanceId)
 												    .collect(Collectors.toSet());
 			
-			Set<Integer> removedNpcs = currentInRangeNpcs.stream().filter(e -> !newInRangeNpcs.contains(e)).collect(Collectors.toSet());
+			Set<Integer> newInRangeNpcInstanceIds = newInRangeNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
+			
+			Set<Integer> removedNpcs = currentInRangeNpcs.stream().filter(e -> !newInRangeNpcInstanceIds.contains(e)).collect(Collectors.toSet());
 			if (!removedNpcs.isEmpty()) {
 				NpcOutOfRangeResponse npcOutOfRangeResponse = new NpcOutOfRangeResponse();
 				npcOutOfRangeResponse.setInstances(removedNpcs);
 				responseMaps.addClientOnlyResponse(entry.getValue(), npcOutOfRangeResponse);
 			}
 			
-			Set<Integer> addedNpcs = newInRangeNpcs.stream().filter(e -> !currentInRangeNpcs.contains(e)).collect(Collectors.toSet());
+			Set<Integer> addedNpcs = newInRangeNpcInstanceIds.stream().filter(e -> !currentInRangeNpcs.contains(e)).collect(Collectors.toSet());
 			if (!addedNpcs.isEmpty()) {
 				NpcInRangeResponse npcInRangeResponse = new NpcInRangeResponse();
 				npcInRangeResponse.addInstances(entry.getValue().getFloor(), addedNpcs);
 				responseMaps.addClientOnlyResponse(entry.getValue(), npcInRangeResponse);
+				
+				ClientResourceManager.addNpcs(entry.getValue(), newInRangeNpcs.stream().map(NPC::getId).collect(Collectors.toSet()));
 			}
-			entry.getValue().setInRangeNpcs(newInRangeNpcs);
+			entry.getValue().setInRangeNpcs(newInRangeNpcInstanceIds);
 		}
 		Stopwatch.end("refresh npc locations");
 	}

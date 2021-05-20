@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import lombok.Getter;
 import main.database.entity.delete.DeletePlayerEquipment;
 import main.database.entity.insert.InsertPlayerEquipment;
 import main.processing.DatabaseUpdater;
@@ -24,15 +24,13 @@ public class EquipmentDao {
 	private static HashMap<Integer, EquipmentDto> equipment = new HashMap<>();
 	private static HashMap<Items, Items> reinforcedToBase = new HashMap<>();// reinforced_id, base_id
 	
-	private static Map<Integer, HashMap<Integer, Integer>> playerEquipment; // playerId, <equipmentId, slot>
-	private static Map<Integer, Integer> spriteMapIdByItemId = new HashMap<>();
+	@Getter private static Map<Integer, HashMap<Integer, Integer>> playerEquipment; // playerId, <equipmentId, slot>
 	
 	public static void setupCaches() {
 		cacheEquipmentByType();
 		cacheEquipment();
 		cacheReinforcedtoBaseMap();
 		cachePlayerEquipment();
-		cacheSpriteMapIds();
 	}
 	
 	private static void cacheEquipment() {
@@ -267,31 +265,6 @@ public class EquipmentDao {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public static void cacheSpriteMapIds() {
-		final String query = "select equipment.item_id, animations.sprite_map_id from equipment " + 
-				"inner join animations on animations.id = equipment.animation_id ";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					spriteMapIdByItemId.put(rs.getInt("item_id"), rs.getInt("sprite_map_id"));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public static Set<Integer> getSpriteMapIdsByItemIds(Set<Integer> itemIds) {
-		return spriteMapIdByItemId.entrySet().stream()
-				.filter(map -> itemIds.contains(map.getKey()))
-				.map(map -> map.getValue())
-				.collect(Collectors.toSet());
 	}
 
 	public static Map<PlayerPartType, PlayerAnimationDto> getEquipmentAnimationsByPlayerId(int playerId) {

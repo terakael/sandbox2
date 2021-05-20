@@ -1,10 +1,12 @@
 package main.responses;
 
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 import lombok.Setter;
 import main.database.ShopDao;
 import main.database.ShopItemDto;
+import main.processing.ClientResourceManager;
 import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;
@@ -32,7 +34,6 @@ public class ShopResponse extends Response {
 		ShopRequest request = (ShopRequest)req;
 		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());// request tileid is the instnace id
 		if (npc == null) {
-			setRecoAndResponseText(0, "you cannot do that.");
 			return;
 		}
 		
@@ -52,6 +53,8 @@ public class ShopResponse extends Response {
 			player.faceDirection(npc.getTileId(), responseMaps);
 			Store shop = ShopManager.getShopByOwnerId(npc.getId());
 			if (shop != null) {
+				ClientResourceManager.addItems(player, shop.getStock().values().stream().map(ShopItemDto::getItemId).collect(Collectors.toSet()));
+				
 				player.setShopId(shop.getShopId());
 				shopStock = shop.getStock();
 				shopName = ShopDao.getShopNameById(shop.getShopId());

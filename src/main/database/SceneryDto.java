@@ -9,7 +9,7 @@ import lombok.Setter;
 public class SceneryDto {
 	@Getter private int id;
 	private String name;
-	private int spriteFrameId;
+	@Getter private int spriteFrameId;
 	private int leftclickOption;
 	private int otherOptions;
 	private int attributes;

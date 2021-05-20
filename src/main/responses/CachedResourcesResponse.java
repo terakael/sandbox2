@@ -2,17 +2,16 @@ package main.responses;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.database.ContextOptionsDao;
 import main.database.ContextOptionsDto;
 import main.database.GroundTextureDao;
 import main.database.GroundTextureDto;
-import main.database.ItemDao;
 import main.database.ItemDto;
-import main.database.NPCDao;
 import main.database.NPCDto;
-import main.database.SceneryDao;
 import main.database.SceneryDto;
 import main.database.SpriteFrameDao;
 import main.database.SpriteFrameDto;
@@ -27,14 +26,10 @@ public class CachedResourcesResponse extends Response {
 	private static CachedResourcesResponse instance = null;
 	
 	private List<SpriteMapDto> spriteMaps = null;
-	private List<ItemDto> items = null;
 	private List<SpriteFrameDto> spriteFrames = null;
 	private List<ContextOptionsDto> contextOptions = null;
 	private Map<Integer, String> statMap = null;
 	private Map<Integer, Integer> expMap = null;
-	private List<NPCDto> npcs = null;
-	private List<SceneryDto> scenery = null;
-	private List<GroundTextureDto> groundTextures = null;
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -55,14 +50,16 @@ public class CachedResourcesResponse extends Response {
 	
 	private void loadCachedResources() {
 		spriteMaps = SpriteMapDao.getAlwaysLoadedSpriteMaps();
-		spriteFrames = SpriteFrameDao.getAllSpriteFrames();
-		items = ItemDao.getAllItems();
+		
+		spriteFrames = SpriteFrameDao.getAllSpriteFrames().stream()
+				.filter(e -> spriteMaps.stream()
+						.map(SpriteMapDto::getId)
+						.collect(Collectors.toSet())
+				.contains(e.getSprite_map_id()))
+				.collect(Collectors.toList());
 		contextOptions = ContextOptionsDao.getAllContextOptions();
 		statMap = StatsDao.getCachedStats();
-		npcs = NPCDao.getNpcList();
 		expMap = StatsDao.getExpMap();
-		scenery = SceneryDao.getAllScenery();
-		groundTextures = GroundTextureDao.getGroundTextures();
 	}
 
 }

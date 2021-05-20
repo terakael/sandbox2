@@ -1,9 +1,11 @@
 package main.database;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.Setter;
 
 @Setter
+@Getter
 @AllArgsConstructor
 public class PlayerAnimationDto {
 	public PlayerAnimationDto(AnimationDto dto, Integer color) {

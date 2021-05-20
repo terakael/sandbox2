@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.websocket.Session;
@@ -97,6 +98,11 @@ public class Player extends Attackable {
 	private boolean slowburnBlockedStatDrain = false;
 	
 	private Set<Integer> loadedSpriteMapIds = new HashSet<>();
+	private Set<Integer> loadedItemIds = new HashSet<>();
+	private Set<Integer> loadedSpriteFrameIds = new HashSet<>();
+	private Set<Integer> loadedSceneryIds = new HashSet<>();
+	private Set<Integer> loadedNpcIds = new HashSet<>();
+	private Set<Integer> loadedGroundTextureIds = new HashSet<>();
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
@@ -953,17 +959,52 @@ public class Player extends Attackable {
 		}
 	}
 	
-	public boolean hasLoadedSpriteMapId(int spriteMapId) {
-		return loadedSpriteMapIds.contains(spriteMapId);
+	
+	public Set<Integer> extractUnloadedSpriteMapIds(Set<Integer> spriteMapIds) {
+		return spriteMapIds.stream().filter(e -> !loadedSpriteMapIds.contains(e)).collect(Collectors.toSet());
 	}
 	
-	public Set<Integer> notLoadedSpriteMapIds(Set<Integer> spriteMapIds) {
-		return spriteMapIds.stream()
-				.filter(e -> !loadedSpriteMapIds.contains(e))
-				.collect(Collectors.toSet());
+	public void addLoadedSpriteMapIds(Set<Integer> spriteMapId) {
+		loadedSpriteMapIds.addAll(spriteMapId);
+	}
+
+	public Set<Integer> extractUnloadedSpriteFrameIds(Set<Integer> spriteFrameIds) {
+		return spriteFrameIds.stream().filter(e -> !loadedSpriteFrameIds.contains(e)).collect(Collectors.toSet());
 	}
 	
-	public void addLoadedSpriteMapId(int spriteMapId) {
-		loadedSpriteMapIds.add(spriteMapId);
+	public void addLoadedSpriteFrameIds(Set<Integer> spriteFrameIds) {
+		loadedSpriteFrameIds.addAll(spriteFrameIds);
+	}
+	
+	public Set<Integer> extractUnloadedSceneryIds(Set<Integer> sceneryIds) {
+		return sceneryIds.stream().filter(e -> !loadedSceneryIds.contains(e)).collect(Collectors.toSet());
+	}
+	
+	public void addLoadedSceneryIds(Set<Integer> sceneryIds) {
+		loadedSceneryIds.addAll(sceneryIds);
+	}
+	
+	public Set<Integer> extractUnloadedNpcIds(Set<Integer> npcIds) {
+		return npcIds.stream().filter(e -> !loadedNpcIds.contains(e)).collect(Collectors.toSet());
+	}
+	
+	public void addLoadedNpcIds(Set<Integer> npcIds) {
+		loadedNpcIds.addAll(npcIds);
+	}
+	
+	public Set<Integer> extractUnloadedItemIds(Set<Integer> itemIds) {
+		return itemIds.stream().filter(e -> !loadedItemIds.contains(e)).collect(Collectors.toSet());
+	}
+	
+	public void addLoadedItemIds(Set<Integer> itemIds) {
+		loadedItemIds.addAll(itemIds);
+	}
+	
+	public Set<Integer> extractUnloadedGroundTextureIds(Set<Integer> groundTextureIds) {
+		return groundTextureIds.stream().filter(e -> !loadedGroundTextureIds.contains(e)).collect(Collectors.toSet());
+	}
+	
+	public void addLoadedGroundTextureIds(Set<Integer> groundTextureIds) {
+		loadedGroundTextureIds.addAll(groundTextureIds);
 	}
 }
