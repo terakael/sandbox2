@@ -16,6 +16,7 @@ import main.requests.UseRequest;
 import main.types.Stats;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class FinishUseResponse extends Response {
 	private int src;
 	private int dest;

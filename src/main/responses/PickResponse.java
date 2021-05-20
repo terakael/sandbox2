@@ -7,7 +7,6 @@ import main.database.PlayerStorageDao;
 import main.processing.FlowerManager;
 import main.processing.PathFinder;
 import main.processing.Player;
-import main.processing.RockManager;
 import main.processing.Player.PlayerState;
 import main.requests.PickRequest;
 import main.requests.Request;

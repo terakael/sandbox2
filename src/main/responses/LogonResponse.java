@@ -2,7 +2,6 @@ package main.responses;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.websocket.Session;
@@ -21,6 +20,7 @@ import main.requests.LogonRequest;
 import main.requests.Request;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class LogonResponse extends Response {
 	private PlayerDto playerDto;
 	

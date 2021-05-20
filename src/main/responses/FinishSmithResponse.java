@@ -16,6 +16,7 @@ import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class FinishSmithResponse extends Response {
 	private int itemId;
 	

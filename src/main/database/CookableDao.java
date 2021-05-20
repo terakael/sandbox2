@@ -4,11 +4,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class CookableDao {
-	private static HashMap<Integer, CookableDto> cookables;// raw_item_id, dto
+	private static Map<Integer, CookableDto> cookables;// raw_item_id, dto
 	
 	public static void cacheCookables() {
 		final String query = "select raw_item_id, cooked_item_id, level, exp, burnt_item_id from cookable";

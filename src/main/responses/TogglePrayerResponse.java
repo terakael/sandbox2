@@ -3,11 +3,8 @@ package main.responses;
 import java.util.Set;
 
 import lombok.Setter;
-import main.database.EquipmentDao;
-import main.database.PlayerAnimationDao;
 import main.database.PrayerDao;
 import main.database.PrayerDto;
-import main.database.StatsDao;
 import main.processing.Player;
 import main.requests.Request;
 import main.requests.TogglePrayerRequest;

@@ -11,7 +11,6 @@ import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.FishRequest;
 import main.requests.Request;
-import main.types.Items;
 import main.types.Stats;
 
 public class FishResponse extends Response {

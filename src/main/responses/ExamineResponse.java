@@ -13,6 +13,7 @@ import main.requests.Request;
 import main.types.ItemAttributes;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class ExamineResponse extends Response {
 	private String examineText;
 	

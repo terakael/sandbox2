@@ -22,6 +22,7 @@ import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class MessageResponse extends Response {
 	private String name;
 	private int id;
@@ -45,7 +46,6 @@ public class MessageResponse extends Response {
 		id = messageReq.getId();
 		
 		if (msg.length() >= 2 && msg.substring(0, 2).equals("::")) {
-			//handleDebugCommand(id, msg, client);
 			handleDebugCommand(player, msg.substring(2), responseMaps);
 			return;
 		}

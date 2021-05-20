@@ -10,7 +10,7 @@ import main.requests.Request;
 import main.types.DamageTypes;
 import main.types.PlayerPartType;
 
-
+@SuppressWarnings("unused")
 public class PlayerUpdateResponse extends Response {
 	@Getter @Setter private Integer id = null;
 	@Setter private String name = null;

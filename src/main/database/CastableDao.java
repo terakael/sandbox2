@@ -6,8 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-import lombok.Getter;
-
 public class CastableDao {
 	private static HashMap<Integer, CastableDto> castables; // itemId, dto
 	

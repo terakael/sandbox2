@@ -6,11 +6,9 @@ import java.util.Set;
 import main.database.EquipmentDao;
 import main.database.PlayerAnimationDao;
 import main.database.StatsDao;
-import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.Request;
-import main.types.Prayers;
 import main.types.Stats;
 
 public class PlayerInRangeResponse extends Response {

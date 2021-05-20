@@ -42,9 +42,6 @@ public class ClientResourceManager {
 		// we need to pull the corresponding spriteMapIds based on the unloaded textureIds,
 		// then based on those spriteMapIds, pull all the remaining textureIds and pass those through as well.
 		// when the client receives it, it's creating a texture map with the spriteIds, which requires all groundTextureIds.
-		
-		
-		
 		Set<GroundTextureDto> selectedGroundTextures = GroundTextureDao.getGroundTextures().stream()
 			.filter(e -> groundTextureIds.contains(e.getId()))
 			.collect(Collectors.toSet());
@@ -52,6 +49,7 @@ public class ClientResourceManager {
 		final Set<Integer> spriteMapIds = selectedGroundTextures.stream().map(GroundTextureDto::getSpriteMapId).collect(Collectors.toSet());
 		
 		// pull all the other ground textures that use these sprite maps and add them to our selected list
+		// e.g. if the client loads one part of the water texture map, pull the rest of the textures in the water map and send them too.
 		selectedGroundTextures.addAll(GroundTextureDao.getGroundTextures().stream()
 				.filter(e -> spriteMapIds.contains(e.getSpriteMapId()))
 				.collect(Collectors.toSet()));
@@ -206,24 +204,6 @@ public class ClientResourceManager {
 		selectedSpriteFrameIds.addAll(animations.stream().map(PlayerAnimationDto::getAttack_right).collect(Collectors.toSet()));
 		
 		addSpriteFramesAndSpriteMaps(player, selectedSpriteFrameIds);
-		
-//		Set<Integer> spriteMapIds = player.extractUnloadedSpriteMapIds(PlayerAnimationDao.getSpriteMapIdsByPlayerIds(playerIds));
-//		
-//		Set<Integer> equippedItemIds = new HashSet<>();
-//		for (int playerId : playerIds)
-//			equippedItemIds.addAll(EquipmentDao.getEquippedSlotsAndItemIdsByPlayerId(playerId).keySet());
-		
-//		spriteMapIds.addAll(player.extractUnloadedSpriteMapIds(EquipmentDao.getSpriteMapIdsByItemIds(equippedItemIds)));
-//		if (spriteMapIds.isEmpty())
-//			return;
-		
-//		player.addLoadedSpriteMapIds(spriteMapIds);
-//		
-//		if (!spriteMaps.containsKey(player))
-//			spriteMaps.put(player, new HashSet<>());
-//		
-//		for (Integer spriteMapId : spriteMapIds)
-//			spriteMaps.get(player).add(SpriteMapDao.getSpriteMap(spriteMapId));
 	}
 	
 	public static void addLocalAnimations(Player player, Set<Integer> playerIds) {
@@ -254,14 +234,6 @@ public class ClientResourceManager {
 		scenery.clear();
 		npcs.clear();
 		groundTextures.clear();
-		
-//		private static Map<Player, Set<SpriteMapDto>> spriteMaps = new HashMap<>();
-//		private static Map<Player, Set<Integer>> groundTextureSpriteMapIds = new HashMap<>();
-//		private static Map<Player, Set<ItemDto>> items = new HashMap<>();
-//		private static Map<Player, Set<SpriteFrameDto>> spriteFrames = new HashMap<>();
-//		private static Map<Player, Set<SceneryDto>> scenery = new HashMap<>();
-//		private static Map<Player, Set<NPCDto>> npcs = new HashMap<>();
-//		private static Map<Player, Set<GroundTextureDto>> groundTextures = new HashMap<>();
 	}
 	
 	public static void compileToResponseMaps(ResponseMaps responseMap) {

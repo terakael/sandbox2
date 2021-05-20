@@ -1,6 +1,5 @@
 package main.responses;
 
-import lombok.Setter;
 import main.processing.Player;
 import main.requests.Request;
 

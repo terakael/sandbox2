@@ -5,15 +5,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
-import main.database.StatsDao;
-import main.responses.PlayerUpdateResponse;
 import main.responses.PvmEndResponse;
 import main.responses.PvpEndResponse;
 import main.responses.ResponseMaps;
-import main.types.DamageTypes;
 import main.types.Prayers;
-import main.types.Stats;
-import main.utils.RandomUtil;
 
 public class FightManager {
 	private FightManager() {}

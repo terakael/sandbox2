@@ -18,6 +18,7 @@ import main.requests.RequestFactory;
 import main.types.StorageTypes;
 
 @Setter
+@SuppressWarnings("unused")
 public class InventoryUpdateResponse extends Response {	
 	private Map<Integer, InventoryItemDto> inventory = new HashMap<>();
 	private Set<Integer> equippedSlots = new HashSet<>();

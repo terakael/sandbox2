@@ -11,6 +11,7 @@ import main.processing.TradeManager.Trade;
 import main.requests.Request;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class TradeUpdateResponse extends Response {
 	private Map<Integer, InventoryItemDto> playerTradeData = new HashMap<>();
 	private Map<Integer, InventoryItemDto> otherTradeData = new HashMap<>();

@@ -1,6 +1,5 @@
 package main.responses;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import main.database.InventoryItemDto;

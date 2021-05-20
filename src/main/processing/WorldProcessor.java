@@ -27,7 +27,6 @@ import main.processing.Player.PlayerState;
 import main.requests.Request;
 import main.responses.AddGroundTextureInstancesResponse;
 import main.responses.AddMinimapSegmentsResponse;
-import main.responses.AddResourceResponse;
 import main.responses.AddSceneryInstancesResponse;
 import main.responses.GroundItemInRangeResponse;
 import main.responses.GroundItemOutOfRangeResponse;
@@ -150,11 +149,6 @@ public class WorldProcessor implements Runnable {
 			if (!npcsToProcess.containsKey(entry.getValue().getFloor()))
 				npcsToProcess.put(entry.getValue().getFloor(), new HashSet<>());
 			npcsToProcess.get(entry.getValue().getFloor()).addAll(npcIdsNearPlayer);
-			
-//			ClientResourceManager.addNpcs(entry.getValue(), npcs
-//				    .stream()
-//				    .map(NPC::getId)
-//				    .collect(Collectors.toSet()));
 		}
 		Stopwatch.end("process players");
 		

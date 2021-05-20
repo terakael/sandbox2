@@ -14,6 +14,7 @@ import main.requests.RequestFactory;
 import main.types.ItemAttributes;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class BankWithdrawResponse extends Response {
 	private Map<Integer, InventoryItemDto> items;
 	

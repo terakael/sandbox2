@@ -2,6 +2,7 @@ package main.scenery;
 
 import java.util.HashSet;
 
+@SuppressWarnings("unused")
 public class BankChest {
 	private static HashSet<Integer> bankChestTileIds = new HashSet<>();
 	

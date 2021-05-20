@@ -9,7 +9,6 @@ import main.processing.Player.PlayerState;
 import main.requests.MessageRequest;
 import main.requests.Request;
 
-@SuppressWarnings("unused")
 public abstract class Response {
 	protected static Gson gson = new Gson();
 	

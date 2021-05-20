@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 import main.database.StatsDao;
 import main.processing.Player;
 import main.requests.Request;
-import main.types.Stats;
 
+@SuppressWarnings("unused")
 public class StatBoostResponse extends Response {
 	public StatBoostResponse() {
 		setAction("stat_boosts");

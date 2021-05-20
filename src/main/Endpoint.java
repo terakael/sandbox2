@@ -26,6 +26,7 @@ import main.requests.Request;
 import main.requests.RequestDecoder;
 import main.responses.ResponseEncoder;
 
+@SuppressWarnings("unused")
 @ServerEndpoint(value = "/game", encoders = ResponseEncoder.class, decoders = RequestDecoder.class)
 public class Endpoint {
 	private static Gson gson = new Gson();
@@ -38,10 +39,6 @@ public class Endpoint {
 	// in addition, the multi-request requests can be done at the same time as another request, multi or not (walking plus equipping for example)
 	public static Map<Session, Request> requestMap = new HashMap<>();
 	public static Map<Session, List<Request>> multiRequestMap = new HashMap<>();
-	
-//	static {
-//		PlayerSessionDao.clearAllSessions();
-//	}
 	
 	@OnOpen
 	public void onOpen(Session session) {
@@ -66,7 +63,6 @@ public class Endpoint {
 		// TODO: all good to clear the session in normal cases, but in combat they should stay 
 		// in-game for like a minute to prevent x-logging when in danger
 		System.out.println("onClose");
-//		peers.remove(session);
 		
 		Player playerToRemove = WorldProcessor.playerSessions.get(session);
 		if (playerToRemove == null)

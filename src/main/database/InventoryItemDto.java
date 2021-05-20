@@ -2,8 +2,6 @@ package main.database;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
-import main.types.ItemAttributes;
 import main.utils.Utils;
 
 @Getter

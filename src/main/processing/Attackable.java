@@ -13,7 +13,6 @@ import lombok.Setter;
 import main.database.DoorDao;
 import main.responses.ResponseMaps;
 import main.types.DamageTypes;
-import main.types.Prayers;
 import main.types.Stats;
 import main.utils.RandomUtil;
 
@@ -88,9 +87,6 @@ public abstract class Attackable {
 		int maxHit = maxHitFromLevel + maxHitFromBonus;
 		maxHit = postMaxHitModifications(maxHit);
 		
-//		int bonus = (int)Math.ceil(bonuses.get(Stats.STRENGTH) * 0.10);
-		
-//		int maxHit = (int)Math.ceil((stats.get(Stats.STRENGTH) + boosts.get(Stats.STRENGTH)) * 0.18) + (int)Math.ceil(bonuses.get(Stats.STRENGTH) * 0.10);
 		// number line starts with 100 evenly distributed elements
 		// e.g. if your max hit is 1, it will have 50 0s and 50 1s
 		// if your max hit is 9, it will have 10 0s, 10 1s etc

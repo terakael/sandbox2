@@ -15,6 +15,7 @@ import main.types.Stats;
 import main.types.StorageTypes;
 import main.utils.RandomUtil;
 
+@SuppressWarnings("unused")
 public class FinishCookingResponse extends Response {
 	private int itemId;// so we can automatically re-cook
 	private int tileId;// wherever the fire is

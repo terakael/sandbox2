@@ -5,6 +5,7 @@ import main.processing.Player;
 import main.requests.Request;
 import main.types.DamageTypes;
 
+@SuppressWarnings("unused")
 public class NpcUpdateResponse extends Response {
 	@Setter private Integer instanceId = null;
 	private Integer damage = null;

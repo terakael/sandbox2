@@ -8,8 +8,6 @@ import main.responses.ResponseMaps;
 import main.types.ShopTypes;
 
 public class ShopManager {
-	private static int UPDATE_TIMER = 100;
-	private static int updateTime = UPDATE_TIMER;
 	@Getter private static ArrayList<Store> shops = new ArrayList<>();
 	
 	public static void setupShops() {
@@ -38,11 +36,6 @@ public class ShopManager {
 	}
 	
 	public static void process(ResponseMaps responseMaps) {
-//		if (--updateTime > 0)
-//			return;
-//		
-//		updateTime = UPDATE_TIMER;
-		
 		for (Store shop : shops) {
 			shop.process(responseMaps);
 		}

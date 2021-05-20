@@ -2,7 +2,6 @@ package main.database;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import main.database.entity.annotations.Column;
 
 @AllArgsConstructor
 @Getter

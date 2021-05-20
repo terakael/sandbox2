@@ -20,6 +20,7 @@ import main.types.EquipmentTypes;
 import main.types.PlayerPartType;
 import main.types.Stats;
 
+@SuppressWarnings("unused")
 public class EquipResponse extends Response {
 	private Set<Integer> equippedSlots = new HashSet<>();
 	private Map<PlayerPartType, PlayerAnimationDto> equipAnimations = new HashMap<>();

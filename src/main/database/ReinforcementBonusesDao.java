@@ -7,8 +7,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import main.types.PlayerPartType;
-
 public class ReinforcementBonusesDao {
 	private static Map<Integer, ReinforcementBonusesDto> reinforcementBonuses;
 	

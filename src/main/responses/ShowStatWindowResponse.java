@@ -12,6 +12,7 @@ import main.requests.Request;
 import main.requests.ShowStatWindowRequest;
 import main.types.Stats;
 
+@SuppressWarnings("unused")
 public class ShowStatWindowResponse extends Response {
 	public ShowStatWindowResponse() {
 		setAction("show_stat_window");

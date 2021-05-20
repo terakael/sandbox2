@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.database.NPCDao;
@@ -57,12 +56,6 @@ public class NPCManager {
 				.filter(e -> entry.getValue().contains(e.getInstanceId()))
 				.forEach(e -> e.process(tick, responseMaps));
 		}
-		
-//		for (Map.Entry<Integer, List<NPC>> entry : npcs.entrySet()) {
-//			for (NPC npc : entry.getValue()) {
-//				npc.process(responseMaps);
-//			}
-//		}
 	}
 	
 	public List<NPC> getNpcsNearTile(int floor, int tileId, int radius) {

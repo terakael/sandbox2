@@ -5,6 +5,7 @@ import main.processing.Player;
 import main.requests.Request;
 
 @Setter
+@SuppressWarnings("unused")
 public class PvpEndResponse extends Response {
 	private int player1Id;
 	private int player2Id;

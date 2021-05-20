@@ -5,6 +5,7 @@ import main.processing.Player;
 import main.requests.Request;
 
 @Setter
+@SuppressWarnings("unused")
 public class PvmStartResponse extends Response {
 	private int playerId;
 	private int monsterId;

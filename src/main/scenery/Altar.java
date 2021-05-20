@@ -9,7 +9,6 @@ import main.database.StatsDao;
 import main.processing.Player;
 import main.requests.UseRequest;
 import main.responses.AddExpResponse;
-import main.responses.FinishUseResponse;
 import main.responses.InventoryUpdateResponse;
 import main.responses.MessageResponse;
 import main.responses.PlayerUpdateResponse;

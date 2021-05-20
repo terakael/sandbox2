@@ -15,6 +15,7 @@ import main.requests.Request;
 import main.requests.TalkToRequest;
 import main.utils.RandomUtil;
 
+@SuppressWarnings("unused")
 public class TalkToResponse extends Response {
 	private int objectId;
 	private String message;

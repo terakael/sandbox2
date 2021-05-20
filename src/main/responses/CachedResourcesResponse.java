@@ -2,17 +2,11 @@ package main.responses;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.database.ContextOptionsDao;
 import main.database.ContextOptionsDto;
-import main.database.GroundTextureDao;
-import main.database.GroundTextureDto;
-import main.database.ItemDto;
-import main.database.NPCDto;
-import main.database.SceneryDto;
 import main.database.SpriteFrameDao;
 import main.database.SpriteFrameDto;
 import main.database.SpriteMapDao;

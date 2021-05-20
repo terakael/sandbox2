@@ -16,6 +16,7 @@ import main.types.Items;
 import main.types.StorageTypes;
 
 @Setter
+@SuppressWarnings("unused")
 public class DialogueResponse extends Response {
 	private String dialogue = "";
 	private String speaker = "";

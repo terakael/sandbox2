@@ -3,6 +3,7 @@ package main.responses;
 import main.processing.Player;
 import main.requests.Request;
 
+@SuppressWarnings("unused")
 public class ActionBubbleResponse extends Response {
 	private int playerId;
 	private int iconId;

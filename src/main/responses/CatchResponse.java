@@ -10,9 +10,9 @@ import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.CatchRequest;
 import main.requests.Request;
-import main.requests.RequestFactory;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class CatchResponse extends Response {
 	private int instanceId;
 

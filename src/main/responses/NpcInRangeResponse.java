@@ -10,9 +10,9 @@ import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.Player;
 import main.requests.Request;
-import main.utils.Utils;
 
 @Setter
+@SuppressWarnings("unused")
 public class NpcInRangeResponse extends Response {
 	@AllArgsConstructor
 	public static class NpcLocation {

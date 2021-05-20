@@ -5,6 +5,7 @@ import main.processing.Player;
 import main.requests.Request;
 
 @Setter
+@SuppressWarnings("unused")
 public class AcceptTradeResponse extends Response {
 	private int otherPlayerId;
 	

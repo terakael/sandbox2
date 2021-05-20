@@ -2,6 +2,7 @@ package main.database;
 
 import lombok.AllArgsConstructor;
 
+@SuppressWarnings("unused")
 @AllArgsConstructor
 public class ContextOptionsDto {
 	private int id;

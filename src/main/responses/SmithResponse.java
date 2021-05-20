@@ -1,9 +1,5 @@
 package main.responses;
 
-import java.util.ArrayList;
-
-import main.database.ItemDao;
-import main.database.MineableDao;
 import main.database.PlayerStorageDao;
 import main.database.SmithableDao;
 import main.database.SmithableDto;
@@ -11,9 +7,7 @@ import main.database.StatsDao;
 import main.processing.FightManager;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
-import main.requests.AddExpRequest;
 import main.requests.Request;
-import main.requests.RequestFactory;
 import main.requests.SmithRequest;
 import main.types.Items;
 import main.types.Stats;
