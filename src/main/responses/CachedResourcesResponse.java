@@ -24,6 +24,7 @@ public class CachedResourcesResponse extends Response {
 	private List<ContextOptionsDto> contextOptions = null;
 	private Map<Integer, String> statMap = null;
 	private Map<Integer, Integer> expMap = null;
+//	private List<ItemDto> items = null;
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -44,7 +45,7 @@ public class CachedResourcesResponse extends Response {
 	
 	private void loadCachedResources() {
 		spriteMaps = SpriteMapDao.getAlwaysLoadedSpriteMaps();
-		
+//		items = Collections.singletonList(ItemDao.getItem(0));
 		spriteFrames = SpriteFrameDao.getAllSpriteFrames().stream()
 				.filter(e -> spriteMaps.stream()
 						.map(SpriteMapDto::getId)

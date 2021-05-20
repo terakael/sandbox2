@@ -1,10 +1,14 @@
 package main.responses;
 
+import java.util.Collections;
+import java.util.stream.Collectors;
+
 import main.database.FishableDao;
 import main.database.FishableDto;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
 import main.database.StatsDao;
+import main.processing.ClientResourceManager;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
@@ -59,6 +63,8 @@ public class FishResponse extends Response {
 			// the action bubble will be the fish you're trying to catch
 			ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(fishable.getItemId()).getSpriteFrameId());
 			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
+			
+			ClientResourceManager.addItems(player, Collections.singleton(fishable.getItemId()));
 			
 			player.setState(PlayerState.fishing);
 			player.setSavedRequest(req);

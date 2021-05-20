@@ -1,11 +1,13 @@
 package main.scenery;
 
+import java.util.Collections;
 import java.util.List;
 
 import main.database.CookableDao;
 import main.database.CookableDto;
 import main.database.ItemDao;
 import main.database.PlayerStorageDao;
+import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.UseRequest;
@@ -53,6 +55,8 @@ public class Fire extends Scenery {
 				
 				ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(cookable.getCookedItemId()).getSpriteFrameId());
 				responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
+				
+				ClientResourceManager.addItems(player, Collections.singleton(cookable.getCookedItemId()));
 
 				player.setSavedRequest(request);
 				player.setState(PlayerState.cooking);

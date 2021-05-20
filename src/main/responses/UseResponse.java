@@ -1,5 +1,6 @@
 package main.responses;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -181,6 +182,8 @@ public class UseResponse extends Response {
 		
 		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(dto.getResultingItemId()).getSpriteFrameId());
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
+		
+		ClientResourceManager.addItems(player, Collections.singleton(dto.getResultingItemId()));
 		
 		player.setState(PlayerState.using);
 		player.setSavedRequest(request);

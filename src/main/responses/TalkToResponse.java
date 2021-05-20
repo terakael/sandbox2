@@ -18,7 +18,7 @@ import main.utils.RandomUtil;
 @SuppressWarnings("unused")
 public class TalkToResponse extends Response {
 	private int objectId;
-	private String message;
+	private String message = "";
 	
 	public TalkToResponse() {
 		setAction("talk to");
@@ -65,6 +65,9 @@ public class TalkToResponse extends Response {
 			if (!messages.isEmpty()) {
 				message = messages.get(RandomUtil.getRandom(0, messages.size()));
 				responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), this);
+			} else {
+				setRecoAndResponseText(1, "they don't seem interested in talking.");
+				responseMaps.addClientOnlyResponse(player, this);
 			}
 			return;
 		}

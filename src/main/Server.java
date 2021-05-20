@@ -10,6 +10,7 @@ import main.database.BrewableDao;
 import main.database.BuryableDao;
 import main.database.CastableDao;
 import main.database.CatchableDao;
+import main.database.ClimbableDao;
 import main.database.ConsumableDao;
 import main.database.ContextOptionsDao;
 import main.database.CookableDao;
@@ -185,6 +186,9 @@ public class Server {
 		
 		System.out.println("caching buryables");
 		BuryableDao.setupCaches();
+		
+		System.out.println("caching climbables");
+		ClimbableDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

@@ -1,9 +1,6 @@
 package main.responses;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
+import main.database.ClimbableDao;
 import main.database.SceneryDao;
 import main.database.StatsDao;
 import main.processing.FightManager;
@@ -15,10 +12,6 @@ import main.requests.Request;
 import main.types.Stats;
 
 public class ClimbResponse extends Response {
-	// TODO this is stupid
-	private static final Set<Integer> climbUpScenery = new HashSet<>(Arrays.asList(60, 119));
-	private static final Set<Integer> climbDownScenery = new HashSet<>(Arrays.asList(50, 117, 118));
-
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof ClimbRequest))
@@ -42,7 +35,7 @@ public class ClimbResponse extends Response {
 			player.faceDirection(request.getTileId(), responseMaps);
 			
 			int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId());
-			if (!climbUpScenery.contains(sceneryId) && !climbDownScenery.contains(sceneryId)) { // up, down ladders
+			if (!ClimbableDao.isClimbable(sceneryId)) {
 				setResponseText("you can't climb that.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
@@ -56,14 +49,7 @@ public class ClimbResponse extends Response {
 				}
 			}
 			
-			int destFloor = player.getFloor();
-			if (climbUpScenery.contains(sceneryId)) {
-				++destFloor;
-			} else {
-				--destFloor;
-			}
-			
-			player.setFloor(destFloor);
+			player.setFloor(player.getFloor() + ClimbableDao.getRelativeFloorsBySceneryId(sceneryId));
 			player.setTileId(request.getTileId() + PathFinder.LENGTH);
 			player.clearPath();
 			
