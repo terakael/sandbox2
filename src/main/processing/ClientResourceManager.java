@@ -30,6 +30,15 @@ import main.responses.ResponseMaps;
 import main.types.PlayerPartType;
 
 public class ClientResourceManager {
+	// keeps track of what each player has loaded, decaches on player logout. key is playerId.
+	private static Map<Integer, Set<Integer>> loadedSpriteMapIds = new HashMap<>();
+	private static Map<Integer, Set<Integer>> loadedItemIds = new HashMap<>();
+	private static Map<Integer, Set<Integer>> loadedSpriteFrameIds = new HashMap<>();
+	private static Map<Integer, Set<Integer>> loadedSceneryIds = new HashMap<>();
+	private static Map<Integer, Set<Integer>> loadedNpcIds = new HashMap<>();
+	private static Map<Integer, Set<Integer>> loadedGroundTextureIds = new HashMap<>();
+	
+	// loaded each tick, sent to the appropriate players, then cleared
 	private static Map<Player, Set<SpriteMapDto>> spriteMaps = new HashMap<>();
 	private static Map<Player, Set<Integer>> groundTextureSpriteMapIds = new HashMap<>();
 	private static Map<Player, Set<ItemDto>> items = new HashMap<>();
@@ -54,20 +63,20 @@ public class ClientResourceManager {
 				.filter(e -> spriteMapIds.contains(e.getSpriteMapId()))
 				.collect(Collectors.toSet()));
 		
-		Set<Integer> selectedGroundTextureIds = player.extractUnloadedGroundTextureIds(selectedGroundTextures.stream().map(GroundTextureDto::getId).collect(Collectors.toSet()));
+		Set<Integer> selectedGroundTextureIds = extractUnloadedGroundTextureIds(player, selectedGroundTextures.stream().map(GroundTextureDto::getId).collect(Collectors.toSet()));
 		if (selectedGroundTextureIds.isEmpty())
 			return;
 		
 		if (!groundTextures.containsKey(player))
 			groundTextures.put(player, new HashSet<>());		
 		groundTextures.get(player).addAll(selectedGroundTextures);
-		player.addLoadedGroundTextureIds(selectedGroundTextureIds);
+		addLoadedGroundTextureIds(player, selectedGroundTextureIds);
 		
-		Set<Integer> selectedSpriteMapIds = player.extractUnloadedSpriteMapIds(spriteMapIds);
+		Set<Integer> selectedSpriteMapIds = extractUnloadedSpriteMapIds(player, spriteMapIds);
 		if (selectedSpriteMapIds.isEmpty())
 			return;
 		
-		player.addLoadedSpriteMapIds(selectedSpriteMapIds);
+		addLoadedSpriteMapIds(player, selectedSpriteMapIds);
 		
 		if (!spriteMaps.containsKey(player))
 			spriteMaps.put(player, new HashSet<>());
@@ -83,7 +92,7 @@ public class ClientResourceManager {
 	
 	private static void addSpriteFramesAndSpriteMaps(Player player, Set<Integer> spriteFrameIds) {
 		// the scenery's sprite frames
-		Set<Integer> selectedSpriteFrameIds = player.extractUnloadedSpriteFrameIds(spriteFrameIds);
+		Set<Integer> selectedSpriteFrameIds = extractUnloadedSpriteFrameIds(player, spriteFrameIds);
 				
 		if (selectedSpriteFrameIds.isEmpty())
 			return;
@@ -94,18 +103,18 @@ public class ClientResourceManager {
 
 		if (!spriteFrames.containsKey(player))
 			spriteFrames.put(player, new HashSet<>());
-		player.addLoadedSpriteFrameIds(selectedSpriteFrameIds);
+		addLoadedSpriteFrameIds(player, selectedSpriteFrameIds);
 		spriteFrames.get(player).addAll(selectedSpriteFrames);
 		
 		// the sprite frame's sprite maps
-		Set<Integer> selectedSpriteMapIds = player.extractUnloadedSpriteMapIds(selectedSpriteFrames.stream()
+		Set<Integer> selectedSpriteMapIds = extractUnloadedSpriteMapIds(player, selectedSpriteFrames.stream()
 			.map(SpriteFrameDto::getSprite_map_id)
 			.collect(Collectors.toSet()));
 		
 		if (selectedSpriteMapIds.isEmpty())
 			return;
 		
-		player.addLoadedSpriteMapIds(selectedSpriteMapIds);
+		addLoadedSpriteMapIds(player, selectedSpriteMapIds);
 		
 		if (!spriteMaps.containsKey(player))
 			spriteMaps.put(player, new HashSet<>());
@@ -115,7 +124,7 @@ public class ClientResourceManager {
 	}
 	
 	public static void addScenery(Player player, Set<Integer> sceneryIds) {
-		Set<Integer> selectedSceneryIds = player.extractUnloadedSceneryIds(sceneryIds);
+		Set<Integer> selectedSceneryIds = extractUnloadedSceneryIds(player, sceneryIds);
 		if (selectedSceneryIds.isEmpty())
 			return;
 		
@@ -126,7 +135,7 @@ public class ClientResourceManager {
 		
 		if (!scenery.containsKey(player))
 			scenery.put(player, new HashSet<>());
-		player.addLoadedSceneryIds(selectedScenery.stream().map(SceneryDto::getId).collect(Collectors.toSet()));
+		addLoadedSceneryIds(player, selectedScenery.stream().map(SceneryDto::getId).collect(Collectors.toSet()));
 		scenery.get(player).addAll(selectedScenery);
 		
 		addSpriteFramesAndSpriteMaps(player, selectedScenery.stream()
@@ -135,7 +144,7 @@ public class ClientResourceManager {
 	}
 	
 	public static void addNpcs(Player player, Set<Integer> npcIds) {
-		Set<Integer> selectedNpcIds = player.extractUnloadedNpcIds(npcIds);
+		Set<Integer> selectedNpcIds = extractUnloadedNpcIds(player, npcIds);
 		if (selectedNpcIds.isEmpty())
 			return;
 		
@@ -145,7 +154,7 @@ public class ClientResourceManager {
 		
 		if (!npcs.containsKey(player))
 			npcs.put(player, new HashSet<>());
-		player.addLoadedNpcIds(selectedNpcs.stream().map(NPCDto::getId).collect(Collectors.toSet()));
+		addLoadedNpcIds(player, selectedNpcs.stream().map(NPCDto::getId).collect(Collectors.toSet()));
 		npcs.get(player).addAll(selectedNpcs);
 		
 		Set<Integer> selectedSpriteFrameIds = new HashSet<>();
@@ -159,7 +168,7 @@ public class ClientResourceManager {
 	}
 	
 	public static void addItems(Player player, Set<Integer> itemIds) {
-		Set<Integer> selectedItemIds = player.extractUnloadedItemIds(itemIds);
+		Set<Integer> selectedItemIds = extractUnloadedItemIds(player, itemIds);
 		if (selectedItemIds.isEmpty())
 			return;
 		
@@ -169,7 +178,7 @@ public class ClientResourceManager {
 		
 		if (!items.containsKey(player))
 			items.put(player, new HashSet<>());
-		player.addLoadedItemIds(selectedItems.stream().map(ItemDto::getId).collect(Collectors.toSet()));
+		addLoadedItemIds(player, selectedItems.stream().map(ItemDto::getId).collect(Collectors.toSet()));
 		items.get(player).addAll(selectedItems);
 		
 		addSpriteFramesAndSpriteMaps(player, selectedItems.stream()
@@ -274,5 +283,86 @@ public class ClientResourceManager {
 		}
 
 		clear();
+	}
+	
+	public static Set<Integer> extractUnloadedSpriteMapIds(Player player, Set<Integer> spriteMapIds) {
+		if (!loadedSpriteMapIds.containsKey(player.getId()))
+			return spriteMapIds;
+		return spriteMapIds.stream().filter(e -> !loadedSpriteMapIds.get(player.getId()).contains(e)).collect(Collectors.toSet());
+	}
+	
+	public static void addLoadedSpriteMapIds(Player player, Set<Integer> spriteMapId) {
+		if (!loadedSpriteMapIds.containsKey(player.getId()))
+			loadedSpriteMapIds.put(player.getId(), new HashSet<>());
+		loadedSpriteMapIds.get(player.getId()).addAll(spriteMapId);
+	}
+
+	public static Set<Integer> extractUnloadedSpriteFrameIds(Player player, Set<Integer> spriteFrameIds) {
+		if (!loadedSpriteFrameIds.containsKey(player.getId()))
+			return spriteFrameIds;
+		return spriteFrameIds.stream().filter(e -> !loadedSpriteFrameIds.get(player.getId()).contains(e)).collect(Collectors.toSet());
+	}
+	
+	public static void addLoadedSpriteFrameIds(Player player, Set<Integer> spriteFrameIds) {
+		if (!loadedSpriteFrameIds.containsKey(player.getId()))
+			loadedSpriteFrameIds.put(player.getId(), new HashSet<>());
+		loadedSpriteFrameIds.get(player.getId()).addAll(spriteFrameIds);
+	}
+	
+	public static Set<Integer> extractUnloadedSceneryIds(Player player, Set<Integer> sceneryIds) {
+		if (!loadedSceneryIds.containsKey(player.getId()))
+			return sceneryIds;
+		return sceneryIds.stream().filter(e -> !loadedSceneryIds.get(player.getId()).contains(e)).collect(Collectors.toSet());
+	}
+	
+	public static void addLoadedSceneryIds(Player player, Set<Integer> sceneryIds) {
+		if (!loadedSceneryIds.containsKey(player.getId()))
+			loadedSceneryIds.put(player.getId(), new HashSet<>());
+		loadedSceneryIds.get(player.getId()).addAll(sceneryIds);
+	}
+	
+	public static Set<Integer> extractUnloadedNpcIds(Player player, Set<Integer> npcIds) {
+		if (!loadedNpcIds.containsKey(player.getId()))
+			return npcIds;
+		return npcIds.stream().filter(e -> !loadedNpcIds.get(player.getId()).contains(e)).collect(Collectors.toSet());
+	}
+	
+	public static void addLoadedNpcIds(Player player, Set<Integer> npcIds) {
+		if (!loadedNpcIds.containsKey(player.getId()))
+			loadedNpcIds.put(player.getId(), new HashSet<>());
+		loadedNpcIds.get(player.getId()).addAll(npcIds);
+	}
+	
+	public static Set<Integer> extractUnloadedItemIds(Player player, Set<Integer> itemIds) {
+		if (!loadedItemIds.containsKey(player.getId()))
+			return itemIds;
+		return itemIds.stream().filter(e -> !loadedItemIds.get(player.getId()).contains(e)).collect(Collectors.toSet());
+	}
+	
+	public static void addLoadedItemIds(Player player, Set<Integer> itemIds) {
+		if (!loadedItemIds.containsKey(player.getId()))
+			loadedItemIds.put(player.getId(), new HashSet<>());
+		loadedItemIds.get(player.getId()).addAll(itemIds);
+	}
+	
+	public static Set<Integer> extractUnloadedGroundTextureIds(Player player, Set<Integer> groundTextureIds) {
+		if (!loadedGroundTextureIds.containsKey(player.getId()))
+			return groundTextureIds;
+		return groundTextureIds.stream().filter(e -> !loadedGroundTextureIds.get(player.getId()).contains(e)).collect(Collectors.toSet());
+	}
+	
+	public static void addLoadedGroundTextureIds(Player player, Set<Integer> groundTextureIds) {
+		if (!loadedGroundTextureIds.containsKey(player.getId()))
+			loadedGroundTextureIds.put(player.getId(), new HashSet<>());
+		loadedGroundTextureIds.get(player.getId()).addAll(groundTextureIds);
+	}
+	
+	public static void decachePlayer(Player player) {
+		loadedSpriteMapIds.remove(player.getId());
+		loadedItemIds.remove(player.getId());
+		loadedSpriteFrameIds.remove(player.getId());
+		loadedSceneryIds.remove(player.getId());
+		loadedNpcIds.remove(player.getId());
+		loadedGroundTextureIds.remove(player.getId());
 	}
 }

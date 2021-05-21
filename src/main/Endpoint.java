@@ -16,6 +16,7 @@ import javax.websocket.server.ServerEndpoint;
 
 import com.google.gson.Gson;
 
+import main.processing.ClientResourceManager;
 import main.processing.FightManager;
 import main.processing.Player;
 import main.processing.TradeManager;
@@ -70,6 +71,7 @@ public class Endpoint {
 		
 		FightManager.cancelFight(playerToRemove, null);
 		TradeManager.cancelTrade(playerToRemove);
+		ClientResourceManager.decachePlayer(playerToRemove);
 		
 		WorldProcessor.playerSessions.remove(session);
 		
