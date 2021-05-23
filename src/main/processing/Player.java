@@ -63,6 +63,7 @@ public class Player extends Attackable {
 		idle,
 		walking,
 		chasing,// used for walking to a moving target (following, moving to attack something etc)
+		chasing_with_range,
 		following,
 		mining,
 		smithing,
@@ -92,6 +93,7 @@ public class Player extends Attackable {
 	@Getter @Setter private Set<Integer> loadedMinimapSegments = new HashSet<>();
 	@Getter private Set<Integer> activePrayers = new HashSet<>();
 	@Getter private float prayerPoints = 0;
+	@Setter private int range = 0; // if we're chasing with range (i.e. chasing to cast a spell or something), this is the range we want to be in
 	private boolean slowburnBlockedStatDrain = false;
 	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
@@ -270,6 +272,39 @@ public class Player extends Attackable {
 				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
 			}
 
+			break;
+		}
+		case chasing_with_range: {
+			if (target != null && floor != target.getFloor())// if the target goes down a ladder or something then stop following
+				target = null;
+			
+			if (target == null) {
+				// player could have logged out/died as they were chasing
+				state = PlayerState.idle;
+				break;
+			}
+			
+			if (!PathFinder.lineOfSightIsClear(floor, tileId, target.getTileId(), range)) {
+				path = PathFinder.findPathInRange(floor, tileId, target.getTileId(), range);
+			} else {
+				// start the fight
+				if (savedRequest != null) {
+					Request req = savedRequest;
+					savedRequest = null;
+					
+					Response response = ResponseFactory.create(req.getAction());
+					response.process(req, this, responseMaps);
+				}
+				path.clear();
+			}
+			
+			// similar to walking, but need to recalculate path each tick due to moving target
+			if (popPath()) {
+				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+				playerUpdateResponse.setId(dto.getId());
+				playerUpdateResponse.setTileId(getTileId());
+				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
+			}
 			break;
 		}
 		case mining:

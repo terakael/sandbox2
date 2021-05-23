@@ -16,6 +16,7 @@ import main.database.GroundTextureDao;
 import main.database.SceneryDao;
 import main.types.ImpassableTypes;
 import main.utils.Stopwatch;
+import main.utils.Utils;
 
 public class PathFinder {
 	private static PathFinder instance;
@@ -258,18 +259,22 @@ public class PathFinder {
 	}
 	
 	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile) {
-		return findPathInternal(floor, from, to, includeToTile, 0, 0, false);
+		return findPathInternal(floor, from, to, includeToTile, 0, 0, false, 0);
+	}
+	
+	public static Stack<Integer> findPathInRange(int floor, int from, int to, int range) {
+		return findPathInternal(floor, from, to, true, 0, 0, false, range);
 	}
 	
 	public static Stack<Integer> findPathToDoor(int floor, int from, int to) {
-		return findPathInternal(floor, from, to, true, 0, 0, true);
+		return findPathInternal(floor, from, to, true, 0, 0, true, 0);
 	}
 	
 	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius) {
-		return findPathInternal(floor, from, to, includeToTile, spawnTileId, maxRadius, false);
+		return findPathInternal(floor, from, to, includeToTile, spawnTileId, maxRadius, false, 0);
 	}
 	
-	private static Stack<Integer> findPathInternal(int floor, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius, boolean toDoor) {
+	private static Stack<Integer> findPathInternal(int floor, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius, boolean toDoor, int withinRange) {
 		Stopwatch.start("find path");
 		Stack<Integer> output = new Stack<>();
 		if (from == to)
@@ -351,7 +356,7 @@ public class PathFinder {
 				if (!q.isSiblingPassable(i, floor) && q.getSibling(i) != nodes.get(to))
 					continue;
 				
-				PathNode successor = q.getSibling(i);				
+				PathNode successor = q.getSibling(i);
 				if (successor == null || (successor.getWeight() == -1 && successor != nodes.get(to)))// corner and edge nodes have some null siblings
 					continue;
 				
@@ -360,6 +365,7 @@ public class PathFinder {
 				if (successor == nodes.get(to) && successor.impassableTypes != 15 && !isNextTo(floor, q.id, successor.id, !toDoor))
 					continue;
 				
+				// for NPCs so they don't wander outside their range.
 				if (spawnTileId > 0 && maxRadius > 0) {
 					int tileX = successor.getId() % LENGTH;
 					int tileY = successor.getId() / LENGTH;
@@ -390,6 +396,25 @@ public class PathFinder {
 					
 					if (!open.contains(successor))
 						open.add(successor);
+				}
+				
+				// for things like magic, we just need to be within a certain range of the target.
+				// if we're within range and there's nothing blocking the distance between the current tile and the target (walls etc),
+				// then this tile will do, return the path from here.
+				if (withinRange > 0) {
+					// Bresenham's algorithm?
+					// cast a ray from this tile to the target tile, and note all tiles it passes through.
+					// for each of the tiles it passes through, check if the ray passes through an impassable.
+					// if it doesn't pass through any impassables, then this can be counted as the destination.
+					if (lineOfSightIsClear(floor, successor.getId(), to, withinRange)) {
+						while (successor.getParent() != null) {
+							output.push(successor.getId());
+							successor = successor.getParent();
+						}
+						
+						Stopwatch.end("find path");
+						return output;
+					}
 				}
 				
 				if (successor == nodes.get(to)) {
@@ -425,6 +450,63 @@ public class PathFinder {
 	
 	private static double calculateManhattan(int src, int dest) {
 		return Math.abs(src % LENGTH - dest % LENGTH) + Math.abs(src / LENGTH - dest / LENGTH);
+	}
+	
+	public static boolean lineOfSightIsClear(int floor, int srcTileId, int destTileId, int range)
+	{
+//		if (calculateManhattan(srcTileId, destTileId) > range) // too far away
+//			return false;
+		
+		final int x0 = srcTileId % LENGTH;
+		final int y0 = srcTileId / LENGTH;
+		
+		final int x1 = destTileId % LENGTH;
+		final int y1 = destTileId / LENGTH;
+		
+	    int dx = Math.abs(x1 - x0);
+	    int dy = Math.abs(y1 - y0);
+	    
+	    if (dx + dy > range)
+	    	return false;
+	    
+	    int x = x0;
+	    int y = y0;
+	    int n = 1 + dx + dy;
+	    int x_inc = (x1 > x0) ? 1 : -1;
+	    int y_inc = (y1 > y0) ? 1 : -1;
+	    int error = dx - dy;
+	    dx *= 2;
+	    dy *= 2;
+
+	    int prevTileId = srcTileId;
+	    for (; n > 0; --n)
+	    {
+	    	// check if tile has impassable that intersects the line, returning false if true
+//	        visit(x, y);
+	    	final int checkTileId = (y * LENGTH) + x;
+//	    	if (prevTileId == checkTileId)
+//	    		continue;
+	    	
+	    	if (!isNextTo(floor, prevTileId, checkTileId)) {
+	    		// despite the two tiles being next to eachother, they are not "next to" eachother,
+	    		// meaning there is a barrier in the way.
+	    		return false;
+	    	}
+	    	prevTileId = checkTileId;
+
+	        if (error > 0)
+	        {
+	            x += x_inc;
+	            error -= dy;
+	        }
+	        else
+	        {
+	            y += y_inc;
+	            error += dx;
+	        }
+	    }
+	    
+	    return true;
 	}
 	
 	// standard behaviour is to include door impassables; only opening/closing doors changes this behaviour

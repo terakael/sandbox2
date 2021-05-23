@@ -4,6 +4,7 @@ import main.database.ItemDao;
 import main.database.PickableDao;
 import main.database.PickableDto;
 import main.database.PlayerStorageDao;
+import main.processing.FightManager;
 import main.processing.FlowerManager;
 import main.processing.PathFinder;
 import main.processing.Player;
@@ -19,6 +20,13 @@ public class PickResponse extends Response {
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof PickRequest))
 			return;
+		
+		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+			setRecoAndResponseText(0, "you can't do that during combat.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		FightManager.cancelFight(player, responseMaps);
 		
 		PickRequest request = (PickRequest)req;
 		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {

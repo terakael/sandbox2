@@ -268,76 +268,86 @@ public class UseResponse extends Response {
 	}
 	
 	private boolean handleCastableOnNpc(UseRequest request, Player player, ResponseMaps responseMaps) {
-		CastableDto castable = CastableDao.getCastableByItemId(request.getSrc());
-		if (castable == null)
-			return false;
-		
 		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getDest());
 		if (targetNpc == null)
 			return false;
 		
-		// you can't teleport an npc
-		if (TeleportableDao.isTeleportable(castable.getItemId()))
-			return false;
-		
-		if (!NPCDao.npcHasAttribute(targetNpc.getId(), NpcAttributes.ATTACKABLE))
-			return false;
-		
-		if (FightManager.fightWithFighterExists(targetNpc) && !FightManager.fightingWith(targetNpc, player)) {
-			setRecoAndResponseText(0, "someone is already fighting that.");
-			responseMaps.addClientOnlyResponse(player, this);
+		if (!PathFinder.lineOfSightIsClear(player.getFloor(), player.getTileId(), targetNpc.getTileId(), 6)) {
+			player.setTarget(targetNpc);
+			player.setState(PlayerState.chasing_with_range);
+			player.setRange(6);
+			player.setSavedRequest(request);
+			return true;
+		} else {
+			CastableDto castable = CastableDao.getCastableByItemId(request.getSrc());
+			if (castable == null)
+				return false;
+			
+			// you can't teleport an npc
+			if (TeleportableDao.isTeleportable(castable.getItemId()))
+				return false;
+			
+			if (!NPCDao.npcHasAttribute(targetNpc.getId(), NpcAttributes.ATTACKABLE))
+				return false;
+			
+			if (FightManager.fightWithFighterExists(targetNpc) && !FightManager.fightingWith(targetNpc, player)) {
+				setRecoAndResponseText(0, "someone is already fighting that.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return true;
+			}
+			
+			if (FightManager.fightWithFighterExists(player) && !FightManager.fightingWith(targetNpc, player)) {
+				setRecoAndResponseText(0, "you're already fighting something else.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return true;
+			}
+			
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+			if (!invItemIds.contains(castable.getItemId()))
+				return false;
+			
+			// in case of user fuckery, they modify the slot to a different slot.
+			// if it's somehow different then set it to the correct slot.
+			int slot = request.getSrcSlot();
+			if (slot >= invItemIds.size() || invItemIds.get(slot) != castable.getItemId())
+				slot = invItemIds.indexOf(castable.getItemId());
+			
+			// at this point we're good to cast the spell.		
+			castOffensiveSpell(castable, player, targetNpc, responseMaps);
+			
+			int chanceToSaveRune = 0;
+			if (player.prayerIsActive(Prayers.RUNELESS_MAGIC))
+				chanceToSaveRune = 15;
+			else if (player.prayerIsActive(Prayers.RUNELESS_MAGIC_LVL_2))
+				chanceToSaveRune = 30;
+			else if (player.prayerIsActive(Prayers.RUNELESS_MAGIC_LVL_3))
+				chanceToSaveRune = 45;
+			
+			if (RandomUtil.getRandom(0, 100) > chanceToSaveRune) { // chance failed, so use up the rune
+				InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
+				if (item.getCount() > 1) {
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(
+							player.getId(), 
+							StorageTypes.INVENTORY, 
+							slot, 
+							item.getItemId(), item.getCount() - 1, item.getCharges());
+				} else {
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(
+							player.getId(), 
+							StorageTypes.INVENTORY, 
+							slot, 
+							0, 1, 0);
+				}
+				InventoryUpdateResponse.sendUpdate(player, responseMaps);
+			}
+			
+			CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId());
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), castSpellResponse);
+			
+			player.setState(PlayerState.idle);
+			
 			return true;
 		}
-		
-		if (FightManager.fightWithFighterExists(player) && !FightManager.fightingWith(targetNpc, player)) {
-			setRecoAndResponseText(0, "you're already fighting something else.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return true;
-		}
-		
-		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-		if (!invItemIds.contains(castable.getItemId()))
-			return false;
-		
-		// in case of user fuckery, they modify the slot to a different slot.
-		// if it's somehow different then set it to the correct slot.
-		int slot = request.getSrcSlot();
-		if (slot >= invItemIds.size() || invItemIds.get(slot) != castable.getItemId())
-			slot = invItemIds.indexOf(castable.getItemId());
-		
-		// at this point we're good to cast the spell.		
-		castOffensiveSpell(castable, player, targetNpc, responseMaps);
-		
-		int chanceToSaveRune = 0;
-		if (player.prayerIsActive(Prayers.RUNELESS_MAGIC))
-			chanceToSaveRune = 15;
-		else if (player.prayerIsActive(Prayers.RUNELESS_MAGIC_LVL_2))
-			chanceToSaveRune = 30;
-		else if (player.prayerIsActive(Prayers.RUNELESS_MAGIC_LVL_3))
-			chanceToSaveRune = 45;
-		
-		if (RandomUtil.getRandom(0, 100) > chanceToSaveRune) { // chance failed, so use up the rune
-			InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
-			if (item.getCount() > 1) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(
-						player.getId(), 
-						StorageTypes.INVENTORY, 
-						slot, 
-						item.getItemId(), item.getCount() - 1, item.getCharges());
-			} else {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(
-						player.getId(), 
-						StorageTypes.INVENTORY, 
-						slot, 
-						0, 1, 0);
-			}
-			InventoryUpdateResponse.sendUpdate(player, responseMaps);
-			}
-		
-		CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), castSpellResponse);
-		
-		return true;
 	}
 	
 	private void castOffensiveSpell(CastableDto castable, Player player, Attackable opponent, ResponseMaps responseMaps) {
@@ -464,33 +474,44 @@ public class UseResponse extends Response {
 				return false;
 			}
 			
-			if (!FightManager.fightingWith(player, targetPlayer)) {
-				setRecoAndResponseText(0, "you can only cast spells on other players during a duel.");
-				responseMaps.addClientOnlyResponse(player, this);
+			if (!PathFinder.lineOfSightIsClear(player.getFloor(), player.getTileId(), targetPlayer.getTileId(), 6)) {
+				player.setTarget(targetPlayer);
+				player.setState(PlayerState.chasing_with_range);
+				player.setRange(6);
+				player.setSavedRequest(request);
+				return true;
+			} else {
+				
+				if (!FightManager.fightingWith(player, targetPlayer)) {
+					setRecoAndResponseText(0, "you can only cast spells on other players during a duel.");
+					responseMaps.addClientOnlyResponse(player, this);
+					return true;
+				}
+				
+				castOffensiveSpell(castable, player, targetPlayer, responseMaps);
+				
+				InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
+				if (item.getCount() > 1) {
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(
+							player.getId(), 
+							StorageTypes.INVENTORY, 
+							slot, 
+							item.getItemId(), item.getCount() - 1, item.getCharges());
+				} else {
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(
+							player.getId(), 
+							StorageTypes.INVENTORY, 
+							slot, 
+							0, 1, 0);
+				}
+				InventoryUpdateResponse.sendUpdate(player, responseMaps);
+				
+				CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetPlayer.getId(), "player", castable.getSpriteFrameId());
+				responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), castSpellResponse);
+				
+				player.setState(PlayerState.idle);
 				return true;
 			}
-			
-			castOffensiveSpell(castable, player, targetPlayer, responseMaps);
-			
-			InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
-			if (item.getCount() > 1) {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(
-						player.getId(), 
-						StorageTypes.INVENTORY, 
-						slot, 
-						item.getItemId(), item.getCount() - 1, item.getCharges());
-			} else {
-				PlayerStorageDao.setItemFromPlayerIdAndSlot(
-						player.getId(), 
-						StorageTypes.INVENTORY, 
-						slot, 
-						0, 1, 0);
-			}
-			InventoryUpdateResponse.sendUpdate(player, responseMaps);
-			
-			CastSpellResponse castSpellResponse = new CastSpellResponse(player.getId(), targetPlayer.getId(), "player", castable.getSpriteFrameId());
-			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), castSpellResponse);
-			return true;
 		}
 		
 		return false;
