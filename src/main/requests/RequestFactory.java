@@ -55,6 +55,7 @@ public class RequestFactory {
 		map.put("pray at", PrayAtRequest.class);
 		map.put("bury", BuryRequest.class);
 		map.put("open", OpenCloseRequest.class);
+		map.put("toggle_duel_rule", ToggleDuelRuleRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

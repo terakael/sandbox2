@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.websocket.Session;
 
@@ -27,6 +28,7 @@ import main.database.StatsDao;
 import main.database.TeleportableDao;
 import main.database.TeleportableDto;
 import main.database.entity.update.UpdatePlayerEntity;
+import main.processing.FightManager.Fight;
 import main.requests.FishRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
@@ -50,6 +52,7 @@ import main.responses.StatBoostResponse;
 import main.responses.TogglePrayerResponse;
 import main.types.Buffs;
 import main.types.DamageTypes;
+import main.types.DuelRules;
 import main.types.ItemAttributes;
 import main.types.Items;
 import main.types.Prayers;
@@ -63,7 +66,7 @@ public class Player extends Attackable {
 		idle,
 		walking,
 		chasing,// used for walking to a moving target (following, moving to attack something etc)
-		chasing_with_range,
+		chasing_with_range, // if the player is behind a wall and they cast a spell, they'll run around in preparation of casting from range
 		following,
 		mining,
 		smithing,
@@ -471,7 +474,7 @@ public class Player extends Attackable {
 			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
 		}
 		
-		setBoosts(boosts);
+		refreshBoosts();
 		
 		new StatBoostResponse().process(null, this, responseMaps);
 	}
@@ -527,46 +530,61 @@ public class Player extends Attackable {
 	
 	@Override
 	public void onDeath(Attackable killer, ResponseMaps responseMaps) {
-		lastTarget = null;
 		clearPoison();
-		if (FightManager.fightWithFighterExists(this)) {
-			FightManager.cancelFight(this, responseMaps);
-		}
 		
-		// unequip and drop all the items in inventory
-		EquipmentDao.clearAllEquppedItems(getId());
-		
-		int itemsToProtect = 3; // TODO 0 if skulled
-		if (prayerIsActive(Prayers.PROTECT_SLOT))
-			itemsToProtect += 1;
-		else if (prayerIsActive(Prayers.PROTECT_SLOT_LVL_2))
-			itemsToProtect += 2;
-		
-		Map<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.INVENTORY);
-		for (InventoryItemDto dto : inventoryList.values()) {
-			if (dto.getSlot() < itemsToProtect)
-				continue;// you always protect your items in the first three slots (0, 1, 2)
+		Fight fight = FightManager.getFightByPlayerId(getId()); // fight doesn't necessarily exist - the player could die of poison outside a fight for example.
+		Integer duelRules = fight == null ? null : fight.getRules();
+		if (duelRules == null || (duelRules & DuelRules.dangerous.getValue()) > 0) {
+			// not a duel, or a dangerous duel
+			// unequip and drop all the items in inventory
+			EquipmentDao.clearAllEquppedItems(getId());
 			
-			if (dto.getItemId() != 0) {
-				int stack = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.STACKABLE) ? dto.getCount() : 1;
-				int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? dto.getCharges() : 1;
+			int itemsToProtect = 3; // TODO 0 if skulled
+			if (prayerIsActive(Prayers.PROTECT_SLOT))
+				itemsToProtect += 1;
+			else if (prayerIsActive(Prayers.PROTECT_SLOT_LVL_2))
+				itemsToProtect += 2;
+			
+			Map<Integer, InventoryItemDto> inventoryList = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.INVENTORY);
+			for (InventoryItemDto dto : inventoryList.values()) {
+				if (dto.getSlot() < itemsToProtect)
+					continue;// you always protect your items in the first three slots (0, 1, 2)
 				
-				if (killer instanceof Player && ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.TRADEABLE)) {
-					// if it's a tradeable unique, the killer should only see it if they don't already have one.
-					if (ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.UNIQUE)) {
-						if (PlayerStorageDao.itemExistsInPlayerStorage(((Player)killer).getId(), dto.getItemId()) || GroundItemManager.itemIsOnGround(floor, ((Player)killer).getId(), dto.getItemId())) {
-							continue;
-						}
-					}
+				if (dto.getItemId() != 0) {
+					int stack = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.STACKABLE) ? dto.getCount() : 1;
+					int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? dto.getCharges() : 1;
 					
-					GroundItemManager.add(floor, ((Player)killer).getId(), dto.getItemId(), tileId, stack, charges);
-				} else {
-					// for now, untradeables will drop on the ground for the owner to pick back up
-					GroundItemManager.add(floor, getId(), dto.getItemId(), tileId, stack, charges);
+					if (killer instanceof Player && ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.TRADEABLE)) {
+						// if it's a tradeable unique, the killer should only see it if they don't already have one.
+						if (ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.UNIQUE)) {
+							if (PlayerStorageDao.itemExistsInPlayerStorage(((Player)killer).getId(), dto.getItemId()) || GroundItemManager.itemIsOnGround(floor, ((Player)killer).getId(), dto.getItemId())) {
+								continue;
+							}
+						}
+						
+						GroundItemManager.add(floor, ((Player)killer).getId(), dto.getItemId(), tileId, stack, charges);
+					} else {
+						// for now, untradeables will drop on the ground for the owner to pick back up
+						GroundItemManager.add(floor, getId(), dto.getItemId(), tileId, stack, charges);
+					}
 				}
 			}
+			PlayerStorageDao.clearPlayerInventoryExceptFirstSlots(getId(), itemsToProtect);
+		} 
+
+		if (duelRules != null) { // not an "else" here because we still need to handle the dangerous duel stake stuff (which is irrelevant to do but still possible)
+			// safe/dangerous duel: pull stuff from own trade (staked stuff) and throw it on killer's ground
+			// no need to do the tradeable checks etc; this is all checked pre-duel when the duel offer is being done
+			List<InventoryItemDto> itemsToDrop = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.TRADE).values().stream()
+					.filter(e -> e.getItemId() != 0)
+					.collect(Collectors.toList());
+			
+			for (InventoryItemDto itemToDrop : itemsToDrop) {
+				GroundItemManager.add(floor, ((Player)killer).getId(), itemToDrop.getItemId(), tileId, itemToDrop.getCount(), itemToDrop.getCharges());
+			}
+			
+			PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(getId(), StorageTypes.TRADE);
 		}
-		PlayerStorageDao.clearPlayerInventoryExceptFirstSlots(getId(), itemsToProtect);
 		
 		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.HITPOINTS, 0);
 		currentHp = StatsDao.getStatLevelByStatIdPlayerId(Stats.HITPOINTS, dto.getId());
@@ -591,6 +609,11 @@ public class Player extends Attackable {
 		setTileId(respawnPoint.getTileId());
 		setFloor(respawnPoint.getFloor());
 
+		lastTarget = null;
+		if (FightManager.fightWithFighterExists(this)) {
+			FightManager.cancelFight(this, responseMaps); // this unsets target which changes state to idle
+		}
+		
 		state = PlayerState.dead;
 		tickCounter = 2;
 	}
@@ -607,6 +630,18 @@ public class Player extends Attackable {
 			messageResponse.setRecoAndResponseText(1, String.format("you have defeated %s!", ((Player)killed).getDto().getName()));
 			messageResponse.setColour("white");
 			responseMaps.addClientOnlyResponse(this, messageResponse);
+			
+			Fight fight = FightManager.getFightByPlayerId(getId()); // fight doesn't necessarily exist - the player could die of poison outside a fight for example.
+			Integer duelRules = fight == null ? null : fight.getRules();
+			if (duelRules != null) {
+				// they won this duel (clearly); put their stake items back into their inventory
+				Map<Integer, InventoryItemDto> stakedItems = PlayerStorageDao.getStorageDtoMapByPlayerId(getId(), StorageTypes.TRADE);
+				for (InventoryItemDto item : stakedItems.values())
+					PlayerStorageDao.addItemToFirstFreeSlot(getId(), StorageTypes.INVENTORY, item.getItemId(), item.getCount(), item.getCharges());
+				PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(getId(), StorageTypes.TRADE);
+				
+				InventoryUpdateResponse.sendUpdate(this, responseMaps);
+			}
 		}
 		
 		// exp is doled out based on attackStyle and weapon type.
@@ -868,6 +903,41 @@ public class Player extends Attackable {
 			activePrayers.remove(prayer.getValue());
 		else
 			activePrayers.add(prayer.getValue());
+	}
+	
+	public void clearActivePrayers(ResponseMaps responseMaps) {
+		if (activePrayers.isEmpty())
+			return;// no need to send a response if there are already no prayers being used
+		
+		activePrayers.clear();
+		
+		TogglePrayerResponse prayerResponse = new TogglePrayerResponse();
+		prayerResponse.setActivePrayers(activePrayers);
+		responseMaps.addClientOnlyResponse(this, prayerResponse);
+	}
+	
+	public void removeCombatBoosts(ResponseMaps responseMaps) {
+		HashMap<Stats, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
+		
+		for (Map.Entry<Stats, Integer> entry : boosts.entrySet()) {
+			switch (entry.getKey()) {
+			case STRENGTH:
+			case ACCURACY:
+			case DEFENCE:
+			case PRAYER:
+			case MAGIC:
+			case HITPOINTS:
+				if (entry.getValue() > 0) {
+					StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), 0);
+				}
+				break;
+			default:
+			}
+		}
+		
+		refreshBoosts();
+	
+		new StatBoostResponse().process(null, this, responseMaps);
 	}
 	
 	@Override

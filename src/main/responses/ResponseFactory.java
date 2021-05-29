@@ -168,6 +168,9 @@ public class ResponseFactory {
 		case "open":
 			response = new OpenCloseResponse();
 			break;
+		case "toggle_duel_rule":
+			response = new ToggleDuelRuleResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

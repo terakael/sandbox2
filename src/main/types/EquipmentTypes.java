@@ -1,7 +1,10 @@
 package main.types;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
+@Getter
+@RequiredArgsConstructor
 public enum EquipmentTypes {
 	HELMET(1),
 	BODY(2),
@@ -14,10 +17,7 @@ public enum EquipmentTypes {
 	CAPE(9),
 	NECKLACE(10);
 	
-	@Getter private int value;
-	EquipmentTypes(int value) {
-		this.value = value;
-	}
+	private final int value;
 	
 	public static EquipmentTypes withValue(final int val) {
 		for (EquipmentTypes type : EquipmentTypes.values()) {

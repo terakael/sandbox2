@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 
+import lombok.Getter;
+import lombok.Setter;
 import main.database.InventoryItemDto;
 import main.database.PlayerStorageDao;
 import main.types.StorageTypes;
 
+// despite being called TradeManager, this is used for both trades and duels
 public class TradeManager {
 	private TradeManager() {}
 	
@@ -17,9 +20,14 @@ public class TradeManager {
 		private Player p2;
 		boolean p1accepted = false;
 		boolean p2accepted = false;
-		public Trade(Player p1, Player p2) {
+		@Getter @Setter private Integer p1Rules = null; // null for a trade, non-null for a duel
+		@Getter @Setter private Integer p2Rules = null; // null for a trade, non-null for a duel
+		
+		public Trade(Player p1, Player p2, boolean isDuel) {
 			this.p1 = p1;
 			this.p2 = p2;
+			p1Rules = isDuel ? 0 : null;
+			p2Rules = isDuel ? 0 : null;
 		}
 		
 		public Map<Integer, InventoryItemDto> getItemsByPlayer(Player p) {
@@ -32,10 +40,12 @@ public class TradeManager {
 			return p == p1 || p == p2;
 		}
 		
+		public boolean playerIsP1(Player p) {
+			return p == p1;
+		}
+		
 		public Player getOtherPlayer(Player player) {
-			if (player == p1)
-				return p2;
-			return p1;
+			return (player == p1) ? p2 : p1;
 		}
 		
 		public void playerAcceptsTrade(Player player) {
@@ -64,6 +74,10 @@ public class TradeManager {
 			p1accepted = false;
 			p2accepted = false;
 		}
+		
+		public boolean isDuel() {
+			return p1Rules != null;
+		}
 	}
 	
 	public static Trade getTradeWithPlayer(Player p) {
@@ -74,8 +88,8 @@ public class TradeManager {
 		return null;
 	}
 	
-	public static void addTrade(Player p1, Player p2) {
-		trades.add(new Trade(p1, p2));
+	public static void addTrade(Player p1, Player p2, boolean isDuel) {
+		trades.add(new Trade(p1, p2, isDuel));
 	}
 	
 	public static void cancelTrade(Player p) {

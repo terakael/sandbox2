@@ -3,6 +3,7 @@ package main.responses;
 import lombok.Getter;
 import lombok.Setter;
 import main.PlayerRequestManager;
+import main.PlayerRequestManager.PlayerRequestType;
 import main.database.PlayerDao;
 import main.processing.FightManager;
 import main.processing.PathFinder;
@@ -12,6 +13,7 @@ import main.processing.TradeManager;
 import main.processing.WorldProcessor;
 import main.requests.PlayerRequest;
 import main.requests.Request;
+import main.types.DuelRules;
 
 // this response is for trades/duels
 
@@ -86,42 +88,62 @@ public abstract class PlayerResponse extends Response {
 			PlayerRequestManager.removeRequest(playerReq.getObjectId());
 			PlayerRequestManager.removeRequest(playerReq.getId());
 			
-			switch (playerReq.getRequestType()) {
-			case duel: {
-				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
-				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
-				FightManager.addFight(player1, player2, true);
-				
-				player1.setTileId(player2.getTileId());
-				
-				PvpStartResponse pvpStart = new PvpStartResponse();
-				pvpStart.setPlayer1Id(player1.getId());
-				pvpStart.setPlayer2Id(player2.getId());
-				pvpStart.setTileId(player2.getTileId());
-				responseMaps.addBroadcastResponse(pvpStart);
-				break;
-			}
+			final boolean isDuel = playerReq.getRequestType() == PlayerRequestType.duel;
+			Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
+			Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
 			
-			case trade: {
-				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
-				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
-				
-				AcceptTradeResponse player1TradeResponse = new AcceptTradeResponse();
-				player1TradeResponse.setOtherPlayerId(player2.getId());
-				responseMaps.addClientOnlyResponse(player1, player1TradeResponse);
-				
-				AcceptTradeResponse player2TradeResponse = new AcceptTradeResponse();
-				player2TradeResponse.setOtherPlayerId(player1.getId());
-				responseMaps.addClientOnlyResponse(player2, player2TradeResponse);
-				
-				TradeManager.addTrade(player1, player2);
-				break;
-			}
+			AcceptTradeResponse player1TradeResponse = new AcceptTradeResponse();
+			player1TradeResponse.setOtherPlayerId(player2.getId());
+			if (isDuel)
+				player1TradeResponse.setDuelRules(DuelRules.asMap());
+			responseMaps.addClientOnlyResponse(player1, player1TradeResponse);
 			
-			default:
-				break;
+			AcceptTradeResponse player2TradeResponse = new AcceptTradeResponse();
+			player2TradeResponse.setOtherPlayerId(player1.getId());
+			if (isDuel)
+				player2TradeResponse.setDuelRules(DuelRules.asMap());
+			responseMaps.addClientOnlyResponse(player2, player2TradeResponse);
 			
-			}
+			TradeManager.addTrade(player1, player2, isDuel);
+			
+//			switch (playerReq.getRequestType()) {
+//			case duel: {
+//				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
+//				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
+//				FightManager.addFight(player1, player2, true);
+//				
+//				player1.setTileId(player2.getTileId());
+//				
+//				PvpStartResponse pvpStart = new PvpStartResponse();
+//				pvpStart.setPlayer1Id(player1.getId());
+//				pvpStart.setPlayer2Id(player2.getId());
+//				pvpStart.setTileId(player2.getTileId());
+//				responseMaps.addBroadcastResponse(pvpStart);
+//				break;
+//			}
+//			
+//			case trade: {
+//				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
+//				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
+//				
+//				AcceptTradeResponse player1TradeResponse = new AcceptTradeResponse();
+//				player1TradeResponse.setOtherPlayerId(player2.getId());
+//				player1TradeResponse.setDuel(isDuel);
+//				responseMaps.addClientOnlyResponse(player1, player1TradeResponse);
+//				
+//				AcceptTradeResponse player2TradeResponse = new AcceptTradeResponse();
+//				player2TradeResponse.setOtherPlayerId(player1.getId());
+//				player2TradeResponse.setDuel(isDuel);
+//				responseMaps.addClientOnlyResponse(player2, player2TradeResponse);
+//				
+//				TradeManager.addTrade(player1, player2, isDuel);
+//				break;
+//			}
+//			
+//			default:
+//				break;
+//			
+//			}
 		}
 		else {
 			setRecoAndResponseText(1, String.format("sending %s request...", playerReq.getRequestType()));

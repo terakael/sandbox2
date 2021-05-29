@@ -37,6 +37,7 @@ import main.requests.UseRequest;
 import main.scenery.Scenery;
 import main.scenery.SceneryManager;
 import main.types.DamageTypes;
+import main.types.DuelRules;
 import main.types.Items;
 import main.types.NpcAttributes;
 import main.types.Prayers;
@@ -443,7 +444,66 @@ public class UseResponse extends Response {
 			return handleCastableOnPlayer(request, player, responseMaps);
 		}
 		
-		return false;
+		final Player targetPlayer = WorldProcessor.getPlayerById(request.getDest());
+		if (targetPlayer == null) {
+			return false;
+		}
+		
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), targetPlayer.getTileId())) {
+			player.setTarget(targetPlayer);	
+			player.setSavedRequest(request);
+			return true;
+		} else {
+			// for now you can only use poison on enemies, which requires you to be in combat.
+			Items item = Items.withValue(request.getSrc());
+			if (item == null)
+				return false;
+			
+			// before we figure out to do with the item, make sure we have it in our inventory.
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+			if (!invItemIds.contains(request.getSrc()))
+				return false;
+			
+			// if there's some mismatch with the slot + item then use the first 
+			// slot in the inventory with said item instead (we know it exists in inventory now)
+			int slot = request.getSrcSlot();
+			if (slot >= invItemIds.size() || invItemIds.get(slot) != request.getSrc())
+				slot = invItemIds.indexOf(request.getSrc());
+			
+			switch (item) {
+			case POISON_1:
+			case POISON_2:
+			case POISON_3:
+			case POISON_4: {
+				// need to be in melee range, this also starts the fight so it works like an attack option
+				// also obviously cannot be used on non-attackables.
+				int becomesItemId = 0;
+				if (item != Items.POISON_1)
+					becomesItemId = item.getValue() + 1;// the item ids are in incremental order ((4) -> (3) -> (2) -> (1))
+				
+				if (FightManager.fightingWith(player, targetPlayer)) {
+					Fight fight = FightManager.getFightByPlayerId(player.getId());
+					if (fight.getRules() != null && (fight.getRules() & DuelRules.no_poison.getValue()) > 0) {
+						setRecoAndResponseText(0, "poison is not allowed in this duel.");
+					} else {
+						setRecoAndResponseText(1, "you throw poison in your opponents face!");
+						PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, becomesItemId, 1, ItemDao.getMaxCharges(becomesItemId));
+						InventoryUpdateResponse.sendUpdate(player, responseMaps);
+						targetPlayer.inflictPoison(6);
+						
+						responseMaps.addClientOnlyResponse(targetPlayer, MessageResponse.newMessageResponse(String.format("%s threw poison in your face!", player.getDto().getName()), "white"));
+					}
+				} else {
+					setRecoAndResponseText(0, "you need to be in a duel to poison them.");
+				}
+				responseMaps.addClientOnlyResponse(player, this);
+				return true;
+			}
+			
+			default:
+				return false;
+			}
+		}
 	}
 	
 	private boolean handleCastableOnPlayer(UseRequest request, Player player, ResponseMaps responseMaps) {
@@ -481,9 +541,17 @@ public class UseResponse extends Response {
 				player.setSavedRequest(request);
 				return true;
 			} else {
-				
-				if (!FightManager.fightingWith(player, targetPlayer)) {
+				Fight fight = FightManager.getFightByPlayerId(player.getId());
+				if (fight == null) {
 					setRecoAndResponseText(0, "you can only cast spells on other players during a duel.");
+					responseMaps.addClientOnlyResponse(player, this);
+					return true;
+				} else if (!FightManager.fightingWith(player, targetPlayer)) {
+					setRecoAndResponseText(0, "you can only attack your opponent.");
+					responseMaps.addClientOnlyResponse(player, this);
+					return true;
+				} else if (fight.getRules() != null && (fight.getRules() & DuelRules.no_magic.getValue()) > 0) {
+					setRecoAndResponseText(0, "magic isn't allowed in this duel!");
 					responseMaps.addClientOnlyResponse(player, this);
 					return true;
 				}

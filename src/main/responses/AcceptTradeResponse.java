@@ -1,5 +1,7 @@
 package main.responses;
 
+import java.util.Map;
+
 import lombok.Setter;
 import main.processing.Player;
 import main.requests.Request;
@@ -8,6 +10,7 @@ import main.requests.Request;
 @SuppressWarnings("unused")
 public class AcceptTradeResponse extends Response {
 	private int otherPlayerId;
+	private Map<Integer, String> duelRules = null;
 	
 	public AcceptTradeResponse() {
 		setAction("accept_trade");

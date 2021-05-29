@@ -7,13 +7,16 @@ import java.util.Map;
 
 import main.database.InventoryItemDto;
 import main.database.PlayerStorageDao;
+import main.processing.FightManager;
 import main.processing.Player;
 import main.processing.TradeManager;
 import main.processing.TradeManager.Trade;
 import main.processing.WorldProcessor;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.types.DuelRules;
 import main.types.StorageTypes;
+import main.utils.RandomUtil;
 
 public class AcceptTradeOfferResponse extends Response {
 	HashSet<Integer> acceptedPlayerIds = null;
@@ -26,6 +29,12 @@ public class AcceptTradeOfferResponse extends Response {
 		Trade trade = TradeManager.getTradeWithPlayer(player);
 		if (trade == null)
 			return;
+		
+		if (trade.isDuel() && trade.getP1Rules() != trade.getP2Rules()) {
+			setRecoAndResponseText(1, "the rules must match before you can accept.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
 		
 		trade.playerAcceptsTrade(player);
 		if (!trade.bothPlayersAccepted()) {
@@ -43,6 +52,43 @@ public class AcceptTradeOfferResponse extends Response {
 			return;
 		if (!WorldProcessor.playerSessions.containsKey(otherPlayer.getSession()))
 			return;
+		
+		if (trade.isDuel()) {
+			if (trade.getP1Rules() != trade.getP2Rules())
+				return;// both players have to have agreed-upon rules
+			
+			Player player1 = WorldProcessor.getPlayerById(player.getId());
+			Player player2 = WorldProcessor.getPlayerById(otherPlayer.getId());
+			FightManager.addFightWithRules(player1, player2, RandomUtil.getRandom(0, 100) < 50, trade.getP1Rules());
+			
+			// run through and set up the rules
+			// turn off any prayer if that's the rules
+			if ((trade.getP1Rules() & DuelRules.no_prayer.getValue()) > 0) {
+				player1.clearActivePrayers(responseMaps);				
+				player2.clearActivePrayers(responseMaps);
+			}
+			
+			if ((trade.getP1Rules() & DuelRules.no_boosted_stats.getValue()) > 0) {
+				// set all combat stats to normal
+				player1.removeCombatBoosts(responseMaps);
+				player2.removeCombatBoosts(responseMaps);
+			}
+			
+			player1.setTileId(player2.getTileId());
+			
+			PvpStartResponse pvpStart = new PvpStartResponse();
+			pvpStart.setPlayer1Id(player1.getId());
+			pvpStart.setPlayer2Id(player2.getId());
+			pvpStart.setTileId(player2.getTileId());
+			responseMaps.addBroadcastResponse(pvpStart);
+			
+			TradeManager.cancelTrade(trade);
+			
+			CancelTradeResponse cancelTrade = new CancelTradeResponse();
+			responseMaps.addClientOnlyResponse(player, cancelTrade);
+			responseMaps.addClientOnlyResponse(otherPlayer, cancelTrade);
+			return;
+		}
 		
 		List<Integer> p1invItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		List<Integer> p2invItems = PlayerStorageDao.getStorageListByPlayerId(otherPlayer.getId(), StorageTypes.INVENTORY);

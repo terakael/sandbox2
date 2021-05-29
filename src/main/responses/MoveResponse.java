@@ -3,11 +3,13 @@ package main.responses;
 import java.util.Stack;
 
 import main.processing.FightManager;
+import main.processing.FightManager.Fight;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.MoveRequest;
 import main.requests.Request;
+import main.types.DuelRules;
 
 public class MoveResponse extends Response {
 	public MoveResponse() {
@@ -24,7 +26,13 @@ public class MoveResponse extends Response {
 		MoveRequest moveReq = (MoveRequest)req;
 		
 		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't retreat yet!");
+			Fight fight = FightManager.getFightByPlayerId(player.getId());
+			if (fight.getRules() != null && (fight.getRules() & DuelRules.no_retreat.getValue()) > 0) {
+				setRecoAndResponseText(0, "you can't retreat in this duel!");
+			} else {
+				setRecoAndResponseText(0, "you can't retreat yet!");
+			}
+			
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}

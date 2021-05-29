@@ -8,6 +8,7 @@ import lombok.Getter;
 import main.responses.PvmEndResponse;
 import main.responses.PvpEndResponse;
 import main.responses.ResponseMaps;
+import main.types.DuelRules;
 import main.types.Prayers;
 
 public class FightManager {
@@ -19,9 +20,12 @@ public class FightManager {
 		@Getter private Attackable fighter1;
 		@Getter private Attackable fighter2;
 		@Getter private int battleLockTicks;
+		@Getter private Integer rules;
 		
-		Fight(Attackable fighter1, Attackable fighter2, boolean fighter1initiated) {
+		Fight(Attackable fighter1, Attackable fighter2, boolean fighter1initiated, Integer rules) {
 			battleLockTicks = 10;
+			if (rules != null && (rules & DuelRules.no_retreat.getValue()) > 0)
+				battleLockTicks = Integer.MAX_VALUE; // technically it's not "no retreat": you can retreat after ~40 years.
 			
 			this.fighter1 = fighter1;
 			this.fighter2 = fighter2;
@@ -31,8 +35,10 @@ public class FightManager {
 			
 			this.fighter1.setCooldown(fighter1initiated ? 0 : 3);
 			this.fighter2.setCooldown(fighter1initiated ? 3 : 0);
+			
+			this.rules = rules;
 		}
-		
+	
 		public boolean isBattleLocked() {
 			return battleLockTicks > 0;
 		}
@@ -139,7 +145,11 @@ public class FightManager {
 	}
 	
 	public static void addFight(Attackable fighter1, Attackable fighter2, boolean fighter1initiated) {
-		fights.add(new Fight(fighter1, fighter2, fighter1initiated));
+		addFightWithRules(fighter1, fighter2, fighter1initiated, null);
+	}
+	
+	public static void addFightWithRules(Attackable fighter1, Attackable fighter2, boolean fighter1initiated, Integer rules) {
+		fights.add(new Fight(fighter1, fighter2, fighter1initiated, rules));
 	}
 	
 	public static void cancelFight(Attackable participant, ResponseMaps responseMaps) {
