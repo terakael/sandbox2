@@ -7,6 +7,7 @@ import main.database.PlayerStorageDao;
 import main.processing.Player;
 import main.processing.TradeManager;
 import main.processing.TradeManager.Trade;
+import main.processing.WorldProcessor;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.types.StorageTypes;
@@ -29,17 +30,22 @@ public class CancelTradeResponse extends Response {
 		if (trade == null)
 			return;
 		
+		TradeManager.cancelTrade(trade);
+		
 		Player otherPlayer = trade.getOtherPlayer(player);
 		Map<Integer, InventoryItemDto> otherPlayerItems = trade.getItemsByPlayer(otherPlayer);
 		restoreItemsToPlayer(otherPlayer, otherPlayerItems, responseMaps);
-		
-		TradeManager.cancelTrade(trade);
-		
-		new InventoryUpdateResponse().process(RequestFactory.create("", otherPlayer.getId()), otherPlayer, responseMaps);
-		
-		CancelTradeResponse otherPlayerCancelResponse = new CancelTradeResponse();
-		otherPlayerCancelResponse.setRecoAndResponseText(1, "other player declined trade.");
-		responseMaps.addClientOnlyResponse(otherPlayer, otherPlayerCancelResponse);
+
+		// sometimes the cancel request happened due to a disconnect.
+		// if this is the case, don't update the player inventory, as this triggers the ClientResourceManager
+		// to recache the item data, which means the player won't get sent it next time, causing bugs.
+		if (WorldProcessor.sessionExistsByPlayerId(otherPlayer.getId())) {
+			new InventoryUpdateResponse().process(RequestFactory.create("", otherPlayer.getId()), otherPlayer, responseMaps);
+			
+			CancelTradeResponse otherPlayerCancelResponse = new CancelTradeResponse();
+			otherPlayerCancelResponse.setRecoAndResponseText(1, "other player declined trade.");
+			responseMaps.addClientOnlyResponse(otherPlayer, otherPlayerCancelResponse);
+		}
 	}
 	
 	private void restoreItemsToPlayer(Player player, Map<Integer, InventoryItemDto> items, ResponseMaps responseMaps) {

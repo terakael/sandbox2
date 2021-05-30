@@ -20,7 +20,9 @@ import main.processing.ClientResourceManager;
 import main.processing.FightManager;
 import main.processing.Player;
 import main.processing.TradeManager;
+import main.processing.TradeManager.Trade;
 import main.processing.WorldProcessor;
+import main.requests.CancelTradeRequest;
 import main.requests.MultiRequest;
 import main.requests.PlayerLeaveRequest;
 import main.requests.Request;
@@ -70,7 +72,13 @@ public class Endpoint {
 			return;
 		
 		FightManager.cancelFight(playerToRemove, null);
-		TradeManager.cancelTrade(playerToRemove);
+//		TradeManager.cancelTrade(playerToRemove);
+		Trade trade = TradeManager.getTradeWithPlayer(playerToRemove);
+		if (trade != null) {
+			Player otherPlayer = trade.getOtherPlayer(playerToRemove);
+			requestMap.put(otherPlayer.getSession(), new CancelTradeRequest());
+		}
+		
 		ClientResourceManager.decachePlayer(playerToRemove);
 		
 		WorldProcessor.playerSessions.remove(session);

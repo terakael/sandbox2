@@ -116,6 +116,9 @@ public class WorldProcessor implements Runnable {
 		// process player requests for this tick
 		for (Map.Entry<Session, List<Request>> entry : requestMap.entrySet()) {
 			for (Request request : entry.getValue()) {// most cases there's only one request, but MultiRequest types exist (equipping etc)
+				if (request.getAction() == null)
+					continue;
+				
 				Response response = ResponseFactory.create(request.getAction());
 				
 				if (request.getAction().equals("logon")) {
