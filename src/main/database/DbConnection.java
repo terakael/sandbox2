@@ -13,7 +13,7 @@ public class DbConnection {
 		dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
 		dataSource.setUrl("jdbc:mysql://localhost:3306/local_schema?autoReconnect=true&useSSL=false");
 		dataSource.setUsername("root");
-		dataSource.setPassword("ey3a4y3e");
+		dataSource.setPassword("ppL34kn4g");
 		System.out.println("datasource set");
 	}
 	

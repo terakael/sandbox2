@@ -1,16 +1,15 @@
 package main.responses;
 
+import java.util.List;
+
+import lombok.Setter;
 import main.database.SmithableDto;
 import main.processing.Player;
 import main.requests.Request;
 
-import java.util.ArrayList;
-
-import lombok.Setter;
-
 public class ShowSmithingTableResponse extends Response { 
 	@Setter private int oreId;
-	@Setter private ArrayList<SmithableDto> smithingOptions;
+	@Setter private List<SmithableDto> smithingOptions;
 	@Setter private int storedCoal;
 	public ShowSmithingTableResponse() {
 		setAction("show_smithing_table");

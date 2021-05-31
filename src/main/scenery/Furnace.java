@@ -1,7 +1,7 @@
 package main.scenery;
 
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import main.database.PlayerStorageDao;
@@ -31,7 +31,7 @@ public class Furnace extends Scenery {
 		case 180: // runite
 			// note that coal isn't in this list as you cannot use coal with the furnace.
 			// you need to use a primary ore; coal is used as a secondary ore for the other ores.
-			ArrayList<SmithableDto> smithingOptions = SmithableDao.getAllItemsThatUseMaterial(srcItemId);
+			List<SmithableDto> smithingOptions = SmithableDao.getAllItemsThatUseMaterial(srcItemId);
 			
 			ShowSmithingTableResponse response = new ShowSmithingTableResponse();
 			response.setOreId(srcItemId);

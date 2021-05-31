@@ -31,6 +31,7 @@ import main.database.ReinforcementBonusesDao;
 import main.database.RespawnableDao;
 import main.database.SceneryDao;
 import main.database.ShopDao;
+import main.database.SmithableDao;
 import main.database.SpriteFrameDao;
 import main.database.SpriteMapDao;
 import main.database.TeleportableDao;
@@ -189,6 +190,9 @@ public class Server {
 		
 		System.out.println("caching climbables");
 		ClimbableDao.setupCaches();
+		
+		System.out.println("caching smithables");
+		SmithableDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up
