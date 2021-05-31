@@ -99,6 +99,13 @@ public class Player extends Attackable {
 	@Setter private int range = 0; // if we're chasing with range (i.e. chasing to cast a spell or something), this is the range we want to be in
 	private boolean slowburnBlockedStatDrain = false;
 	
+	// these two are used while the player is doing their death animation.
+	// technically they are at the respawn point, and if they disconnect during the death animation
+	// then that's where they'll log in.  However during the death animation we still want the client
+	// to receive messages at the point of their death (to continue processing npcs, scenery etc until they respawn).
+	private int preDeathFloor = 0;
+	private int preDeathTileId = 0;
+	
 	private final int MAX_STAT_RESTORE_TICKS = 100;// 100 ticks == one minute
 	private int statRestoreTicks = MAX_STAT_RESTORE_TICKS;
 	
@@ -393,7 +400,6 @@ public class Player extends Attackable {
 				playerUpdate.setCurrentHp(currentHp);
 				playerUpdate.setMaxHp(currentHp);
 				playerUpdate.setCurrentPrayer((int)prayerPoints);
-//				playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(getId()));
 				playerUpdate.setRespawn(true);
 				
 				TogglePrayerResponse togglePrayerResponse = new TogglePrayerResponse();
@@ -517,7 +523,11 @@ public class Player extends Attackable {
 	}
 	
 	public int getTileId() {
-		return tileId;
+		return state == PlayerState.dead ? preDeathTileId : tileId;
+	}
+	
+	public int getFloor() {
+		return state == PlayerState.dead ? preDeathFloor : floor;
 	}
 	
 	public boolean isGod() {
@@ -530,6 +540,19 @@ public class Player extends Attackable {
 	
 	@Override
 	public void onDeath(Attackable killer, ResponseMaps responseMaps) {
+		// so the client continues to receive messages and process correctly during their death animation
+		preDeathTileId = tileId;
+		preDeathFloor = floor;
+		
+		// respawn at the tyrotown teleport spot
+		TeleportableDto respawnPoint = TeleportableDao.getTeleportableByItemId(Items.TYROTOWN_TELEPORT_RUNE.getValue());
+		
+		setTileId(respawnPoint.getTileId());
+		setFloor(respawnPoint.getFloor());
+		
+		state = PlayerState.dead;
+		tickCounter = 2;
+		
 		clearPoison();
 		
 		Fight fight = FightManager.getFightByPlayerId(getId()); // fight doesn't necessarily exist - the player could die of poison outside a fight for example.
@@ -557,15 +580,15 @@ public class Player extends Attackable {
 					if (killer instanceof Player && ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.TRADEABLE)) {
 						// if it's a tradeable unique, the killer should only see it if they don't already have one.
 						if (ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.UNIQUE)) {
-							if (PlayerStorageDao.itemExistsInPlayerStorage(((Player)killer).getId(), dto.getItemId()) || GroundItemManager.itemIsOnGround(floor, ((Player)killer).getId(), dto.getItemId())) {
+							if (PlayerStorageDao.itemExistsInPlayerStorage(((Player)killer).getId(), dto.getItemId()) || GroundItemManager.itemIsOnGround(getFloor(), ((Player)killer).getId(), dto.getItemId())) {
 								continue;
 							}
 						}
 						
-						GroundItemManager.add(floor, ((Player)killer).getId(), dto.getItemId(), tileId, stack, charges);
+						GroundItemManager.add(getFloor(), ((Player)killer).getId(), dto.getItemId(), getTileId(), stack, charges);
 					} else {
 						// for now, untradeables will drop on the ground for the owner to pick back up
-						GroundItemManager.add(floor, getId(), dto.getItemId(), tileId, stack, charges);
+						GroundItemManager.add(getFloor(), getId(), dto.getItemId(), getTileId(), stack, charges);
 					}
 				}
 			}
@@ -580,7 +603,7 @@ public class Player extends Attackable {
 					.collect(Collectors.toList());
 			
 			for (InventoryItemDto itemToDrop : itemsToDrop) {
-				GroundItemManager.add(floor, ((Player)killer).getId(), itemToDrop.getItemId(), tileId, itemToDrop.getCount(), itemToDrop.getCharges());
+				GroundItemManager.add(getFloor(), ((Player)killer).getId(), itemToDrop.getItemId(), getTileId(), itemToDrop.getCount(), itemToDrop.getCharges());
 			}
 			
 			PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(getId(), StorageTypes.TRADE);
@@ -597,25 +620,19 @@ public class Player extends Attackable {
 		// let everyone around the dead player know they died 
 		responseMaps.addLocalResponse(getFloor(), getTileId(), new DeathResponse(dto.getId()));
 		
-		// respawn at the tyrotown teleport spot
-		TeleportableDto respawnPoint = TeleportableDao.getTeleportableByItemId(Items.TYROTOWN_TELEPORT_RUNE.getValue());
+		
 		
 		// if the player's spawn point is not local to where they died, they won't receive the local death response.
 		// it's not ideal to send an additional response but we have to set the respawn point immediately
 		// otherwise the player can just disconnect during the death sequence then relogin in the same spot they died (with full hp)
-		if (respawnPoint.getFloor() != getFloor() || !Utils.areTileIdsWithinRadius(respawnPoint.getTileId(), getTileId(), 15))
-			responseMaps.addClientOnlyResponse(this, new DeathResponse(dto.getId()));
-				
-		setTileId(respawnPoint.getTileId());
-		setFloor(respawnPoint.getFloor());
+//		if (respawnPoint.getFloor() != getFloor() || !Utils.areTileIdsWithinRadius(respawnPoint.getTileId(), getTileId(), 15))
+//			responseMaps.addClientOnlyResponse(this, new DeathResponse(dto.getId()));
 
 		lastTarget = null;
 		if (FightManager.fightWithFighterExists(this)) {
 			FightManager.cancelFight(this, responseMaps); // this unsets target which changes state to idle
+			state = PlayerState.dead;
 		}
-		
-		state = PlayerState.dead;
-		tickCounter = 2;
 	}
 	
 	@Override

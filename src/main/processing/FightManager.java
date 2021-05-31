@@ -167,7 +167,7 @@ public class FightManager {
 						resp.setMonsterId(((NPC)fight.getFighter2()).getInstanceId());
 						resp.setPlayerTileId(fight.getFighter1().getTileId());
 						resp.setMonsterTileId(fight.getFighter2().getTileId());
-						responseMaps.addLocalResponse(participant.getFloor(), participant.getTileId(), resp);
+						responseMaps.addLocalResponse(((Player)fight.getFighter1()).getFloor(), ((Player)fight.getFighter1()).getTileId(), resp);
 					} else {
 						fight.getFighter2().setTarget(null);
 						PvpEndResponse resp = new PvpEndResponse();
@@ -175,7 +175,8 @@ public class FightManager {
 						resp.setPlayer2Id(((Player)fight.getFighter2()).getId());
 						resp.setPlayer1TileId(fight.getFighter1().getTileId());
 						resp.setPlayer2TileId(fight.getFighter2().getTileId());
-						responseMaps.addLocalResponse(participant.getFloor(), participant.getTileId(), resp);
+						responseMaps.addClientOnlyResponse((Player)fight.getFighter1(), resp);
+						responseMaps.addLocalResponse(((Player)fight.getFighter2()).getFloor(), ((Player)fight.getFighter2()).getTileId(), resp);
 					}
 				}
 				fights.remove(fight);
