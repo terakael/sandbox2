@@ -59,7 +59,6 @@ import main.types.Prayers;
 import main.types.Stats;
 import main.types.StorageTypes;
 import main.utils.RandomUtil;
-import main.utils.Utils;
 
 public class Player extends Attackable {
 	public enum PlayerState {

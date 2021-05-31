@@ -16,7 +16,6 @@ import main.database.GroundTextureDao;
 import main.database.SceneryDao;
 import main.types.ImpassableTypes;
 import main.utils.Stopwatch;
-import main.utils.Utils;
 
 public class PathFinder {
 	private static PathFinder instance;

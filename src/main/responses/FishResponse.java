@@ -1,7 +1,6 @@
 package main.responses;
 
 import java.util.Collections;
-import java.util.stream.Collectors;
 
 import main.database.FishableDao;
 import main.database.FishableDto;

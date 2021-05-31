@@ -6,6 +6,7 @@ import lombok.Setter;
 
 @Setter
 @NoArgsConstructor
+@SuppressWarnings("unused")
 public class SceneryDto {
 	@Getter private int id;
 	private String name;

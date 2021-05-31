@@ -10,7 +10,6 @@ import main.requests.Request;
 import main.requests.ToggleDuelRuleRequest;
 import main.types.DuelRules;
 
-@SuppressWarnings("unused")
 public class ToggleDuelRuleResponse extends Response {
 	private Map<Integer, Integer> rules;
 	
