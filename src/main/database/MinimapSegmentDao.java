@@ -1,13 +1,21 @@
 package main.database;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
 
 import main.processing.PathFinder;
 
@@ -18,29 +26,30 @@ public class MinimapSegmentDao {
 	
 	private static Map<Integer, Map<Integer, Map<Integer, Set<Integer>>>> tileIdsByFloorAndSegmentAndSpriteFrameId; // floor, <segment, <iconId, <tileIds>>>
 	
-	public static void setupCaches() {
+	public static void setupCaches() throws FileNotFoundException, IOException {
 		cacheMinimapSegments();
 		cacheMinimapIconLocations();
 	}
 	
-	private static void cacheMinimapSegments() {
+	private static void cacheMinimapSegments() throws FileNotFoundException, IOException {
 		minimapSegments = new HashMap<>();
 		
-		final String query = "select floor, segment, to_base64(data) data from minimap_segments";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					if (!minimapSegments.containsKey(rs.getInt("floor")))
-						minimapSegments.put(rs.getInt("floor"), new HashMap<>());
-					minimapSegments.get(rs.getInt("floor")).put(rs.getInt("segment"), rs.getString("data").replace("\n", ""));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		ClassLoader loader = Thread.currentThread().getContextClassLoader();
+		URL url = loader.getResource("minimap");
+	    String path = url.getPath();
+	    File[] files = new File(path).listFiles();
+	    for (int i = 0; i < files.length; ++i) {
+	    	int floor = Integer.parseInt(files[i].getName());
+	    	if (!minimapSegments.containsKey(floor))
+	    		minimapSegments.put(floor, new HashMap<>());
+	    	File[] floorFiles = new File(files[i].getPath()).listFiles();
+	    	for (int j = 0; j < floorFiles.length; ++j) {
+	    		int segmentId = Integer.parseInt(floorFiles[j].getName());
+	    		
+				byte[] data = IOUtils.toByteArray(new FileInputStream(floorFiles[j]));
+				minimapSegments.get(floor).put(segmentId, Base64.getEncoder().encodeToString(data));
+	    	}
+	    }
 	}
 	
 	private static void cacheMinimapIconLocations() {
