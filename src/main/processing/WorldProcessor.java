@@ -182,6 +182,10 @@ public class WorldProcessor implements Runnable {
 		FlowerManager.process(responseMaps);
 		Stopwatch.end("flowers");
 		
+		Stopwatch.start("locked doors");
+		LockedDoorManager.process(responseMaps);
+		Stopwatch.end("locked doors");
+		
 		refreshGroundItems(responseMaps);
 		updateShopStock(responseMaps);
 		updateLocalGroundTexturesAndScenery(responseMaps);
@@ -541,6 +545,10 @@ public class WorldProcessor implements Runnable {
 					
 					HashSet<Integer> openDoors = new HashSet<>();
 					openDoors.addAll(DoorDao.getOpenDoorTileIds(player.getFloor())
+							  .stream()
+							  .filter(tileId -> newLocalTiles.contains(tileId))
+							  .collect(Collectors.toSet()));
+					openDoors.addAll(LockedDoorManager.getOpenLockedDoorTileIds(player.getFloor())
 							  .stream()
 							  .filter(tileId -> newLocalTiles.contains(tileId))
 							  .collect(Collectors.toSet()));

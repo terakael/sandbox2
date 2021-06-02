@@ -16,6 +16,17 @@ public class SceneryManager {
 		sceneryMap.put(26, new BloodObelisk());
 		sceneryMap.put(27, new DeathObelisk());
 		sceneryMap.put(106, new Altar());
+		
+		sceneryMap.put(107, new Door());
+		sceneryMap.put(108, new Door());
+		sceneryMap.put(109, new Door());
+		sceneryMap.put(110, new Door());
+		sceneryMap.put(111, new Door());
+		sceneryMap.put(112, new Door());
+		sceneryMap.put(113, new Door());
+		sceneryMap.put(114, new Door());
+		sceneryMap.put(115, new Door());
+		sceneryMap.put(116, new Door());
 	}
 	public static Scenery getScenery(int sceneryId) {
 		if (sceneryMap.containsKey(sceneryId))

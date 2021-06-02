@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import main.processing.LockedDoorManager;
 
 public class DoorDao {
 	private static Map<Integer, DoorDto> doors; // <scenery_id, dto>
@@ -21,6 +22,7 @@ public class DoorDao {
 	public static void setupCaches() {
 		setupDoorCache();
 		setupDoorInstanceCache();
+		setupLockedDoorCache();
 	}
 	
 	public static DoorDto getDoorDtoByTileId(int floor, int tileId) {
@@ -137,6 +139,29 @@ public class DoorDao {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	private static void setupLockedDoorCache() {
+		final String query = "select floor, tile_id, unlock_item_id from locked_door_instances";
+		
+		Map<Integer, Map<Integer, LockedDoorDto>> lockedDoorInstances = new HashMap<>();
+		
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					if (!lockedDoorInstances.containsKey(rs.getInt("floor")))
+						lockedDoorInstances.put(rs.getInt("floor"), new HashMap<>());
+					lockedDoorInstances.get(rs.getInt("floor")).put(rs.getInt("tile_id"), new LockedDoorDto(rs.getInt("floor"), rs.getInt("tile_id"), rs.getInt("unlock_item_id")));
+				}
+				
+				LockedDoorManager.setLockedDoorInstances(lockedDoorInstances);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 }

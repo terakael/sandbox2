@@ -9,6 +9,7 @@ import java.util.Random;
 import main.database.BrewableDao;
 import main.database.CastableDao;
 import main.database.CastableDto;
+import main.database.DoorDao;
 import main.database.EquipmentBonusDto;
 import main.database.EquipmentDao;
 import main.database.InventoryItemDto;
@@ -88,8 +89,14 @@ public class UseResponse extends Response {
 			return true;
 		}
 		
-		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getDest())) {
-			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getDest(), false));
+		boolean targetIsDoor = DoorDao.getDoorDtoByTileId(player.getFloor(), request.getDest()) != null;
+		
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getDest(), !targetIsDoor)) {
+			if (targetIsDoor) {
+				player.setPath(PathFinder.findPathToDoor(player.getFloor(), player.getTileId(), request.getDest()));
+			} else {
+				player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getDest(), false));
+			}
 			player.setState(PlayerState.walking);
 			player.setSavedRequest(request);
 			return true;
@@ -101,11 +108,6 @@ public class UseResponse extends Response {
 		Scenery scenery = SceneryManager.getScenery(sceneryId);
 		if (scenery == null)
 			return false;
-		
-//		int itemIdInSlot = PlayerStorageDao.getItemIdInSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot());
-//		if (itemIdInSlot != request.getSrc()) {// the item in the requested slot isn't what we expect...
-//			return false;
-//		}
 		
 		if (!scenery.use(request, player, responseMaps))
 			return false;

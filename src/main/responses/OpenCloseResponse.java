@@ -5,7 +5,9 @@ import java.util.Stack;
 import lombok.Setter;
 import main.database.DoorDao;
 import main.database.DoorDto;
+import main.database.LockedDoorDto;
 import main.processing.FightManager;
+import main.processing.LockedDoorManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
@@ -51,8 +53,27 @@ public class OpenCloseResponse extends Response {
 		} else {			
 			player.faceDirection(request.getTileId(), responseMaps);
 			
-			DoorDao.toggleDoor(player.getFloor(), tileId);
-			responseMaps.addLocalResponse(player.getFloor(), tileId, this);
+			LockedDoorDto lockedDoor = LockedDoorManager.getLockedDoor(player.getFloor(), tileId);
+			if (lockedDoor != null) {
+				String failedRequirementReason = LockedDoorManager.playerMeetsDoorRequirements(player, lockedDoor);
+				if (failedRequirementReason.isEmpty()) { // empty reason means the player meets the requirements
+					if (LockedDoorManager.openLockedDoor(player.getFloor(), tileId)) // if it's already open then keep it open; just reset the timer
+						responseMaps.addLocalResponse(player.getFloor(), tileId, this);
+					// move the player to the other side
+					int newPlayerTileId = LockedDoorManager.calculatePlayerNewTileId(player.getTileId(), tileId, DoorDao.getDoorImpassableByTileId(player.getFloor(), tileId));
+					PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
+					playerUpdate.setId(player.getId());
+					playerUpdate.setTileId(newPlayerTileId);
+					player.setTileId(newPlayerTileId);
+					responseMaps.addLocalResponse(player.getFloor(), tileId, playerUpdate);
+				} else {
+					setRecoAndResponseText(0, failedRequirementReason);
+					responseMaps.addClientOnlyResponse(player, this);
+				}
+			} else {
+				DoorDao.toggleDoor(player.getFloor(), tileId);
+				responseMaps.addLocalResponse(player.getFloor(), tileId, this);
+			}
 		}
 	}
 }
