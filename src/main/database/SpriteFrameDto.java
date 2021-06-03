@@ -23,4 +23,5 @@ public class SpriteFrameDto {
 	private int framerate;
 	private int animation_type_id;
 	private Map<Integer, CustomBoundingBoxDto> customBoundingBoxes;
+	private int color;
 }

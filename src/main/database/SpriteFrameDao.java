@@ -24,7 +24,7 @@ public class SpriteFrameDao {
 	}
 	
 	private static void cacheAllSpriteFrames() {
-		final String query = "select id, sprite_map_id, x, y, w, h, anchor_x, anchor_y, scale_x, scale_y, margin, frame_count, framerate, animation_type_id from sprite_frames";
+		final String query = "select id, sprite_map_id, x, y, w, h, anchor_x, anchor_y, scale_x, scale_y, margin, frame_count, framerate, animation_type_id, color from sprite_frames";
 		allSpriteFrames = new HashMap<>();
 		
 		try (
@@ -48,7 +48,8 @@ public class SpriteFrameDao {
 						rs.getInt("frame_count"),
 						rs.getInt("framerate"),
 						rs.getInt("animation_type_id"),
-						new HashMap<>()
+						new HashMap<>(),
+						rs.getInt("color")
 					));
 			}
 		} catch (SQLException e) {
