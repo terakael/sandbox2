@@ -326,7 +326,7 @@ public class UseResponse extends Response {
 			else if (player.prayerIsActive(Prayers.RUNELESS_MAGIC_LVL_3))
 				chanceToSaveRune = 45;
 			
-			if (RandomUtil.getRandom(0, 100) > chanceToSaveRune) { // chance failed, so use up the rune
+			if (RandomUtil.getRandom(0, 100) > chanceToSaveRune) { // chance failed, so use up the rune.  seems to be 1/100 chance to save a rune by default (0 == 0)
 				InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);
 				if (item.getCount() > 1) {
 					PlayerStorageDao.setItemFromPlayerIdAndSlot(
