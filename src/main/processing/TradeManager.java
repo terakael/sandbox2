@@ -6,8 +6,8 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.database.InventoryItemDto;
-import main.database.PlayerStorageDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.InventoryItemDto;
 import main.types.StorageTypes;
 
 // despite being called TradeManager, this is used for both trades and duels

@@ -2,10 +2,10 @@ package main.responses;
 
 import java.util.List;
 
-import main.database.MineableDao;
-import main.database.MineableDto;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
+import main.database.dao.MineableDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.StatsDao;
+import main.database.dto.MineableDto;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;

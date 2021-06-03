@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import main.database.ItemDao;
-import main.database.RespawnableDao;
-import main.database.RespawnableDto;
+import main.database.dao.ItemDao;
+import main.database.dao.RespawnableDao;
+import main.database.dto.RespawnableDto;
 import main.types.ItemAttributes;
 
 public class RoomGroundItemManager {

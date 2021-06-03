@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.database.DoorDao;
+import main.database.dao.DoorDao;
 import main.responses.ResponseMaps;
 import main.types.DamageTypes;
 import main.types.Stats;

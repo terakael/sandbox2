@@ -3,9 +3,9 @@ package main.scenery;
 import java.util.List;
 import java.util.Set;
 
-import main.database.EquipmentDao;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
+import main.database.dao.EquipmentDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
 import main.processing.Player;
 import main.requests.RequestFactory;
 import main.responses.InventoryUpdateResponse;

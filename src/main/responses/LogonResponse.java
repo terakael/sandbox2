@@ -6,13 +6,13 @@ import java.util.stream.Collectors;
 
 import javax.websocket.Session;
 
-import main.database.EquipmentBonusDto;
-import main.database.EquipmentDao;
-import main.database.InventoryItemDto;
-import main.database.PlayerDao;
-import main.database.PlayerDto;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
+import main.database.dao.EquipmentDao;
+import main.database.dao.PlayerDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.StatsDao;
+import main.database.dto.EquipmentBonusDto;
+import main.database.dto.InventoryItemDto;
+import main.database.dto.PlayerDto;
 import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.processing.WorldProcessor;

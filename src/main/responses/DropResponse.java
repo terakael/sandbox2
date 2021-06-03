@@ -3,9 +3,9 @@ package main.responses;
 import java.util.Set;
 
 import main.GroundItemManager;
-import main.database.EquipmentDao;
-import main.database.InventoryItemDto;
-import main.database.PlayerStorageDao;
+import main.database.dao.EquipmentDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.InventoryItemDto;
 import main.processing.FightManager;
 import main.processing.Player;
 import main.requests.DropRequest;

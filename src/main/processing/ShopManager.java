@@ -2,8 +2,8 @@ package main.processing;
 
 import java.util.ArrayList;
 import lombok.Getter;
-import main.database.ShopDao;
-import main.database.ShopDto;
+import main.database.dao.ShopDao;
+import main.database.dto.ShopDto;
 import main.responses.ResponseMaps;
 import main.types.ShopTypes;
 

@@ -2,10 +2,10 @@ package main.responses;
 
 import java.util.List;
 
-import main.database.CookableDao;
-import main.database.CookableDto;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
+import main.database.dao.CookableDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.CookableDto;
 import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.Request;

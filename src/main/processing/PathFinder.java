@@ -11,9 +11,9 @@ import java.util.Stack;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.database.DoorDao;
-import main.database.GroundTextureDao;
-import main.database.SceneryDao;
+import main.database.dao.DoorDao;
+import main.database.dao.GroundTextureDao;
+import main.database.dao.SceneryDao;
 import main.types.ImpassableTypes;
 import main.utils.Stopwatch;
 

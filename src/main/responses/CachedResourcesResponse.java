@@ -5,13 +5,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
-import main.database.ContextOptionsDao;
-import main.database.ContextOptionsDto;
-import main.database.SpriteFrameDao;
-import main.database.SpriteFrameDto;
-import main.database.SpriteMapDao;
-import main.database.SpriteMapDto;
-import main.database.StatsDao;
+import main.database.dao.ContextOptionsDao;
+import main.database.dao.SpriteFrameDao;
+import main.database.dao.SpriteMapDao;
+import main.database.dao.StatsDao;
+import main.database.dto.ContextOptionsDto;
+import main.database.dto.SpriteFrameDto;
+import main.database.dto.SpriteMapDto;
 import main.processing.Player;
 import main.requests.Request;
 

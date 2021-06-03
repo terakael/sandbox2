@@ -3,9 +3,9 @@ package main.responses;
 import java.util.Collections;
 import java.util.List;
 
-import main.database.InventoryItemDto;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.InventoryItemDto;
 import main.processing.Player;
 import main.processing.TradeManager;
 import main.processing.TradeManager.Trade;

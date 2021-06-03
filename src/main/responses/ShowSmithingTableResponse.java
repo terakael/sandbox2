@@ -3,7 +3,7 @@ package main.responses;
 import java.util.List;
 
 import lombok.Setter;
-import main.database.SmithableDto;
+import main.database.dto.SmithableDto;
 import main.processing.Player;
 import main.requests.Request;
 

@@ -3,7 +3,7 @@ package main.responses;
 import java.util.HashMap;
 
 import lombok.Setter;
-import main.database.StatsDao;
+import main.database.dao.StatsDao;
 import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.Request;

@@ -1,9 +1,9 @@
 package main.responses;
 
-import main.database.ItemDao;
-import main.database.PickableDao;
-import main.database.PickableDto;
-import main.database.PlayerStorageDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PickableDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.PickableDto;
 import main.processing.FightManager;
 import main.processing.FlowerManager;
 import main.processing.PathFinder;

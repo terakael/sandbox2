@@ -2,11 +2,11 @@ package main.responses;
 
 import java.util.HashMap;
 
-import main.database.ConsumableDao;
-import main.database.ConsumableEffectsDto;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
+import main.database.dao.ConsumableDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.StatsDao;
+import main.database.dto.ConsumableEffectsDto;
 import main.processing.FightManager;
 import main.processing.Player;
 import main.requests.ConsumableRequest;

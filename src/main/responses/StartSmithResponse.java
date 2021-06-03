@@ -1,7 +1,7 @@
 package main.responses;
 
-import main.database.ItemDao;
-import main.database.ItemDto;
+import main.database.dao.ItemDao;
+import main.database.dto.ItemDto;
 import main.processing.Player;
 import main.requests.Request;
 import main.requests.SmithRequest;

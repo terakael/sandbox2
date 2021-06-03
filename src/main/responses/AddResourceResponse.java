@@ -3,12 +3,12 @@ package main.responses;
 import java.util.Set;
 
 import lombok.Setter;
-import main.database.GroundTextureDto;
-import main.database.ItemDto;
-import main.database.NPCDto;
-import main.database.SceneryDto;
-import main.database.SpriteFrameDto;
-import main.database.SpriteMapDto;
+import main.database.dto.GroundTextureDto;
+import main.database.dto.ItemDto;
+import main.database.dto.NPCDto;
+import main.database.dto.SceneryDto;
+import main.database.dto.SpriteFrameDto;
+import main.database.dto.SpriteMapDto;
 import main.processing.Player;
 import main.requests.Request;
 

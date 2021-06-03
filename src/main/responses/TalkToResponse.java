@@ -2,10 +2,10 @@ package main.responses;
 
 import java.util.ArrayList;
 
-import main.database.DialogueDao;
-import main.database.NPCDao;
-import main.database.NpcDialogueDto;
-import main.database.NpcMessageDao;
+import main.database.dao.DialogueDao;
+import main.database.dao.NPCDao;
+import main.database.dao.NpcMessageDao;
+import main.database.dto.NpcDialogueDto;
 import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;

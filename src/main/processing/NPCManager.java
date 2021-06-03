@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import lombok.Getter;
-import main.database.NPCDao;
-import main.database.NPCDto;
+import main.database.dao.NPCDao;
+import main.database.dto.NPCDto;
 import main.responses.ResponseMaps;
 
 public class NPCManager {

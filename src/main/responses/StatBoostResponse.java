@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import main.database.StatsDao;
+import main.database.dao.StatsDao;
 import main.processing.Player;
 import main.requests.Request;
 

@@ -3,9 +3,9 @@ package main.responses;
 import java.util.Stack;
 
 import lombok.Setter;
-import main.database.DoorDao;
-import main.database.DoorDto;
-import main.database.LockedDoorDto;
+import main.database.dao.DoorDao;
+import main.database.dto.DoorDto;
+import main.database.dto.LockedDoorDto;
 import main.processing.FightManager;
 import main.processing.LockedDoorManager;
 import main.processing.PathFinder;

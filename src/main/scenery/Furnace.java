@@ -4,9 +4,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import main.database.PlayerStorageDao;
-import main.database.SmithableDao;
-import main.database.SmithableDto;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.SmithableDao;
+import main.database.dto.SmithableDto;
 import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.requests.RequestFactory;

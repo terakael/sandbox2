@@ -3,10 +3,10 @@ package main.responses;
 import java.util.List;
 import java.util.Map;
 
-import main.database.BuryableDao;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
+import main.database.dao.BuryableDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.StatsDao;
 import main.processing.Player;
 import main.requests.BuryRequest;
 import main.requests.Request;

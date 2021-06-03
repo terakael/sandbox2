@@ -1,6 +1,6 @@
 package main.responses;
 
-import main.database.ItemDao;
+import main.database.dao.ItemDao;
 import main.processing.Player;
 import main.requests.Request;
 import main.types.Items;

@@ -1,6 +1,6 @@
 package main.responses;
 
-import main.database.NPCDao;
+import main.database.dao.NPCDao;
 import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;

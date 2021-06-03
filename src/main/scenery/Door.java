@@ -1,7 +1,7 @@
 package main.scenery;
 
-import main.database.DoorDao;
-import main.database.LockedDoorDto;
+import main.database.dao.DoorDao;
+import main.database.dto.LockedDoorDto;
 import main.processing.LockedDoorManager;
 import main.processing.Player;
 import main.requests.UseRequest;

@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import main.database.PrayerDao;
-import main.database.PrayerDto;
+import main.database.dao.PrayerDao;
+import main.database.dto.PrayerDto;
 import main.processing.Player;
 import main.requests.Request;
 import main.types.Stats;

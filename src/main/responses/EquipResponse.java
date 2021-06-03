@@ -6,12 +6,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import main.database.PlayerAnimationDto;
-import main.database.EquipmentBonusDto;
-import main.database.EquipmentDao;
-import main.database.EquipmentDto;
-import main.database.ItemDto;
-import main.database.PlayerStorageDao;
+import main.database.dao.EquipmentDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.EquipmentBonusDto;
+import main.database.dto.EquipmentDto;
+import main.database.dto.ItemDto;
+import main.database.dto.PlayerAnimationDto;
 import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.requests.EquipRequest;

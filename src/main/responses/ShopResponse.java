@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import lombok.Setter;
-import main.database.ShopDao;
-import main.database.ShopItemDto;
+import main.database.dao.ShopDao;
+import main.database.dto.ShopItemDto;
 import main.processing.ClientResourceManager;
 import main.processing.FightManager;
 import main.processing.NPC;

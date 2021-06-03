@@ -1,7 +1,7 @@
 package main.responses;
 
-import main.database.SceneryDao;
-import main.database.StatsDao;
+import main.database.dao.SceneryDao;
+import main.database.dao.StatsDao;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;

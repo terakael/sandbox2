@@ -4,12 +4,12 @@ import java.util.Collections;
 import java.util.List;
 
 import lombok.Setter;
-import main.database.ItemDao;
-import main.database.PlayerDao;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
-import main.database.TeleportableDao;
-import main.database.TeleportableDto;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.StatsDao;
+import main.database.dao.TeleportableDao;
+import main.database.dto.TeleportableDto;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;

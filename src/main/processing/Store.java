@@ -5,10 +5,10 @@ import java.util.HashMap;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.database.ItemDao;
-import main.database.ItemDto;
-import main.database.ShopDto;
-import main.database.ShopItemDto;
+import main.database.dao.ItemDao;
+import main.database.dto.ItemDto;
+import main.database.dto.ShopDto;
+import main.database.dto.ShopItemDto;
 import main.responses.ResponseMaps;
 
 public abstract class Store {

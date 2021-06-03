@@ -4,12 +4,12 @@ import java.util.List;
 
 import lombok.Setter;
 import main.GroundItemManager;
-import main.database.DialogueDao;
-import main.database.ItemDao;
-import main.database.NPCDao;
-import main.database.NpcDialogueDto;
-import main.database.NpcDialogueOptionDto;
-import main.database.PlayerStorageDao;
+import main.database.dao.DialogueDao;
+import main.database.dao.ItemDao;
+import main.database.dao.NPCDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.NpcDialogueDto;
+import main.database.dto.NpcDialogueOptionDto;
 import main.processing.Player;
 import main.requests.DialogueOptionRequest;
 import main.requests.Request;

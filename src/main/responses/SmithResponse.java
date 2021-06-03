@@ -1,9 +1,9 @@
 package main.responses;
 
-import main.database.PlayerStorageDao;
-import main.database.SmithableDao;
-import main.database.SmithableDto;
-import main.database.StatsDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.SmithableDao;
+import main.database.dao.StatsDao;
+import main.database.dto.SmithableDto;
 import main.processing.FightManager;
 import main.processing.Player;
 import main.processing.Player.PlayerState;

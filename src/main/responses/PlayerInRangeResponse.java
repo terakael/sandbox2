@@ -3,9 +3,9 @@ package main.responses;
 import java.util.ArrayList;
 import java.util.Set;
 
-import main.database.EquipmentDao;
-import main.database.PlayerAnimationDao;
-import main.database.StatsDao;
+import main.database.dao.EquipmentDao;
+import main.database.dao.PlayerAnimationDao;
+import main.database.dao.StatsDao;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.Request;

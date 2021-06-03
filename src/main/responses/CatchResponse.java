@@ -1,8 +1,8 @@
 package main.responses;
 
-import main.database.CatchableDao;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
+import main.database.dao.CatchableDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
 import main.processing.FightManager;
 import main.processing.NPC;
 import main.processing.NPCManager;

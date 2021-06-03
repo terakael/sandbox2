@@ -3,12 +3,12 @@ package main.responses;
 import java.util.Collections;
 import java.util.List;
 
-import main.database.BrewableDao;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
-import main.database.UseItemOnItemDao;
-import main.database.UseItemOnItemDto;
+import main.database.dao.BrewableDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.StatsDao;
+import main.database.dao.UseItemOnItemDao;
+import main.database.dto.UseItemOnItemDto;
 import main.processing.Player;
 import main.requests.Request;
 import main.requests.RequestFactory;

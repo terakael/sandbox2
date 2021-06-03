@@ -1,10 +1,10 @@
 package main.responses;
 
 import lombok.Setter;
-import main.database.FishableDao;
-import main.database.FishableDto;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
+import main.database.dao.FishableDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.FishableDto;
 import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.FishRequest;

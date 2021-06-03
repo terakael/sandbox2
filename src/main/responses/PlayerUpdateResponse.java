@@ -4,7 +4,7 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.database.PlayerAnimationDto;
+import main.database.dto.PlayerAnimationDto;
 import main.processing.Player;
 import main.requests.Request;
 import main.types.DamageTypes;

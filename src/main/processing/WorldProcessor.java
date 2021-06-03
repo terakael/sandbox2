@@ -16,12 +16,12 @@ import com.google.gson.Gson;
 
 import main.Endpoint;
 import main.GroundItemManager;
-import main.database.DoorDao;
-import main.database.GroundTextureDao;
-import main.database.MinimapSegmentDao;
-import main.database.SceneryDao;
-import main.database.ShopDao;
-import main.database.ShopItemDto;
+import main.database.dao.DoorDao;
+import main.database.dao.GroundTextureDao;
+import main.database.dao.MinimapSegmentDao;
+import main.database.dao.SceneryDao;
+import main.database.dao.ShopDao;
+import main.database.dto.ShopItemDto;
 import main.processing.FightManager.Fight;
 import main.processing.Player.PlayerState;
 import main.requests.Request;

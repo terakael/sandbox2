@@ -1,7 +1,7 @@
 package main.processing;
 
-import main.database.ShopDto;
-import main.database.ShopItemDto;
+import main.database.dto.ShopDto;
+import main.database.dto.ShopItemDto;
 
 public class SpecialtyStore extends Store {
 

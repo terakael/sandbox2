@@ -4,9 +4,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import main.database.InventoryItemDto;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.InventoryItemDto;
 import main.processing.Player;
 import main.requests.BankWithdrawRequest;
 import main.requests.Request;

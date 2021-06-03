@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import main.database.InventoryItemDto;
-import main.database.PlayerStorageDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.InventoryItemDto;
 import main.processing.FightManager;
 import main.processing.Player;
 import main.processing.TradeManager;

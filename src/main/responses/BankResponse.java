@@ -3,9 +3,9 @@ package main.responses;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import main.database.InventoryItemDto;
-import main.database.PlayerStorageDao;
-import main.database.SceneryDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.SceneryDao;
+import main.database.dto.InventoryItemDto;
 import main.processing.ClientResourceManager;
 import main.processing.PathFinder;
 import main.processing.Player;

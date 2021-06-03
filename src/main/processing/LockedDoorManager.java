@@ -8,9 +8,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Setter;
-import main.database.LockedDoorDto;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.StatsDao;
+import main.database.dto.LockedDoorDto;
 import main.responses.OpenCloseResponse;
 import main.responses.ResponseMaps;
 import main.types.StorageTypes;

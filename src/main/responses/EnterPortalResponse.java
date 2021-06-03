@@ -1,6 +1,6 @@
 package main.responses;
 
-import main.database.SceneryDao;
+import main.database.dao.SceneryDao;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;

@@ -3,8 +3,8 @@ package main.responses;
 import java.util.Set;
 
 import lombok.Setter;
-import main.database.PrayerDao;
-import main.database.PrayerDto;
+import main.database.dao.PrayerDao;
+import main.database.dto.PrayerDto;
 import main.processing.FightManager;
 import main.processing.FightManager.Fight;
 import main.processing.Player;

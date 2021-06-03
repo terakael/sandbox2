@@ -3,8 +3,8 @@ package main.responses;
 import java.util.List;
 
 import main.GroundItemManager;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;

@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import main.database.EquipmentDao;
-import main.database.InventoryItemDto;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
+import main.database.dao.EquipmentDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.InventoryItemDto;
 import main.processing.Player;
 import main.requests.BankDepositRequest;
 import main.requests.Request;

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import main.database.StatWindowRowDto;
-import main.database.StatsDao;
+import main.database.dao.StatsDao;
+import main.database.dto.StatWindowRowDto;
 import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.requests.Request;

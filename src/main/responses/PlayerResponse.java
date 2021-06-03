@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import main.PlayerRequestManager;
 import main.PlayerRequestManager.PlayerRequestType;
-import main.database.PlayerDao;
+import main.database.dao.PlayerDao;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;

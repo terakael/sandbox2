@@ -3,10 +3,10 @@ package main.responses;
 import java.util.Collections;
 import java.util.List;
 
-import main.database.InventoryItemDto;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
-import main.database.ShopItemDto;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.InventoryItemDto;
+import main.database.dto.ShopItemDto;
 import main.processing.Player;
 import main.processing.ShopManager;
 import main.processing.Store;

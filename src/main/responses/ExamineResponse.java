@@ -3,10 +3,10 @@ package main.responses;
 import java.util.HashMap;
 import java.util.Map;
 
-import main.database.ItemDao;
-import main.database.NPCDao;
-import main.database.PlayerStorageDao;
-import main.database.SceneryDao;
+import main.database.dao.ItemDao;
+import main.database.dao.NPCDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.SceneryDao;
 import main.processing.Player;
 import main.requests.ExamineRequest;
 import main.requests.Request;

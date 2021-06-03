@@ -2,11 +2,11 @@ package main.responses;
 
 import java.util.Collections;
 
-import main.database.FishableDao;
-import main.database.FishableDto;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
+import main.database.dao.FishableDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.StatsDao;
+import main.database.dto.FishableDto;
 import main.processing.ClientResourceManager;
 import main.processing.FightManager;
 import main.processing.PathFinder;

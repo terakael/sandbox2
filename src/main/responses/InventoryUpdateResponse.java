@@ -7,9 +7,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Setter;
-import main.database.EquipmentDao;
-import main.database.InventoryItemDto;
-import main.database.PlayerStorageDao;
+import main.database.dao.EquipmentDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.InventoryItemDto;
 import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.requests.InventoryMoveRequest;

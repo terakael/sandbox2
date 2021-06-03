@@ -3,11 +3,11 @@ package main.responses;
 import java.util.List;
 
 import lombok.Setter;
-import main.database.InventoryItemDto;
-import main.database.ItemDao;
-import main.database.MineableDao;
-import main.database.MineableDto;
-import main.database.PlayerStorageDao;
+import main.database.dao.ItemDao;
+import main.database.dao.MineableDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.InventoryItemDto;
+import main.database.dto.MineableDto;
 import main.processing.Player;
 import main.processing.RockManager;
 import main.requests.AddExpRequest;

@@ -3,10 +3,10 @@ package main.scenery;
 import java.util.Collections;
 import java.util.List;
 
-import main.database.CookableDao;
-import main.database.CookableDto;
-import main.database.ItemDao;
-import main.database.PlayerStorageDao;
+import main.database.dao.CookableDao;
+import main.database.dao.ItemDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dto.CookableDto;
 import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.processing.Player.PlayerState;

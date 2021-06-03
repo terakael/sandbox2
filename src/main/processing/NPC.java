@@ -7,12 +7,12 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.GroundItemManager;
-import main.database.ItemDao;
-import main.database.NPCDao;
-import main.database.NPCDto;
-import main.database.NpcDropDto;
-import main.database.PlayerStorageDao;
-import main.database.StatsDao;
+import main.database.dao.ItemDao;
+import main.database.dao.NPCDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.StatsDao;
+import main.database.dto.NPCDto;
+import main.database.dto.NpcDropDto;
 import main.processing.Player.PlayerState;
 import main.responses.MessageResponse;
 import main.responses.NpcUpdateResponse;

@@ -1,8 +1,8 @@
 package main.responses;
 
-import main.database.ItemDao;
-import main.database.ItemDto;
-import main.database.ShopItemDto;
+import main.database.dao.ItemDao;
+import main.database.dto.ItemDto;
+import main.database.dto.ShopItemDto;
 import main.processing.Player;
 import main.processing.ShopManager;
 import main.processing.Store;

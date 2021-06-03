@@ -3,11 +3,11 @@ package main.responses;
 import java.util.ArrayList;
 import java.util.List;
 
-import main.database.ItemDao;
-import main.database.MineableDao;
-import main.database.PlayerStorageDao;
-import main.database.SmithableDao;
-import main.database.SmithableDto;
+import main.database.dao.ItemDao;
+import main.database.dao.MineableDao;
+import main.database.dao.PlayerStorageDao;
+import main.database.dao.SmithableDao;
+import main.database.dto.SmithableDto;
 import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.Request;

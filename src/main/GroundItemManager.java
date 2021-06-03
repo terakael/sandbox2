@@ -3,7 +3,8 @@ package main;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import main.database.GroundTextureDao;
+
+import main.database.dao.GroundTextureDao;
 import main.processing.RoomGroundItemManager;
 import main.processing.RoomGroundItemManager.GroundItem;
 
