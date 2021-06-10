@@ -2,6 +2,7 @@ package main.responses;
 
 import java.util.List;
 
+import main.database.dao.ItemDao;
 import main.database.dao.MineableDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.StatsDao;
@@ -60,6 +61,7 @@ public class MineResponse extends Response {
 				&& !inventoryItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue())) {
 				setRecoAndResponseText(0, "you need a pickaxe in order to mine the rock.");
 				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
 				return;
 			}
 			
@@ -67,6 +69,7 @@ public class MineResponse extends Response {
 			if (RockManager.rockIsDepleted(player.getFloor(), request.getTileId())) {
 				setRecoAndResponseText(0, "the rock currently contains no ore.");
 				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
 				return;
 			}
 			
@@ -74,6 +77,7 @@ public class MineResponse extends Response {
 			if (StatsDao.getStatLevelByStatIdPlayerId(Stats.MINING, player.getId()) < mineable.getLevel()) {
 				setRecoAndResponseText(0, String.format("you need %d mining to mine this.", mineable.getLevel()));
 				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
 				return;
 			}
 			
@@ -81,26 +85,41 @@ public class MineResponse extends Response {
 			if (PlayerStorageDao.getFreeSlotByPlayerId(player.getId()) == -1) {
 				setRecoAndResponseText(0, "your inventory is too full to mine anymore.");
 				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
 				return;
 			}
 			
-			new StartMiningResponse().process(request, player, responseMaps);
+//			new StartMiningResponse().process(request, player, responseMaps);
 			
-			player.setState(PlayerState.mining);
-			player.setSavedRequest(req);
+			// only send the message the first time; it's annoying if it gets spammed.
+			if (player.getState() != PlayerState.mining) {
+				setRecoAndResponseText(1, "you start mining the rock...");
+				responseMaps.addClientOnlyResponse(player, this);
+				
+				player.setState(PlayerState.mining);
+				player.setSavedRequest(req);
+			}
 			
 			// we check like this because if, for example, the player had both a magic pickaxe and golden pickaxe
 			// in their inventory, they would be using charges from the magic pickaxe but getting the speed
 			// of the golden pickaxe.  Therefore we check each tier using else ifs.
+			Items usedPickaxe;
 			if (inventoryItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue())) {
+				usedPickaxe = Items.MAGIC_GOLDEN_PICKAXE;
 				player.setTickCounter(3);
 			} else if (inventoryItemIds.contains(Items.MAGIC_PICKAXE.getValue())) {
+				usedPickaxe = Items.MAGIC_PICKAXE;
 				player.setTickCounter(5);
 			} else if (inventoryItemIds.contains(Items.GOLDEN_PICKAXE.getValue())) {
+				usedPickaxe = Items.GOLDEN_PICKAXE;
 				player.setTickCounter(3);
 			} else {
+				usedPickaxe = Items.PICKAXE;
 				player.setTickCounter(5);
 			}
+			
+			ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(usedPickaxe.getValue()).getSpriteFrameId());
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
 		}
 	}
 

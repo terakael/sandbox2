@@ -1,5 +1,6 @@
 package main.responses;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,10 +22,9 @@ public class CachedResourcesResponse extends Response {
 	
 	private List<SpriteMapDto> spriteMaps = null;
 	private List<SpriteFrameDto> spriteFrames = null;
-	private List<ContextOptionsDto> contextOptions = null;
+	private Map<String, List<ContextOptionsDto>> contextOptions = new HashMap<>();
 	private Map<Integer, String> statMap = null;
 	private Map<Integer, Integer> expMap = null;
-//	private List<ItemDto> items = null;
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -45,14 +45,16 @@ public class CachedResourcesResponse extends Response {
 	
 	private void loadCachedResources() {
 		spriteMaps = SpriteMapDao.getAlwaysLoadedSpriteMaps();
-//		items = Collections.singletonList(ItemDao.getItem(0));
 		spriteFrames = SpriteFrameDao.getAllSpriteFrames().stream()
 				.filter(e -> spriteMaps.stream()
 						.map(SpriteMapDto::getId)
 						.collect(Collectors.toSet())
 				.contains(e.getSprite_map_id()))
 				.collect(Collectors.toList());
-		contextOptions = ContextOptionsDao.getAllContextOptions();
+				
+		contextOptions.put("item", ContextOptionsDao.getItemContextOptions());
+		contextOptions.put("npc", ContextOptionsDao.getNpcContextOptions());
+		contextOptions.put("scenery", ContextOptionsDao.getSceneryContextOptions());
 		statMap = StatsDao.getCachedStats();
 		expMap = StatsDao.getExpMap();
 	}

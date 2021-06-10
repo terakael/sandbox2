@@ -44,6 +44,7 @@ import main.responses.FinishSmithResponse;
 import main.responses.FinishUseResponse;
 import main.responses.InventoryUpdateResponse;
 import main.responses.MessageResponse;
+import main.responses.MineResponse;
 import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
@@ -319,17 +320,6 @@ public class Player extends Attackable {
 		case mining:
 			// waiting until the tick counter hits zero, then do the actual mining and create a finish_mining response
 			if (--tickCounter <= 0) {
-				// TODO do checks:
-				// is player close enough to target tile?
-				// is target tile a rock?
-				// does player have level to mine this rock?
-				// does player have inventory space for the loot?
-				
-				// if yes to all above:
-				// add rock loot to first empty inventory space
-				// create storage_update response
-				// create finish_mining response
-				// set state to idle.
 				if (!(savedRequest instanceof MineRequest)) {
 					savedRequest = null;
 					state = PlayerState.idle;
@@ -337,9 +327,12 @@ public class Player extends Attackable {
 				}
 				
 				new FinishMiningResponse().process(savedRequest, this, responseMaps);
+				
+				// let's go for another mine!
+				new MineResponse().process(savedRequest, this, responseMaps);
 
-				savedRequest = null;
-				state = PlayerState.idle;
+//				savedRequest = null;
+//				state = PlayerState.idle;
 			}
 			break;
 		case fishing:

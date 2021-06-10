@@ -87,7 +87,7 @@ public class Server {
 		SpriteMapDao.setupCaches();
 
 		System.out.println("caching context options");
-		ContextOptionsDao.cacheAllContextOptions();
+		ContextOptionsDao.setupCaches();
 		
 		System.out.println("caching base player animations");
 		PlayerAnimationDao.setupCaches();

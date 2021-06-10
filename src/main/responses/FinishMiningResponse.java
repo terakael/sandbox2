@@ -120,7 +120,8 @@ public class FinishMiningResponse extends Response {
 				}
 			}
 		} else {
-			setResponseText("you fail to hit the rock.");
+			// don't send anything if you miss, it's annoying.
+//			setResponseText("you fail to hit the rock.");
 		}
 		
 		responseMaps.addClientOnlyResponse(player, this);

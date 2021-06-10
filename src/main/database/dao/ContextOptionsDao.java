@@ -12,13 +12,21 @@ import main.database.DbConnection;
 import main.database.dto.ContextOptionsDto;
 
 public class ContextOptionsDao {
-	@Getter private static List<ContextOptionsDto> allContextOptions;
+	@Getter private static List<ContextOptionsDto> itemContextOptions;
+	@Getter private static List<ContextOptionsDto> npcContextOptions;
+	@Getter private static List<ContextOptionsDto> sceneryContextOptions;
 	
 	private ContextOptionsDao() {};
 	
-	public static void cacheAllContextOptions() {
-		allContextOptions = new ArrayList<>();
-		final String query = "select id, name, priority from context_options";
+	public static void setupCaches() {
+		itemContextOptions = cacheContextOptions("item");
+		npcContextOptions = cacheContextOptions("npc");
+		sceneryContextOptions = cacheContextOptions("scenery");
+	}
+	
+	public static List<ContextOptionsDto> cacheContextOptions(String category) {
+		List<ContextOptionsDto> list = new ArrayList<>();
+		final String query = String.format("select id, name from %s_context_options", category);
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -26,10 +34,12 @@ public class ContextOptionsDao {
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
-					allContextOptions.add(new ContextOptionsDto(rs.getInt("id"), rs.getString("name"), rs.getInt("priority")));
+					list.add(new ContextOptionsDto(rs.getInt("id"), rs.getString("name")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		return list;
 	}
 }
