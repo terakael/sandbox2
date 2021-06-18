@@ -3,11 +3,13 @@ package main.responses;
 import java.util.HashMap;
 import java.util.Map;
 
+import main.GroundItemManager;
 import main.database.dao.ItemDao;
 import main.database.dao.NPCDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
 import main.processing.Player;
+import main.processing.RoomGroundItemManager.GroundItem;
 import main.requests.ExamineRequest;
 import main.requests.Request;
 import main.types.ItemAttributes;
@@ -45,17 +47,19 @@ public class ExamineResponse extends Response {
 			break;
 		}
 		case "item": {
-			// TODO because we don't know the source of the examine request, there's a small bug here.
-			// basically if you have a stackable (of any size) on the ground, and also 100k+ stackable in your inventory,
-			// if you examine the ground stackable it will tell you your inventory stackable count.
-			// ideally we could tell the source of the request (inventory, ground, shop, bank, smithing interface etc) and handle it accordingly.
 			if (ItemDao.itemHasAttribute(request.getObjectId(), ItemAttributes.STACKABLE)) {
 				int stackCount = PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), request.getObjectId(), StorageTypes.INVENTORY); 
-				if (stackCount >= 100000) {// 0 if the item isn't in the inventory
+				if (stackCount >= 100000) {
 					examineText = String.format("%,d %s.", stackCount , ItemDao.getNameFromId(request.getObjectId()));
 					break;
 				}
 			}
+			examineText = itemExamineMap.get(request.getObjectId());
+			break;
+		}
+		case "grounditem": {
+			// you can't count a stackable item if it's on the ground, that's just silly.
+			// you need to be holding it to count it.
 			examineText = itemExamineMap.get(request.getObjectId());
 			break;
 		}
