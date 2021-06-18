@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum EquipmentTypes {
-	HELMET(1),
+	HELMET_FULL(1),
 	BODY(2),
 	LEGS(3),
 	SHIELD(4),
@@ -15,7 +15,10 @@ public enum EquipmentTypes {
 	DAGGERS(7),
 	RING(8),
 	CAPE(9),
-	NECKLACE(10);
+	NECKLACE(10),
+	HELMET_MED(11),
+	HAT(12),
+	WAND(13);
 	
 	private final int value;
 	

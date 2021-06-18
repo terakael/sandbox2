@@ -33,7 +33,6 @@ import main.requests.FishRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
-import main.requests.SmithRequest;
 import main.responses.AddExpResponse;
 import main.responses.DeathResponse;
 import main.responses.EquipResponse;
@@ -42,6 +41,7 @@ import main.responses.FinishFishingResponse;
 import main.responses.FinishMiningResponse;
 import main.responses.FinishSmithResponse;
 import main.responses.FinishUseResponse;
+import main.responses.FishResponse;
 import main.responses.InventoryUpdateResponse;
 import main.responses.MessageResponse;
 import main.responses.MineResponse;
@@ -49,8 +49,10 @@ import main.responses.PlayerUpdateResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
+import main.responses.SmithResponse;
 import main.responses.StatBoostResponse;
 import main.responses.TogglePrayerResponse;
+import main.responses.UseResponse;
 import main.types.Buffs;
 import main.types.DamageTypes;
 import main.types.DuelRules;
@@ -330,9 +332,6 @@ public class Player extends Attackable {
 				
 				// let's go for another mine!
 				new MineResponse().process(savedRequest, this, responseMaps);
-
-//				savedRequest = null;
-//				state = PlayerState.idle;
 			}
 			break;
 		case fishing:
@@ -344,39 +343,29 @@ public class Player extends Attackable {
 				}
 				
 				new FinishFishingResponse().process(savedRequest, this, responseMaps);
-
-				savedRequest = null;
-				state = PlayerState.idle;
+				
+				// fish again
+				new FishResponse().process(savedRequest, this, responseMaps);
 			}
 			break;
 		case smithing:
 			if (--tickCounter <= 0) {
-				if (!(savedRequest instanceof SmithRequest)) {
-					savedRequest = null;
-					state = PlayerState.idle;
-					return;
-				}
-				
 				new FinishSmithResponse().process(savedRequest, this, responseMaps);
-				
-				savedRequest = null;
-				state = PlayerState.idle;
+				new SmithResponse().process(savedRequest, this, responseMaps);
 			}
 			break;
 			
 		case using:
 			if (--tickCounter <= 0) {
 				new FinishUseResponse().process(savedRequest, this, responseMaps);
-				savedRequest = null;
-				state = PlayerState.idle;
+				new UseResponse().process(savedRequest, this, responseMaps);
 			}
 			break;
 			
 		case cooking:
 			if (--tickCounter <= 0) {
 				new FinishCookingResponse().process(savedRequest, this, responseMaps);
-				savedRequest = null;
-				state = PlayerState.idle;
+				new UseResponse().process(savedRequest, this, responseMaps);
 			}
 			break;
 			

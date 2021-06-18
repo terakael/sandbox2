@@ -84,7 +84,9 @@ public class EquipResponse extends Response {
 	
 	private boolean playerHasRequirements(Player player, EquipmentDto equip, ResponseMaps responseMaps) {
 		switch (equip.getType()) {
-		case HELMET:
+		case HELMET_FULL:
+		case HELMET_MED:
+		case HAT:
 		case BODY:
 		case LEGS:
 		case SHIELD:
@@ -114,6 +116,13 @@ public class EquipResponse extends Response {
 		case SWORD:
 			if (player.getStats().get(Stats.ACCURACY) < equip.getRequirement() && player.getStats().get(Stats.STRENGTH) < equip.getRequirement()) {
 				setRecoAndResponseText(0, String.format("you need %d strength or accuracy to equip that.", equip.getRequirement()));
+				responseMaps.addClientOnlyResponse(player, this);
+				return false;
+			}
+			break;
+		case WAND:
+			if (player.getStats().get(Stats.MAGIC) < equip.getRequirement()) {
+				setRecoAndResponseText(0, String.format("you need %d magic to equip that.", equip.getRequirement()));
 				responseMaps.addClientOnlyResponse(player, this);
 				return false;
 			}

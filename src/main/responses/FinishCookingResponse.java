@@ -36,9 +36,6 @@ public class FinishCookingResponse extends Response {
 		tileId = request.getDest();// dest is the fire's tileId
 		type = request.getType();
 		
-		
-		
-		int slot = request.getSlot();
 		CookableDto cookable = CookableDao.getCookable(itemId);
 		if (cookable != null) {
 			int cookingLevel = player.getStats().get(Stats.COOKING);
@@ -50,11 +47,11 @@ public class FinishCookingResponse extends Response {
 			
 			List<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 			
+			int slot = request.getSlot();
 			if (inv.get(slot) != cookable.getRawItemId()) {// the passed-in slot doesn't have the correct item?  check other slots
-				for (slot = 0; slot < inv.size(); ++slot) {
-					if (inv.get(slot) == cookable.getRawItemId())
-						break;
-				}
+				slot = inv.indexOf(cookable.getRawItemId());
+				if (slot == -1)
+					return; // item could have been dropped during cooking?
 			}
 			
 			int baseChanceToBurn = (cookable.getLevel() - (cookable.getLevel() % 10)) + 10; // 1-10 cooking is 10% chance, 11-20 cooking is 20% chance etc

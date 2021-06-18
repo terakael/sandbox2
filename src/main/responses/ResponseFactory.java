@@ -63,9 +63,6 @@ public class ResponseFactory {
 		case "mine":
 			response = new MineResponse();
 			break;
-		case "start_mining":
-			response = new StartMiningResponse();
-			break;
 		case "finish_mining":
 			response = new FinishMiningResponse();
 			break;

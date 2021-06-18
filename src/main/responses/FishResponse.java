@@ -40,6 +40,7 @@ public class FishResponse extends Response {
 			if (fishable == null) {
 				setRecoAndResponseText(0, "you can't fish this.");
 				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
 				return;
 			}
 			
@@ -47,27 +48,32 @@ public class FishResponse extends Response {
 			if (StatsDao.getStatLevelByStatIdPlayerId(Stats.FISHING, player.getId()) < fishable.getLevel()) {
 				setRecoAndResponseText(0, String.format("you need %d fishing to fish here.", fishable.getLevel()));
 				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
 				return;
 			}
 			
 			// does player have inventory space
 			if (PlayerStorageDao.getFreeSlotByPlayerId(player.getId()) == -1) {
-				setRecoAndResponseText(0, "your inventory is too full to fish anymore.");
+				setRecoAndResponseText(0, "your inventory is full.");
 				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
 				return;
 			}
 			
-			new StartFishingResponse().process(request, player, responseMaps);
+			if (player.getState() != PlayerState.fishing) {
+				setRecoAndResponseText(1, "you start fishing...");
+				responseMaps.addClientOnlyResponse(player, this);
+				
+				player.setState(PlayerState.fishing);
+				player.setSavedRequest(req);
+			}
+			player.setTickCounter(5);
 			
 			// the action bubble will be the fish you're trying to catch
 			ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(fishable.getItemId()).getSpriteFrameId());
 			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
 			
 			ClientResourceManager.addItems(player, Collections.singleton(fishable.getItemId()));
-			
-			player.setState(PlayerState.fishing);
-			player.setSavedRequest(req);
-			player.setTickCounter(5);
 		}
 	}
 

@@ -14,7 +14,6 @@ import main.requests.UseRequest;
 import main.responses.ActionBubbleResponse;
 import main.responses.MessageResponse;
 import main.responses.ResponseMaps;
-import main.responses.StartCookingResponse;
 import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
@@ -31,36 +30,44 @@ public class Fire extends Scenery {
 			return false;
 		
 		CookableDto cookable = CookableDao.getCookable(srcItemId);
-		if (cookable != null) {
-			int cookingLevel = player.getStats().get(Stats.COOKING);
-			if (cookingLevel < cookable.getLevel()) {
-				MessageResponse response = new MessageResponse();
-				response.setRecoAndResponseText(0, String.format("you need %d cooking to cook that.", cookable.getLevel()));
-				responseMaps.addClientOnlyResponse(player, response);
-				return true;
-			}
-			
-			List<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-			
-			if (inv.get(slot) != cookable.getRawItemId()) {// the passed-in slot doesn't have the correct item?  check other slots
-				for (slot = 0; slot < inv.size(); ++slot) {
-					if (inv.get(slot) == cookable.getRawItemId())
-						break;
-				}
-			}
-			
-			if (slot < inv.size()) {
-				StartCookingResponse startCookingResponse = new StartCookingResponse();
-				responseMaps.addClientOnlyResponse(player, startCookingResponse);
+		if (cookable == null) {
+			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("you can't cook that.", null));
+			return true;
+		}
+		
+		int cookingLevel = player.getStats().get(Stats.COOKING);
+		if (cookingLevel < cookable.getLevel()) {
+			MessageResponse response = new MessageResponse();
+			response.setRecoAndResponseText(0, String.format("you need %d cooking to cook that.", cookable.getLevel()));
+			responseMaps.addClientOnlyResponse(player, response);
+			return true;
+		}
+		
+		List<Integer> inv = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+		
+		if (inv.get(slot) != cookable.getRawItemId()) {// the passed-in slot doesn't have the correct item?  check other slots
+			slot = inv.indexOf(cookable.getRawItemId());
+		}
+		
+		if (slot > 0) {
+			if (player.getState() != PlayerState.cooking) {
+				responseMaps.addClientOnlyResponse(player, 
+						MessageResponse.newMessageResponse(String.format("you throw the %s on the fire...", ItemDao.getItem(cookable.getRawItemId()).getName()), null));
 				
-				ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(cookable.getCookedItemId()).getSpriteFrameId());
-				responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
-				
-				ClientResourceManager.addItems(player, Collections.singleton(cookable.getCookedItemId()));
-
 				player.setSavedRequest(request);
 				player.setState(PlayerState.cooking);
-				player.setTickCounter(5);
+			}
+			player.setTickCounter(5);
+			
+			ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(cookable.getCookedItemId()).getSpriteFrameId());
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
+			
+			ClientResourceManager.addItems(player, Collections.singleton(cookable.getCookedItemId()));
+			return true;
+		} else {
+			if (player.getState() == PlayerState.cooking) {
+				// we've run out of raw food.
+				player.setState(PlayerState.idle);
 				return true;
 			}
 		}

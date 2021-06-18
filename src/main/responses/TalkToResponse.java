@@ -66,7 +66,7 @@ public class TalkToResponse extends Response {
 				message = messages.get(RandomUtil.getRandom(0, messages.size()));
 				responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), this);
 			} else {
-				setRecoAndResponseText(1, "they don't seem interested in talking.");
+				setRecoAndResponseText(0, "they don't seem interested in talking.");
 				responseMaps.addClientOnlyResponse(player, this);
 			}
 			return;

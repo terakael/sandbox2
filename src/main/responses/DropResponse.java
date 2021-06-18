@@ -35,8 +35,6 @@ public class DropResponse extends Response {
 		InventoryItemDto itemToDrop = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getDto().getId(), StorageTypes.INVENTORY, dropReq.getSlot());
 		if (itemToDrop == null || itemToDrop.getItemId() == 0) {
 			// better not to send the player a response here for obfuscation reasons I think
-//			setRecoAndResponseText(0, "you can't drop an item that doesn't exist.");
-//			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		

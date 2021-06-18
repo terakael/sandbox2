@@ -132,6 +132,7 @@ public class UseResponse extends Response {
 			dto = UseItemOnItemDao.getEntryBySrcIdDestId(src, dest);
 			if (dto == null) {
 				// nope no match; nothing interesting happens when you use these two items together.
+				player.setState(PlayerState.idle);
 				return false;
 			}
 		}
@@ -141,8 +142,11 @@ public class UseResponse extends Response {
 		if (invItemIds.get(srcSlot) != src) {
 			srcSlot = invItemIds.indexOf(src);
 			if (srcSlot == -1) {
-				setRecoAndResponseText(0, "you don't have the materials to make that.");
-				responseMaps.addClientOnlyResponse(player, this);
+				if (player.getState() != PlayerState.using) {
+					setRecoAndResponseText(0, "you don't have the materials to make that.");
+					responseMaps.addClientOnlyResponse(player, this);
+				}
+				player.setState(PlayerState.idle);
 				return true;
 			}
 		}
@@ -150,14 +154,18 @@ public class UseResponse extends Response {
 		if (invItemIds.get(destSlot) != dest) {
 			destSlot = invItemIds.indexOf(dest);
 			if (destSlot == -1) {
-				setRecoAndResponseText(0, "you don't have the materials to make that.");
-				responseMaps.addClientOnlyResponse(player, this);
+				if (player.getState() != PlayerState.using) {
+					setRecoAndResponseText(0, "you don't have the materials to make that.");
+					responseMaps.addClientOnlyResponse(player, this);
+				}
+				player.setState(PlayerState.idle);
 				return true;
 			}
 		}
 		
 		if (invItemIds.get(srcSlot) != src || invItemIds.get(destSlot) != dest) {
 			// user-input slots don't match what's actually in the slots; bail with a "nothing interesting happens" message
+			player.setState(PlayerState.idle);
 			return false;
 		}
 		
@@ -168,6 +176,7 @@ public class UseResponse extends Response {
 			if (playerLevel < requiredLevel) {
 				setRecoAndResponseText(0, String.format("you need %d herblore to make that.", requiredLevel));
 				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
 				return true;
 			}
 		}
@@ -177,20 +186,23 @@ public class UseResponse extends Response {
 				EquipmentDao.isItemEquippedByItemIdAndSlot(player.getId(), dest, destSlot)) {
 			setRecoAndResponseText(0, "you need to unequip it first.");
 			responseMaps.addClientOnlyResponse(player, this);
+			player.setState(PlayerState.idle);
 			return true;
 		}
 		
-		StartUseResponse startUseResponse = new StartUseResponse();
-		startUseResponse.process(request, player, responseMaps);		
+		if (player.getState() != PlayerState.using) {
+			setRecoAndResponseText(1, "you use the items together...");
+			responseMaps.addClientOnlyResponse(player, this);
+			player.setState(PlayerState.using);
+			player.setSavedRequest(request);	
+		}
+		
+		player.setTickCounter(3);
 		
 		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(dto.getResultingItemId()).getSpriteFrameId());
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
 		
 		ClientResourceManager.addItems(player, Collections.singleton(dto.getResultingItemId()));
-		
-		player.setState(PlayerState.using);
-		player.setSavedRequest(request);
-		player.setTickCounter(3);
 		return true;
 	}
 

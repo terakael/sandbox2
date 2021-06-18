@@ -36,16 +36,12 @@ public class FinishUseResponse extends Response {
 		src = request.getSrc();
 		dest = request.getDest();
 		type = request.getType();
-//		int srcSlot = request.getSrcSlot();
-//		int destSlot = request.getSlot();
 		
 		UseItemOnItemDto dto = UseItemOnItemDao.getEntryBySrcIdDestId(src, dest);
 		if (dto == null) {
 			// try switching the src and dest
 			src = request.getDest();
 			dest = request.getSrc();
-//			srcSlot = request.getSlot();
-//			destSlot = request.getSrcSlot();
 			
 			dto = UseItemOnItemDao.getEntryBySrcIdDestId(src, dest);
 			if (dto == null) {
