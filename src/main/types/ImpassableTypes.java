@@ -6,7 +6,13 @@ public enum ImpassableTypes {
 	TOP(1),
 	LEFT(2),
 	RIGHT(4),
-	BOTTOM(8);
+	BOTTOM(8),
+	
+	// if the low flags are set, it means it can be ranged/maged over (fence, wall with window etc)
+	TOP_IS_LOW(16),
+	LEFT_IS_LOW(32),
+	RIGHT_IS_LOW(64),
+	BOTTOM_IS_LOW(128);
 	
 	@Getter private int value;
 	ImpassableTypes(int value) {

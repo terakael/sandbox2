@@ -361,7 +361,7 @@ public class PathFinder {
 				
 				// we're at the final step - if the final step is completely impassable we want to keep processing
 				// but if there is some passable way and we're not actually next to it then continue.
-				if (successor == nodes.get(to) && successor.impassableTypes != 15 && !isNextTo(floor, q.id, successor.id, !toDoor))
+				if (successor == nodes.get(to) && successor.impassableTypes != 15 && !isNextTo(floor, q.id, successor.id, !toDoor, true))
 					continue;
 				
 				// for NPCs so they don't wander outside their range.
@@ -421,7 +421,7 @@ public class PathFinder {
 						continue;
 					
 					// found it
-					if (!includeToTile || (toDoor && !isNextTo(floor, q.id, successor.id, true)))
+					if (!includeToTile || (toDoor && !isNextTo(floor, q.id, successor.id, true, true)))
 						successor = successor.getParent();
 					
 					while (successor.getParent() != null) {
@@ -453,9 +453,6 @@ public class PathFinder {
 	
 	public static boolean lineOfSightIsClear(int floor, int srcTileId, int destTileId, int range)
 	{
-//		if (calculateManhattan(srcTileId, destTileId) > range) // too far away
-//			return false;
-		
 		final int x0 = srcTileId % LENGTH;
 		final int y0 = srcTileId / LENGTH;
 		
@@ -481,12 +478,9 @@ public class PathFinder {
 	    for (; n > 0; --n)
 	    {
 	    	// check if tile has impassable that intersects the line, returning false if true
-//	        visit(x, y);
 	    	final int checkTileId = (y * LENGTH) + x;
-//	    	if (prevTileId == checkTileId)
-//	    		continue;
 	    	
-	    	if (!isNextTo(floor, prevTileId, checkTileId)) {
+	    	if (!isNextTo(floor, prevTileId, checkTileId, true, false)) {
 	    		// despite the two tiles being next to eachother, they are not "next to" eachother,
 	    		// meaning there is a barrier in the way.
 	    		return false;
@@ -510,10 +504,10 @@ public class PathFinder {
 	
 	// standard behaviour is to include door impassables; only opening/closing doors changes this behaviour
 	public static boolean isNextTo(int floor, int srcTile, int destTile) {
-		return isNextTo(floor, srcTile, destTile, true);
+		return isNextTo(floor, srcTile, destTile, true, true);
 	}
 	
-	public static boolean isNextTo(int floor, int srcTile, int destTile, boolean includeDoors) {
+	public static boolean isNextTo(int floor, int srcTile, int destTile, boolean includeDoors, boolean includeLowWalls) {
 		// returns true if srcTile and destTile are touching horizontally or vertically (or are the same tile)
 		// if the tiles are next to eachother but there's a barrier between them (non-zero impassableType)
 		// then they are not technically next to eachother (i.e. there's a wall between the tiles).
@@ -525,6 +519,34 @@ public class PathFinder {
 		if (includeDoors) {
 			srcImpassableType |= DoorDao.getDoorImpassableByTileId(floor, srcTile);
 			destImpassableType |= DoorDao.getDoorImpassableByTileId(floor, destTile);
+		}
+		
+		if (!includeLowWalls) {
+			// if we're not including low walls, then clear the impassable type of walls that are flagged as low
+			if (ImpassableTypes.isImpassable(ImpassableTypes.TOP_IS_LOW, srcImpassableType))
+				srcImpassableType &= ~ImpassableTypes.TOP.getValue();
+			
+			if (ImpassableTypes.isImpassable(ImpassableTypes.LEFT_IS_LOW, srcImpassableType))
+				srcImpassableType &= ~ImpassableTypes.LEFT.getValue();
+			
+			if (ImpassableTypes.isImpassable(ImpassableTypes.RIGHT_IS_LOW, srcImpassableType))
+				srcImpassableType &= ~ImpassableTypes.RIGHT.getValue();
+			
+			if (ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM_IS_LOW, srcImpassableType))
+				srcImpassableType &= ~ImpassableTypes.BOTTOM.getValue();
+			
+			// also do dest
+			if (ImpassableTypes.isImpassable(ImpassableTypes.TOP_IS_LOW, destImpassableType))
+				destImpassableType &= ~ImpassableTypes.TOP.getValue();
+			
+			if (ImpassableTypes.isImpassable(ImpassableTypes.LEFT_IS_LOW, destImpassableType))
+				destImpassableType &= ~ImpassableTypes.LEFT.getValue();
+			
+			if (ImpassableTypes.isImpassable(ImpassableTypes.RIGHT_IS_LOW, destImpassableType))
+				destImpassableType &= ~ImpassableTypes.RIGHT.getValue();
+			
+			if (ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM_IS_LOW, destImpassableType))
+				destImpassableType &= ~ImpassableTypes.BOTTOM.getValue();
 		}
 		
 		return  

@@ -41,7 +41,7 @@ public class OpenCloseResponse extends Response {
 		}
 		FightManager.cancelFight(player, responseMaps);
 		
-		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), tileId, false)) {
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), tileId, false, true)) {
 			Stack<Integer> path = PathFinder.findPathToDoor(player.getFloor(), player.getTileId(), tileId);
 			// empty check because it's not guaranteed that there is a path between the player and the door.
 			if (!path.isEmpty()) {

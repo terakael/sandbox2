@@ -91,7 +91,7 @@ public class UseResponse extends Response {
 		
 		boolean targetIsDoor = DoorDao.getDoorDtoByTileId(player.getFloor(), request.getDest()) != null;
 		
-		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getDest(), !targetIsDoor)) {
+		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getDest(), !targetIsDoor, true)) {
 			if (targetIsDoor) {
 				player.setPath(PathFinder.findPathToDoor(player.getFloor(), player.getTileId(), request.getDest()));
 			} else {
