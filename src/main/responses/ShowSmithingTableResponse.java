@@ -8,9 +8,7 @@ import main.processing.Player;
 import main.requests.Request;
 
 public class ShowSmithingTableResponse extends Response { 
-	@Setter private int oreId;
 	@Setter private List<SmithableDto> smithingOptions;
-	@Setter private int storedCoal;
 	public ShowSmithingTableResponse() {
 		setAction("show_smithing_table");
 	}

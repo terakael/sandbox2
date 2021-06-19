@@ -33,12 +33,14 @@ import main.requests.FishRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.requests.SmithRequest;
 import main.responses.AddExpResponse;
 import main.responses.DeathResponse;
 import main.responses.EquipResponse;
 import main.responses.FinishCookingResponse;
 import main.responses.FinishFishingResponse;
 import main.responses.FinishMiningResponse;
+import main.responses.FinishSmeltResponse;
 import main.responses.FinishSmithResponse;
 import main.responses.FinishUseResponse;
 import main.responses.FishResponse;
@@ -72,6 +74,7 @@ public class Player extends Attackable {
 		following,
 		mining,
 		smithing,
+		smelting,
 		fighting,
 		using,
 		climbing, // ladders etc, give a tick or so duration (like for climbing animation in the future)
@@ -351,7 +354,21 @@ public class Player extends Attackable {
 		case smithing:
 			if (--tickCounter <= 0) {
 				new FinishSmithResponse().process(savedRequest, this, responseMaps);
-				new SmithResponse().process(savedRequest, this, responseMaps);
+				
+				SmithRequest smithReq = (SmithRequest)savedRequest;
+				smithReq.setAmount(smithReq.getAmount() - 1);
+				if (smithReq.getAmount() > 0) {
+					new SmithResponse().process(smithReq, this, responseMaps);
+				} else {
+					setState(PlayerState.idle); // finished all the actions
+				}
+			}
+			break;
+			
+		case smelting:
+			if (--tickCounter <= 0) {
+				new FinishSmeltResponse().process(savedRequest, this, responseMaps);
+				new UseResponse().process(savedRequest, this, responseMaps);
 			}
 			break;
 			

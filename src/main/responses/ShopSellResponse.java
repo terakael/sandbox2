@@ -1,6 +1,8 @@
 package main.responses;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,14 +23,19 @@ import main.types.Items;
 import main.types.StorageTypes;
 
 public class ShopSellResponse extends Response {
+	// if the client tries to send a different amount, then fail.  These are the only allowed amounts.
+	private static Set<Integer> allowedRequestAmounts = new HashSet<>(Arrays.asList(1, 5, 10, 50));
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof ShopSellRequest))
 			return;
 		
-		ShopSellRequest request = (ShopSellRequest)req;
-		int requestAmount = Math.min(request.getAmount(), 10);// prevention of client injection
+		final ShopSellRequest request = (ShopSellRequest)req;
+		
+		int requestAmount = request.getAmount();
+		if (!allowedRequestAmounts.contains(requestAmount))
+			return;
 		
 		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (!invItemIds.contains(request.getObjectId()))

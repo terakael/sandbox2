@@ -328,7 +328,7 @@ public class PathFinder {
 		}
 		
 		// cannot move to an impassable tile.
-		if (nodes.get(to).getImpassableTypes() == 15) // TODO inaccurate
+		if ((nodes.get(to).getImpassableTypes() & 15) == 15) // TODO inaccurate
 			includeToTile = false;
 		
 		ArrayList<PathNode> open = new ArrayList<>();
@@ -361,7 +361,7 @@ public class PathFinder {
 				
 				// we're at the final step - if the final step is completely impassable we want to keep processing
 				// but if there is some passable way and we're not actually next to it then continue.
-				if (successor == nodes.get(to) && successor.impassableTypes != 15 && !isNextTo(floor, q.id, successor.id, !toDoor, true))
+				if (successor == nodes.get(to) && (successor.impassableTypes & 15) != 15 && !isNextTo(floor, q.id, successor.id, !toDoor, true))
 					continue;
 				
 				// for NPCs so they don't wander outside their range.
@@ -553,22 +553,22 @@ public class PathFinder {
 			// destTile is to the left, destTile doesn't have a right-facing wall, srcTile doesn't have a left-facing wall
 			((destTile == srcTile - 1 || (srcTile % LENGTH == 0 && destTile == srcTile + LENGTH - 1))  && 
 				((!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, destImpassableType) && 
-					!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, srcImpassableType)) || destImpassableType == 15)) ||
+					!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, srcImpassableType)) || (destImpassableType & 15) == 15)) ||
 			
 			// destTile is to the right; destTile doesn't have a left-facing wall, srcTile doesn't have a right-facing wall
 			((destTile == srcTile + 1 || (srcTile % LENGTH == LENGTH - 1 && destTile == srcTile - LENGTH + 1))&& 
 				((!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, destImpassableType) && 
-					!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, srcImpassableType)) || destImpassableType == 15)) ||
+					!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, srcImpassableType)) || (destImpassableType & 15) == 15)) ||
 			
 			// destTile is above; destTile doesn't have a bottom-facing wall, srcTile doesn't have a top-facing wall
 			(destTile == srcTile - LENGTH && 
 				((!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, destImpassableType) && 
-					!ImpassableTypes.isImpassable(ImpassableTypes.TOP, srcImpassableType)) || destImpassableType == 15)) ||
+					!ImpassableTypes.isImpassable(ImpassableTypes.TOP, srcImpassableType)) || (destImpassableType & 15) == 15)) ||
 			
 			// destTile is below; destTile doesn't have a top-facing wall, srcTile doesn't have a bottom-facing wall
 			(destTile == srcTile + LENGTH &&
 				((!ImpassableTypes.isImpassable(ImpassableTypes.TOP, destImpassableType) && 
-					!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, srcImpassableType)) || destImpassableType == 15))
+					!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, srcImpassableType)) || (destImpassableType & 15) == 15))
 			
 			|| destTile == srcTile;// same tile
 	}

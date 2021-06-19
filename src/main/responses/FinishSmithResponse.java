@@ -1,18 +1,20 @@
 package main.responses;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import main.database.dao.ItemDao;
 import main.database.dao.MineableDao;
 import main.database.dao.PlayerStorageDao;
+import main.database.dao.SmeltableDao;
 import main.database.dao.SmithableDao;
+import main.database.dao.StatsDao;
 import main.database.dto.SmithableDto;
 import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.SmithRequest;
-import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
 
@@ -40,28 +42,22 @@ public class FinishSmithResponse extends Response {
 			return;
 		}
 		
-		// player has the correct materials, remove the materials and add the smithed item
-		List<Integer> inventoryList = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-		List<Integer> material1Slots = getAffectedSlots(inventoryList, dto.getMaterial1(), dto.getCount1());
-		List<Integer> material2Slots = getAffectedSlots(inventoryList, dto.getMaterial2(), dto.getCount2());
-		List<Integer> material3Slots = getAffectedSlots(inventoryList, dto.getMaterial3(), dto.getCount3());
-		
-		for (Integer slot : material1Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, 0, 1, 0);
-		if (dto.getMaterial1() == Items.COAL_ORE.getValue() && material1Slots.size() < dto.getCount1()) {
-			PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.FURNACE, 0, -(dto.getCount1() - material1Slots.size()));
+		List<Integer> playerInvIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+		final int playerBarCount = Collections.frequency(playerInvIds, dto.getBarId());
+		if (playerBarCount < dto.getRequiredBars()) {
+			return;
 		}
 		
-		for (Integer slot : material2Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, 0, 1, 0);
-		if (dto.getMaterial2() == Items.COAL_ORE.getValue() && material2Slots.size() < dto.getCount2()) {
-			PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.FURNACE, 0, -(dto.getCount2() - material2Slots.size()));
+		// level check
+		final int smithingLevel = StatsDao.getStatLevelByStatIdPlayerId(Stats.SMITHING, player.getId());
+		if (smithingLevel < dto.getLevel()) {
+			return;
 		}
-		
-		for (Integer slot : material3Slots)
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, 0, 1, 0);
-		if (dto.getMaterial3() == Items.COAL_ORE.getValue() && material3Slots.size() < dto.getCount3()) {
-			PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.FURNACE, 0, -(dto.getCount3() - material3Slots.size()));
+
+		for (int i = 0; i < dto.getRequiredBars(); ++i) {
+			int barIndex = playerInvIds.indexOf(dto.getBarId());
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, barIndex, 0, 0, 0);
+			playerInvIds.set(barIndex, 0);
 		}
 		
 		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, dto.getItemId(), 1, ItemDao.getMaxCharges(dto.getItemId()));
@@ -70,12 +66,7 @@ public class FinishSmithResponse extends Response {
 		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId())));
 		responseMaps.addClientOnlyResponse(player, this);
 		
-		int exp = MineableDao.getMineableExpByItemId(dto.getMaterial1()) * dto.getCount1();
-		if (dto.getMaterial2() != 0)
-			exp += MineableDao.getMineableExpByItemId(dto.getMaterial2()) * dto.getCount2();
-		if (dto.getMaterial3() != 0)
-			exp += MineableDao.getMineableExpByItemId(dto.getMaterial3()) * dto.getCount3();
-		
+		final int exp = SmeltableDao.getSmeltableByBarId(dto.getBarId()).getLevel() * 10;
 		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING.getValue(), exp), player, responseMaps);
 		
 		// update the inventory for the client

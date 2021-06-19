@@ -1,5 +1,8 @@
 package main.responses;
 
+import java.util.Collections;
+import java.util.List;
+
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SmithableDao;
@@ -32,9 +35,6 @@ public class SmithResponse extends Response {
 		
 		SmithRequest smithRequest = (SmithRequest)req;
 		
-		// checks:
-		// is player next to furnace
-		
 		// is item smithable
 		SmithableDto dto = SmithableDao.getSmithableItemByItemId(smithRequest.getItemId());
 		if (dto == null) {
@@ -53,16 +53,21 @@ public class SmithResponse extends Response {
 			return;
 		}
 		
-		// does player have correct materials in inventory		
-		if (!playerHasItemsInInventory(player.getId(), dto.getMaterial1(), dto.getCount1()) ||
-			!playerHasItemsInInventory(player.getId(), dto.getMaterial2(), dto.getCount2()) ||
-			!playerHasItemsInInventory(player.getId(), dto.getMaterial3(), dto.getCount3())) {
-			
+		List<Integer> playerInvIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+		if (!playerInvIds.contains(ItemDao.getIdFromName("hammer"))) {
+			setRecoAndResponseText(0, "you need a hammer to smith with.");
+			responseMaps.addClientOnlyResponse(player, this);
+			player.setState(PlayerState.idle);
+			return;
+		}
+		
+		final int playerBarCount = Collections.frequency(playerInvIds, dto.getBarId());
+		if (playerBarCount < dto.getRequiredBars()) {
 			// if we're already smithing, then say we've run out.
 			// if we aren't smithing then we don't have the materials to start smithing.
 			final String responseText = player.getState() == PlayerState.smithing 
-					? "you have run out of materials to smith."
-					: "you don't have the correct materials to smith that.";
+					? "you no longer have enough bars to continue."
+					: String.format("you need %d bars to smith that.", dto.getRequiredBars());
 			
 			setRecoAndResponseText(0, responseText);
 			responseMaps.addClientOnlyResponse(player, this);
@@ -72,7 +77,7 @@ public class SmithResponse extends Response {
 		}
 		
 		if (player.getState() != PlayerState.smithing) {
-			setRecoAndResponseText(1, "you throw the ore into the furnace...");
+			setRecoAndResponseText(1, "you start hammering the bar...");
 			responseMaps.addClientOnlyResponse(player, this);
 			
 			player.setState(PlayerState.smithing);
@@ -83,16 +88,5 @@ public class SmithResponse extends Response {
 		
 		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(dto.getItemId()).getSpriteFrameId());
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
-	}
-
-	private boolean playerHasItemsInInventory(int playerId, int materialId, int count) {
-		if (materialId == 0)
-			return true;// item doesn't require this material
-		
-		int itemsInInventory = PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(playerId, materialId, StorageTypes.INVENTORY);
-		if (itemsInInventory < count && materialId == Items.COAL_ORE.getValue()) {// coal is a special case; check coal storage
-			itemsInInventory += PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(playerId, Items.COAL_ORE.getValue(), StorageTypes.FURNACE);
-		}
-		return itemsInInventory >= count;
 	}
 }

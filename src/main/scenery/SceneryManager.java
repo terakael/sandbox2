@@ -27,6 +27,8 @@ public class SceneryManager {
 		sceneryMap.put(114, new Door());
 		sceneryMap.put(115, new Door());
 		sceneryMap.put(116, new Door());
+		
+		sceneryMap.put(120, new Anvil());
 	}
 	public static Scenery getScenery(int sceneryId) {
 		if (sceneryMap.containsKey(sceneryId))
