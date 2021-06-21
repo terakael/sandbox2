@@ -18,7 +18,7 @@ import main.responses.ResponseMaps;
 import main.types.Stats;
 import main.types.StorageTypes;
 
-public class Furnace extends Scenery {
+public class Furnace implements Scenery {
 
 	@Override
 	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {

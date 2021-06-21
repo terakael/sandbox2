@@ -15,7 +15,7 @@ import main.types.Items;
 import main.types.StorageTypes;
 import main.utils.RandomUtil;
 
-public abstract class Obelisk extends Scenery {
+public abstract class Obelisk implements Scenery {
 	protected int enchantChance = 0;
 	
 	protected boolean attemptToEnchant(Items src, Items dest, int slot, Player player, ResponseMaps responseMaps) {

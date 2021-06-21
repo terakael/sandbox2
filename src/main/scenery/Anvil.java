@@ -1,8 +1,6 @@
 package main.scenery;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import main.database.dao.SmithableDao;
@@ -13,7 +11,7 @@ import main.requests.UseRequest;
 import main.responses.ResponseMaps;
 import main.responses.ShowSmithingTableResponse;
 
-public class Anvil extends Scenery {
+public class Anvil implements Scenery {
 
 	@Override
 	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {

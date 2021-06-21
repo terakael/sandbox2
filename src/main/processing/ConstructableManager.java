@@ -15,6 +15,7 @@ public class ConstructableManager {
 	
 	public static void process(ResponseMaps responseMaps) {
 		constructableLifetime.forEach((floor, tileIdMap) -> {
+			
 			tileIdMap.replaceAll((k, v) -> v -= 1);
 			
 			Set<Integer> tileIdsToRemove = tileIdMap.entrySet().stream()
@@ -24,6 +25,7 @@ public class ConstructableManager {
 			
 			tileIdsToRemove.forEach(tileId -> 
 				responseMaps.addLocalResponse(floor, tileId, new ConstructableDespawnResponse(tileId)));
+			
 			
 			constructableInstances.get(floor).keySet().removeIf(e -> tileIdsToRemove.contains(e));
 			constructableLifetime.get(floor).keySet().removeIf(e -> tileIdsToRemove.contains(e));

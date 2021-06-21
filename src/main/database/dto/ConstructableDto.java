@@ -8,13 +8,13 @@ import lombok.Getter;
 public class ConstructableDto {
 	private int resultingSceneryId;
 	private int level;
-	private int exp;
-	private int toolId;
+	private transient int exp;
+	private transient int toolId;
 	private int plankId;
 	private int plankAmount;
 	private int barId;
 	private int barAmount;
 	private int tertiaryId;
 	private int tertiaryAmount;
-	private int lifetimeTicks;
+	private transient int lifetimeTicks;
 }

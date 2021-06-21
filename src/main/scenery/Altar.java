@@ -16,7 +16,7 @@ import main.responses.ResponseMaps;
 import main.types.Stats;
 import main.types.StorageTypes;
 
-public class Altar extends Scenery {
+public class Altar implements Scenery {
 
 	@Override
 	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {

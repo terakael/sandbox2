@@ -717,6 +717,7 @@ public class UseResponse extends Response {
 			});
 		} else {
 			// show a menu with all the constructables
+			new ShowConstructionTableResponse(constructables).process(null, player, responseMaps);
 		}
 		
 		return true;

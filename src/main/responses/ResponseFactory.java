@@ -171,6 +171,15 @@ public class ResponseFactory {
 		case "chop":
 			response = new ChopResponse();
 			break;
+		case "drink from":
+			response = new DrinkFromResponse();
+			break;
+		case "construction":
+			response = new ConstructionResponse();
+			break;
+		case "show_construction_materials":
+			response = new ShowConstructionMaterialsResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

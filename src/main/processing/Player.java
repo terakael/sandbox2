@@ -535,6 +535,24 @@ public class Player extends Attackable {
 		new StatBoostResponse().process(null, this, responseMaps);
 	}
 	
+	public void boostStat(Stats stat, int amount, ResponseMaps responseMaps) {
+		HashMap<Stats, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId()); 
+		int currentBoost = boosts.get(stat);
+		
+		// max hitpoints depends on the hitpoints bonus (i.e. +5 means we can heal +5 over max hitpoints)
+		int maxBoost = stat.equals(Stats.HITPOINTS) ? getBonuses().get(stat) : 0;
+		
+		currentBoost += amount;
+		if (currentBoost < maxBoost)
+			currentBoost = maxBoost;
+		
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), stat, currentBoost);
+		
+		setBoosts(boosts);
+		
+		new StatBoostResponse().process(null, this, responseMaps);
+	}
+	
 	public void setState(PlayerState state) {
 		this.state = state;
 		this.shopId = 0;

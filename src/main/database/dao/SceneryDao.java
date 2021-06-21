@@ -214,4 +214,12 @@ public class SceneryDao {
 				.map(SceneryDto::getId)
 				.orElse(-1);
 	}
+	
+	public static String getNameById(int id) {
+		return allScenery.stream()
+				.filter(e -> e.getId() == id)
+				.findFirst()
+				.map(SceneryDto::getName)
+				.orElse("");
+	}
 }

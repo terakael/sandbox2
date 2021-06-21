@@ -57,6 +57,9 @@ public class RequestFactory {
 		map.put("open", OpenCloseRequest.class);
 		map.put("toggle_duel_rule", ToggleDuelRuleRequest.class);
 		map.put("chop", ChopRequest.class);
+		map.put("construction", ConstructionRequest.class);
+		map.put("drink from", DrinkFromRequest.class);
+		map.put("show_construction_materials", ShowConstructionMaterialsRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

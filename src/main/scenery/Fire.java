@@ -1,13 +1,11 @@
 package main.scenery;
 
-import java.util.Collections;
 import java.util.List;
 
 import main.database.dao.CookableDao;
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dto.CookableDto;
-import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.UseRequest;
@@ -18,7 +16,7 @@ import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
 
-public class Fire extends Scenery {
+public class Fire implements Scenery {
 
 	@Override
 	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {

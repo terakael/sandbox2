@@ -47,6 +47,14 @@ public abstract class ConsumableResponse extends Response {
 		
 		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, ConsumableDao.getBecomesItemId(itemId), 1, ItemDao.getMaxCharges(itemId));
 		
+		InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
+		invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
+		invUpdate.setResponseText(String.format("you %s the %s.", getAction(), ItemDao.getNameFromId(itemId)));
+		
+		consume(player, itemId, responseMaps);
+	}
+	
+	public void consume(Player player, int itemId, ResponseMaps responseMaps) {
 		boolean hpModified = false;
 		HashMap<Stats, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(player.getId());
 		
@@ -108,10 +116,6 @@ public abstract class ConsumableResponse extends Response {
 		
 		player.refreshBoosts();
 		new StatBoostResponse().process(null, player, responseMaps);
-		
-		InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
-		invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
-		invUpdate.setResponseText(String.format("you %s the %s.", getAction(), ItemDao.getNameFromId(itemId)));
 		
 		handleCustomActions(itemId, player, responseMaps);
 	}

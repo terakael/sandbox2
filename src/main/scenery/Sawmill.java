@@ -18,7 +18,7 @@ import main.responses.ResponseMaps;
 import main.types.Stats;
 import main.types.StorageTypes;
 
-public class Sawmill extends Scenery {
+public class Sawmill implements Scenery {
 	private static int REQUIRED_LOGS = 3;
 
 	@Override

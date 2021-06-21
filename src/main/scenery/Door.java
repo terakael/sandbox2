@@ -9,7 +9,7 @@ import main.responses.OpenCloseResponse;
 import main.responses.PlayerUpdateResponse;
 import main.responses.ResponseMaps;
 
-public class Door extends Scenery {
+public class Door implements Scenery {
 
 	@Override
 	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {
