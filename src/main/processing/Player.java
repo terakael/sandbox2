@@ -182,7 +182,7 @@ public class Player extends Attackable {
 		bonuses.put(Stats.MAGIC, equipment.getMage());
 	}
 	
-	public void process(ResponseMaps responseMaps) {
+	public void process(int tick, ResponseMaps responseMaps) {
 		// called each tick; build a response where necessary
 		if (postFightCooldown > 0)
 			--postFightCooldown;
@@ -196,6 +196,11 @@ public class Player extends Attackable {
 		
 		if (prayerPoints > 0)
 			processPrayer(responseMaps);
+		
+		if (tick % 3 == 0 && ConstructableManager.constructableIsInRadius(getFloor(), getTileId(), 139, 3)) {
+			if (prayerPoints < StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, getId()))
+				setPrayerPoints(prayerPoints + 1, responseMaps);
+		}
 		
 		// decrement the remaining ticks on every active buff
 		activeBuffs.replaceAll((k, v) -> v -= 1);
@@ -529,24 +534,6 @@ public class Player extends Attackable {
 			
 			StatsDao.setRelativeBoostByPlayerIdStatId(getId(), entry.getKey(), relativeBoost);
 		}
-		
-		setBoosts(boosts);
-		
-		new StatBoostResponse().process(null, this, responseMaps);
-	}
-	
-	public void boostStat(Stats stat, int amount, ResponseMaps responseMaps) {
-		HashMap<Stats, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId()); 
-		int currentBoost = boosts.get(stat);
-		
-		// max hitpoints depends on the hitpoints bonus (i.e. +5 means we can heal +5 over max hitpoints)
-		int maxBoost = stat.equals(Stats.HITPOINTS) ? getBonuses().get(stat) : 0;
-		
-		currentBoost += amount;
-		if (currentBoost < maxBoost)
-			currentBoost = maxBoost;
-		
-		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), stat, currentBoost);
 		
 		setBoosts(boosts);
 		

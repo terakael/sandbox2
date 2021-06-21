@@ -143,7 +143,7 @@ public class WorldProcessor implements Runnable {
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			final Player player = entry.getValue();
 			
-			player.process(responseMaps);
+			player.process(tick, responseMaps);
 			
 			List<NPC> npcs = NPCManager.get().getNpcsNearTile(player.getFloor(), player.getTileId(), 15);
 			

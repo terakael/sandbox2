@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import main.database.dao.ConstructableDao;
+import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.StatsDao;
@@ -17,6 +18,7 @@ import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.ConstructionRequest;
 import main.requests.Request;
+import main.types.ItemAttributes;
 import main.types.Stats;
 import main.types.StorageTypes;
 
@@ -34,7 +36,11 @@ public class FinishConstructionResponse extends Response {
 		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		final int plankCount = Collections.frequency(invItemIds, constructable.getPlankId());
 		final int barCount = Collections.frequency(invItemIds, constructable.getBarId());
-		final int tertiaryCount = Collections.frequency(invItemIds, constructable.getTertiaryId());
+		
+		final boolean tertiaryIsStackable = ItemDao.itemHasAttribute(constructable.getTertiaryId(), ItemAttributes.STACKABLE);
+		final int tertiaryCount = tertiaryIsStackable
+				? PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), constructable.getTertiaryId(), StorageTypes.INVENTORY)
+				: Collections.frequency(invItemIds, constructable.getTertiaryId());
 		
 		if (plankCount < constructable.getPlankAmount() || barCount < constructable.getBarAmount() || tertiaryCount < constructable.getTertiaryAmount()) {
 			setRecoAndResponseText(0, "you don't have the correct materials to make that.");
@@ -77,10 +83,15 @@ public class FinishConstructionResponse extends Response {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, barIndex, 0, 0, 0);
 			invItemIds.set(barIndex, 0);
 		}
-		for (int i = 0; i < constructable.getTertiaryAmount(); ++i) {
+		if (tertiaryIsStackable) {
 			int tertiaryIndex = invItemIds.indexOf(constructable.getTertiaryId());
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, tertiaryIndex, 0, 0, 0);
-			invItemIds.set(tertiaryIndex, 0);
+			PlayerStorageDao.setCountOnSlot(player.getId(), StorageTypes.INVENTORY, tertiaryIndex, tertiaryCount - constructable.getTertiaryAmount());
+		} else {
+			for (int i = 0; i < constructable.getTertiaryAmount(); ++i) {
+				int tertiaryIndex = invItemIds.indexOf(constructable.getTertiaryId());
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, tertiaryIndex, 0, 0, 0);
+				invItemIds.set(tertiaryIndex, 0);
+			}
 		}
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		

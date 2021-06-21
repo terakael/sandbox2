@@ -1,10 +1,10 @@
 package main.responses;
 
-import lombok.Setter;
 import main.database.dao.FishableDao;
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dto.FishableDto;
+import main.processing.ConstructableManager;
 import main.processing.Player;
 import main.requests.AddExpRequest;
 import main.requests.FishRequest;
@@ -12,9 +12,9 @@ import main.requests.Request;
 import main.requests.RequestFactory;
 import main.types.Stats;
 import main.types.StorageTypes;
+import main.utils.RandomUtil;
 
 public class FinishFishingResponse extends Response {
-	@Setter private int tileId;
 	
 	public FinishFishingResponse() {
 		setAction("finish_fishing");
@@ -34,9 +34,12 @@ public class FinishFishingResponse extends Response {
 			return;
 		}
 		
-		tileId = request.getTileId();// the tile we just finished fishing
-		
 		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, fishable.getItemId(), 1, ItemDao.getMaxCharges(fishable.getItemId()));
+		
+		// 20% chance to catch a double fish if near a fishing totem pole
+		if (ConstructableManager.constructableIsInRadius(player.getFloor(), player.getTileId(), 137, 3) && RandomUtil.chance(20)) {
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, fishable.getItemId(), 1, ItemDao.getMaxCharges(fishable.getItemId()));
+		}
 		
 		AddExpRequest addExpReq = new AddExpRequest();
 		addExpReq.setId(player.getId());

@@ -18,6 +18,7 @@ import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.ConstructionRequest;
 import main.requests.Request;
+import main.types.ItemAttributes;
 import main.types.Stats;
 import main.types.StorageTypes;
 
@@ -38,10 +39,11 @@ public class ConstructionResponse extends Response {
 		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		final int plankCount = Collections.frequency(invItemIds, constructable.getPlankId());
 		final int barCount = Collections.frequency(invItemIds, constructable.getBarId());
-		final int tertiaryCount = Collections.frequency(invItemIds, constructable.getTertiaryId());
+		final int tertiaryCount = ItemDao.itemHasAttribute(constructable.getTertiaryId(), ItemAttributes.STACKABLE)
+				? PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), constructable.getTertiaryId(), StorageTypes.INVENTORY)
+				: Collections.frequency(invItemIds, constructable.getTertiaryId());
 
-		if (plankCount < constructable.getPlankAmount() || barCount < constructable.getBarAmount()
-				|| tertiaryCount < constructable.getTertiaryAmount()) {
+		if (plankCount < constructable.getPlankAmount() || barCount < constructable.getBarAmount() || tertiaryCount < constructable.getTertiaryAmount()) {
 			setRecoAndResponseText(0, "you don't have the correct materials to make that.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;

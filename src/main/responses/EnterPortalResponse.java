@@ -1,6 +1,9 @@
 package main.responses;
 
+import main.database.dao.ConstructableDao;
 import main.database.dao.SceneryDao;
+import main.database.dao.TeleportableDao;
+import main.database.dto.TeleportableDto;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
@@ -35,6 +38,14 @@ public class EnterPortalResponse extends Response {
 		case 87:// yellow
 			teleTileId = 871947954;
 			teleFloor = 0;
+			break;
+			
+		// constructables have the rune as the tertiary, so we can get the coords from there
+		case 143: // tyrotown tele portal
+			final int teleRuneId = ConstructableDao.getConstructableBySceneryId(sceneryId).getTertiaryId();
+			TeleportableDto teleportable = TeleportableDao.getTeleportableByItemId(teleRuneId);
+			teleTileId = teleportable.getTileId();
+			teleFloor = teleportable.getFloor();
 			break;
 		
 		default:

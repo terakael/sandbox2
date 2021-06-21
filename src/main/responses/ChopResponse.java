@@ -8,6 +8,7 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.StatsDao;
 import main.database.dto.ChoppableDto;
+import main.processing.ConstructableManager;
 import main.processing.DepletionManager;
 import main.processing.FightManager;
 import main.processing.PathFinder;
@@ -110,7 +111,11 @@ public class ChopResponse extends Response {
 			int usedHatchetId = hatchetId;
 			if (inventoryItemIds.contains(goldenHatchetId))
 				usedHatchetId = goldenHatchetId;
-			player.setTickCounter(usedHatchetId == hatchetId ? 5 : 3);
+			
+			int tickCounter = usedHatchetId == hatchetId ? 5 : 3;
+			if (ConstructableManager.constructableIsInRadius(player.getFloor(), player.getTileId(), 138, 3))
+				tickCounter -= 1;
+			player.setTickCounter(tickCounter);
 			
 			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
 					new ActionBubbleResponse(player, ItemDao.getItem(usedHatchetId)));
