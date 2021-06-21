@@ -8,8 +8,8 @@ import main.database.dao.MineableDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dto.InventoryItemDto;
 import main.database.dto.MineableDto;
+import main.processing.DepletionManager;
 import main.processing.Player;
-import main.processing.RockManager;
 import main.requests.AddExpRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
@@ -112,9 +112,9 @@ public class FinishMiningResponse extends Response {
 				
 				int depletionChance = Math.max(20 - ((miningLevel - requirementLevel) / 2), requirementLevel / 10);
 				if (RandomUtil.getRandom(0,  100) < depletionChance) {
-					RockManager.addDepletedRock(player.getFloor(), tileId, mineable.getRespawnTicks());
+					DepletionManager.addDepletedScenery(DepletionManager.DepletionType.rock, player.getFloor(), tileId, mineable.getRespawnTicks());
 					
-					RockDepleteResponse rockDepleteResponse = new RockDepleteResponse();
+					SceneryDepleteResponse rockDepleteResponse = new SceneryDepleteResponse();
 					rockDepleteResponse.setTileId(tileId);
 					responseMaps.addLocalResponse(player.getFloor(), tileId, rockDepleteResponse);
 				}

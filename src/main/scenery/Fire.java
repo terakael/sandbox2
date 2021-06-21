@@ -59,10 +59,8 @@ public class Fire extends Scenery {
 			}
 			player.setTickCounter(5);
 			
-			ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(cookable.getCookedItemId()).getSpriteFrameId());
-			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
-			
-			ClientResourceManager.addItems(player, Collections.singleton(cookable.getCookedItemId()));
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
+					new ActionBubbleResponse(player, ItemDao.getItem(cookable.getCookedItemId())));
 			return true;
 		} else {
 			if (player.getState() == PlayerState.cooking) {

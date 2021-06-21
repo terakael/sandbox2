@@ -143,6 +143,13 @@ public class ClientResourceManager {
 					.collect(Collectors.toSet()));
 	}
 	
+	public static void addLocalScenery(Player player, Set<Integer> sceneryIds) {
+		// used for constructables
+		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
+		for (Player localPlayer : localPlayers)
+			addScenery(localPlayer, sceneryIds);
+	}
+	
 	public static void addNpcs(Player player, Set<Integer> npcIds) {
 		Set<Integer> selectedNpcIds = extractUnloadedNpcIds(player, npcIds);
 		if (selectedNpcIds.isEmpty())
@@ -184,6 +191,12 @@ public class ClientResourceManager {
 		addSpriteFramesAndSpriteMaps(player, selectedItems.stream()
 				.map(ItemDto::getSpriteFrameId)
 				.collect(Collectors.toSet()));
+	}
+	
+	public static void addLocalItems(Player player, Set<Integer> itemIds) {
+		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
+		for (Player localPlayer : localPlayers)
+			addItems(localPlayer, itemIds);
 	}
 	
 	public static void addAnimations(Player player, Set<Integer> playerIds) {

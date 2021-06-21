@@ -13,7 +13,11 @@ public enum Stats {
 	MAGIC(8),
 	HERBLORE(9),
 	FISHING(10),
-	COOKING(11);
+	COOKING(11),
+	WOODCUTTING(12),
+	FLETCHING(13),
+	CONSTRUCTION(14),
+	RANGED(15);
 	
 	@Getter private int value;
 	Stats(int value) {

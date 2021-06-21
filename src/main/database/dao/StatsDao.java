@@ -210,14 +210,15 @@ public class StatsDao {
 			getLevelFromExp(stats.get(Stats.DEFENCE.getValue()).intValue()),
 			getLevelFromExp(stats.get(Stats.PRAYER.getValue()).intValue()),
 			getLevelFromExp(stats.get(Stats.HITPOINTS.getValue()).intValue()),
-			getLevelFromExp(stats.get(Stats.MAGIC.getValue()).intValue())
+			getLevelFromExp(stats.get(Stats.MAGIC.getValue()).intValue()),
+			getLevelFromExp(stats.get(Stats.RANGED.getValue()).intValue())
 		);
 	}
 	
-	public static int getCombatLevelByStats(int str, int att, int def, int pray, int hp, int magic) {
+	public static int getCombatLevelByStats(int str, int att, int def, int pray, int hp, int magic, int ranged) {
 		return (int)Math.ceil(((double)str + att) / 4) 
 				+ (int)Math.ceil(((double)def + hp) / 5) 
-				+ (int)Math.ceil(((double)magic + pray) / 6);
+				+ (int)Math.ceil(((double)Math.max(magic, ranged) + pray) / 6);
 	}
 	
 	public static int getCombatLevelByStats(Map<Stats, Integer> stats) {
@@ -227,7 +228,8 @@ public class StatsDao {
 				stats.get(Stats.DEFENCE),
 				stats.get(Stats.PRAYER),
 				stats.get(Stats.HITPOINTS),
-				stats.get(Stats.MAGIC)
+				stats.get(Stats.MAGIC),
+				stats.get(Stats.RANGED)
 			);
 	}
 	

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.GroundItemManager;
+import main.database.dao.BuryableDao;
 import main.database.dao.ItemDao;
 import main.database.dao.NPCDao;
 import main.database.dao.PlayerStorageDao;
@@ -14,6 +15,9 @@ import main.database.dao.StatsDao;
 import main.database.dto.NPCDto;
 import main.database.dto.NpcDropDto;
 import main.processing.Player.PlayerState;
+import main.requests.AddExpRequest;
+import main.responses.AddExpResponse;
+import main.responses.BuryResponse;
 import main.responses.MessageResponse;
 import main.responses.NpcUpdateResponse;
 import main.responses.PvmStartResponse;
@@ -55,14 +59,13 @@ public class NPC extends Attackable {
 		stats.put(Stats.MAGIC, dto.getMagic());
 		setStats(stats);
 		
-		combatLevel = StatsDao.getCombatLevelByStats(dto.getStr(), dto.getAcc(), dto.getDef(), dto.getPray(), dto.getHp(), dto.getMagic());
+		combatLevel = StatsDao.getCombatLevelByStats(dto.getStr(), dto.getAcc(), dto.getDef(), dto.getPray(), dto.getHp(), dto.getMagic(), 1);
 		
 		HashMap<Stats, Integer> bonuses = new HashMap<>();
 		bonuses.put(Stats.STRENGTH, dto.getStrBonus());
 		bonuses.put(Stats.ACCURACY, dto.getAccBonus());
 		bonuses.put(Stats.DEFENCE, dto.getDefBonus());
 		bonuses.put(Stats.PRAYER, dto.getPrayBonus());
-//		bonuses.put(Stats.HITPOINTS, dto.getHpBonus());
 		setBonuses(bonuses);
 		
 		HashMap<Stats, Integer> boosts = new HashMap<>();
@@ -77,7 +80,6 @@ public class NPC extends Attackable {
 		setMaxCooldown(dto.getAttackSpeed());
 		
 		huntTimer = RandomUtil.getRandom(0, MAX_HUNT_TIMER);// just so all the NPCs aren't hunting on the same tick
-//		tickCounter = RandomUtil.getRandom(1, maxTickCount);
 	}
 	
 	public void process(int currentTick, ResponseMaps responseMaps) {
@@ -228,9 +230,15 @@ public class NPC extends Attackable {
 				})
 				.collect(Collectors.toList());
 		
-		for (NpcDropDto dto : potentialDrops) {
-			if (RandomUtil.getRandom(0, dto.getRate()) == 0) {
-				GroundItemManager.add(floor, ((Player)killer).getId(), dto.getItemId(), tileId, dto.getCount(), ItemDao.getMaxCharges(dto.getItemId()));
+		final Player player = (Player)killer;
+		for (NpcDropDto drop : potentialDrops) {
+			if (RandomUtil.getRandom(0, drop.getRate()) == 0) {
+				if (ConstructableManager.constructableIsInRadius(floor, tileId, 129, 3) &&  BuryableDao.isBuryable(drop.getItemId())) {
+					// give the player the corresponding prayer exp instead of dropping it
+					BuryResponse.handleBury(player, drop.getItemId(), responseMaps);
+				} else {
+					GroundItemManager.add(floor, player.getId(), drop.getItemId(), tileId, drop.getCount(), ItemDao.getMaxCharges(drop.getItemId()));
+				}
 			}
 		}
 	}

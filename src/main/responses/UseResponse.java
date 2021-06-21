@@ -5,9 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import main.database.dao.BrewableDao;
 import main.database.dao.CastableDao;
+import main.database.dao.ConstructableDao;
 import main.database.dao.DoorDao;
 import main.database.dao.EquipmentDao;
 import main.database.dao.ItemDao;
@@ -18,6 +20,7 @@ import main.database.dao.StatsDao;
 import main.database.dao.TeleportableDao;
 import main.database.dao.UseItemOnItemDao;
 import main.database.dto.CastableDto;
+import main.database.dto.ConstructableDto;
 import main.database.dto.EquipmentBonusDto;
 import main.database.dto.InventoryItemDto;
 import main.database.dto.TeleportableDto;
@@ -33,6 +36,7 @@ import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.processing.WorldProcessor;
 import main.requests.AttackRequest;
+import main.requests.ConstructionRequest;
 import main.requests.Request;
 import main.requests.UseRequest;
 import main.scenery.Scenery;
@@ -116,6 +120,11 @@ public class UseResponse extends Response {
 	}
 	
 	private boolean handleUseOnItem(UseRequest request, Player player, ResponseMaps responseMaps) {
+		if (ConstructableDao.itemIsConstructionTool(request.getSrc()) || ConstructableDao.itemIsConstructionTool(request.getDest())) {
+			// construction special case
+			return handleConstruction(request, player, responseMaps);
+		}
+		
 		int src = request.getSrc();
 		int dest = request.getDest();
 		int srcSlot = request.getSrcSlot();
@@ -132,7 +141,8 @@ public class UseResponse extends Response {
 			dto = UseItemOnItemDao.getEntryBySrcIdDestId(src, dest);
 			if (dto == null) {
 				// nope no match; nothing interesting happens when you use these two items together.
-				player.setState(PlayerState.idle);
+				if (player.getState() != PlayerState.idle && player.getState() != PlayerState.walking)
+					player.setState(PlayerState.idle);
 				return false;
 			}
 		}
@@ -199,10 +209,8 @@ public class UseResponse extends Response {
 		
 		player.setTickCounter(3);
 		
-		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(dto.getResultingItemId()).getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
-		
-		ClientResourceManager.addItems(player, Collections.singleton(dto.getResultingItemId()));
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
+				new ActionBubbleResponse(player, ItemDao.getItem(dto.getResultingItemId())));
 		return true;
 	}
 
@@ -683,6 +691,33 @@ public class UseResponse extends Response {
 					0, 1, 0);
 		}
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
+		
+		return true;
+	}
+	
+	private boolean handleConstruction(UseRequest request, Player player, ResponseMaps responseMaps) {
+		final int src = request.getSrc();
+		final int dest = request.getDest();
+		
+		int toolId = ConstructableDao.itemIsConstructionTool(src) ? src : dest;
+		int materialId = toolId == src ? dest : src;
+		
+		Set<ConstructableDto> constructables = ConstructableDao.getAllConstructablesWithMaterials(toolId, materialId);
+		if (constructables.isEmpty()) {
+			return false; // no matches; nothing interesting happens (e.g. use tinderbox on helmet or whatevs)
+		}
+		else if (constructables.size() == 1) {
+			// one result means we don't show the menu, just build the thing
+			// it's a set so just do a foreach to get the only entry
+			constructables.forEach(e -> {
+				ConstructionRequest constructionRequest = new ConstructionRequest();
+				constructionRequest.setSceneryId(e.getResultingSceneryId());
+				constructionRequest.setTileId(player.getTileId());
+				new ConstructionResponse().process(constructionRequest, player, responseMaps);
+			});
+		} else {
+			// show a menu with all the constructables
+		}
 		
 		return true;
 	}

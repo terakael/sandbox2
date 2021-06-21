@@ -35,11 +35,15 @@ import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.SmithRequest;
 import main.responses.AddExpResponse;
+import main.responses.ChopResponse;
 import main.responses.DeathResponse;
 import main.responses.EquipResponse;
+import main.responses.FinishChopResponse;
+import main.responses.FinishConstructionResponse;
 import main.responses.FinishCookingResponse;
 import main.responses.FinishFishingResponse;
 import main.responses.FinishMiningResponse;
+import main.responses.FinishSawmillResponse;
 import main.responses.FinishSmeltResponse;
 import main.responses.FinishSmithResponse;
 import main.responses.FinishUseResponse;
@@ -75,6 +79,9 @@ public class Player extends Attackable {
 		mining,
 		smithing,
 		smelting,
+		woodcutting,
+		sawmill,
+		construction,
 		fighting,
 		using,
 		climbing, // ladders etc, give a tick or so duration (like for climbing animation in the future)
@@ -95,6 +102,7 @@ public class Player extends Attackable {
 	private HashMap<Buffs, Integer> activeBuffs = new HashMap<>(); // buff, remaining ticks
 	@Getter @Setter private Set<Integer> inRangeNpcs = new HashSet<>();
 	@Getter @Setter private Set<Integer> inRangePlayers = new HashSet<>();
+	@Getter @Setter private Set<Integer> inRangeConstructables = new HashSet<>();
 	@Getter @Setter private Map<Integer, List<Integer>> inRangeGroundItems = new HashMap<>();
 	@Getter @Setter private Set<Integer> localTiles = new HashSet<>();
 	@Getter @Setter private int loadedFloor = 0;
@@ -372,6 +380,21 @@ public class Player extends Attackable {
 			}
 			break;
 			
+		case sawmill:
+			if (--tickCounter <= 0) {
+				new FinishSawmillResponse().process(savedRequest, this, responseMaps);
+				new UseResponse().process(savedRequest, this, responseMaps);
+			}
+			break;
+			
+		case construction:
+			if (--tickCounter <= 0) {
+				new FinishConstructionResponse().process(savedRequest, this, responseMaps);
+				savedRequest = null;
+				setState(PlayerState.idle);
+			}
+			break;
+			
 		case using:
 			if (--tickCounter <= 0) {
 				new FinishUseResponse().process(savedRequest, this, responseMaps);
@@ -383,6 +406,13 @@ public class Player extends Attackable {
 			if (--tickCounter <= 0) {
 				new FinishCookingResponse().process(savedRequest, this, responseMaps);
 				new UseResponse().process(savedRequest, this, responseMaps);
+			}
+			break;
+			
+		case woodcutting:
+			if (--tickCounter <= 0) {
+				new FinishChopResponse().process(savedRequest, this, responseMaps);
+				new ChopResponse().process(savedRequest, this, responseMaps);
 			}
 			break;
 			

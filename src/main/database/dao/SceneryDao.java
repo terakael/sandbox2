@@ -14,6 +14,7 @@ import java.util.Set;
 import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.SceneryDto;
+import main.processing.ConstructableManager;
 
 public class SceneryDao {
 	private SceneryDao() {};
@@ -185,7 +186,9 @@ public class SceneryDao {
 					return dto.getId();
 			}
 		}
-		return -1;
+		
+		// fallback by checking the constructables
+		return ConstructableManager.getConstructableIdByTileId(floor, tileId);
 	}
 	
 	public static int getImpassableTypeByFloor(int floor, int tileId) {
@@ -202,5 +205,13 @@ public class SceneryDao {
 		if (!impassableTileIds.containsKey(floor))
 			return null;
 		return impassableTileIds.get(floor);
+	}
+	
+	public static int getIdByName(String name) {
+		return allScenery.stream()
+				.filter(e -> name.equals(e.getName()))
+				.findFirst()
+				.map(SceneryDto::getId)
+				.orElse(-1);
 	}
 }

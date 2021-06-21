@@ -631,6 +631,12 @@ public class PathFinder {
 		return nodesByFloor.get(floor).containsKey(tileId);
 	}
 	
+	public static int getImpassableByTileId(int floor, int tileId) {
+		if (!tileIsValid(floor, tileId))
+			return 0;
+		return nodesByFloor.get(floor).get(tileId).getImpassableTypes();
+	}
+	
 	public static String getDirection(int srcTileId, int destTileId) {
 		String direction = "";
 		if (srcTileId + 1 == destTileId)

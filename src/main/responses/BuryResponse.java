@@ -39,6 +39,10 @@ public class BuryResponse extends Response {
 		setResponseText(String.format("you bury the %s.", ItemDao.getNameFromId(boneId)));
 		responseMaps.addClientOnlyResponse(player, this);
 		
+		handleBury(player, boneId, responseMaps);
+	}
+
+	public static void handleBury(Player player, int boneId, ResponseMaps responseMaps) {
 		int prayerLevelBeforeBury = StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, player.getId());
 		StatsDao.addExpToPlayer(player.getId(), Stats.PRAYER, BuryableDao.getExpFromBuryable(boneId));
 		int prayerLevelAfterBury = StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, player.getId());
@@ -67,5 +71,4 @@ public class BuryResponse extends Response {
 			}
 		}
 	}
-
 }

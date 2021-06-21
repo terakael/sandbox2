@@ -66,58 +66,8 @@ public class Furnace extends Scenery {
 		}
 		player.setTickCounter(5);
 		
-		ClientResourceManager.addItems(player, Collections.singleton(smeltable.getBarId()));
-		
-		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(smeltable.getBarId()).getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
-		
-//		switch (srcItemId) {
-//		case 3: // copper
-//		case 4: // iron
-//		case 6: // mithril
-//		case 179: // addy
-//		case 180: // runite
-//			// note that coal isn't in this list as you cannot use coal with the furnace.
-//			// you need to use a primary ore; coal is used as a secondary ore for the other ores.
-////			List<SmithableDto> smithingOptions = SmithableDao.getAllItemsThatUseMaterial(srcItemId);
-////			
-////			ShowSmithingTableResponse response = new ShowSmithingTableResponse();
-////			response.setOreId(srcItemId);
-////			response.setSmithingOptions(smithingOptions);
-////			response.setStoredCoal(PlayerStorageDao.getStoredCoalByPlayerId(player.getId()));
-////			responseMaps.addClientOnlyResponse(player, response);
-////			
-////			// if the client has never been sent the material information, send it now.
-////			Set<Integer> itemIds = new HashSet<>(); 
-////			itemIds.add(srcItemId);
-////			for (SmithableDto dto : smithingOptions) {
-////				itemIds.add(dto.getItemId());
-////				itemIds.add(dto.getMaterial1());
-////				itemIds.add(dto.getMaterial2());
-////				itemIds.add(dto.getMaterial3());
-////			}
-////			ClientResourceManager.addItems(player, itemIds);
-//			
-//			
-//			
-//			return true;
-////		case 5: // coal
-////			// add all the coal in inventory to the furnace storage
-////			int numCoal = PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), Items.COAL_ORE.getValue(), StorageTypes.INVENTORY);
-////			if (numCoal > 0) {
-////				PlayerStorageDao.removeAllItemsFromInventoryByPlayerIdItemId(player.getId(), Items.COAL_ORE);
-////				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.FURNACE, 0, numCoal);
-////			}
-////			
-////			InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
-////			invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
-////			invUpdate.setResponseText(String.format("you store %d coal at the furnace.", numCoal));
-////			
-////			return true;
-//		default:
-//			break;
-//		}
-		
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
+				new ActionBubbleResponse(player, ItemDao.getItem(smeltable.getBarId())));
 		return true;
 	}
 	

@@ -70,10 +70,8 @@ public class FishResponse extends Response {
 			player.setTickCounter(5);
 			
 			// the action bubble will be the fish you're trying to catch
-			ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(fishable.getItemId()).getSpriteFrameId());
-			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
-			
-			ClientResourceManager.addItems(player, Collections.singleton(fishable.getItemId()));
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
+					new ActionBubbleResponse(player, ItemDao.getItem(fishable.getItemId())));
 		}
 	}
 

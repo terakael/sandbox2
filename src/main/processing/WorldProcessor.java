@@ -28,6 +28,7 @@ import main.requests.Request;
 import main.responses.AddGroundTextureInstancesResponse;
 import main.responses.AddMinimapSegmentsResponse;
 import main.responses.AddSceneryInstancesResponse;
+import main.responses.ConstructableInRangeResponse;
 import main.responses.GroundItemInRangeResponse;
 import main.responses.GroundItemOutOfRangeResponse;
 import main.responses.LogonResponse;
@@ -136,12 +137,15 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.end("player requests");
 		
 		Map<Integer, Set<Integer>> npcsToProcess = new HashMap<>(); // floor, list<id>
+//		Map<Integer, Set<Integer>> playerSceneryToProcess = new HashMap<>(); // floor, list<tileId>
 		Stopwatch.start("process players");
 		// process players
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
-			entry.getValue().process(responseMaps);
+			final Player player = entry.getValue();
 			
-			List<NPC> npcs = NPCManager.get().getNpcsNearTile(entry.getValue().getFloor(), entry.getValue().getTileId(), 15);
+			player.process(responseMaps);
+			
+			List<NPC> npcs = NPCManager.get().getNpcsNearTile(player.getFloor(), player.getTileId(), 15);
 			
 			// while we iterate the players, pull out the npcs near each player as these are the only npcs we need to process.
 			Set<Integer> npcIdsNearPlayer = npcs
@@ -149,9 +153,16 @@ public class WorldProcessor implements Runnable {
 				    .map(NPC::getInstanceId)
 				    .collect(Collectors.toSet());
 			
-			if (!npcsToProcess.containsKey(entry.getValue().getFloor()))
-				npcsToProcess.put(entry.getValue().getFloor(), new HashSet<>());
-			npcsToProcess.get(entry.getValue().getFloor()).addAll(npcIdsNearPlayer);
+			if (!npcsToProcess.containsKey(player.getFloor()))
+				npcsToProcess.put(player.getFloor(), new HashSet<>());
+			npcsToProcess.get(player.getFloor()).addAll(npcIdsNearPlayer);
+			
+			// because player scenery doesn't move, we can just update the player scenery here and load
+			// up the big list of in-range player scenery to process afterwards.
+//			updatePlayerSceneryNearPlayer(player, responseMaps);
+//			if (!playerSceneryToProcess.containsKey(player.getFloor()))
+//				playerSceneryToProcess.put(player.getFloor(), new HashSet<>());
+//			playerSceneryToProcess.get(player.getFloor()).addAll(player.getInRangeConstructables());
 		}
 		Stopwatch.end("process players");
 		
@@ -160,6 +171,10 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("process npcs");
 		NPCManager.get().process(npcsToProcess, responseMaps, tick);
 		Stopwatch.end("process npcs");
+		
+		Stopwatch.start("process constructables");
+		ConstructableManager.process(responseMaps);
+		Stopwatch.end("process constructables");
 		
 		// process fight manager
 		Stopwatch.start("process fight manager");
@@ -173,23 +188,17 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("shops");
 		ShopManager.process(responseMaps);
 		Stopwatch.end("shops");
-		
-		Stopwatch.start("rocks");
-		RockManager.process(responseMaps);
-		Stopwatch.end("rocks");
-		
-		Stopwatch.start("flowers");
-		FlowerManager.process(responseMaps);
-		Stopwatch.end("flowers");
+
+		Stopwatch.start("deletion manager");
+		DepletionManager.process(responseMaps);
+		Stopwatch.end("deletion manager");
 		
 		Stopwatch.start("locked doors");
 		LockedDoorManager.process(responseMaps);
 		Stopwatch.end("locked doors");
 		
-		refreshGroundItems(responseMaps);
 		updateShopStock(responseMaps);
-		updateLocalGroundTexturesAndScenery(responseMaps);
-		updateLocalNpcLocations(responseMaps);
+		updateThingsLocalToPlayer(responseMaps);
 		
 		
 		// take all the responseMaps and compile the responses to send to each player
@@ -399,66 +408,64 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.end("updating in-range players");
 	}
 	
-	private void refreshGroundItems(ResponseMaps responseMaps) {
+	private void updateLocalGroundItems(Player player, ResponseMaps responseMaps) {
 		Stopwatch.start("refresh ground items");
-		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
-			Map<Integer, List<Integer>> currentInRangeGroundItems = entry.getValue().getInRangeGroundItems();
-			Map<Integer, List<Integer>> newInRangeGroundItems = GroundItemManager.getItemIdsNearTile(entry.getValue().getFloor(), entry.getValue().getId(), entry.getValue().getTileId(), 15);
-			
-			Map<Integer, List<Integer>> removedGroundItems = new HashMap<>();
-			for (Map.Entry<Integer, List<Integer>> currentEntry : currentInRangeGroundItems.entrySet()) {
-				if (!newInRangeGroundItems.containsKey(currentEntry.getKey())) {
-					removedGroundItems.put(currentEntry.getKey(), currentEntry.getValue());
-					continue;
-				}
-				
-				List<Integer> currentList = new ArrayList<>(currentEntry.getValue());
-				List<Integer> newList = newInRangeGroundItems.get(currentEntry.getKey());
-				for (int newItemId : newList) {
-					if (currentList.contains(newItemId))
-						currentList.remove(currentList.indexOf(newItemId));
-				}
-				
-				if (!currentList.isEmpty())
-					removedGroundItems.put(currentEntry.getKey(), currentList);
+		Map<Integer, List<Integer>> currentInRangeGroundItems = player.getInRangeGroundItems();
+		Map<Integer, List<Integer>> newInRangeGroundItems = GroundItemManager.getItemIdsNearTile(player.getFloor(), player.getId(), player.getTileId(), 15);
+		
+		Map<Integer, List<Integer>> removedGroundItems = new HashMap<>();
+		for (Map.Entry<Integer, List<Integer>> currentEntry : currentInRangeGroundItems.entrySet()) {
+			if (!newInRangeGroundItems.containsKey(currentEntry.getKey())) {
+				removedGroundItems.put(currentEntry.getKey(), currentEntry.getValue());
+				continue;
 			}
 			
-			if (!removedGroundItems.isEmpty()) {
-				GroundItemOutOfRangeResponse groundItemOutOfRangeResponse = new GroundItemOutOfRangeResponse();
-				groundItemOutOfRangeResponse.setGroundItems(removedGroundItems);
-				responseMaps.addClientOnlyResponse(entry.getValue(), groundItemOutOfRangeResponse);
+			List<Integer> currentList = new ArrayList<>(currentEntry.getValue());
+			List<Integer> newList = newInRangeGroundItems.get(currentEntry.getKey());
+			for (int newItemId : newList) {
+				if (currentList.contains(newItemId))
+					currentList.remove(currentList.indexOf(newItemId));
 			}
 			
-			Map<Integer, List<Integer>> addedGroundItems = new HashMap<>();
-			for (Map.Entry<Integer, List<Integer>> newEntry : newInRangeGroundItems.entrySet()) {
-				if (!currentInRangeGroundItems.containsKey(newEntry.getKey())) {
-					addedGroundItems.put(newEntry.getKey(), newEntry.getValue());
-					continue;
-				}
-
-				List<Integer> currentList = currentInRangeGroundItems.get(newEntry.getKey());
-				List<Integer> newList = new ArrayList<>(newEntry.getValue());
-				for (int currentItemId : currentList) {
-					if (newList.contains(currentItemId))
-						newList.remove(newList.indexOf(currentItemId));
-				}
-
-				if (!newList.isEmpty())
-					addedGroundItems.put(newEntry.getKey(), newList);
-			}
-			if (!addedGroundItems.isEmpty()) {
-				Set<Integer> allItemIds = addedGroundItems.values().stream().
-						flatMap(List::stream)
-						.collect(Collectors.toSet());
-				ClientResourceManager.addItems(entry.getValue(), allItemIds);
-				
-				GroundItemInRangeResponse groundItemInRangeResponse = new GroundItemInRangeResponse();
-				groundItemInRangeResponse.setGroundItems(addedGroundItems);
-				responseMaps.addClientOnlyResponse(entry.getValue(), groundItemInRangeResponse);
-			}
-			
-			entry.getValue().setInRangeGroundItems(newInRangeGroundItems);
+			if (!currentList.isEmpty())
+				removedGroundItems.put(currentEntry.getKey(), currentList);
 		}
+		
+		if (!removedGroundItems.isEmpty()) {
+			GroundItemOutOfRangeResponse groundItemOutOfRangeResponse = new GroundItemOutOfRangeResponse();
+			groundItemOutOfRangeResponse.setGroundItems(removedGroundItems);
+			responseMaps.addClientOnlyResponse(player, groundItemOutOfRangeResponse);
+		}
+		
+		Map<Integer, List<Integer>> addedGroundItems = new HashMap<>();
+		for (Map.Entry<Integer, List<Integer>> newEntry : newInRangeGroundItems.entrySet()) {
+			if (!currentInRangeGroundItems.containsKey(newEntry.getKey())) {
+				addedGroundItems.put(newEntry.getKey(), newEntry.getValue());
+				continue;
+			}
+
+			List<Integer> currentList = currentInRangeGroundItems.get(newEntry.getKey());
+			List<Integer> newList = new ArrayList<>(newEntry.getValue());
+			for (int currentItemId : currentList) {
+				if (newList.contains(currentItemId))
+					newList.remove(newList.indexOf(currentItemId));
+			}
+
+			if (!newList.isEmpty())
+				addedGroundItems.put(newEntry.getKey(), newList);
+		}
+		if (!addedGroundItems.isEmpty()) {
+			Set<Integer> allItemIds = addedGroundItems.values().stream().
+					flatMap(List::stream)
+					.collect(Collectors.toSet());
+			ClientResourceManager.addItems(player, allItemIds);
+			
+			GroundItemInRangeResponse groundItemInRangeResponse = new GroundItemInRangeResponse();
+			groundItemInRangeResponse.setGroundItems(addedGroundItems);
+			responseMaps.addClientOnlyResponse(player, groundItemInRangeResponse);
+		}
+		
+		player.setInRangeGroundItems(newInRangeGroundItems);
 		Stopwatch.end("refresh ground items");
 	}
 	
@@ -483,152 +490,159 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.end("update shop stock");
 	}
 	
-	private void updateLocalGroundTexturesAndScenery(ResponseMaps responseMaps) {
+	private void updateLocalGroundTexturesAndScenery(Player player, ResponseMaps responseMaps) {
 		Stopwatch.start("updating local ground textures and scenery");
-		for (Player player : playerSessions.values()) {
-			if (player.getState() == PlayerState.dead)
-				continue; // we dont want to update the client while the "you are dead" screen is fading in
+		if (player.getState() == PlayerState.dead)
+			return; // we dont want to update the client while the "you are dead" screen is fading in
 
-			Set<Integer> currentLocalTiles = player.getLocalTiles();
-			Set<Integer> newLocalTiles = WorldProcessor.getLocalTiles(player.getTileId(), 12);
-			
-			Set<Integer> removedTileIds = currentLocalTiles.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !newLocalTiles.contains(e)).collect(Collectors.toSet());
-			if (!removedTileIds.isEmpty()) {
-				RemoveGroundTextureInstancesResponse removeResponse = new RemoveGroundTextureInstancesResponse();
-				removeResponse.setTileIds(removedTileIds);
-				responseMaps.addClientOnlyResponse(player, removeResponse);
-			}
-			
-			Set<Integer> addedTileIds = newLocalTiles.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !currentLocalTiles.contains(e)).collect(Collectors.toSet());
-			if (!addedTileIds.isEmpty()) {
-				Map<Integer, Set<Integer>> tileIdsByGroundTextureId = new HashMap<>();
-				Map<Integer, Set<Integer>> addedSceneryIds = new HashMap<>();
-				
-				for (int tileId : addedTileIds) {
-					int groundTextureId = GroundTextureDao.getGroundTextureIdByTileId(player.getFloor(), tileId);
-					if (!tileIdsByGroundTextureId.containsKey(groundTextureId))
-						tileIdsByGroundTextureId.put(groundTextureId, new HashSet<>());
-					tileIdsByGroundTextureId.get(groundTextureId).add(tileId);
-					
-					int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), tileId);
-					if (sceneryId != -1) {
-						if (!addedSceneryIds.containsKey(sceneryId))
-							addedSceneryIds.put(sceneryId, new HashSet<>());
-						addedSceneryIds.get(sceneryId).add(tileId);
-					}
-				}
-				
-				AddGroundTextureInstancesResponse addResponse = new AddGroundTextureInstancesResponse();
-				addResponse.setInstances(tileIdsByGroundTextureId);
-				responseMaps.addClientOnlyResponse(player, addResponse);
-				ClientResourceManager.addGroundTextures(player, tileIdsByGroundTextureId.keySet());
-				
-				if (!addedSceneryIds.isEmpty()) {
-					AddSceneryInstancesResponse addSceneryResponse = new AddSceneryInstancesResponse();
-					addSceneryResponse.setInstances(addedSceneryIds);
-					responseMaps.addClientOnlyResponse(player, addSceneryResponse);
-					
-					HashSet<Integer> depletedScenery = new HashSet<>();					
-					
-					depletedScenery.addAll(RockManager.getDepletedRockTileIds(player.getFloor())
-												      .stream()
-												      .filter(rockTileId -> newLocalTiles.contains(rockTileId))
-												      .collect(Collectors.toSet()));
-					
-					depletedScenery.addAll(FlowerManager.getDepletedFlowerTileIds(player.getFloor())
-														.stream()
-														.filter(flowerTileId -> newLocalTiles.contains(flowerTileId))
-														.collect(Collectors.toSet()));
-					
-					
-					addSceneryResponse.setDepletedScenery(depletedScenery);
-					
-					HashSet<Integer> openDoors = new HashSet<>();
-					openDoors.addAll(DoorDao.getOpenDoorTileIds(player.getFloor())
-							  .stream()
-							  .filter(tileId -> newLocalTiles.contains(tileId))
-							  .collect(Collectors.toSet()));
-					openDoors.addAll(LockedDoorManager.getOpenLockedDoorTileIds(player.getFloor())
-							  .stream()
-							  .filter(tileId -> newLocalTiles.contains(tileId))
-							  .collect(Collectors.toSet()));
-					addSceneryResponse.setOpenDoors(openDoors);
-					
-					// if the scenery has never been sent to the player, then also send the corresponding sprite map to them
-					ClientResourceManager.addScenery(player, addedSceneryIds.keySet());
-				}
-			}
-			
-			// minimap segments
-			Set<Integer> newSegments = MinimapSegmentDao.getSegmentIdsFromTileId(player.getTileId());
-			Set<Integer> currentSegments = player.getLoadedMinimapSegments();
-			
-			Set<Integer> removedSegments = currentSegments.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !newSegments.contains(e)).collect(Collectors.toSet());
-			if (!removedSegments.isEmpty()) {
-				// remove minimap segments response
-				RemoveMinimapSegmentsResponse minimapResponse = new RemoveMinimapSegmentsResponse();
-				minimapResponse.setSegments(removedSegments);
-				responseMaps.addClientOnlyResponse(player, minimapResponse);
-			}
-			
-			Set<Integer> addedSegments = newSegments.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !currentSegments.contains(e)).collect(Collectors.toSet());
-			if (!addedSegments.isEmpty()) {
-				Map<Integer, Set<Integer>> minimapIconLocations = new HashMap<>();
-				Map<Integer, String> segments = new HashMap<>();
-				for (int segmentId : addedSegments) {
-					segments.put(segmentId, MinimapSegmentDao.getMinimapDataByFloorAndSegmentId(player.getFloor(), segmentId));
-					
-					Map<Integer, Set<Integer>> minimapIconLocationsByFloorAndSegment = MinimapSegmentDao.getMinimapIconLocationsByFloorAndSegment(player.getFloor(), segmentId);
-					for (Map.Entry<Integer, Set<Integer>> entry : minimapIconLocationsByFloorAndSegment.entrySet()) {
-						if (!minimapIconLocations.containsKey(entry.getKey()))
-							minimapIconLocations.put(entry.getKey(), new HashSet<>());
-						minimapIconLocations.get(entry.getKey()).addAll(entry.getValue());
-					}
-				}
-				
-				AddMinimapSegmentsResponse minimapResponse = new AddMinimapSegmentsResponse();
-				minimapResponse.setSegments(segments);
-				minimapResponse.setMinimapIconLocations(minimapIconLocations);
-				responseMaps.addClientOnlyResponse(player, minimapResponse);
-			}
-			
-			player.setLocalTiles(newLocalTiles);
-			player.setLoadedFloor(player.getFloor());
-			player.setLoadedMinimapSegments(newSegments);
+		Set<Integer> currentLocalTiles = player.getLocalTiles();
+		Set<Integer> newLocalTiles = WorldProcessor.getLocalTiles(player.getTileId(), 12);
+		
+		Set<Integer> removedTileIds = currentLocalTiles.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !newLocalTiles.contains(e)).collect(Collectors.toSet());
+		if (!removedTileIds.isEmpty()) {
+			RemoveGroundTextureInstancesResponse removeResponse = new RemoveGroundTextureInstancesResponse();
+			removeResponse.setTileIds(removedTileIds);
+			responseMaps.addClientOnlyResponse(player, removeResponse);
 		}
+		
+		Set<Integer> addedTileIds = newLocalTiles.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !currentLocalTiles.contains(e)).collect(Collectors.toSet());
+		if (!addedTileIds.isEmpty()) {
+			Map<Integer, Set<Integer>> tileIdsByGroundTextureId = new HashMap<>();
+			Map<Integer, Set<Integer>> addedTileIdsBySceneryId = new HashMap<>();
+			Map<Integer, Set<Integer>> addedTileIdsByConstructableId = new HashMap<>();
+			
+			for (int tileId : addedTileIds) {
+				int groundTextureId = GroundTextureDao.getGroundTextureIdByTileId(player.getFloor(), tileId);
+				if (!tileIdsByGroundTextureId.containsKey(groundTextureId))
+					tileIdsByGroundTextureId.put(groundTextureId, new HashSet<>());
+				tileIdsByGroundTextureId.get(groundTextureId).add(tileId);
+				
+				int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), tileId);
+				if (sceneryId != -1) {
+					addedTileIdsBySceneryId.putIfAbsent(sceneryId, new HashSet<>());
+					addedTileIdsBySceneryId.get(sceneryId).add(tileId);
+				}
+				
+				final int constructableId = ConstructableManager.getConstructableIdByTileId(player.getFloor(), tileId);
+				if (constructableId != -1) {
+					addedTileIdsByConstructableId.putIfAbsent(constructableId, new HashSet<>());
+					addedTileIdsByConstructableId.get(constructableId).add(tileId);
+				}
+			}
+			
+			AddGroundTextureInstancesResponse addResponse = new AddGroundTextureInstancesResponse();
+			addResponse.setInstances(tileIdsByGroundTextureId);
+			responseMaps.addClientOnlyResponse(player, addResponse);
+			ClientResourceManager.addGroundTextures(player, tileIdsByGroundTextureId.keySet());
+			
+			if (!addedTileIdsBySceneryId.isEmpty()) {
+				AddSceneryInstancesResponse addSceneryResponse = new AddSceneryInstancesResponse();
+				addSceneryResponse.setInstances(addedTileIdsBySceneryId);
+				responseMaps.addClientOnlyResponse(player, addSceneryResponse);
+
+				addSceneryResponse.setDepletedScenery(DepletionManager.getDepletedSceneryTileIds(player.getFloor())
+						.stream()
+						.filter(scenery -> newLocalTiles.contains(scenery))
+						.collect(Collectors.toSet()));
+				
+				HashSet<Integer> openDoors = new HashSet<>();
+				openDoors.addAll(DoorDao.getOpenDoorTileIds(player.getFloor())
+						  .stream()
+						  .filter(tileId -> newLocalTiles.contains(tileId))
+						  .collect(Collectors.toSet()));
+				openDoors.addAll(LockedDoorManager.getOpenLockedDoorTileIds(player.getFloor())
+						  .stream()
+						  .filter(tileId -> newLocalTiles.contains(tileId))
+						  .collect(Collectors.toSet()));
+				addSceneryResponse.setOpenDoors(openDoors);
+				
+				// if the scenery has never been sent to the player, then also send the corresponding sprite map to them
+				ClientResourceManager.addScenery(player, addedTileIdsBySceneryId.keySet());
+			}
+			
+			if (!addedTileIdsByConstructableId.isEmpty()) {
+				ConstructableInRangeResponse constructableInRange = new ConstructableInRangeResponse();
+				constructableInRange.setInstances(addedTileIdsByConstructableId);
+				responseMaps.addClientOnlyResponse(player, constructableInRange);
+				ClientResourceManager.addScenery(player, addedTileIdsByConstructableId.keySet());
+			}
+		}
+		
+		// minimap segments
+		Set<Integer> newSegments = MinimapSegmentDao.getSegmentIdsFromTileId(player.getTileId());
+		Set<Integer> currentSegments = player.getLoadedMinimapSegments();
+		
+		Set<Integer> removedSegments = currentSegments.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !newSegments.contains(e)).collect(Collectors.toSet());
+		if (!removedSegments.isEmpty()) {
+			// remove minimap segments response
+			RemoveMinimapSegmentsResponse minimapResponse = new RemoveMinimapSegmentsResponse();
+			minimapResponse.setSegments(removedSegments);
+			responseMaps.addClientOnlyResponse(player, minimapResponse);
+		}
+		
+		Set<Integer> addedSegments = newSegments.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !currentSegments.contains(e)).collect(Collectors.toSet());
+		if (!addedSegments.isEmpty()) {
+			Map<Integer, Set<Integer>> minimapIconLocations = new HashMap<>();
+			Map<Integer, String> segments = new HashMap<>();
+			for (int segmentId : addedSegments) {
+				segments.put(segmentId, MinimapSegmentDao.getMinimapDataByFloorAndSegmentId(player.getFloor(), segmentId));
+				
+				Map<Integer, Set<Integer>> minimapIconLocationsByFloorAndSegment = MinimapSegmentDao.getMinimapIconLocationsByFloorAndSegment(player.getFloor(), segmentId);
+				for (Map.Entry<Integer, Set<Integer>> entry : minimapIconLocationsByFloorAndSegment.entrySet()) {
+					if (!minimapIconLocations.containsKey(entry.getKey()))
+						minimapIconLocations.put(entry.getKey(), new HashSet<>());
+					minimapIconLocations.get(entry.getKey()).addAll(entry.getValue());
+				}
+			}
+			
+			AddMinimapSegmentsResponse minimapResponse = new AddMinimapSegmentsResponse();
+			minimapResponse.setSegments(segments);
+			minimapResponse.setMinimapIconLocations(minimapIconLocations);
+			responseMaps.addClientOnlyResponse(player, minimapResponse);
+		}
+		
+		player.setLocalTiles(newLocalTiles);
+		player.setLoadedFloor(player.getFloor());
+		player.setLoadedMinimapSegments(newSegments);
 		Stopwatch.end("updating local ground textures and scenery");
 	}
 	
-	private void updateLocalNpcLocations(ResponseMaps responseMaps) {
+	private void updateLocalNpcLocations(Player player, ResponseMaps responseMaps) {
 		Stopwatch.start("refresh npc locations");
-		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
-			Set<Integer> currentInRangeNpcs = entry.getValue().getInRangeNpcs();
-			Set<NPC> newInRangeNpcs = NPCManager.get().getNpcsNearTile(entry.getValue().getFloor(), entry.getValue().getTileId(), 15)
-												    .stream()
-												    .filter(e -> !e.isDeadWithDelay())	// the delay of two ticks gives the client time for the death animation
+		Set<Integer> currentInRangeNpcs = player.getInRangeNpcs();
+		Set<NPC> newInRangeNpcs = NPCManager.get().getNpcsNearTile(player.getFloor(), player.getTileId(), 15)
+											    .stream()
+											    .filter(e -> !e.isDeadWithDelay())	// the delay of two ticks gives the client time for the death animation
 //												    .map(NPC::getInstanceId)
-												    .collect(Collectors.toSet());
-			
-			Set<Integer> newInRangeNpcInstanceIds = newInRangeNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
-			
-			Set<Integer> removedNpcs = currentInRangeNpcs.stream().filter(e -> !newInRangeNpcInstanceIds.contains(e)).collect(Collectors.toSet());
-			if (!removedNpcs.isEmpty()) {
-				NpcOutOfRangeResponse npcOutOfRangeResponse = new NpcOutOfRangeResponse();
-				npcOutOfRangeResponse.setInstances(removedNpcs);
-				responseMaps.addClientOnlyResponse(entry.getValue(), npcOutOfRangeResponse);
-			}
-			
-			Set<Integer> addedNpcs = newInRangeNpcInstanceIds.stream().filter(e -> !currentInRangeNpcs.contains(e)).collect(Collectors.toSet());
-			if (!addedNpcs.isEmpty()) {
-				NpcInRangeResponse npcInRangeResponse = new NpcInRangeResponse();
-				npcInRangeResponse.addInstances(entry.getValue().getFloor(), addedNpcs);
-				responseMaps.addClientOnlyResponse(entry.getValue(), npcInRangeResponse);
-				
-				ClientResourceManager.addNpcs(entry.getValue(), newInRangeNpcs.stream().map(NPC::getId).collect(Collectors.toSet()));
-			}
-			entry.getValue().setInRangeNpcs(newInRangeNpcInstanceIds);
+											    .collect(Collectors.toSet());
+		
+		Set<Integer> newInRangeNpcInstanceIds = newInRangeNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
+		
+		Set<Integer> removedNpcs = currentInRangeNpcs.stream().filter(e -> !newInRangeNpcInstanceIds.contains(e)).collect(Collectors.toSet());
+		if (!removedNpcs.isEmpty()) {
+			NpcOutOfRangeResponse npcOutOfRangeResponse = new NpcOutOfRangeResponse();
+			npcOutOfRangeResponse.setInstances(removedNpcs);
+			responseMaps.addClientOnlyResponse(player, npcOutOfRangeResponse);
 		}
+		
+		Set<Integer> addedNpcs = newInRangeNpcInstanceIds.stream().filter(e -> !currentInRangeNpcs.contains(e)).collect(Collectors.toSet());
+		if (!addedNpcs.isEmpty()) {
+			NpcInRangeResponse npcInRangeResponse = new NpcInRangeResponse();
+			npcInRangeResponse.addInstances(player.getFloor(), addedNpcs);
+			responseMaps.addClientOnlyResponse(player, npcInRangeResponse);
+			
+			ClientResourceManager.addNpcs(player, newInRangeNpcs.stream().map(NPC::getId).collect(Collectors.toSet()));
+		}
+		player.setInRangeNpcs(newInRangeNpcInstanceIds);
 		Stopwatch.end("refresh npc locations");
+	}
+	
+	private void updateThingsLocalToPlayer(ResponseMaps responseMaps) {
+		for (Player player : playerSessions.values()) {
+			updateLocalGroundTexturesAndScenery(player, responseMaps);
+			updateLocalNpcLocations(player, responseMaps);
+			updateLocalGroundItems(player, responseMaps);
+		}
 	}
 	
 	public static boolean sessionExistsByPlayerId(int playerId) {

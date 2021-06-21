@@ -168,6 +168,9 @@ public class ResponseFactory {
 		case "toggle_duel_rule":
 			response = new ToggleDuelRuleResponse();
 			break;
+		case "chop":
+			response = new ChopResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

@@ -10,7 +10,9 @@ import main.database.dao.BrewableDao;
 import main.database.dao.BuryableDao;
 import main.database.dao.CastableDao;
 import main.database.dao.CatchableDao;
+import main.database.dao.ChoppableDao;
 import main.database.dao.ClimbableDao;
+import main.database.dao.ConstructableDao;
 import main.database.dao.ConsumableDao;
 import main.database.dao.ContextOptionsDao;
 import main.database.dao.CookableDao;
@@ -29,6 +31,7 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dao.PrayerDao;
 import main.database.dao.ReinforcementBonusesDao;
 import main.database.dao.RespawnableDao;
+import main.database.dao.SawmillableDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.ShopDao;
 import main.database.dao.SmeltableDao;
@@ -197,6 +200,15 @@ public class Server {
 		
 		System.out.println("caching smeltables");
 		SmeltableDao.setupCaches();
+		
+		System.out.println("caching choppables");
+		ChoppableDao.setupCaches();
+		
+		System.out.println("caching sawmill");
+		SawmillableDao.setupCaches();
+		
+		System.out.println("caching constructables");
+		ConstructableDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

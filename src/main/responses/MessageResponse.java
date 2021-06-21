@@ -80,7 +80,8 @@ public class MessageResponse extends Response {
 			return;
 		}
 		
-		if (msgParts[0].matches("^att|str|def|hp|pray|acc|mage|herb|mine|smith|fish|cook$")) {
+		String command = String.join("|", StatsDao.getCachedStats().values());
+		if (msgParts[0].matches("^"+command+"$")) {
 			
 			if (msgParts.length >= 2) {
 				handleAddExp(player, msgParts, responseMaps);

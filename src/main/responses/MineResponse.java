@@ -7,11 +7,11 @@ import main.database.dao.MineableDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.StatsDao;
 import main.database.dto.MineableDto;
+import main.processing.DepletionManager;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
-import main.processing.RockManager;
 import main.requests.MineRequest;
 import main.requests.Request;
 import main.types.Items;
@@ -66,7 +66,7 @@ public class MineResponse extends Response {
 			}
 			
 			// does the rock currently have ore in it?
-			if (RockManager.rockIsDepleted(player.getFloor(), request.getTileId())) {
+			if (DepletionManager.isDepleted(DepletionManager.DepletionType.rock, player.getFloor(), request.getTileId())) {
 				setRecoAndResponseText(0, "the rock currently contains no ore.");
 				responseMaps.addClientOnlyResponse(player, this);
 				player.setState(PlayerState.idle);
@@ -118,8 +118,8 @@ public class MineResponse extends Response {
 				player.setTickCounter(5);
 			}
 			
-			ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(usedPickaxe.getValue()).getSpriteFrameId());
-			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
+					new ActionBubbleResponse(player, ItemDao.getItem(usedPickaxe.getValue())));
 		}
 	}
 

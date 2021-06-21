@@ -52,7 +52,7 @@ public class NPCDao {
 						rs.getFloat("scale_y"),
 						0,// tileId (not used in this map as this is not the instance list, just all npc types)
 						rs.getInt("hp"),
-						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), 0),
+						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), 0, 0),
 						rs.getInt("leftclick_option"),
 						rs.getInt("other_options"),
 						0,// floor (not used in this map as this is not the instance list, just all npc types)
@@ -106,7 +106,7 @@ public class NPCDao {
 						rs.getFloat("scale_y"),
 						rs.getInt("tile_id"),
 						rs.getInt("hp"),
-						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), 0),
+						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), 0, 0),
 						rs.getInt("leftclick_option"),
 						rs.getInt("other_options"),
 						floor,

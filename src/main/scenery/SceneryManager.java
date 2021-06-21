@@ -29,6 +29,17 @@ public class SceneryManager {
 		sceneryMap.put(116, new Door());
 		
 		sceneryMap.put(120, new Anvil());
+		sceneryMap.put(121, new Sawmill());
+		
+		// constructable fires
+		sceneryMap.put(122, new Fire()); // regular
+		sceneryMap.put(123, new Fire());
+		sceneryMap.put(124, new Fire());
+		sceneryMap.put(125, new Fire());
+		sceneryMap.put(126, new Fire());
+		sceneryMap.put(127, new Fire()); // magic
+		
+		sceneryMap.put(128, new Sawmill());
 	}
 	public static Scenery getScenery(int sceneryId) {
 		if (sceneryMap.containsKey(sceneryId))

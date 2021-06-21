@@ -83,10 +83,9 @@ public class SmithResponse extends Response {
 			player.setState(PlayerState.smithing);
 			player.setSavedRequest(req);
 		}
-
 		player.setTickCounter(5);
 		
-		ActionBubbleResponse actionBubble = new ActionBubbleResponse(player.getId(), ItemDao.getItem(dto.getItemId()).getSpriteFrameId());
-		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), actionBubble);
+		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
+				new ActionBubbleResponse(player, ItemDao.getItem(dto.getItemId())));
 	}
 }

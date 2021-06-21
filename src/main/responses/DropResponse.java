@@ -8,6 +8,7 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dto.InventoryItemDto;
 import main.processing.FightManager;
 import main.processing.Player;
+import main.processing.Player.PlayerState;
 import main.requests.DropRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
@@ -47,12 +48,18 @@ public class DropResponse extends Response {
 			return;
 		}
 		
-
 		GroundItemManager.add(player.getFloor(), player.getId(), itemToDrop.getItemId(), player.getTileId(), itemToDrop.getCount(), itemToDrop.getCharges());
 		PlayerStorageDao.setItemFromPlayerIdAndSlot(dropReq.getId(), StorageTypes.INVENTORY, dropReq.getSlot(), 0, 1, 0);
 		
 		// update the player inventory/equipped items and only send it to the player
 		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);
+		
+		// dropping should interrupt any action except walking
+		// otherwise there's a potential exploit where the player can drop something mid-action and if 
+		// the FinishResponse doesn't check for it then they basically can make free shit
+		if (player.getState() != PlayerState.idle && player.getState() != PlayerState.walking) {
+			player.setState(PlayerState.idle);
+		}
 	}
 
 }

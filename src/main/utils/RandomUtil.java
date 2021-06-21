@@ -7,4 +7,8 @@ public class RandomUtil {
 		Random r = new Random();
 		return r.nextInt(max - min) + min;
 	}
+	
+	public static boolean chance(int outOf100) {
+		return getRandom(0, 100) < outOf100;
+	}
 }
