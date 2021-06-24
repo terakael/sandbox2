@@ -5,13 +5,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import main.database.DbConnection;
 import main.database.dto.SmeltableDto;
 
 public class SmeltableDao {
 	private static List<SmeltableDto> smeltables; // by ore_id
+	private static Set<Integer> barIds;
 	
 	public static void setupCaches() {
 		cacheSmeltables();
@@ -19,8 +22,9 @@ public class SmeltableDao {
 	
 	private static void cacheSmeltables() {
 		smeltables = new ArrayList<>();
+		barIds = new HashSet<>();
 		
-		final String query = "select bar_id, level, ore_id, coal_count from smeltable";
+		final String query = "select bar_id, level, ore_id, coal_count, ore_count from smeltable";
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -28,13 +32,16 @@ public class SmeltableDao {
 		) {
 			
 			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
+				while (rs.next()) {
+					barIds.add(rs.getInt("bar_id"));
 					smeltables.add(new SmeltableDto(
 							rs.getInt("bar_id"),
 							rs.getInt("level"),
 							rs.getInt("ore_id"),
-							rs.getInt("coal_count")
+							rs.getInt("coal_count"),
+							rs.getInt("ore_count")
 					));
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -52,5 +59,9 @@ public class SmeltableDao {
 	
 	public static SmeltableDto getSmeltableByBarId(int barId) {
 		return smeltables.stream().filter(e -> e.getBarId() == barId).findFirst().orElse(null);
+	}
+	
+	public static boolean itemIsBar(int itemId) {
+		return barIds.contains(itemId);
 	}
 }

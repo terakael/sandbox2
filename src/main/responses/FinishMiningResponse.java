@@ -60,8 +60,14 @@ public class FinishMiningResponse extends Response {
 		}
 		
 		if (mineSuccessful) {
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, mineable.getItemId(), 1, ItemDao.getMaxCharges(mineable.getItemId()));
-			
+			final boolean minedGoldChips = RandomUtil.chance(mineable.getGoldChance());
+			if (minedGoldChips) {
+				// mine a gold chip
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, 351, 1, 0); // gold chips
+			} else {
+				// mine the rock
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, mineable.getItemId(), 1, ItemDao.getMaxCharges(mineable.getItemId()));
+			}
 			// as there are multiple pickaxe types, there is a specific order that it uses.
 			// that is: magic golden pickaxe, magic pickaxe, golden pickaxe, pickaxe
 			
@@ -85,7 +91,7 @@ public class FinishMiningResponse extends Response {
 			new AddExpResponse().process(addExpReq, player, responseMaps);
 			new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 			
-			setResponseText(String.format("you mine some %s.", ItemDao.getNameFromId(mineable.getItemId())));
+			setResponseText(String.format("you mine some %s.", minedGoldChips ? "gold chips" : ItemDao.getNameFromId(mineable.getItemId())));
 			
 			// there's a chance the rock depletes on a successful mine (unless the player has a magic pickaxe variant
 			if (!invItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue()) && !invItemIds.contains(Items.MAGIC_PICKAXE.getValue())) {

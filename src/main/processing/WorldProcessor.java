@@ -28,7 +28,6 @@ import main.requests.Request;
 import main.responses.AddGroundTextureInstancesResponse;
 import main.responses.AddMinimapSegmentsResponse;
 import main.responses.AddSceneryInstancesResponse;
-import main.responses.ConstructableInRangeResponse;
 import main.responses.GroundItemInRangeResponse;
 import main.responses.GroundItemOutOfRangeResponse;
 import main.responses.LogonResponse;
@@ -86,7 +85,7 @@ public class WorldProcessor implements Runnable {
 		}
 	}
 	
-	public void process(int tick) {		
+	public void process(int tickId) {		
 		Stopwatch.reset();
 		Stopwatch.start("total");
 
@@ -143,7 +142,7 @@ public class WorldProcessor implements Runnable {
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			final Player player = entry.getValue();
 			
-			player.process(tick, responseMaps);
+			player.process(tickId, responseMaps);
 			
 			List<NPC> npcs = NPCManager.get().getNpcsNearTile(player.getFloor(), player.getTileId(), 15);
 			
@@ -169,11 +168,11 @@ public class WorldProcessor implements Runnable {
 		updateInRangePlayers(responseMaps);
 		
 		Stopwatch.start("process npcs");
-		NPCManager.get().process(npcsToProcess, responseMaps, tick);
+		NPCManager.get().process(npcsToProcess, responseMaps, tickId);
 		Stopwatch.end("process npcs");
 		
 		Stopwatch.start("process constructables");
-		ConstructableManager.process(responseMaps);
+		ConstructableManager.process(tickId, responseMaps);
 		Stopwatch.end("process constructables");
 		
 		// process fight manager
@@ -340,8 +339,10 @@ public class WorldProcessor implements Runnable {
 		
 		Set<Integer> localTiles = new HashSet<>();
 		
-		for (int y = 0; y < radius * 2; ++y) {
-			for (int x = 0; x < radius * 2; ++x)
+		// (radius * 2) + 1 because the centre tile as well
+		// e.g. radius of 2 gives us a 5x5 grid (2 left tiles, centre tile, 2 right tiles)
+		for (int y = 0; y < (radius * 2) + 1; ++y) {
+			for (int x = 0; x < (radius * 2) + 1; ++x)
 				localTiles.add(topLeft + (y * PathFinder.LENGTH) + x);
 		}
 		
@@ -522,12 +523,6 @@ public class WorldProcessor implements Runnable {
 					addedTileIdsBySceneryId.putIfAbsent(sceneryId, new HashSet<>());
 					addedTileIdsBySceneryId.get(sceneryId).add(tileId);
 				}
-				
-				final int constructableId = ConstructableManager.getConstructableIdByTileId(player.getFloor(), tileId);
-				if (constructableId != -1) {
-					addedTileIdsByConstructableId.putIfAbsent(constructableId, new HashSet<>());
-					addedTileIdsByConstructableId.get(constructableId).add(tileId);
-				}
 			}
 			
 			AddGroundTextureInstancesResponse addResponse = new AddGroundTextureInstancesResponse();
@@ -537,34 +532,14 @@ public class WorldProcessor implements Runnable {
 			
 			if (!addedTileIdsBySceneryId.isEmpty()) {
 				AddSceneryInstancesResponse addSceneryResponse = new AddSceneryInstancesResponse();
-				addSceneryResponse.setInstances(addedTileIdsBySceneryId);
 				responseMaps.addClientOnlyResponse(player, addSceneryResponse);
-
-				addSceneryResponse.setDepletedScenery(DepletionManager.getDepletedSceneryTileIds(player.getFloor())
-						.stream()
-						.filter(scenery -> newLocalTiles.contains(scenery))
-						.collect(Collectors.toSet()));
 				
-				HashSet<Integer> openDoors = new HashSet<>();
-				openDoors.addAll(DoorDao.getOpenDoorTileIds(player.getFloor())
-						  .stream()
-						  .filter(tileId -> newLocalTiles.contains(tileId))
-						  .collect(Collectors.toSet()));
-				openDoors.addAll(LockedDoorManager.getOpenLockedDoorTileIds(player.getFloor())
-						  .stream()
-						  .filter(tileId -> newLocalTiles.contains(tileId))
-						  .collect(Collectors.toSet()));
-				addSceneryResponse.setOpenDoors(openDoors);
+				addSceneryResponse.setInstances(addedTileIdsBySceneryId);
+				addSceneryResponse.setDepletedScenery(player.getFloor(), newLocalTiles);
+				addSceneryResponse.setOpenDoors(player.getFloor(), newLocalTiles);
 				
 				// if the scenery has never been sent to the player, then also send the corresponding sprite map to them
 				ClientResourceManager.addScenery(player, addedTileIdsBySceneryId.keySet());
-			}
-			
-			if (!addedTileIdsByConstructableId.isEmpty()) {
-				ConstructableInRangeResponse constructableInRange = new ConstructableInRangeResponse();
-				constructableInRange.setInstances(addedTileIdsByConstructableId);
-				responseMaps.addClientOnlyResponse(player, constructableInRange);
-				ClientResourceManager.addScenery(player, addedTileIdsByConstructableId.keySet());
 			}
 		}
 		
@@ -589,8 +564,7 @@ public class WorldProcessor implements Runnable {
 				
 				Map<Integer, Set<Integer>> minimapIconLocationsByFloorAndSegment = MinimapSegmentDao.getMinimapIconLocationsByFloorAndSegment(player.getFloor(), segmentId);
 				for (Map.Entry<Integer, Set<Integer>> entry : minimapIconLocationsByFloorAndSegment.entrySet()) {
-					if (!minimapIconLocations.containsKey(entry.getKey()))
-						minimapIconLocations.put(entry.getKey(), new HashSet<>());
+					minimapIconLocations.putIfAbsent(entry.getKey(), new HashSet<>());
 					minimapIconLocations.get(entry.getKey()).addAll(entry.getValue());
 				}
 			}

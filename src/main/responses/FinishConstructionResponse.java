@@ -15,6 +15,7 @@ import main.database.dto.ConstructableDto;
 import main.processing.ClientResourceManager;
 import main.processing.ConstructableManager;
 import main.processing.Player;
+import main.processing.WorldProcessor;
 import main.requests.AddExpRequest;
 import main.requests.ConstructionRequest;
 import main.requests.Request;
@@ -68,8 +69,12 @@ public class FinishConstructionResponse extends Response {
 		Map<Integer, Set<Integer>> instances = new HashMap<>();
 		instances.put(constructable.getResultingSceneryId(), Collections.singleton(request.getTileId()));
 		
-		ConstructableInRangeResponse inRangeResponse = new ConstructableInRangeResponse();
+		AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
 		inRangeResponse.setInstances(instances);
+		
+		// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
+		inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
+		inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
 		responseMaps.addLocalResponse(player.getFloor(), request.getTileId(), inRangeResponse);
 
 		// get rid of all the materials

@@ -70,7 +70,7 @@ public class MineableDao {
 	}
 	
 	private static void cacheMineables() {
-		final String query = "select scenery_id, level, exp, item_id, respawn_ticks from mineable";
+		final String query = "select scenery_id, level, exp, item_id, respawn_ticks, gold_chance from mineable";
 		
 		List<MineableDto> dtos = new ArrayList<>();
 		try (
@@ -79,7 +79,7 @@ public class MineableDao {
 			ResultSet rs = ps.executeQuery()
 		) {
 			while (rs.next())
-				dtos.add(new MineableDto(rs.getInt("scenery_id"), rs.getInt("level"), rs.getInt("exp"), rs.getInt("item_id"), rs.getInt("respawn_ticks")));
+				dtos.add(new MineableDto(rs.getInt("scenery_id"), rs.getInt("level"), rs.getInt("exp"), rs.getInt("item_id"), rs.getInt("respawn_ticks"), rs.getInt("gold_chance")));
 
 			mineables = dtos;
 		} catch (SQLException e) {

@@ -57,7 +57,7 @@ public class ConstructionResponse extends Response {
 			return;
 		}
 
-		final int existingSceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId());
+		int existingSceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId());
 		if (existingSceneryId != -1) {
 			setRecoAndResponseText(0, "you can't build that here.");
 			responseMaps.addClientOnlyResponse(player, this);

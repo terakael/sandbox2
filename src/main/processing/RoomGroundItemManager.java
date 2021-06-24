@@ -163,6 +163,29 @@ public class RoomGroundItemManager {
 				playerGroundItems.get(playerId).get(tileId).add(new GroundItem(itemId, LIFETIME, 1, charges));
 		}
 	}
+	
+	public void addGlobally(int tileId, int itemId, int count, int charges) {
+		globalGroundItems.putIfAbsent(tileId, new ArrayList<>());
+		
+		// stackable is handled differently
+		if (ItemDao.itemHasAttribute(itemId,ItemAttributes.STACKABLE)) {
+			// run through all the items on this tile, and if an item already exists then combine it and reset the lifetime
+			List<GroundItem> items = globalGroundItems.get(tileId);
+			for (GroundItem item : items) {
+				if (item.id == itemId) {
+					item.count += count;
+					item.lifetime = LIFETIME;
+					return;
+				}
+			}
+			
+			// otherwise just add it to the ground
+			globalGroundItems.get(tileId).add(new GroundItem(itemId, LIFETIME, count, charges));
+		} else {
+			for (int i = 0; i < count; ++i) 
+				globalGroundItems.get(tileId).add(new GroundItem(itemId, LIFETIME, 1, charges));
+		}
+	}
 
 	public void remove(int playerId, int tileId, int itemId, int count, int charges) {
 		if (removeFromPlayerGroundItems(playerId, tileId, itemId, count, charges))

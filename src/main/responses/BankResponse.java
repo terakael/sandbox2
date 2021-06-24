@@ -10,7 +10,7 @@ import main.processing.ClientResourceManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
-import main.requests.BankRequest;
+import main.requests.OpenRequest;
 import main.requests.Request;
 import main.types.StorageTypes;
 
@@ -22,11 +22,11 @@ public class BankResponse extends Response {
 	}
 
 	@Override
-	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (!(req instanceof BankRequest))
+	public void process(Request req, Player player, ResponseMaps responseMaps) {		
+		if (!(req instanceof OpenRequest))
 			return;
 		
-		BankRequest request = (BankRequest)req;
+		OpenRequest request = (OpenRequest)req;
 		
 		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId());
 		if (sceneryId != 53)// storage chest scenery id

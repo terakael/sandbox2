@@ -11,7 +11,7 @@ import main.processing.LockedDoorManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
-import main.requests.OpenCloseRequest;
+import main.requests.OpenRequest;
 import main.requests.Request;
 
 public class OpenCloseResponse extends Response {
@@ -23,7 +23,7 @@ public class OpenCloseResponse extends Response {
 	
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		OpenCloseRequest request = (OpenCloseRequest)req;
+		OpenRequest request = (OpenRequest)req;
 		
 		// does the tile a door on it?
 		DoorDto door = DoorDao.getDoorDtoByTileId(player.getFloor(), request.getTileId());

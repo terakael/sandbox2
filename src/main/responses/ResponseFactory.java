@@ -135,9 +135,6 @@ public class ResponseFactory {
 		case "flower_respawn":
 			response = new FlowerRespawnResponse();
 			break;
-		case "bank":
-			response = new BankResponse();
-			break;
 		case "deposit":
 			response = new BankDepositResponse();
 			break;
@@ -163,7 +160,7 @@ public class ResponseFactory {
 			response = new BuryResponse();
 			break;
 		case "open":
-			response = new OpenCloseResponse();
+			response = new OpenResponse();
 			break;
 		case "toggle_duel_rule":
 			response = new ToggleDuelRuleResponse();

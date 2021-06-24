@@ -40,6 +40,7 @@ public class SceneryManager {
 		sceneryMap.put(127, new Fire()); // magic
 		
 		sceneryMap.put(128, new Sawmill());
+		sceneryMap.put(144, new Furnace());
 	}
 	public static Scenery getScenery(int sceneryId) {
 		if (sceneryMap.containsKey(sceneryId))

@@ -45,7 +45,6 @@ public class RequestFactory {
 		map.put("catch", CatchRequest.class);
 		map.put("climb", ClimbRequest.class);
 		map.put("pick", PickRequest.class);
-		map.put("bank", BankRequest.class);
 		map.put("deposit", BankDepositRequest.class);
 		map.put("withdraw", BankWithdrawRequest.class);
 		map.put("show_stat_window", ShowStatWindowRequest.class);
@@ -54,7 +53,7 @@ public class RequestFactory {
 		map.put("toggle_prayer", TogglePrayerRequest.class);
 		map.put("pray at", PrayAtRequest.class);
 		map.put("bury", BuryRequest.class);
-		map.put("open", OpenCloseRequest.class);
+		map.put("open", OpenRequest.class);
 		map.put("toggle_duel_rule", ToggleDuelRuleRequest.class);
 		map.put("chop", ChopRequest.class);
 		map.put("construction", ConstructionRequest.class);

@@ -11,4 +11,5 @@ public class MineableDto {
 	private int exp;
 	private int itemId;
 	private int respawnTicks;
+	private int goldChance;
 }

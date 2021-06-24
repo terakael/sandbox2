@@ -3,13 +3,14 @@ package main.responses;
 import java.util.HashMap;
 import java.util.Map;
 
-import main.GroundItemManager;
+import main.database.dao.ConstructableDao;
 import main.database.dao.ItemDao;
 import main.database.dao.NPCDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
+import main.database.dto.ConstructableDto;
+import main.processing.ConstructableManager;
 import main.processing.Player;
-import main.processing.RoomGroundItemManager.GroundItem;
 import main.requests.ExamineRequest;
 import main.requests.Request;
 import main.types.ItemAttributes;
@@ -42,8 +43,20 @@ public class ExamineResponse extends Response {
 			return;
 		
 		switch (request.getType()) {
-		case "scenery": {
+		case "scenery": { 
 			examineText = sceneryExamineMap.get(request.getObjectId());
+			
+			// constructables show their timer as well
+			final int remainingTicks = ConstructableManager.getRemainingTicks(player.getFloor(), request.getTileId());
+			if (remainingTicks > 0) {
+				if (remainingTicks > 100) {
+					final int remainingMinutes = remainingTicks / 100;
+					examineText += String.format(" (%d minute%s remain%s)", remainingMinutes, remainingMinutes == 1 ? "" : "s", remainingMinutes == 1 ? "s" : "");
+				} else {
+					final int remainingSeconds = (int)(remainingTicks * 0.6);
+					examineText += String.format(" (%d second%s remain%s)", remainingSeconds, remainingSeconds == 1 ? "" : "s", remainingSeconds == 1 ? "s" : "");
+				}
+			}
 			break;
 		}
 		case "item": {

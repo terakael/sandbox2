@@ -273,6 +273,12 @@ public class PlayerStorageDao {
 		if (!validatePlayerStorageElement(playerId, storageType, slot))
 			return;
 		
+		if (count <= 0) {
+			// BUG, somehow count went below 0
+			System.out.println(String.format("player %d got %d count on storage type %s!", playerId, count, storageType.name()));
+			count = 0;
+		}
+		
 		if (count == 0) {
 			// in the case of a stackable, if we are setting the count to zero then remove the item from the inventory (set the item to 0)
 			setItemFromPlayerIdAndSlot(playerId, storageType, slot, 0, 1, 0);

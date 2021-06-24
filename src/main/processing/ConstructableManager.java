@@ -1,34 +1,39 @@
 package main.processing;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import main.database.dao.SceneryDao;
 import main.database.dto.ConstructableDto;
 import main.responses.ConstructableDespawnResponse;
 import main.responses.ResponseMaps;
+import main.scenery.constructable.Constructable;
+import main.scenery.constructable.NaturesShrine;
 
 public class ConstructableManager {
-	private static Map<Integer, Map<Integer, Integer>> constructableInstances = new HashMap<>(); // floor, <tileId, constructableId>
-	private static Map<Integer, Map<Integer, Integer>> constructableLifetime = new HashMap<>(); // floor, <tileId, lifetime>
+	private static Map<Integer, Class<? extends Constructable>> constructables = new HashMap<>(); // sceneryId, constructable class
+	private static Map<Integer, Map<Integer, Constructable>> constructableInstances = new HashMap<>(); // floor, <tileId, constructable>
 	
-	public static void process(ResponseMaps responseMaps) {
-		constructableLifetime.forEach((floor, tileIdMap) -> {
-			
-			tileIdMap.replaceAll((k, v) -> v -= 1);
-			
-			Set<Integer> tileIdsToRemove = tileIdMap.entrySet().stream()
-					.filter(e -> e.getValue() == 0)
-					.map(e -> e.getKey())
-					.collect(Collectors.toSet());
-			
-			tileIdsToRemove.forEach(tileId -> 
-				responseMaps.addLocalResponse(floor, tileId, new ConstructableDespawnResponse(tileId)));
-			
+	static {
+		constructables.put(140, NaturesShrine.class);
+	}
+	
+	public static void process(int tickId, ResponseMaps responseMaps) {
+		constructableInstances.forEach((floor, tileIdMap) -> {
+			Set<Integer> tileIdsToRemove = new HashSet<>();
+			tileIdMap.forEach((tileId, constructable) -> {
+				constructable.process(tickId, responseMaps);
+				if (constructable.getRemainingTicks() <= 0) {
+					tileIdsToRemove.add(tileId);
+					responseMaps.addLocalResponse(floor, tileId, new ConstructableDespawnResponse(tileId));
+				}
+			});
 			
 			constructableInstances.get(floor).keySet().removeIf(e -> tileIdsToRemove.contains(e));
-			constructableLifetime.get(floor).keySet().removeIf(e -> tileIdsToRemove.contains(e));
 		});
 	}
 	
@@ -39,15 +44,30 @@ public class ConstructableManager {
 		if (!constructableInstances.get(floor).containsKey(tileId))
 			return -1;
 		
-		return constructableInstances.get(floor).get(tileId);
+		return constructableInstances.get(floor).get(tileId).getDto().getResultingSceneryId();
 	}
 	
 	public static void add(int floor, int tileId, ConstructableDto constructable) {
-		constructableInstances.putIfAbsent(floor, new HashMap<>());
-		constructableInstances.get(floor).put(tileId, constructable.getResultingSceneryId());
+		// if something already exists here then bail
+		if (!PathFinder.tileIsValid(floor, tileId) || SceneryDao.getSceneryIdByTileId(floor, tileId) != -1 || getConstructableIdByTileId(floor, tileId) != -1)
+			return;
 		
-		constructableLifetime.putIfAbsent(floor, new HashMap<>());
-		constructableLifetime.get(floor).put(tileId, constructable.getLifetimeTicks());
+		constructableInstances.putIfAbsent(floor, new HashMap<>());
+		Constructable newConstructableInstance = null;
+		if (constructables.containsKey(constructable.getResultingSceneryId())) {
+			try {
+				newConstructableInstance = constructables.get(constructable.getResultingSceneryId())
+						.getDeclaredConstructor(int.class, int.class, ConstructableDto.class)
+						.newInstance(floor, tileId, constructable);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
+		} else {
+			newConstructableInstance = new Constructable(floor, tileId, constructable); // generic constructable, represents constructables that don't have special process logic
+		}
+
+		constructableInstances.get(floor).put(tileId, newConstructableInstance);
 	}
 	
 	public static boolean constructableIsInRadius(int floor, int tileId, int constructableId, int radius) {
@@ -60,10 +80,20 @@ public class ConstructableManager {
 				.collect(Collectors.toSet());
 		
 		for (int checkTileId : localTilesWithConstructableInstance) {
-			if (constructableInstances.get(floor).get(checkTileId) == constructableId)
+			if (constructableInstances.get(floor).get(checkTileId).getDto().getResultingSceneryId() == constructableId)
 				return true;
 		}
 		
 		return false;
+	}
+	
+	public static int getRemainingTicks(int floor, int tileId) {
+		if (!constructableInstances.containsKey(floor))
+			return -1;
+		
+		if (!constructableInstances.get(floor).containsKey(tileId))
+			return -1;
+		
+		return constructableInstances.get(floor).get(tileId).getRemainingTicks();
 	}
 }

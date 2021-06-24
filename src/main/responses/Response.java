@@ -36,6 +36,9 @@ public abstract class Response {
 		if (!(req instanceof MessageRequest) && player.getState() == PlayerState.dead)
 			return;
 		
+		// TODO check if in fight
+		// TODO check if next to
+		
 		process(req, player, responseMaps);
 	}
 

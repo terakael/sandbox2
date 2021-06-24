@@ -46,6 +46,13 @@ public class GroundItemManager {
 		
 		groundItemManagers.get(floor).add(playerId, itemId, tileId, count, charges);
 	}
+	
+	public static void addGlobally(int floor, int tileId, int itemId, int count, int charges) {
+		if (!groundItemManagers.containsKey(floor))
+			return;
+		
+		groundItemManagers.get(floor).addGlobally(tileId, itemId, count, charges);
+	}
 
 	public static void remove(int floor, int playerId, int tileId, int itemId, int count, int charges) {
 		if (!groundItemManagers.containsKey(floor))
