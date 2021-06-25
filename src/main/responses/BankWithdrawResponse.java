@@ -6,11 +6,13 @@ import java.util.Map;
 
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
+import main.database.dao.SceneryDao;
 import main.database.dto.InventoryItemDto;
+import main.processing.PathFinder;
 import main.processing.Player;
-import main.requests.BankWithdrawRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.requests.WithdrawRequest;
 import main.types.ItemAttributes;
 import main.types.StorageTypes;
 
@@ -24,10 +26,11 @@ public class BankWithdrawResponse extends Response {
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (!(req instanceof BankWithdrawRequest))
+		if (!(req instanceof WithdrawRequest))
 			return;
 		
-		BankWithdrawRequest request = (BankWithdrawRequest)req;
+		WithdrawRequest request = (WithdrawRequest)req;
+		
 		InventoryItemDto bankItemDto = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.BANK, request.getSlot());
 		if (bankItemDto == null || bankItemDto.getItemId() == 0) {
 			// cannot withdraw this item (because it doesn't exist).

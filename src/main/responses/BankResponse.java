@@ -15,7 +15,8 @@ import main.requests.Request;
 import main.types.StorageTypes;
 
 public class BankResponse extends Response {
-	Map<Integer, InventoryItemDto> items;
+	private Map<Integer, InventoryItemDto> items;
+	private int tileId;
 	
 	public BankResponse() {
 		setAction("bank");
@@ -40,6 +41,7 @@ public class BankResponse extends Response {
 		} else {
 			player.faceDirection(request.getTileId(), responseMaps);
 			items = PlayerStorageDao.getStorageDtoMapByPlayerIdExcludingEmpty(player.getId(), StorageTypes.BANK);
+			tileId = request.getTileId();
 			
 			// TODO if player isn't next to bank tile and player isn't god then bail
 			responseMaps.addClientOnlyResponse(player, this);

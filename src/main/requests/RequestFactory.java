@@ -45,8 +45,8 @@ public class RequestFactory {
 		map.put("catch", CatchRequest.class);
 		map.put("climb", ClimbRequest.class);
 		map.put("pick", PickRequest.class);
-		map.put("deposit", BankDepositRequest.class);
-		map.put("withdraw", BankWithdrawRequest.class);
+		map.put("deposit", DepositRequest.class);
+		map.put("withdraw", WithdrawRequest.class);
 		map.put("show_stat_window", ShowStatWindowRequest.class);
 		map.put("fish", FishRequest.class);
 		map.put("enter", EnterPortalRequest.class);
@@ -59,6 +59,8 @@ public class RequestFactory {
 		map.put("construction", ConstructionRequest.class);
 		map.put("drink from", DrinkFromRequest.class);
 		map.put("show_construction_materials", ShowConstructionMaterialsRequest.class);
+		map.put("storage_move", StorageMoveRequest.class);
+		map.put("repair", RepairRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

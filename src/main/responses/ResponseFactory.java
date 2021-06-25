@@ -136,10 +136,10 @@ public class ResponseFactory {
 			response = new FlowerRespawnResponse();
 			break;
 		case "deposit":
-			response = new BankDepositResponse();
+			response = new DepositResponse();
 			break;
 		case "withdraw":
-			response = new BankWithdrawResponse();
+			response = new WithdrawResponse();
 			break;
 		case "show_stat_window":
 			response = new ShowStatWindowResponse();
@@ -176,6 +176,12 @@ public class ResponseFactory {
 			break;
 		case "show_construction_materials":
 			response = new ShowConstructionMaterialsResponse();
+			break;
+		case "storage_move":
+			response = new StorageMoveResponse();
+			break;
+		case "repair":
+			response = new RepairResponse();
 			break;
 			
 		default:

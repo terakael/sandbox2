@@ -8,9 +8,11 @@ import java.util.Set;
 import main.database.dao.EquipmentDao;
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
+import main.database.dao.SceneryDao;
 import main.database.dto.InventoryItemDto;
+import main.processing.PathFinder;
 import main.processing.Player;
-import main.requests.BankDepositRequest;
+import main.requests.DepositRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.types.ItemAttributes;
@@ -26,10 +28,10 @@ public class BankDepositResponse extends Response {
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (!(req instanceof BankDepositRequest))
+		if (!(req instanceof DepositRequest))
 			return;
 		
-		BankDepositRequest request = (BankDepositRequest)req;
+		DepositRequest request = (DepositRequest)req;
 		
 		if (EquipmentDao.isSlotEquipped(player.getId(), request.getSlot())) {
 			setRecoAndResponseText(0, "you need to unequip it first.");

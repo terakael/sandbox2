@@ -19,4 +19,8 @@ public class InventoryItemDto {
 	private int slot;
 	private int count;
 	private int charges;
+	
+	public void addCount(int newCount) {
+		count += newCount;
+	}
 }

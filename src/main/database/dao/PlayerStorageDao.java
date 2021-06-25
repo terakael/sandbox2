@@ -101,13 +101,6 @@ public class PlayerStorageDao {
 		}
 		return retDtos;
 	}
-	
-	public static Integer getStoredCoalByPlayerId(int playerId) {
-		if (!validatePlayerStorageElement(playerId, StorageTypes.FURNACE))
-			return 0;
-		
-		return playerStorage.get(playerId).get(StorageTypes.FURNACE).get(0).getCount();// furnace only has slot 0
-	}
 
 	public static ItemDto getItemFromPlayerIdAndSlot(int playerId, int slot) {
 		return ItemDao.getItem(getItemIdInSlot(playerId, StorageTypes.INVENTORY, slot));

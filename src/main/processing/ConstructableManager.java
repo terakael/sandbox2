@@ -1,6 +1,5 @@
 package main.processing;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,6 +12,7 @@ import main.responses.ConstructableDespawnResponse;
 import main.responses.ResponseMaps;
 import main.scenery.constructable.Constructable;
 import main.scenery.constructable.NaturesShrine;
+import main.scenery.constructable.SmallStorageChest;
 
 public class ConstructableManager {
 	private static Map<Integer, Class<? extends Constructable>> constructables = new HashMap<>(); // sceneryId, constructable class
@@ -20,6 +20,7 @@ public class ConstructableManager {
 	
 	static {
 		constructables.put(140, NaturesShrine.class);
+		constructables.put(141, SmallStorageChest.class);
 	}
 	
 	public static void process(int tickId, ResponseMaps responseMaps) {
@@ -95,5 +96,15 @@ public class ConstructableManager {
 			return -1;
 		
 		return constructableInstances.get(floor).get(tileId).getRemainingTicks();
+	}
+	
+	public static Constructable getConstructableInstanceByTileId(int floor, int tileId) {
+		if (!constructableInstances.containsKey(floor))
+			return null;
+		
+		if (!constructableInstances.get(floor).containsKey(tileId))
+			return null;
+		
+		return constructableInstances.get(floor).get(tileId);
 	}
 }

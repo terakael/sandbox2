@@ -18,17 +18,21 @@ public class ShowConstructionMaterialsResponse extends Response {
 		if (constructable == null)
 			return;
 		
-		String message = String.format("%s requires: ", SceneryDao.getNameById(constructable.getResultingSceneryId()));
-		if (constructable.getPlankAmount() > 0)
-			message += String.format("%dx %s, ", constructable.getPlankAmount(), ItemDao.getNameFromId(constructable.getPlankId()));
-		if (constructable.getBarAmount() > 0)
-			message += String.format("%dx %s, ", constructable.getBarAmount(), ItemDao.getNameFromId(constructable.getBarId()));
-		if (constructable.getTertiaryAmount() > 0)
-			message += String.format("%dx %s, ", constructable.getTertiaryAmount(), ItemDao.getNameFromId(constructable.getTertiaryId()));
-		
-		message = message.substring(0, message.length() - 2) + ".";
+		String message = String.format("%s requires: %s.", SceneryDao.getNameById(constructable.getResultingSceneryId()), compileMaterialList(constructable));
 		
 		responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(message, "white"));
+	}
+	
+	public static String compileMaterialList(ConstructableDto dto) {
+		String message = "";
+		if (dto.getPlankAmount() > 0)
+			message += String.format("%dx %s, ", dto.getPlankAmount(), ItemDao.getNameFromId(dto.getPlankId()));
+		if (dto.getBarAmount() > 0)
+			message += String.format("%dx %s, ", dto.getBarAmount(), ItemDao.getNameFromId(dto.getBarId()));
+		if (dto.getTertiaryAmount() > 0)
+			message += String.format("%dx %s, ", dto.getTertiaryAmount(), ItemDao.getNameFromId(dto.getTertiaryId()));
+		
+		return message.substring(0, message.length() - 2);
 	}
 
 }
