@@ -31,7 +31,7 @@ public class DialogueOptionResponse extends Response {
 		if (!(req instanceof DialogueOptionRequest))
 			return;
 		
-		NpcDialogueOptionDto selectedOption = DialogueDao.getDialogueOption(dialogue.getNpcId(), dialogue.getPointId(), req.getId());
+		NpcDialogueOptionDto selectedOption = DialogueDao.getDialogueOption(dialogue.getNpcId(), dialogue.getPointId(), player.getId());
 		if (selectedOption == null) {
 			// setting to null causes the DialogueResponse to send an empty message to the player, cleaning up the client side
 			player.setCurrentDialogue(null);

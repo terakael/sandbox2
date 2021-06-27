@@ -197,11 +197,6 @@ public class Player extends Attackable {
 		if (prayerPoints > 0)
 			processPrayer(responseMaps);
 		
-		if (tick % 3 == 0 && ConstructableManager.constructableIsInRadius(getFloor(), getTileId(), 139, 3)) {
-			if (prayerPoints < StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, getId()))
-				setPrayerPoints(prayerPoints + 1, responseMaps);
-		}
-		
 		// decrement the remaining ticks on every active buff
 		activeBuffs.replaceAll((k, v) -> v -= 1);
 		
@@ -423,6 +418,8 @@ public class Player extends Attackable {
 			
 		case dead: {// note that while the player is in the dead state, every response (except Message) is ignored at the Response superclass level
 			if (--tickCounter <= 0) {
+				state = PlayerState.idle;
+				
 				// update the player inventory to show there's no more items
 				new InventoryUpdateResponse().process(RequestFactory.create("dummy", getId()), this, responseMaps);
 				
@@ -445,8 +442,6 @@ public class Player extends Attackable {
 				
 				// mainly to reset the bonuses
 				new EquipResponse().process(null, this, responseMaps);
-				
-				state = PlayerState.idle;
 			}
 			break;
 		}
@@ -477,6 +472,11 @@ public class Player extends Attackable {
 			togglePrayerResponse.setResponseText("you have run out of prayer points.");
 			responseMaps.addClientOnlyResponse(this, togglePrayerResponse);
 		}
+	}
+	
+	public void incrementPrayerPoints(ResponseMaps responseMaps) {
+		if (prayerPoints < StatsDao.getStatLevelByStatIdPlayerId(Stats.PRAYER, getId()))
+			setPrayerPoints(prayerPoints + 1, responseMaps);
 	}
 	
 	private void restoreStats(ResponseMaps responseMaps) {
@@ -547,11 +547,13 @@ public class Player extends Attackable {
 	
 	public void setTileId(int tileId) {
 		this.tileId = tileId;
+		LocationManager.addPlayer(this);
 		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(dto.getId()).tileId(tileId).build());
 	}
 	
 	public void setFloor(int floor) {
 		this.floor = floor;
+		LocationManager.addPlayer(this);
 		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(dto.getId()).floor(floor).build());
 	}
 	
@@ -850,16 +852,17 @@ public class Player extends Attackable {
 		// addy, 7, 9, 11, 13
 		// rune: 10, 13, 15, 18
 		// dragon: doesn't soak as it cannot be reinforced
+		
+		Map<Integer, Integer> equippedSlotsCopy = equippedSlotsByItemId.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 
 		boolean itemUpdated = false;
 		boolean itemCleared = false;
-		for (Map.Entry<Integer, Integer> entry : equippedSlotsByItemId.entrySet()) {
+		for (Map.Entry<Integer, Integer> entry : equippedSlotsCopy.entrySet()) {
 			ReinforcementBonusesDto reinforcementBonuses = ReinforcementBonusesDao.getReinforcementBonusesById(entry.getKey());
 			if (reinforcementBonuses == null)
 				continue;
 			
-			int degradedItemId = EquipmentDao.getBaseItemFromReinforcedItem(entry.getKey());
-			if (degradedItemId > 0 && damage > 0) {
+			if (damage > 0) {
 				if (RandomUtil.getRandom(0, 100) < reinforcementBonuses.getProcChance()) {
 					// proc chance activated, soak some of the damage	
 					int damageToSoak = (int)Math.ceil(damage * reinforcementBonuses.getSoakPct());
@@ -877,19 +880,21 @@ public class Player extends Attackable {
 								entry.getValue(), 
 								entry.getKey(), 1, item.getCharges() - damageToSoak);
 					} else {
+						final int degradedItemId = ItemDao.getDegradedItemId(entry.getKey());
+						
 						// ran out of charges; degrade to the base item
 						PlayerStorageDao.setItemFromPlayerIdAndSlot(getId(), StorageTypes.INVENTORY, entry.getValue(), degradedItemId, 1, ItemDao.getMaxCharges(degradedItemId));
 						
 						// clear the equipped item first then reset it with the degraded base item
 						EquipmentDao.clearEquippedItem(getId(), entry.getValue());
-						EquipmentDao.setEquippedItem(getId(), entry.getValue(), degradedItemId);
+						
+						if (EquipmentDao.isEquippable(degradedItemId))
+							EquipmentDao.setEquippedItem(getId(), entry.getValue(), degradedItemId);
 						itemCleared = true;
 						
 						// it degraded so throw up a message
-						MessageResponse messageResponse = new MessageResponse();
-						messageResponse.setRecoAndResponseText(0, String.format("Your %s degraded!", ItemDao.getNameFromId(item.getItemId())));
-						messageResponse.setColour("white");
-						responseMaps.addClientOnlyResponse(this, messageResponse);
+						responseMaps.addClientOnlyResponse(this, 
+								MessageResponse.newMessageResponse(String.format("Your %s degraded!", ItemDao.getNameFromId(item.getItemId())), "white"));
 					}
 					itemUpdated = true;
 				}

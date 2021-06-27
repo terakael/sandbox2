@@ -43,7 +43,6 @@ public class FinishSawmillResponse extends Response {
 		}
 		
 		AddExpRequest addExpReq = new AddExpRequest();
-		addExpReq.setId(player.getId());
 		addExpReq.setStatId(Stats.CONSTRUCTION.getValue());
 		addExpReq.setExp(sawmillable.getExp());
 		new AddExpResponse().process(addExpReq, player, responseMaps);

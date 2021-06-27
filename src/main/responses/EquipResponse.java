@@ -34,7 +34,7 @@ public class EquipResponse extends Response {
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (req instanceof EquipRequest) {
 			EquipRequest equipReq = (EquipRequest)req;
-			ItemDto item = PlayerStorageDao.getItemFromPlayerIdAndSlot(equipReq.getId(), equipReq.getSlot());		
+			ItemDto item = PlayerStorageDao.getItemFromPlayerIdAndSlot(player.getId(), equipReq.getSlot());		
 			
 			// so we have the item from the requested slot, but is it equippable?
 			EquipmentDto equip = EquipmentDao.getEquipmentByItemId(item.getId());

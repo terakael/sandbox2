@@ -14,7 +14,7 @@ import main.processing.Player;
 import main.requests.DepositRequest;
 import main.requests.Request;
 import main.scenery.constructable.Constructable;
-import main.scenery.constructable.SmallStorageChest;
+import main.scenery.constructable.StorageChest;
 import main.types.ItemAttributes;
 import main.types.StorageTypes;
 
@@ -32,7 +32,7 @@ public class StorageChestDepositResponse extends Response {
 		if (constructable == null)
 			return;
 		
-		if (!(constructable instanceof SmallStorageChest))
+		if (!(constructable instanceof StorageChest))
 			return;
 		
 		InventoryItemDto itemDto = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot());
@@ -50,7 +50,7 @@ public class StorageChestDepositResponse extends Response {
 		
 		final boolean itemIsStackable = ItemDao.itemHasAttribute(itemDto.getItemId(), ItemAttributes.STACKABLE);
 		
-		SmallStorageChest chest = (SmallStorageChest)constructable;		
+		StorageChest chest = (StorageChest)constructable;		
 		int remainingEmptySlots = chest.getEmptySlotCount(player.getId());
 		if (remainingEmptySlots == 0 && !(itemIsStackable && chest.contains(player.getId(), itemDto.getItemId()))) {
 			setRecoAndResponseText(0, "the chest is full.");

@@ -70,7 +70,6 @@ public class RequestFactory {
 	public static Request create(String action, int id) {
 		Request request = new DummyRequest();
 		request.setAction(action);
-		request.setId(id);
 		return request;
 	}
 }

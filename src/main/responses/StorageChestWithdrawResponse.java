@@ -12,7 +12,7 @@ import main.processing.Player;
 import main.requests.Request;
 import main.requests.WithdrawRequest;
 import main.scenery.constructable.Constructable;
-import main.scenery.constructable.SmallStorageChest;
+import main.scenery.constructable.StorageChest;
 import main.types.ItemAttributes;
 import main.types.StorageTypes;
 
@@ -31,10 +31,10 @@ public class StorageChestWithdrawResponse extends Response {
 		if (constructable == null)
 			return;
 		
-		if (!(constructable instanceof SmallStorageChest))
+		if (!(constructable instanceof StorageChest))
 			return;
 		
-		SmallStorageChest chest = (SmallStorageChest)constructable;		
+		StorageChest chest = (StorageChest)constructable;		
 		
 		List<InventoryItemDto> chestItems = chest.getItems(player.getId());
 		InventoryItemDto targetItem = chestItems.get(request.getSlot());

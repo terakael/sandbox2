@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.database.dao.NPCDao;
@@ -33,6 +34,8 @@ public class NPCManager {
 				npcs.get(entry.getKey()).add(new NPC(dto));
 			}
 		}
+		
+		LocationManager.addNpcs(npcs.values().stream().flatMap(List::stream).collect(Collectors.toList()));
 	}
 	
 	// TODO should probs be a Map<id, NPC>
@@ -48,14 +51,18 @@ public class NPCManager {
 	}
 	
 	public void process(Map<Integer, Set<Integer>> npcIds, ResponseMaps responseMaps, int tick) {
-		for (Map.Entry<Integer, Set<Integer>> entry : npcIds.entrySet()) {
-			if (!npcs.containsKey(entry.getKey()))
-				continue;
-			
-			npcs.get(entry.getKey()).stream()
-				.filter(e -> entry.getValue().contains(e.getInstanceId()))
-				.forEach(e -> e.process(tick, responseMaps));
-		}
+		LocationManager.getAllNpcsNearPlayers().forEach((floor, npcSet) -> {
+			npcSet.forEach(npc -> npc.process(tick, responseMaps));
+		});
+		
+//		for (Map.Entry<Integer, Set<Integer>> entry : npcIds.entrySet()) {
+//			if (!npcs.containsKey(entry.getKey()))
+//				continue;
+//			
+//			npcs.get(entry.getKey()).stream()
+//				.filter(e -> entry.getValue().contains(e.getInstanceId()))
+//				.forEach(e -> e.process(tick, responseMaps));
+//		}
 	}
 	
 	public List<NPC> getNpcsNearTile(int floor, int tileId, int radius) {

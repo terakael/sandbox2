@@ -84,7 +84,6 @@ public class FinishMiningResponse extends Response {
 			}
 			
 			AddExpRequest addExpReq = new AddExpRequest();
-			addExpReq.setId(player.getId());
 			addExpReq.setStatId(Stats.MINING.getValue());
 			addExpReq.setExp(mineable.getExp());
 			
@@ -118,11 +117,7 @@ public class FinishMiningResponse extends Response {
 				
 				int depletionChance = Math.max(20 - ((miningLevel - requirementLevel) / 2), requirementLevel / 10);
 				if (RandomUtil.getRandom(0,  100) < depletionChance) {
-					DepletionManager.addDepletedScenery(DepletionManager.DepletionType.rock, player.getFloor(), tileId, mineable.getRespawnTicks());
-					
-					SceneryDepleteResponse rockDepleteResponse = new SceneryDepleteResponse();
-					rockDepleteResponse.setTileId(tileId);
-					responseMaps.addLocalResponse(player.getFloor(), tileId, rockDepleteResponse);
+					DepletionManager.addDepletedScenery(DepletionManager.DepletionType.rock, player.getFloor(), tileId, mineable.getRespawnTicks(), responseMaps);
 				}
 			}
 		} else {
@@ -143,7 +138,7 @@ public class FinishMiningResponse extends Response {
 					pickaxeId, 1, invItem.getCharges() - 1);
 		} else {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(
-					playerId, StorageTypes.INVENTORY, invItemIds.indexOf(pickaxeId), 0, 1, 0);
+					playerId, StorageTypes.INVENTORY, invItemIds.indexOf(pickaxeId), ItemDao.getDegradedItemId(pickaxeId), 1, 0);
 		}
 	}
 

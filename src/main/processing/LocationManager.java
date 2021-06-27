@@ -38,6 +38,36 @@ public class LocationManager {
 		return localNpcs;
 	}
 	
+	public static Set<NPC> getNpcsFromSegments(int floor, Set<Integer> segments) {
+		Set<NPC> npcsToReturn = new HashSet<>();
+		if (!npcs.containsKey(floor))
+			return npcsToReturn;
+		
+		segments.forEach(segment -> {
+			if (npcs.get(floor).containsKey(segment))
+				npcsToReturn.addAll(npcs.get(floor).get(segment));
+		});
+		
+		return npcsToReturn;
+	}
+	
+	public static Map<Integer, Set<NPC>> getAllNpcsNearPlayers() {
+		Map<Integer, Set<NPC>> npcsToReturn = new HashMap<>();
+		
+		players.forEach((floor, segmentMap) -> {
+			if (npcs.containsKey(floor)) {
+				segmentMap.keySet().forEach(segment -> {
+					if (npcs.get(floor).containsKey(segment)) {
+						npcsToReturn.putIfAbsent(floor, new HashSet<>());
+						npcsToReturn.get(floor).addAll(npcs.get(floor).get(segment));
+					}
+				});
+			}
+		});
+		
+		return npcsToReturn;
+	}
+	
 	public static void addNpcs(List<NPC> allNpcs) {
 		allNpcs.forEach(npc -> {
 			// local segments are the one that the spawn tile lies in, plus sibling segments if the roam radius intersects.
@@ -76,32 +106,37 @@ public class LocationManager {
 	}
 	
 	public static void addPlayer(Player player) {
-		int currentSegment = getSegmentFromTileId(player.getTileId());
-		
-		players.putIfAbsent(player.getFloor(), new HashMap<>());
-		players.get(player.getFloor()).putIfAbsent(currentSegment, new HashSet<>());
-		
-		// if the player already exists in this segment then we don't need to do anything.
-		if (!players.get(player.getFloor()).get(currentSegment).contains(player)) {
-			// the player might exist in another segment (e.g. crossed a segment border, went up a ladder, teleported).
-			// if that's the case then remove the player from the other segment.
-			removePlayerIfExists(player);
-			players.get(player.getFloor()).get(currentSegment).add(player);
-		}
-	}
-	
-	public static void removePlayerIfExists(Player player) {
-		players.forEach((floor, segmentMap) -> {
-			segmentMap.forEach((segment, playerList) -> {
-				if (playerList.contains(player))
-					playerList.remove(player);
-				
-				if (playerList.isEmpty())
-					segmentMap.remove(segment);
-				
+		// first check if the player already exists in its current segments
+		final Set<Integer> currentSegments = getLocalSegments(player.getTileId(), 12);
+		if (players.containsKey(player.getFloor())) {
+			boolean containsCurrentSegments = true;
+			for (int segment : currentSegments) {
+				if (!players.get(player.getFloor()).containsKey(segment) || !players.get(player.getFloor()).get(segment).contains(player)) {
+					containsCurrentSegments = false;
+					break;
+				}
+			}
+
+			// the player's current segments are the same, so we don't need to do anything.
+			if (containsCurrentSegments)
 				return;
-			});
+		}
+		
+		// the player's segments have changed, so remove and reset them.
+		removePlayerIfExists(player);
+		currentSegments.forEach(currentSegment -> {
+			players.putIfAbsent(player.getFloor(), new HashMap<>());
+			players.get(player.getFloor()).putIfAbsent(currentSegment, new HashSet<>());
+			players.get(player.getFloor()).get(currentSegment).add(player);
 		});
+	}
+
+	private static void removePlayerIfExists(Player player) {
+		players.forEach((floor, segmentMap) -> {
+			segmentMap.forEach((segment, playerList) -> playerList.removeIf(e -> e.equals(player)));
+			segmentMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+		});
+		players.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 	}
 	
 	private static Set<Integer> getCornerTileIds(int centreTileId, int radius) {

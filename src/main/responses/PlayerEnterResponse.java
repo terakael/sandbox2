@@ -9,7 +9,7 @@ public class PlayerEnterResponse extends Response {
 	@Setter private String name;
 
 	public PlayerEnterResponse() {
-		setAction("playerEnter");
+		setAction("player_enter");
 	}
 
 	@Override

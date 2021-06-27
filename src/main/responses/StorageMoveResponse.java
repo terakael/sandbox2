@@ -8,7 +8,7 @@ import main.processing.Player;
 import main.requests.Request;
 import main.requests.StorageMoveRequest;
 import main.scenery.constructable.Constructable;
-import main.scenery.constructable.SmallStorageChest;
+import main.scenery.constructable.StorageChest;
 
 public class StorageMoveResponse extends Response {
 	private List<InventoryItemDto> items;
@@ -25,10 +25,10 @@ public class StorageMoveResponse extends Response {
 		if (constructable == null)
 			return;
 		
-		if (!(constructable instanceof SmallStorageChest))
+		if (!(constructable instanceof StorageChest))
 			return;
 		
-		SmallStorageChest chest = (SmallStorageChest)constructable;
+		StorageChest chest = (StorageChest)constructable;
 		chest.swapSlotContents(player.getId(), request.getSrc(), request.getDest());
 		
 		items = chest.getItems(player.getId());

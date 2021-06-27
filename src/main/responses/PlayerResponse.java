@@ -61,13 +61,13 @@ public abstract class PlayerResponse extends Response {
 		
 		player.faceDirection(otherPlayer.getTileId(), responseMaps);
 		
-		boolean exists = PlayerRequestManager.requestExists(playerReq.getObjectId(), playerReq.getId(), playerReq.getRequestType());
+		boolean exists = PlayerRequestManager.requestExists(playerReq.getObjectId(), player.getId(), playerReq.getRequestType());
 		PlayerResponse otherResponse = (PlayerResponse)ResponseFactory.create(playerReq.getAction());
 		
 		// note the id and opponent id are switched because we're sending a response to the opponent, not the client
 		otherResponse.setId(playerReq.getObjectId());
-		otherResponse.setOpponentId(playerReq.getId());
-		otherResponse.setOpponentName(PlayerDao.getNameFromId(playerReq.getId()));
+		otherResponse.setOpponentId(player.getId());
+		otherResponse.setOpponentName(PlayerDao.getNameFromId(player.getId()));
 		otherResponse.setAccepted(exists ? 1 : 0);
 		
 		String responseText = exists 
@@ -86,10 +86,10 @@ public abstract class PlayerResponse extends Response {
 			// player A accepts duel request
 			// clear player B's duel request as it is accepted, and also clear player A's trade request as it is old
 			PlayerRequestManager.removeRequest(playerReq.getObjectId());
-			PlayerRequestManager.removeRequest(playerReq.getId());
+			PlayerRequestManager.removeRequest(player.getId());
 			
 			final boolean isDuel = playerReq.getRequestType() == PlayerRequestType.duel;
-			Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
+			Player player1 = WorldProcessor.getPlayerById(player.getId());
 			Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
 			
 			AcceptTradeResponse player1TradeResponse = new AcceptTradeResponse();
@@ -105,50 +105,11 @@ public abstract class PlayerResponse extends Response {
 			responseMaps.addClientOnlyResponse(player2, player2TradeResponse);
 			
 			TradeManager.addTrade(player1, player2, isDuel);
-			
-//			switch (playerReq.getRequestType()) {
-//			case duel: {
-//				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
-//				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
-//				FightManager.addFight(player1, player2, true);
-//				
-//				player1.setTileId(player2.getTileId());
-//				
-//				PvpStartResponse pvpStart = new PvpStartResponse();
-//				pvpStart.setPlayer1Id(player1.getId());
-//				pvpStart.setPlayer2Id(player2.getId());
-//				pvpStart.setTileId(player2.getTileId());
-//				responseMaps.addBroadcastResponse(pvpStart);
-//				break;
-//			}
-//			
-//			case trade: {
-//				Player player1 = WorldProcessor.getPlayerById(playerReq.getId());
-//				Player player2 = WorldProcessor.getPlayerById(playerReq.getObjectId());
-//				
-//				AcceptTradeResponse player1TradeResponse = new AcceptTradeResponse();
-//				player1TradeResponse.setOtherPlayerId(player2.getId());
-//				player1TradeResponse.setDuel(isDuel);
-//				responseMaps.addClientOnlyResponse(player1, player1TradeResponse);
-//				
-//				AcceptTradeResponse player2TradeResponse = new AcceptTradeResponse();
-//				player2TradeResponse.setOtherPlayerId(player1.getId());
-//				player2TradeResponse.setDuel(isDuel);
-//				responseMaps.addClientOnlyResponse(player2, player2TradeResponse);
-//				
-//				TradeManager.addTrade(player1, player2, isDuel);
-//				break;
-//			}
-//			
-//			default:
-//				break;
-//			
-//			}
 		}
 		else {
 			setRecoAndResponseText(1, String.format("sending %s request...", playerReq.getRequestType()));
 			responseMaps.addClientOnlyResponse(player, this);
-			PlayerRequestManager.addRequest(playerReq.getId(), playerReq.getObjectId(), playerReq.getRequestType());
+			PlayerRequestManager.addRequest(player.getId(), playerReq.getObjectId(), playerReq.getRequestType());
 		}
 	}
 

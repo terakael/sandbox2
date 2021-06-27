@@ -49,7 +49,7 @@ public class DropResponse extends Response {
 		}
 		
 		GroundItemManager.add(player.getFloor(), player.getId(), itemToDrop.getItemId(), player.getTileId(), itemToDrop.getCount(), itemToDrop.getCharges());
-		PlayerStorageDao.setItemFromPlayerIdAndSlot(dropReq.getId(), StorageTypes.INVENTORY, dropReq.getSlot(), 0, 1, 0);
+		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, dropReq.getSlot(), 0, 1, 0);
 		
 		// update the player inventory/equipped items and only send it to the player
 		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);

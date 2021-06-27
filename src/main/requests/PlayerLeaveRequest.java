@@ -1,8 +1,10 @@
 package main.requests;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+@AllArgsConstructor
 public class PlayerLeaveRequest extends Request {
-	@Setter @Getter private String name;
+	@Getter private String name;
 }

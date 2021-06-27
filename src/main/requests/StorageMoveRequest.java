@@ -6,5 +6,4 @@ import lombok.Getter;
 public class StorageMoveRequest extends Request {
 	private int src;
 	private int dest;
-	private int tileId;
 }

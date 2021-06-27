@@ -66,7 +66,6 @@ public class FinishCookingResponse extends Response {
 			
 			if (success) {
 				AddExpRequest addExpReq = new AddExpRequest();
-				addExpReq.setId(player.getId());
 				addExpReq.setStatId(Stats.COOKING.getValue());
 				addExpReq.setExp(cookable.getExp());
 				

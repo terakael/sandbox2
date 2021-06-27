@@ -24,7 +24,7 @@ public class AddExpResponse extends Response {
 		
 		AddExpRequest request = (AddExpRequest)req;
 		if (request.getStatId() != -1)
-			StatsDao.addExpToPlayer(request.getId(), Stats.withValue(request.getStatId()), request.getExp());
+			StatsDao.addExpToPlayer(player.getId(), Stats.withValue(request.getStatId()), request.getExp());
 		
 		addExp(request.getStatId(), request.getExp());
 		

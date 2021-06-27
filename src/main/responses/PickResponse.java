@@ -62,11 +62,7 @@ public class PickResponse extends Response {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, freeSlotId, pickable.getItemId(), 1, ItemDao.getMaxCharges(pickable.getItemId()));
 			new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 			
-			DepletionManager.addDepletedScenery(DepletionManager.DepletionType.flower, player.getFloor(), request.getTileId(), pickable.getRespawnTicks());
-			
-			SceneryDepleteResponse flowerDepleteResponse = new SceneryDepleteResponse();
-			flowerDepleteResponse.setTileId(request.getTileId());
-			responseMaps.addLocalResponse(player.getFloor(), request.getTileId(), flowerDepleteResponse);
+			DepletionManager.addDepletedScenery(DepletionManager.DepletionType.flower, player.getFloor(), request.getTileId(), pickable.getRespawnTicks(), responseMaps);
 		}
 	}
 

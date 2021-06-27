@@ -7,5 +7,4 @@ import lombok.Setter;
 @Getter
 public class ConstructionRequest extends Request {
 	private int sceneryId;
-	private int tileId;
 }

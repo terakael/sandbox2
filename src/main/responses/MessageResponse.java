@@ -43,7 +43,7 @@ public class MessageResponse extends Response {
 		MessageRequest messageReq = (MessageRequest)req;
 		
 		String msg = messageReq.getMessage();
-		id = messageReq.getId();
+		id = player.getId();
 		
 		if (msg.length() >= 2 && msg.substring(0, 2).equals("::")) {
 			handleDebugCommand(player, msg.substring(2), responseMaps);

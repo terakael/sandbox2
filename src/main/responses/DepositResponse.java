@@ -21,6 +21,7 @@ public class DepositResponse extends Response {
 			return;
 			
 		case 141: // small storage chest
+		case 147: // large storage chest
 			new StorageChestDepositResponse().process(req, player, responseMaps);
 			return;
 		}

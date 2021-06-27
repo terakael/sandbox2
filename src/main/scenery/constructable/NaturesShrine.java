@@ -16,8 +16,13 @@ public class NaturesShrine extends Constructable {
 	private List<Integer> spawnableTileIds; // list due to random access
 	private List<Integer> flowerIds; // list due to random access
 	
+	private final static int GROW_TIMER = 5;
+	private int growOffset;
+	
 	public NaturesShrine(int floor, int tileId, ConstructableDto dto) {
 		super(floor, tileId, dto);
+		
+		growOffset = RandomUtil.getRandom(0, GROW_TIMER); // used so flowers grow on different ticks when there's multiple Natures Shrines around.  Looks weird otherwise.
 		
 		spawnableTileIds = findSpawnableTileIds();
 		
@@ -32,7 +37,7 @@ public class NaturesShrine extends Constructable {
 
 	@Override
 	public void processConstructable(int tickId, ResponseMaps responseMaps) {		
-		if (tickId % 5 == 0) {
+		if (tickId % GROW_TIMER == growOffset) {
 			if (spawnableTileIds.isEmpty()) {
 				spawnableTileIds = findSpawnableTileIds(); 
 			}

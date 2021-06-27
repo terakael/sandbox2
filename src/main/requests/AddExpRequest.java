@@ -12,7 +12,6 @@ public class AddExpRequest extends Request {
 	
 	public AddExpRequest(int playerId, Stats stat, double exp) {
 		this.action = "addexp";
-		this.id = playerId;
 		this.statId = stat.getValue();
 		this.exp = exp;
 	}

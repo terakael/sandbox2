@@ -2,19 +2,20 @@ package main.scenery.constructable;
 
 import main.database.dto.ConstructableDto;
 
-public class SmallStorageChest extends StorageChest {
-	public SmallStorageChest(int floor, int tileId, ConstructableDto dto) {
+public class LargeStorageChest extends StorageChest {
+
+	public LargeStorageChest(int floor, int tileId, ConstructableDto dto) {
 		super(floor, tileId, dto);
 	}
 
 	@Override
 	public int getMaxSlots() {
-		return 8;
+		return 16;
 	}
 
 	@Override
 	public String getName() {
-		return "small storage";
+		return "large storage";
 	}
-	
+
 }

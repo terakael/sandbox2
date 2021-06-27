@@ -14,6 +14,7 @@ import main.database.dto.EquipmentBonusDto;
 import main.database.dto.InventoryItemDto;
 import main.database.dto.PlayerDto;
 import main.processing.ClientResourceManager;
+import main.processing.LocationManager;
 import main.processing.Player;
 import main.processing.WorldProcessor;
 import main.requests.LogonRequest;
@@ -57,6 +58,7 @@ public class LogonResponse extends Response {
 		}
 		
 		PlayerDao.updateLastLoggedIn(playerDto.getId());
+		LocationManager.addPlayer(player);
 				
 		PlayerStorageDao.createBankSlotsIfNotExists(playerDto.getId());
 		

@@ -7,11 +7,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import main.responses.ResponseMaps;
+import main.responses.SceneryDepleteResponse;
 import main.responses.SceneryRespawnResponse;
 
 public class DepletionManager {
 	public enum DepletionType {
-		rock, flower, tree
+		rock, flower, tree, chest
 	}
 	
 	private static Map<Integer, Map<DepletionType, Map<Integer, Integer>>> depletedScenery = new HashMap<>(); // floor, type, <tileId, remainingTicks>>
@@ -53,7 +54,7 @@ public class DepletionManager {
 		return depletedScenery.get(floor).get(type).containsKey(tileId);
 	}
 	
-	public static void addDepletedScenery(DepletionType type, int floor, int tileId, int ticks) {
+	public static void addDepletedScenery(DepletionType type, int floor, int tileId, int ticks, ResponseMaps responseMaps) {
 		if (!depletedScenery.containsKey(floor))
 			depletedScenery.put(floor, new HashMap<>());
 		
@@ -61,6 +62,10 @@ public class DepletionManager {
 			depletedScenery.get(floor).put(type, new HashMap<>());
 		
 		depletedScenery.get(floor).get(type).put(tileId, ticks);
+		
+		SceneryDepleteResponse depleteResponse = new SceneryDepleteResponse();
+		depleteResponse.setTileId(tileId);
+		responseMaps.addLocalResponse(floor, tileId, depleteResponse);
 	}
 	
 	public static Set<Integer> getDepletedSceneryTileIds(int floor) {
@@ -75,26 +80,5 @@ public class DepletionManager {
 		});
 		
 		return depletedIds;
-		
-//		if (!depletedScenery.get(floor).containsKey(type))
-//			return new HashSet<>();
-//		
-//		return new HashSet<Integer>(depletedScenery.get(floor).get(type).keySet());
 	}
-//	
-//	public static boolean flowerIsDepleted(int floor, int tileId) {
-//		return depletedFlowers.containsKey(floor) && depletedFlowers.get(floor).containsKey(tileId);
-//	}
-//	
-//	public static void addDepletedFlower(int floor, int tileId, int ticks) {
-//		if (!depletedFlowers.containsKey(floor))
-//			depletedFlowers.put(floor, new HashMap<>());
-//		depletedFlowers.get(floor).put(tileId, ticks);
-//	}
-//	
-//	public static HashSet<Integer> getDepletedFlowerTileIds(int floor) {
-//		if (!depletedFlowers.containsKey(floor))
-//			return new HashSet<>();
-//		return new HashSet<Integer>(depletedFlowers.get(floor).keySet());
-//	}
 }

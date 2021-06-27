@@ -36,8 +36,8 @@ public class InventoryUpdateResponse extends Response {
 		if (req instanceof InventoryMoveRequest)
 			processInventoryMoveRequest((InventoryMoveRequest)req, player);
 		
-		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(req.getId(), StorageTypes.INVENTORY);
-		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(req.getId());
+		inventory = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.INVENTORY);
+		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
 		
 		responseMaps.addClientOnlyResponse(player, this);
 		
@@ -50,27 +50,27 @@ public class InventoryUpdateResponse extends Response {
 		InventoryItemDto destItem = items.get(req.getDest());
 		InventoryItemDto srcItem = items.get(req.getSrc());
 
-		boolean destItemEquipped = EquipmentDao.isSlotEquipped(req.getId(), req.getDest());
-		boolean srcItemEquipped = EquipmentDao.isSlotEquipped(req.getId(), req.getSrc());
+		boolean destItemEquipped = EquipmentDao.isSlotEquipped(player.getId(), req.getDest());
+		boolean srcItemEquipped = EquipmentDao.isSlotEquipped(player.getId(), req.getSrc());
 		
 		// clear out the equipped items so we can reset them after the move
 		if (destItemEquipped)
-			EquipmentDao.clearEquippedItem(req.getId(), req.getDest());
+			EquipmentDao.clearEquippedItem(player.getId(), req.getDest());
 		
 		if (srcItemEquipped)
-			EquipmentDao.clearEquippedItem(req.getId(), req.getSrc());
+			EquipmentDao.clearEquippedItem(player.getId(), req.getSrc());
 		
 		if (destItem != null) {
-			PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), StorageTypes.INVENTORY, req.getSrc(), destItem.getItemId(), destItem.getCount(), destItem.getCharges());
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, req.getSrc(), destItem.getItemId(), destItem.getCount(), destItem.getCharges());
 			if (destItemEquipped) {
 				// create entry in player_equipment to update slot and item, then remove old entry
-				EquipmentDao.setEquippedItem(req.getId(), req.getSrc(), destItem.getItemId());
+				EquipmentDao.setEquippedItem(player.getId(), req.getSrc(), destItem.getItemId());
 			}
 		}
 		
-		PlayerStorageDao.setItemFromPlayerIdAndSlot(req.getId(), StorageTypes.INVENTORY, req.getDest(), srcItem.getItemId(), srcItem.getCount(), srcItem.getCharges());
+		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, req.getDest(), srcItem.getItemId(), srcItem.getCount(), srcItem.getCharges());
 		if (srcItemEquipped) {
-			EquipmentDao.setEquippedItem(req.getId(), req.getDest(), srcItem.getItemId());
+			EquipmentDao.setEquippedItem(player.getId(), req.getDest(), srcItem.getItemId());
 		}
 		
 		player.recacheEquippedItems();

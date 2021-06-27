@@ -41,7 +41,12 @@ public class OpenResponse extends Response {
 			return;
 			
 		case 141: // small storage chest
+		case 147: // large storage chest
 			new OpenStorageChestResponse().process(req, player, responseMaps);
+			return;
+			
+		case 148: // shadow chest
+			new OpenShadowChestResponse().process(req, player, responseMaps);
 			return;
 		}
 	}

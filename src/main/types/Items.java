@@ -367,7 +367,12 @@ public enum Items {
 	BONES(318),
 	WHIRLWIND_WAND(323),
 	
-	HOLY_SYMBOL(324);
+	HOLY_SYMBOL(324),
+	
+	SHADOW_HELMET(354),
+	SHADOW_PLATEBODY(355),
+	SHADOW_PLATELEGS(356),
+	SHADOW_SHIELD(357);
 
 	@Getter private int value;
 	Items(int value) {

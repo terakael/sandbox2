@@ -71,7 +71,6 @@ public class FinishChopResponse extends Response {
 				decreaseHatchetCharge(player.getId(), inventoryItemIds, goldenHatchetId);
 			
 			AddExpRequest addExpReq = new AddExpRequest();
-			addExpReq.setId(player.getId());
 			addExpReq.setStatId(Stats.WOODCUTTING.getValue());
 			addExpReq.setExp(choppable.getExp());
 			
@@ -82,10 +81,7 @@ public class FinishChopResponse extends Response {
 			
 			// flat 20% chance of depletion
 			if (RandomUtil.chance(20)) {
-				DepletionManager.addDepletedScenery(DepletionManager.DepletionType.tree, player.getFloor(), request.getTileId(), choppable.getRespawnTicks());
-				SceneryDepleteResponse rockDepleteResponse = new SceneryDepleteResponse();
-				rockDepleteResponse.setTileId(request.getTileId());
-				responseMaps.addLocalResponse(player.getFloor(), request.getTileId(), rockDepleteResponse);
+				DepletionManager.addDepletedScenery(DepletionManager.DepletionType.tree, player.getFloor(), request.getTileId(), choppable.getRespawnTicks(), responseMaps);
 			}
 		}
 	}
@@ -100,7 +96,7 @@ public class FinishChopResponse extends Response {
 					hatchetId, 1, invItem.getCharges() - 1);
 		} else {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(
-					playerId, StorageTypes.INVENTORY, invItemIds.indexOf(hatchetId), 0, 1, 0);
+					playerId, StorageTypes.INVENTORY, invItemIds.indexOf(hatchetId), ItemDao.getDegradedItemId(hatchetId), 1, 0);
 		}
 	}
 

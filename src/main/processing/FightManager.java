@@ -157,7 +157,7 @@ public class FightManager {
 			if (fight.getFighter1() == participant || fight.getFighter2() == participant) {
 				// clear the target from the player.
 				// if we're cancelling a fight with an npc, the npc should keep the target so it can chase.
-				fight.getFighter1().setTarget(null);
+				
 				
 				// fighter1 is always a player, fighter2 can be a player or npc
 				if (responseMaps != null) {// todo figure out endpoint onclose cancel fight
@@ -169,7 +169,6 @@ public class FightManager {
 						resp.setMonsterTileId(fight.getFighter2().getTileId());
 						responseMaps.addLocalResponse(((Player)fight.getFighter1()).getFloor(), ((Player)fight.getFighter1()).getTileId(), resp);
 					} else {
-						fight.getFighter2().setTarget(null);
 						PvpEndResponse resp = new PvpEndResponse();
 						resp.setPlayer1Id(((Player)fight.getFighter1()).getId());
 						resp.setPlayer2Id(((Player)fight.getFighter2()).getId());
@@ -178,6 +177,9 @@ public class FightManager {
 						responseMaps.addClientOnlyResponse((Player)fight.getFighter1(), resp);
 						responseMaps.addLocalResponse(((Player)fight.getFighter2()).getFloor(), ((Player)fight.getFighter2()).getTileId(), resp);
 					}
+					
+					fight.getFighter1().setTarget(null);
+					fight.getFighter2().setTarget(null);
 				}
 				fights.remove(fight);
 				return;

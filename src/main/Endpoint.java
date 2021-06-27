@@ -32,11 +32,6 @@ import main.responses.ResponseEncoder;
 @SuppressWarnings("unused")
 @ServerEndpoint(value = "/game", encoders = ResponseEncoder.class, decoders = RequestDecoder.class)
 public class Endpoint {
-	private static Gson gson = new Gson();
-	
-	// connections to the server; not necessarily players (i.e. logon screen)
-	private static Set<Session> peers = Collections.synchronizedSet(new HashSet<Session>());
-	
 	// the reason we have two maps, is because in some cases we want the user to be able to do multiple requests in the same tick.
 	// for example, equipping multiple items or banking multiple items within the same tick, otherwise they become annoying to do.
 	// in addition, the multi-request requests can be done at the same time as another request, multi or not (walking plus equipping for example)
@@ -51,10 +46,9 @@ public class Endpoint {
 	@OnMessage
 	public void onMessage(Request msg, Session client) {
 		// collect the messages for the WorldProcessor to process every tick
-		System.out.println("req: id: " + msg.getId() +  " action: " + msg.getAction());
+		System.out.println("action: " + msg.getAction());
 		if (msg instanceof MultiRequest) {
-			if (!multiRequestMap.containsKey(client))
-				multiRequestMap.put(client, new ArrayList<>());
+			multiRequestMap.putIfAbsent(client, new ArrayList<>());
 			multiRequestMap.get(client).add(msg);
 		} else {
 			requestMap.put(client, msg);
@@ -72,7 +66,6 @@ public class Endpoint {
 			return;
 		
 		FightManager.cancelFight(playerToRemove, null);
-//		TradeManager.cancelTrade(playerToRemove);
 		Trade trade = TradeManager.getTradeWithPlayer(playerToRemove);
 		if (trade != null) {
 			Player otherPlayer = trade.getOtherPlayer(playerToRemove);
@@ -84,11 +77,7 @@ public class Endpoint {
 		WorldProcessor.playerSessions.remove(session);
 		
 		if (playerToRemove.getDto() != null) {
-			PlayerLeaveRequest req = new PlayerLeaveRequest();
-			req.setAction("playerLeave");
-			req.setId(playerToRemove.getId());
-			req.setName(playerToRemove.getDto().getName());
-			requestMap.put(session, req);
+			requestMap.put(session, new PlayerLeaveRequest(playerToRemove.getDto().getName()));
 		}
 	}
 }

@@ -21,6 +21,7 @@ public class WithdrawResponse extends Response {
 			return;
 			
 		case 141: // small storage chest
+		case 147: // large storage chest
 			new StorageChestWithdrawResponse().process(req, player, responseMaps);
 			return;
 		}

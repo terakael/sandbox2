@@ -25,6 +25,10 @@ public abstract class UpdateableEntity {
 			return false;
 		}
 		
+		if (operationAnnotation.value().equals("keepalive")) {
+			return executeQuery("select 'keepalive';");
+		}
+		
 		Table tableAnnotation = getClass().getAnnotation(Table.class);
 		if (tableAnnotation == null) {
 			System.out.println("no table annotation found");
@@ -65,10 +69,14 @@ public abstract class UpdateableEntity {
 			query = "";
 		}
 		
+		return executeQuery(query);
+	}
+	
+	private boolean executeQuery(String query) {
 		try {
 			if (stmt == null)
 				stmt = DbConnection.get().createStatement();
-			System.out.println(query);
+//			System.out.println(query);
 			stmt.execute(query);
 		} catch (SQLException e) {
 			System.out.println("ERROR:" + e.getMessage());
@@ -79,7 +87,7 @@ public abstract class UpdateableEntity {
 	}
 	
 	private String insert(Map<String, String> fieldsToInsert, Map<String, String> whereClause) {		
-		Map<String, String> allFields = Stream
+		final Map<String, String> allFields = Stream
 				.concat(whereClause.entrySet().stream(), fieldsToInsert.entrySet().stream())
 				.collect(Collectors.toMap(
 							Map.Entry::getKey, 
@@ -89,8 +97,8 @@ public abstract class UpdateableEntity {
 						    },
 							LinkedHashMap::new));
 		
-		String headers = allFields.keySet().stream().collect(Collectors.joining(","));
-		String values = allFields.values().stream().map(e -> "'" + e + "'").collect(Collectors.joining(","));
+		final String headers = allFields.keySet().stream().collect(Collectors.joining(","));
+		final String values = allFields.values().stream().map(e -> "'" + e + "'").collect(Collectors.joining(","));
 		
 		return String.format("insert into %s (%s) values (%s)", tableName, headers, values);
 	}

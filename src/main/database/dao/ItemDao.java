@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import main.database.DbConnection;
+import main.database.dto.ItemChargesDto;
 import main.database.dto.ItemDto;
 import main.types.ItemAttributes;
 
@@ -16,7 +17,7 @@ public class ItemDao {
 	private ItemDao() {};
 	
 	private static HashMap<Integer, ItemDto> itemMap = new HashMap<>();
-	private static HashMap<Integer, Integer> itemMaxCharges = new HashMap<>();
+	private static HashMap<Integer, ItemChargesDto> itemMaxCharges = new HashMap<>();
 	
 	public static String getNameFromId(int id) {
 		if (itemMap.containsKey(id))
@@ -62,7 +63,7 @@ public class ItemDao {
 	}
 	
 	private static void populateMaxChargesCache() {
-		final String query = "select item_id, max_charges from item_charges";
+		final String query = "select item_id, max_charges, degraded_item_id from item_charges";
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -70,7 +71,7 @@ public class ItemDao {
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					itemMaxCharges.put(rs.getInt("item_id"), rs.getInt("max_charges"));
+					itemMaxCharges.put(rs.getInt("item_id"), new ItemChargesDto(rs.getInt("item_id"), rs.getInt("max_charges"), rs.getInt("degraded_item_id")));
 				}
 			}
 		} catch (SQLException e) {
@@ -80,7 +81,13 @@ public class ItemDao {
 	
 	public static int getMaxCharges(int itemId) {
 		if (itemMaxCharges.containsKey(itemId))
-			return itemMaxCharges.get(itemId);
+			return itemMaxCharges.get(itemId).getMaxCharges();
+		return 0;
+	}
+	
+	public static int getDegradedItemId(int itemId) {
+		if (itemMaxCharges.containsKey(itemId))
+			return itemMaxCharges.get(itemId).getDegradedItemId();
 		return 0;
 	}
 

@@ -42,7 +42,6 @@ public class FinishFishingResponse extends Response {
 		}
 		
 		AddExpRequest addExpReq = new AddExpRequest();
-		addExpReq.setId(player.getId());
 		addExpReq.setStatId(Stats.FISHING.getValue());
 		addExpReq.setExp(fishable.getExp());
 		

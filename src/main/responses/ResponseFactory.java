@@ -48,10 +48,10 @@ public class ResponseFactory {
 		case "take":
 			response = new TakeResponse();
 			break;
-		case "playerLeave":
+		case "player_leave":
 			response = new PlayerLeaveResponse();
 			break;
-		case "playerEnter":
+		case "player_enter":
 			response = new PlayerEnterResponse();
 			break;
 		case "player_update":

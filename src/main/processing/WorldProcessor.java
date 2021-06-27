@@ -16,12 +16,12 @@ import com.google.gson.Gson;
 
 import main.Endpoint;
 import main.GroundItemManager;
-import main.database.dao.DoorDao;
 import main.database.dao.GroundTextureDao;
 import main.database.dao.MinimapSegmentDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.ShopDao;
 import main.database.dto.ShopItemDto;
+import main.database.entity.other.KeepAlive;
 import main.processing.FightManager.Fight;
 import main.processing.Player.PlayerState;
 import main.requests.Request;
@@ -88,20 +88,21 @@ public class WorldProcessor implements Runnable {
 	public void process(int tickId) {		
 		Stopwatch.reset();
 		Stopwatch.start("total");
+		
+		if (tickId % 100 == 0)
+			DatabaseUpdater.keepAlive();
 
 		Stopwatch.start("request map");
 		// pull requestmap contents from Endpoint and clear it so it can collect for the next tick
 		Map<Session, List<Request>> requestMap = new HashMap<>();
 		for (Map.Entry<Session, Request> entry : Endpoint.requestMap.entrySet()) {
-			if (!requestMap.containsKey(entry.getKey()))
-				requestMap.put(entry.getKey(), new ArrayList<>());
+			requestMap.putIfAbsent(entry.getKey(), new ArrayList<>());
 			requestMap.get(entry.getKey()).add(entry.getValue());
 		}
 		Endpoint.requestMap.clear();
 		
 		for (Map.Entry<Session, List<Request>> entry : Endpoint.multiRequestMap.entrySet()) {
-			if (!requestMap.containsKey(entry.getKey()))
-				requestMap.put(entry.getKey(), new ArrayList<>());
+			requestMap.putIfAbsent(entry.getKey(), new ArrayList<>());
 			requestMap.get(entry.getKey()).addAll(entry.getValue());
 		}
 		Endpoint.multiRequestMap.clear();
@@ -136,7 +137,6 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.end("player requests");
 		
 		Map<Integer, Set<Integer>> npcsToProcess = new HashMap<>(); // floor, list<id>
-//		Map<Integer, Set<Integer>> playerSceneryToProcess = new HashMap<>(); // floor, list<tileId>
 		Stopwatch.start("process players");
 		// process players
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
@@ -144,24 +144,17 @@ public class WorldProcessor implements Runnable {
 			
 			player.process(tickId, responseMaps);
 			
-			List<NPC> npcs = NPCManager.get().getNpcsNearTile(player.getFloor(), player.getTileId(), 15);
-			
-			// while we iterate the players, pull out the npcs near each player as these are the only npcs we need to process.
-			Set<Integer> npcIdsNearPlayer = npcs
-				    .stream()
-				    .map(NPC::getInstanceId)
-				    .collect(Collectors.toSet());
-			
-			if (!npcsToProcess.containsKey(player.getFloor()))
-				npcsToProcess.put(player.getFloor(), new HashSet<>());
-			npcsToProcess.get(player.getFloor()).addAll(npcIdsNearPlayer);
-			
-			// because player scenery doesn't move, we can just update the player scenery here and load
-			// up the big list of in-range player scenery to process afterwards.
-//			updatePlayerSceneryNearPlayer(player, responseMaps);
-//			if (!playerSceneryToProcess.containsKey(player.getFloor()))
-//				playerSceneryToProcess.put(player.getFloor(), new HashSet<>());
-//			playerSceneryToProcess.get(player.getFloor()).addAll(player.getInRangeConstructables());
+//			List<NPC> npcs = NPCManager.get().getNpcsNearTile(player.getFloor(), player.getTileId(), 15);
+//			
+//			// while we iterate the players, pull out the npcs near each player as these are the only npcs we need to process.
+//			Set<Integer> npcIdsNearPlayer = npcs
+//				    .stream()
+//				    .map(NPC::getInstanceId)
+//				    .collect(Collectors.toSet());
+//			
+//			if (!npcsToProcess.containsKey(player.getFloor()))
+//				npcsToProcess.put(player.getFloor(), new HashSet<>());
+//			npcsToProcess.get(player.getFloor()).addAll(npcIdsNearPlayer);
 		}
 		Stopwatch.end("process players");
 		
@@ -510,7 +503,6 @@ public class WorldProcessor implements Runnable {
 		if (!addedTileIds.isEmpty()) {
 			Map<Integer, Set<Integer>> tileIdsByGroundTextureId = new HashMap<>();
 			Map<Integer, Set<Integer>> addedTileIdsBySceneryId = new HashMap<>();
-			Map<Integer, Set<Integer>> addedTileIdsByConstructableId = new HashMap<>();
 			
 			for (int tileId : addedTileIds) {
 				int groundTextureId = GroundTextureDao.getGroundTextureIdByTileId(player.getFloor(), tileId);

@@ -11,6 +11,8 @@ import main.database.dto.ConstructableDto;
 import main.responses.ConstructableDespawnResponse;
 import main.responses.ResponseMaps;
 import main.scenery.constructable.Constructable;
+import main.scenery.constructable.HolyTotemPole;
+import main.scenery.constructable.LargeStorageChest;
 import main.scenery.constructable.NaturesShrine;
 import main.scenery.constructable.SmallStorageChest;
 
@@ -19,8 +21,10 @@ public class ConstructableManager {
 	private static Map<Integer, Map<Integer, Constructable>> constructableInstances = new HashMap<>(); // floor, <tileId, constructable>
 	
 	static {
+		constructables.put(139, HolyTotemPole.class);
 		constructables.put(140, NaturesShrine.class);
 		constructables.put(141, SmallStorageChest.class);
+		constructables.put(147, LargeStorageChest.class);
 	}
 	
 	public static void process(int tickId, ResponseMaps responseMaps) {

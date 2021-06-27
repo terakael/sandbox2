@@ -27,6 +27,7 @@ import main.database.dto.TeleportableDto;
 import main.database.dto.UseItemOnItemDto;
 import main.processing.Attackable;
 import main.processing.ClientResourceManager;
+import main.processing.ConstructableManager;
 import main.processing.FightManager;
 import main.processing.FightManager.Fight;
 import main.processing.NPC;
@@ -338,6 +339,8 @@ public class UseResponse extends Response {
 			// at this point we're good to cast the spell.		
 			castOffensiveSpell(castable, player, targetNpc, responseMaps);
 			
+			
+			
 			int chanceToSaveRune = 0;
 			if (player.prayerIsActive(Prayers.RUNELESS_MAGIC))
 				chanceToSaveRune = 15;
@@ -345,6 +348,9 @@ public class UseResponse extends Response {
 				chanceToSaveRune = 30;
 			else if (player.prayerIsActive(Prayers.RUNELESS_MAGIC_LVL_3))
 				chanceToSaveRune = 45;
+			
+			if (ConstructableManager.constructableIsInRadius(player.getFloor(), player.getTileId(), 136, 3))
+				chanceToSaveRune += 30;
 			
 			if (RandomUtil.getRandom(0, 100) > chanceToSaveRune) { // chance failed, so use up the rune.  seems to be 1/100 chance to save a rune by default (0 == 0)
 				InventoryItemDto item = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot);

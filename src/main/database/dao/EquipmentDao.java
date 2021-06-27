@@ -18,7 +18,6 @@ import main.database.entity.delete.DeletePlayerEquipment;
 import main.database.entity.insert.InsertPlayerEquipment;
 import main.processing.DatabaseUpdater;
 import main.types.EquipmentTypes;
-import main.types.Items;
 import main.types.PlayerPartType;
 
 public class EquipmentDao {
@@ -26,14 +25,14 @@ public class EquipmentDao {
 	
 	private static HashMap<Integer, EquipmentTypes> equipmentByType = new HashMap<>();
 	private static HashMap<Integer, EquipmentDto> equipment = new HashMap<>();
-	private static HashMap<Items, Items> reinforcedToBase = new HashMap<>();// reinforced_id, base_id
+//	private static HashMap<Items, Items> reinforcedToBase = new HashMap<>();// reinforced_id, base_id
 	
 	@Getter private static Map<Integer, HashMap<Integer, Integer>> playerEquipment; // playerId, <equipmentId, slot>
 	
 	public static void setupCaches() {
 		cacheEquipmentByType();
 		cacheEquipment();
-		cacheReinforcedtoBaseMap();
+//		cacheReinforcedtoBaseMap();
 		cachePlayerEquipment();
 	}
 	
@@ -45,7 +44,7 @@ public class EquipmentDao {
 		) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					int itemId = rs.getInt("item_id");
+					final int itemId = rs.getInt("item_id");
 					equipment.put(itemId, 
 								new EquipmentDto(itemId, 
 												 rs.getInt("player_part_id"), 
@@ -81,48 +80,53 @@ public class EquipmentDao {
 			}
 	}
 	
-	private static void cacheReinforcedtoBaseMap() {
-		reinforcedToBase.put(Items.REINFORCED_COPPER_HELMET, Items.COPPER_HELMET);
-		reinforcedToBase.put(Items.REINFORCED_COPPER_PLATEBODY, Items.COPPER_PLATEBODY);
-		reinforcedToBase.put(Items.REINFORCED_COPPER_PLATELEGS, Items.COPPER_PLATELEGS);
-		reinforcedToBase.put(Items.REINFORCED_COPPER_SHIELD, Items.COPPER_SHIELD);
-		
-		reinforcedToBase.put(Items.REINFORCED_IRON_HELMET, Items.IRON_HELMET);
-		reinforcedToBase.put(Items.REINFORCED_IRON_PLATEBODY, Items.IRON_PLATEBODY);
-		reinforcedToBase.put(Items.REINFORCED_IRON_PLATELEGS, Items.IRON_PLATELEGS);
-		reinforcedToBase.put(Items.REINFORCED_IRON_SHIELD, Items.IRON_SHIELD);
-		
-		reinforcedToBase.put(Items.REINFORCED_STEEL_HELMET, Items.STEEL_HELMET);
-		reinforcedToBase.put(Items.REINFORCED_STEEL_PLATEBODY, Items.STEEL_PLATEBODY);
-		reinforcedToBase.put(Items.REINFORCED_STEEL_PLATELEGS, Items.STEEL_PLATELEGS);
-		reinforcedToBase.put(Items.REINFORCED_STEEL_SHIELD, Items.STEEL_SHIELD);
-		
-		reinforcedToBase.put(Items.REINFORCED_MITHRIL_HELMET, Items.MITHRIL_HELMET);
-		reinforcedToBase.put(Items.REINFORCED_MITHRIL_PLATEBODY, Items.MITHRIL_PLATEBODY);
-		reinforcedToBase.put(Items.REINFORCED_MITHRIL_PLATELEGS, Items.MITHRIL_PLATELEGS);
-		reinforcedToBase.put(Items.REINFORCED_MITHRIL_SHIELD, Items.MITHRIL_SHIELD);
-		
-		reinforcedToBase.put(Items.REINFORCED_ADDY_HELMET, Items.ADDY_HELMET);
-		reinforcedToBase.put(Items.REINFORCED_ADDY_PLATEBODY, Items.ADDY_PLATEBODY);
-		reinforcedToBase.put(Items.REINFORCED_ADDY_PLATELEGS, Items.ADDY_PLATELEGS);
-		reinforcedToBase.put(Items.REINFORCED_ADDY_SHIELD, Items.ADDY_SHIELD);
-		
-		reinforcedToBase.put(Items.REINFORCED_RUNE_HELMET, Items.RUNE_HELMET);
-		reinforcedToBase.put(Items.REINFORCED_RUNE_PLATEBODY, Items.RUNE_PLATEBODY);
-		reinforcedToBase.put(Items.REINFORCED_RUNE_PLATELEGS, Items.RUNE_PLATELEGS);
-		reinforcedToBase.put(Items.REINFORCED_RUNE_SHIELD, Items.RUNE_SHIELD);
-	}
+//	private static void cacheReinforcedtoBaseMap() {
+//		reinforcedToBase.put(Items.REINFORCED_COPPER_HELMET, Items.COPPER_HELMET);
+//		reinforcedToBase.put(Items.REINFORCED_COPPER_PLATEBODY, Items.COPPER_PLATEBODY);
+//		reinforcedToBase.put(Items.REINFORCED_COPPER_PLATELEGS, Items.COPPER_PLATELEGS);
+//		reinforcedToBase.put(Items.REINFORCED_COPPER_SHIELD, Items.COPPER_SHIELD);
+//		
+//		reinforcedToBase.put(Items.REINFORCED_IRON_HELMET, Items.IRON_HELMET);
+//		reinforcedToBase.put(Items.REINFORCED_IRON_PLATEBODY, Items.IRON_PLATEBODY);
+//		reinforcedToBase.put(Items.REINFORCED_IRON_PLATELEGS, Items.IRON_PLATELEGS);
+//		reinforcedToBase.put(Items.REINFORCED_IRON_SHIELD, Items.IRON_SHIELD);
+//		
+//		reinforcedToBase.put(Items.REINFORCED_STEEL_HELMET, Items.STEEL_HELMET);
+//		reinforcedToBase.put(Items.REINFORCED_STEEL_PLATEBODY, Items.STEEL_PLATEBODY);
+//		reinforcedToBase.put(Items.REINFORCED_STEEL_PLATELEGS, Items.STEEL_PLATELEGS);
+//		reinforcedToBase.put(Items.REINFORCED_STEEL_SHIELD, Items.STEEL_SHIELD);
+//		
+//		reinforcedToBase.put(Items.REINFORCED_MITHRIL_HELMET, Items.MITHRIL_HELMET);
+//		reinforcedToBase.put(Items.REINFORCED_MITHRIL_PLATEBODY, Items.MITHRIL_PLATEBODY);
+//		reinforcedToBase.put(Items.REINFORCED_MITHRIL_PLATELEGS, Items.MITHRIL_PLATELEGS);
+//		reinforcedToBase.put(Items.REINFORCED_MITHRIL_SHIELD, Items.MITHRIL_SHIELD);
+//		
+//		reinforcedToBase.put(Items.REINFORCED_ADDY_HELMET, Items.ADDY_HELMET);
+//		reinforcedToBase.put(Items.REINFORCED_ADDY_PLATEBODY, Items.ADDY_PLATEBODY);
+//		reinforcedToBase.put(Items.REINFORCED_ADDY_PLATELEGS, Items.ADDY_PLATELEGS);
+//		reinforcedToBase.put(Items.REINFORCED_ADDY_SHIELD, Items.ADDY_SHIELD);
+//		
+//		reinforcedToBase.put(Items.REINFORCED_RUNE_HELMET, Items.RUNE_HELMET);
+//		reinforcedToBase.put(Items.REINFORCED_RUNE_PLATEBODY, Items.RUNE_PLATEBODY);
+//		reinforcedToBase.put(Items.REINFORCED_RUNE_PLATELEGS, Items.RUNE_PLATELEGS);
+//		reinforcedToBase.put(Items.REINFORCED_RUNE_SHIELD, Items.RUNE_SHIELD);
+//		
+//		reinforcedToBase.put(Items.SHADOW_HELMET, Items.NONE);
+//		reinforcedToBase.put(Items.SHADOW_PLATEBODY, Items.NONE);
+//		reinforcedToBase.put(Items.SHADOW_PLATELEGS, Items.NONE);
+//		reinforcedToBase.put(Items.SHADOW_SHIELD, Items.NONE);
+//	}
 	
-	public static int getBaseItemFromReinforcedItem(int reinforcedId) {
-		Items reinforcedItem = Items.withValue(reinforcedId);
-		if (reinforcedItem == null)
-			return 0;
-		
-		if (reinforcedToBase.containsKey(reinforcedItem))
-			return reinforcedToBase.get(reinforcedItem).getValue();
-		
-		return 0;
-	}
+//	public static int getBaseItemFromReinforcedItem(int reinforcedId) {
+//		Items reinforcedItem = Items.withValue(reinforcedId);
+//		if (reinforcedItem == null)
+//			return 0;
+//		
+//		if (reinforcedToBase.containsKey(reinforcedItem))
+//			return reinforcedToBase.get(reinforcedItem).getValue();
+//		
+//		return 0;
+//	}
 	
 	public static EquipmentTypes getEquipmentTypeByEquipmentId(int equipmentId) {
 		if (equipmentByType.containsKey(equipmentId))
@@ -283,6 +287,10 @@ public class EquipmentDao {
 		}
 		
 		return animationMap;
+	}
+	
+	public static boolean isEquippable(int itemId) {
+		return equipment.keySet().contains(itemId);
 	}
 	
 } 
