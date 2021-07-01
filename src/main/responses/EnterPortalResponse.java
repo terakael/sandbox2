@@ -66,7 +66,7 @@ public class EnterPortalResponse extends Response {
 			return;
 		} else {	
 			player.setTileId(teleTileId);
-			player.setFloor(teleFloor);
+			player.setFloor(teleFloor, responseMaps);
 			player.clearPath();
 			
 			PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();

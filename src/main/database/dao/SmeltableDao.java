@@ -24,7 +24,7 @@ public class SmeltableDao {
 		smeltables = new ArrayList<>();
 		barIds = new HashSet<>();
 		
-		final String query = "select bar_id, level, ore_id, coal_count, ore_count from smeltable";
+		final String query = "select bar_id, level, ore_id, coal_count, ore_count, exp from smeltable";
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -39,7 +39,8 @@ public class SmeltableDao {
 							rs.getInt("level"),
 							rs.getInt("ore_id"),
 							rs.getInt("coal_count"),
-							rs.getInt("ore_count")
+							rs.getInt("ore_count"),
+							rs.getInt("exp")
 					));
 				}
 			}

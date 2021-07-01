@@ -91,6 +91,11 @@ public class LogonResponse extends Response {
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		new LoadPrayersResponse().process(null, player, responseMaps);
 		new PlayerEnterResponse().process(null, player, responseMaps);
+		
+		// if the player is underground or it's currently night time, then let the client know to set the night filter.
+		if (player.getFloor() < 0 || !WorldProcessor.isDaytime()) {
+			responseMaps.addClientOnlyResponse(player, new DaylightResponse(false, true));
+		}
 	}
 	
 	@Override

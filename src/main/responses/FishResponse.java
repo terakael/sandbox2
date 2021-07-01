@@ -15,6 +15,7 @@ import main.processing.Player.PlayerState;
 import main.requests.FishRequest;
 import main.requests.Request;
 import main.types.Stats;
+import main.types.StorageTypes;
 
 public class FishResponse extends Response {
 
@@ -52,6 +53,14 @@ public class FishResponse extends Response {
 				return;
 			}
 			
+			// TODO give the fishable a fishing tool (net, rod, lobster pot etc) column
+			if (PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), 358, StorageTypes.INVENTORY) == 0) {
+				setRecoAndResponseText(0, "you need a net to fish here.");
+				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
+				return;
+			}
+			
 			// does player have inventory space
 			if (PlayerStorageDao.getFreeSlotByPlayerId(player.getId()) == -1) {
 				setRecoAndResponseText(0, "your inventory is full.");
@@ -71,7 +80,7 @@ public class FishResponse extends Response {
 			
 			// the action bubble will be the fish you're trying to catch
 			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
-					new ActionBubbleResponse(player, ItemDao.getItem(fishable.getItemId())));
+					new ActionBubbleResponse(player, ItemDao.getItem(358)));
 		}
 	}
 

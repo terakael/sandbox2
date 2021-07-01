@@ -113,8 +113,6 @@ public class ChopResponse extends Response {
 				usedHatchetId = goldenHatchetId;
 			
 			int tickCounter = usedHatchetId == hatchetId ? 5 : 3;
-			if (ConstructableManager.constructableIsInRadius(player.getFloor(), player.getTileId(), 138, 3))
-				tickCounter -= 1;
 			player.setTickCounter(tickCounter);
 			
 			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 

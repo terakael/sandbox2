@@ -101,6 +101,16 @@ public class MessageResponse extends Response {
 			handleHeal(player, msgParts, responseMaps);
 			return;
 		}
+		
+		if (msgParts[0].equals("day")) {
+			WorldProcessor.setDaytime(true);
+			return;
+		}
+		
+		if (msgParts[0].equals("night")) {
+			WorldProcessor.setDaytime(false);
+			return;
+		}
 	}
 	
 	private void handleDebugTele(Player player, String[] msgParts, ResponseMaps responseMaps) {		
@@ -121,7 +131,7 @@ public class MessageResponse extends Response {
 				playerUpdate.setTileId(tyrotownTele.getTileId());
 				playerUpdate.setSnapToTile(true);
 				player.setTileId(tyrotownTele.getTileId());
-				player.setFloor(tyrotownTele.getFloor());
+				player.setFloor(tyrotownTele.getFloor(), responseMaps);
 				player.clearPath();
 				responseMaps.addBroadcastResponse(playerUpdate);
 				return;

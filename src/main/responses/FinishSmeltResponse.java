@@ -78,7 +78,7 @@ public class FinishSmeltResponse extends Response {
 			playerInvIds.set(coalIndex, 0);
 		}
 		
-		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING, smeltable.getLevel() * 10), player, responseMaps);
+		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING, smeltable.getExp()), player, responseMaps);
 		
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 	}

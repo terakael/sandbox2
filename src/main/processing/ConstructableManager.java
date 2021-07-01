@@ -10,6 +10,7 @@ import main.database.dao.SceneryDao;
 import main.database.dto.ConstructableDto;
 import main.responses.ConstructableDespawnResponse;
 import main.responses.ResponseMaps;
+import main.scenery.constructable.BleedingTotemPole;
 import main.scenery.constructable.Constructable;
 import main.scenery.constructable.HolyTotemPole;
 import main.scenery.constructable.LargeStorageChest;
@@ -21,6 +22,7 @@ public class ConstructableManager {
 	private static Map<Integer, Map<Integer, Constructable>> constructableInstances = new HashMap<>(); // floor, <tileId, constructable>
 	
 	static {
+		constructables.put(138, BleedingTotemPole.class);
 		constructables.put(139, HolyTotemPole.class);
 		constructables.put(140, NaturesShrine.class);
 		constructables.put(141, SmallStorageChest.class);

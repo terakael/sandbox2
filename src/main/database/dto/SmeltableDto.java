@@ -11,4 +11,5 @@ public class SmeltableDto {
 	private int oreId;
 	private int requiredCoal;
 	private int requiredOre;
+	private int exp;
 }

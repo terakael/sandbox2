@@ -111,7 +111,7 @@ public abstract class ConsumableResponse extends Response {
 			PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 			playerUpdateResponse.setId(player.getId());
 			playerUpdateResponse.setCurrentHp(player.getCurrentHp());
-			responseMaps.addBroadcastResponse(playerUpdateResponse);
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), playerUpdateResponse);
 		}
 		
 		player.refreshBoosts();

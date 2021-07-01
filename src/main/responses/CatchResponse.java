@@ -8,6 +8,7 @@ import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.PathFinder;
 import main.processing.Player;
+import main.processing.WorldProcessor;
 import main.processing.Player.PlayerState;
 import main.requests.CatchRequest;
 import main.requests.Request;
@@ -37,7 +38,7 @@ public class CatchResponse extends Response {
 			return;
 		}
 		
-		if (npc.isDead())
+		if (npc.isDead() || (WorldProcessor.isDaytime() && !npc.isDiurnal()) || (!WorldProcessor.isDaytime() && !npc.isNocturnal()))
 			return;
 		
 		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), npc.getTileId())) {

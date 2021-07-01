@@ -300,4 +300,12 @@ public class NPC extends Attackable {
 	public void clearPath() {
 		path.clear();
 	}
+	
+	public boolean isDiurnal() {
+		return (dto.getAttributes() & NpcAttributes.DIURNAL.getValue()) > 0;
+	}
+	
+	public boolean isNocturnal() {
+		return (dto.getAttributes() & NpcAttributes.NOCTURNAL.getValue()) > 0;
+	}
 }

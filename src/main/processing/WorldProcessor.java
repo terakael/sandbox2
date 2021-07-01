@@ -14,20 +14,23 @@ import javax.websocket.Session;
 
 import com.google.gson.Gson;
 
+import lombok.Getter;
 import main.Endpoint;
 import main.GroundItemManager;
 import main.database.dao.GroundTextureDao;
 import main.database.dao.MinimapSegmentDao;
+import main.database.dao.PickableDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.ShopDao;
+import main.database.dto.PickableDto;
 import main.database.dto.ShopItemDto;
-import main.database.entity.other.KeepAlive;
 import main.processing.FightManager.Fight;
 import main.processing.Player.PlayerState;
 import main.requests.Request;
 import main.responses.AddGroundTextureInstancesResponse;
 import main.responses.AddMinimapSegmentsResponse;
 import main.responses.AddSceneryInstancesResponse;
+import main.responses.DaylightResponse;
 import main.responses.GroundItemInRangeResponse;
 import main.responses.GroundItemOutOfRangeResponse;
 import main.responses.LogonResponse;
@@ -42,13 +45,22 @@ import main.responses.RemoveMinimapSegmentsResponse;
 import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
+import main.responses.SceneryDepleteResponse;
+import main.responses.SceneryRespawnResponse;
 import main.responses.ShopResponse;
+import main.types.SceneryAttributes;
 import main.utils.Stopwatch;
 
 public class WorldProcessor implements Runnable {
 	private Thread thread;
 	private static final int TICK_DURATION_MS = 600;
 	private static Gson gson = new Gson();
+	
+	@Getter private static boolean daytime = true;
+	private static boolean daytimeChanged = false;
+	private static final int DAYTIME_TICKS = 100;
+	private static final int NIGHTTIME_TICKS = 50;
+	private static int dayNightCountdown = DAYTIME_TICKS;
 	
 	public static Map<Session, Player> playerSessions = new HashMap<>();
 	
@@ -91,6 +103,10 @@ public class WorldProcessor implements Runnable {
 		
 		if (tickId % 100 == 0)
 			DatabaseUpdater.keepAlive();
+		
+		if (--dayNightCountdown <= 0) {
+			setDaytime(!daytime);
+		}
 
 		Stopwatch.start("request map");
 		// pull requestmap contents from Endpoint and clear it so it can collect for the next tick
@@ -136,42 +152,28 @@ public class WorldProcessor implements Runnable {
 		}
 		Stopwatch.end("player requests");
 		
-		Map<Integer, Set<Integer>> npcsToProcess = new HashMap<>(); // floor, list<id>
 		Stopwatch.start("process players");
 		// process players
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
 			final Player player = entry.getValue();
 			
 			player.process(tickId, responseMaps);
-			
-//			List<NPC> npcs = NPCManager.get().getNpcsNearTile(player.getFloor(), player.getTileId(), 15);
-//			
-//			// while we iterate the players, pull out the npcs near each player as these are the only npcs we need to process.
-//			Set<Integer> npcIdsNearPlayer = npcs
-//				    .stream()
-//				    .map(NPC::getInstanceId)
-//				    .collect(Collectors.toSet());
-//			
-//			if (!npcsToProcess.containsKey(player.getFloor()))
-//				npcsToProcess.put(player.getFloor(), new HashSet<>());
-//			npcsToProcess.get(player.getFloor()).addAll(npcIdsNearPlayer);
+			if (daytimeChanged && player.getFloor() >= 0) {
+				// set brightness to day or night
+				responseMaps.addClientOnlyResponse(player, new DaylightResponse(daytime, false));
+			}
 		}
 		Stopwatch.end("process players");
 		
 		updateInRangePlayers(responseMaps);
 		
 		Stopwatch.start("process npcs");
-		NPCManager.get().process(npcsToProcess, responseMaps, tickId);
+		NPCManager.get().process(responseMaps, tickId);
 		Stopwatch.end("process npcs");
 		
 		Stopwatch.start("process constructables");
 		ConstructableManager.process(tickId, responseMaps);
 		Stopwatch.end("process constructables");
-		
-		// process fight manager
-		Stopwatch.start("process fight manager");
-		FightManager.process(responseMaps);
-		Stopwatch.end("process fight manager");
 		
 		Stopwatch.start("ground item manager");
 		GroundItemManager.process();
@@ -191,6 +193,12 @@ public class WorldProcessor implements Runnable {
 		
 		updateShopStock(responseMaps);
 		updateThingsLocalToPlayer(responseMaps);
+		
+		// fight manager needs to process after the "update things local to player"
+		// just in case an npc attacks a player as it spawns, the player needs to receive the spawn response before the fight response
+		Stopwatch.start("process fight manager");
+		FightManager.process(responseMaps);
+		Stopwatch.end("process fight manager");
 		
 		
 		// take all the responseMaps and compile the responses to send to each player
@@ -246,6 +254,7 @@ public class WorldProcessor implements Runnable {
 		}
 		Stopwatch.end("kill sessions");
 		
+		daytimeChanged = false;
 		Stopwatch.end("total");
 	}
 	
@@ -492,6 +501,25 @@ public class WorldProcessor implements Runnable {
 		Set<Integer> currentLocalTiles = player.getLocalTiles();
 		Set<Integer> newLocalTiles = WorldProcessor.getLocalTiles(player.getTileId(), 12);
 		
+		if (daytimeChanged) {
+			// TODO iterating through every local tile is slow and unnecessary.
+			// move the pickables to the LocationManager.
+			currentLocalTiles.forEach(tileId -> {
+				PickableDto pickable = PickableDao.getPickableByTileId(player.getFloor(), tileId);
+				if (pickable != null && ((daytime && !pickable.isDiurnal()) || (!daytime && !pickable.isNocturnal()))) {
+					SceneryDepleteResponse depleteResponse = new SceneryDepleteResponse();
+					depleteResponse.setTileId(tileId);
+					responseMaps.addLocalResponse(player.getFloor(), tileId, depleteResponse);
+				}
+				
+				if (pickable != null && ((daytime && !pickable.isNocturnal() && pickable.isDiurnal()) || (!daytime && !pickable.isDiurnal() && pickable.isNocturnal()))) {
+					SceneryRespawnResponse respawnResponse = new SceneryRespawnResponse();
+					respawnResponse.setTileId(tileId);
+					responseMaps.addLocalResponse(player.getFloor(), tileId, respawnResponse);
+				}
+			});
+		}
+		
 		Set<Integer> removedTileIds = currentLocalTiles.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !newLocalTiles.contains(e)).collect(Collectors.toSet());
 		if (!removedTileIds.isEmpty()) {
 			RemoveGroundTextureInstancesResponse removeResponse = new RemoveGroundTextureInstancesResponse();
@@ -511,7 +539,7 @@ public class WorldProcessor implements Runnable {
 				tileIdsByGroundTextureId.get(groundTextureId).add(tileId);
 				
 				int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), tileId);
-				if (sceneryId != -1) {
+				if (sceneryId != -1 && !SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.INVISIBLE)) {
 					addedTileIdsBySceneryId.putIfAbsent(sceneryId, new HashSet<>());
 					addedTileIdsBySceneryId.get(sceneryId).add(tileId);
 				}
@@ -575,17 +603,24 @@ public class WorldProcessor implements Runnable {
 	
 	private void updateLocalNpcLocations(Player player, ResponseMaps responseMaps) {
 		Stopwatch.start("refresh npc locations");
+
 		Set<Integer> currentInRangeNpcs = player.getInRangeNpcs();
-		Set<NPC> newInRangeNpcs = NPCManager.get().getNpcsNearTile(player.getFloor(), player.getTileId(), 15)
+		Set<NPC> newInRangeNpcs = LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 12, daytime)
 											    .stream()
 											    .filter(e -> !e.isDeadWithDelay())	// the delay of two ticks gives the client time for the death animation
-//												    .map(NPC::getInstanceId)
 											    .collect(Collectors.toSet());
+		
+		
 		
 		Set<Integer> newInRangeNpcInstanceIds = newInRangeNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
 		
 		Set<Integer> removedNpcs = currentInRangeNpcs.stream().filter(e -> !newInRangeNpcInstanceIds.contains(e)).collect(Collectors.toSet());
 		if (!removedNpcs.isEmpty()) {
+			removedNpcs.forEach(instanceId -> {
+				NPC fightNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), instanceId);
+				if (FightManager.fightWithFighterExists(fightNpc))
+					FightManager.cancelFight(fightNpc, responseMaps);
+			});
 			NpcOutOfRangeResponse npcOutOfRangeResponse = new NpcOutOfRangeResponse();
 			npcOutOfRangeResponse.setInstances(removedNpcs);
 			responseMaps.addClientOnlyResponse(player, npcOutOfRangeResponse);
@@ -604,7 +639,7 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	private void updateThingsLocalToPlayer(ResponseMaps responseMaps) {
-		for (Player player : playerSessions.values()) {
+		for (Player player : playerSessions.values()) {			
 			updateLocalGroundTexturesAndScenery(player, responseMaps);
 			updateLocalNpcLocations(player, responseMaps);
 			updateLocalGroundItems(player, responseMaps);
@@ -613,5 +648,15 @@ public class WorldProcessor implements Runnable {
 	
 	public static boolean sessionExistsByPlayerId(int playerId) {
 		return playerSessions.values().stream().anyMatch(e -> e.getId() == playerId);
+	}
+	
+	public static void setDaytime(boolean newDaytime) {
+		if (daytime != newDaytime) {
+			daytimeChanged = true;
+			DepletionManager.removeDaylightFlowers(newDaytime);
+		}
+		
+		daytime = newDaytime;
+		dayNightCountdown = daytime ? DAYTIME_TICKS : NIGHTTIME_TICKS;
 	}
 }

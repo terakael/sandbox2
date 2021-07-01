@@ -15,6 +15,7 @@ import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.SceneryDto;
 import main.processing.ConstructableManager;
+import main.types.SceneryAttributes;
 
 public class SceneryDao {
 	private SceneryDao() {};
@@ -38,7 +39,7 @@ public class SceneryDao {
 	
 	private static List<SceneryDto> loadAllScenery() {
 		final String query = 
-				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes from scenery " +
+				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes, lightsource_radius from scenery " +
 						" where attributes != 2 ";
 		List<SceneryDto> sceneryList = new ArrayList<>();
 		
@@ -55,6 +56,7 @@ public class SceneryDao {
 					dto.setLeftclickOption(rs.getInt("leftclick_option"));
 					dto.setOtherOptions(rs.getInt("other_options"));
 					dto.setAttributes(rs.getInt("attributes"));
+					dto.setLightsourceRadius(rs.getInt("lightsource_radius"));
 					sceneryList.add(dto);
 				}
 			}
@@ -67,7 +69,7 @@ public class SceneryDao {
 
 	private static List<SceneryDto> loadAllSceneryByFloor(int floor) {
 		final String query = 
-				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes from scenery " +
+				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes, lightsource_radius from scenery " +
 				" where id in (select distinct scenery_id from room_scenery where floor=?) and attributes != 2";
 		
 		List<SceneryDto> sceneryList = new ArrayList<>();
@@ -86,6 +88,7 @@ public class SceneryDao {
 					dto.setLeftclickOption(rs.getInt("leftclick_option"));
 					dto.setOtherOptions(rs.getInt("other_options"));
 					dto.setAttributes(rs.getInt("attributes"));
+					dto.setLightsourceRadius(rs.getInt("lightsource_radius"));
 					sceneryList.add(dto);
 				}
 			}
@@ -221,5 +224,13 @@ public class SceneryDao {
 				.findFirst()
 				.map(SceneryDto::getName)
 				.orElse("");
+	}
+	
+	public static boolean sceneryContainsAttribute(int sceneryId, SceneryAttributes attribute) {
+		SceneryDto dto = allScenery.stream().filter(scenery -> scenery.getId() == sceneryId).findFirst().orElse(null);
+		if (dto == null)
+			return false;
+		
+		return (dto.getAttributes() & attribute.getValue()) > 0;
 	}
 }

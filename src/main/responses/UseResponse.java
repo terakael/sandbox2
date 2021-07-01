@@ -670,7 +670,7 @@ public class UseResponse extends Response {
 		responseMaps.addClientOnlyResponse(player, playerUpdate);
 		responseMaps.addLocalResponse(teleportable.getFloor(), teleportable.getTileId(), playerUpdate);
 		
-		player.setFloor(teleportable.getFloor());
+		player.setFloor(teleportable.getFloor(), responseMaps);
 		player.setTileId(teleportable.getTileId());
 		
 		player.clearPath();

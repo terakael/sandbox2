@@ -6,9 +6,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import main.database.dao.PickableDao;
+import main.database.dto.PickableDto;
 import main.responses.ResponseMaps;
 import main.responses.SceneryDepleteResponse;
 import main.responses.SceneryRespawnResponse;
+import main.types.SceneryAttributes;
 
 public class DepletionManager {
 	public enum DepletionType {
@@ -44,7 +47,33 @@ public class DepletionManager {
 		});
 	}
 	
+	public static void removeDaylightFlowers(boolean daylight) {		
+		depletedScenery.forEach((floor, type) -> {
+			if (floor >= 0) {
+				for (Map.Entry<DepletionType, Map<Integer, Integer>> entry : type.entrySet()) {
+					if (entry.getKey() == DepletionType.flower) {
+						entry.getValue().keySet().removeIf(tileId -> {
+							PickableDto pickable = PickableDao.getPickableByTileId(floor, tileId);
+							return (daylight && !pickable.isDiurnal()) || (!daylight && !pickable.isNocturnal());
+						});
+					}
+				}
+			}
+		});
+	}
+	
 	public static boolean isDepleted(DepletionType type, int floor, int tileId) {
+		if (type == DepletionType.flower) {
+			// some flowers only come out during the day or night.
+			PickableDto dto = PickableDao.getPickableByTileId(floor, tileId);
+			if (dto == null || (WorldProcessor.isDaytime() && !dto.isDiurnal()) || (!WorldProcessor.isDaytime() && !dto.isNocturnal()))
+				return true;
+		}
+		
+		return isDepletedIgnoringDaytime(type, floor, tileId);
+	}
+	
+	public static boolean isDepletedIgnoringDaytime(DepletionType type, int floor, int tileId) {
 		if (!depletedScenery.containsKey(floor))
 			return false;
 		
@@ -71,9 +100,14 @@ public class DepletionManager {
 	public static Set<Integer> getDepletedSceneryTileIds(int floor) {
 		Set<Integer> depletedIds = new HashSet<>();
 		
+		PickableDao.getPickablesByFloor(floor).forEach((sceneryId, tileIds) -> {
+			PickableDto dto = PickableDao.getPickableBySceneryId(sceneryId);
+			if (dto != null && ((WorldProcessor.isDaytime() && !dto.isDiurnal()) || (!WorldProcessor.isDaytime() && !dto.isNocturnal())))
+				depletedIds.addAll(tileIds);
+		});
+		
 		if (!depletedScenery.containsKey(floor))
 			return depletedIds;
-		
 		
 		depletedScenery.get(floor).forEach((k, v) -> {
 			depletedIds.addAll(v.keySet());

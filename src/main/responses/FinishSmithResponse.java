@@ -66,7 +66,7 @@ public class FinishSmithResponse extends Response {
 		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId())));
 		responseMaps.addClientOnlyResponse(player, this);
 		
-		final int exp = SmeltableDao.getSmeltableByBarId(dto.getBarId()).getLevel() * 10;
+		final int exp = SmeltableDao.getSmeltableByBarId(dto.getBarId()).getExp() * dto.getRequiredBars();
 		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING, exp), player, responseMaps);
 		
 		// update the inventory for the client

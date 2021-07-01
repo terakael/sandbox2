@@ -50,19 +50,10 @@ public class NPCManager {
 		return null;
 	}
 	
-	public void process(Map<Integer, Set<Integer>> npcIds, ResponseMaps responseMaps, int tick) {
-		LocationManager.getAllNpcsNearPlayers().forEach((floor, npcSet) -> {
+	public void process(ResponseMaps responseMaps, int tick) {
+		LocationManager.getAllNpcsNearPlayers(WorldProcessor.isDaytime()).forEach((floor, npcSet) -> {
 			npcSet.forEach(npc -> npc.process(tick, responseMaps));
 		});
-		
-//		for (Map.Entry<Integer, Set<Integer>> entry : npcIds.entrySet()) {
-//			if (!npcs.containsKey(entry.getKey()))
-//				continue;
-//			
-//			npcs.get(entry.getKey()).stream()
-//				.filter(e -> entry.getValue().contains(e.getInstanceId()))
-//				.forEach(e -> e.process(tick, responseMaps));
-//		}
 	}
 	
 	public List<NPC> getNpcsNearTile(int floor, int tileId, int radius) {

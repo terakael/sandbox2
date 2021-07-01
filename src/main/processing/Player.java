@@ -36,6 +36,7 @@ import main.requests.RequestFactory;
 import main.requests.SmithRequest;
 import main.responses.AddExpResponse;
 import main.responses.ChopResponse;
+import main.responses.DaylightResponse;
 import main.responses.DeathResponse;
 import main.responses.EquipResponse;
 import main.responses.FinishChopResponse;
@@ -479,6 +480,21 @@ public class Player extends Attackable {
 			setPrayerPoints(prayerPoints + 1, responseMaps);
 	}
 	
+	public void incrementHitpoints(ResponseMaps responseMaps) {
+		HashMap<Stats, Integer> relativeBoosts = StatsDao.getRelativeBoostsByPlayerId(getId());
+		
+		int newRelativeBoost = relativeBoosts.get(Stats.HITPOINTS) + 1;
+		if (newRelativeBoost > getBonuses().get(Stats.HITPOINTS))// the hp relative boost is negative for how many hp lost
+			newRelativeBoost = getBonuses().get(Stats.HITPOINTS);
+		setCurrentHp(getDto().getMaxHp() + newRelativeBoost);
+		StatsDao.setRelativeBoostByPlayerIdStatId(getId(), Stats.HITPOINTS, newRelativeBoost);
+		
+		PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+		playerUpdateResponse.setId(getId());
+		playerUpdateResponse.setCurrentHp(getCurrentHp());
+		responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
+	}
+	
 	private void restoreStats(ResponseMaps responseMaps) {
 		HashMap<Stats, Integer> boosts = StatsDao.getRelativeBoostsByPlayerId(getId());
 		
@@ -551,7 +567,19 @@ public class Player extends Attackable {
 		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(dto.getId()).tileId(tileId).build());
 	}
 	
-	public void setFloor(int floor) {
+	public void setFloor(int floor, ResponseMaps responseMaps) {
+		// if we go underground, or come up from underground, reset the brightness accordingly.
+		// if it's nighttime then nothing changes if we go above or below ground
+		if (WorldProcessor.isDaytime()) {
+			if (this.floor >= 0 && floor < 0) {
+				// we were above ground, now below ground
+				responseMaps.addClientOnlyResponse(this, new DaylightResponse(false, true));
+			} else if (this.floor < 0 && floor >= 0) {
+				// we were below ground, now above ground
+				responseMaps.addClientOnlyResponse(this, new DaylightResponse(true, true));
+			}
+		}
+		
 		this.floor = floor;
 		LocationManager.addPlayer(this);
 		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(dto.getId()).floor(floor).build());

@@ -4,7 +4,9 @@ import lombok.Getter;
 
 public enum NpcAttributes {
 	ATTACKABLE(1),
-	AGGRESSIVE(2);
+	AGGRESSIVE(2),
+	NOCTURNAL(4),
+	DIURNAL(8);
 	
 	@Getter private int value;
 	NpcAttributes(int value) {

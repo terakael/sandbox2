@@ -3,7 +3,10 @@ package main.types;
 import lombok.Getter;
 
 public enum SceneryAttributes {
-	UNUSABLE(1);
+	UNUSABLE(1),
+	INVISIBLE(2),
+	NOCTURNAL(4),
+	DIURNAL(8);
 	
 	@Getter private int value;
 	SceneryAttributes(int value) {

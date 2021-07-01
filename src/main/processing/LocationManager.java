@@ -7,24 +7,37 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import main.responses.ResponseMaps;
+import main.types.NpcAttributes;
+
 public class LocationManager {
 	private static final int SEGMENT_SIZE = 25;
 	private static final int SEGMENTS_PER_ROW = PathFinder.LENGTH / SEGMENT_SIZE;
 	
-	private static Map<Integer, Map<Integer, Set<NPC>>> npcs = new HashMap<>(); // floor, <segment, <npc>>
+	private static Map<Integer, Map<Integer, Set<NPC>>> nocturnalNpcs = new HashMap<>();
+	private static Map<Integer, Map<Integer, Set<NPC>>> diurnalNpcs = new HashMap<>();
+	private static Map<Integer, Map<Integer, Set<NPC>>> undergroundNpcs = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<Player>>> players = new HashMap<>();
 	
-	public static Set<NPC> getLocalNpcs(int floor, int tileId, int radius) {
+	public static Set<NPC> getLocalNpcs(int floor, int tileId, int radius, boolean isDaytime) {
+		final Map<Integer, Map<Integer, Set<NPC>>> sourceMap = 
+				floor < 0
+					? undergroundNpcs
+					: isDaytime
+						? diurnalNpcs
+						: nocturnalNpcs;
+		
 		Set<NPC> localNpcs = new HashSet<>();
-		if (!npcs.containsKey(floor))
+		if (!sourceMap.containsKey(floor))
 			return localNpcs;
 		
 		final int playerTileIdX = tileId % PathFinder.LENGTH;
 		final int playerTileIdY = tileId / PathFinder.LENGTH;
 		
-		getLocalSegments(tileId, radius).forEach(segment -> {
-			if (npcs.get(floor).containsKey(segment)) {
-				localNpcs.addAll(npcs.get(floor).get(segment).stream()
+		Set<Integer> segments =getLocalSegments(tileId, radius); 
+		segments.forEach(segment -> {
+			if (sourceMap.get(floor).containsKey(segment)) {
+				localNpcs.addAll(sourceMap.get(floor).get(segment).stream()
 					.filter(npc -> {
 						final int npcTileIdX = npc.getTileId() % PathFinder.LENGTH;
 						final int npcTileIdY = npc.getTileId() / PathFinder.LENGTH;
@@ -38,28 +51,22 @@ public class LocationManager {
 		return localNpcs;
 	}
 	
-	public static Set<NPC> getNpcsFromSegments(int floor, Set<Integer> segments) {
-		Set<NPC> npcsToReturn = new HashSet<>();
-		if (!npcs.containsKey(floor))
-			return npcsToReturn;
-		
-		segments.forEach(segment -> {
-			if (npcs.get(floor).containsKey(segment))
-				npcsToReturn.addAll(npcs.get(floor).get(segment));
-		});
-		
-		return npcsToReturn;
-	}
-	
-	public static Map<Integer, Set<NPC>> getAllNpcsNearPlayers() {
+	public static Map<Integer, Set<NPC>> getAllNpcsNearPlayers(boolean isDaytime) {
 		Map<Integer, Set<NPC>> npcsToReturn = new HashMap<>();
 		
 		players.forEach((floor, segmentMap) -> {
-			if (npcs.containsKey(floor)) {
+			final Map<Integer, Map<Integer, Set<NPC>>> sourceMap = 
+					floor < 0
+						? undergroundNpcs
+						: isDaytime
+							? diurnalNpcs
+							: nocturnalNpcs;
+			
+			if (sourceMap.containsKey(floor)) {
 				segmentMap.keySet().forEach(segment -> {
-					if (npcs.get(floor).containsKey(segment)) {
+					if (sourceMap.get(floor).containsKey(segment)) {
 						npcsToReturn.putIfAbsent(floor, new HashSet<>());
-						npcsToReturn.get(floor).addAll(npcs.get(floor).get(segment));
+						npcsToReturn.get(floor).addAll(sourceMap.get(floor).get(segment));
 					}
 				});
 			}
@@ -74,9 +81,23 @@ public class LocationManager {
 			// this means if a spawn tile is on the corner of a segment, there will be four segments here as the 
 			// roam range will intersect all four.
 			getLocalSegments(npc.getInstanceId(), npc.getDto().getRoamRadius()).forEach(segment -> {
-				npcs.putIfAbsent(npc.getFloor(), new HashMap<>());
-				npcs.get(npc.getFloor()).putIfAbsent(segment, new HashSet<>());
-				npcs.get(npc.getFloor()).get(segment).add(npc);
+				if (npc.getFloor() < 0) {
+					undergroundNpcs.putIfAbsent(npc.getFloor(), new HashMap<>());
+					undergroundNpcs.get(npc.getFloor()).putIfAbsent(segment, new HashSet<>());
+					undergroundNpcs.get(npc.getFloor()).get(segment).add(npc);
+				} else {
+					if ((npc.getDto().getAttributes() & NpcAttributes.NOCTURNAL.getValue()) > 0) {
+						nocturnalNpcs.putIfAbsent(npc.getFloor(), new HashMap<>());
+						nocturnalNpcs.get(npc.getFloor()).putIfAbsent(segment, new HashSet<>());
+						nocturnalNpcs.get(npc.getFloor()).get(segment).add(npc);
+					}
+					
+					if ((npc.getDto().getAttributes() & NpcAttributes.DIURNAL.getValue()) > 0) {
+						diurnalNpcs.putIfAbsent(npc.getFloor(), new HashMap<>());
+						diurnalNpcs.get(npc.getFloor()).putIfAbsent(segment, new HashSet<>());
+						diurnalNpcs.get(npc.getFloor()).get(segment).add(npc);
+					}
+				}
 			});
 		});
 	}

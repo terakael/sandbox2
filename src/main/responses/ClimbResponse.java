@@ -49,7 +49,7 @@ public class ClimbResponse extends Response {
 				}
 			}
 			
-			player.setFloor(player.getFloor() + ClimbableDao.getRelativeFloorsBySceneryId(sceneryId));
+			player.setFloor(player.getFloor() + ClimbableDao.getRelativeFloorsBySceneryId(sceneryId), responseMaps);
 			player.setTileId(request.getTileId() + PathFinder.LENGTH);
 			player.clearPath();
 			
