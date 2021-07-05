@@ -58,8 +58,8 @@ public class WorldProcessor implements Runnable {
 	
 	@Getter private static boolean daytime = true;
 	private static boolean daytimeChanged = false;
-	private static final int DAYTIME_TICKS = 100;
-	private static final int NIGHTTIME_TICKS = 50;
+	private static final int DAYTIME_TICKS = 6000;
+	private static final int NIGHTTIME_TICKS = 4500;
 	private static int dayNightCountdown = DAYTIME_TICKS;
 	
 	public static Map<Session, Player> playerSessions = new HashMap<>();
