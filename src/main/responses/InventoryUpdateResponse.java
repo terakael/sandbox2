@@ -12,6 +12,7 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dto.InventoryItemDto;
 import main.processing.ClientResourceManager;
 import main.processing.Player;
+import main.processing.Player.PlayerState;
 import main.requests.InventoryMoveRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
@@ -43,6 +44,12 @@ public class InventoryUpdateResponse extends Response {
 		
 		// if we've never sent the item before, we need to send the corresponding sprite map
 		ClientResourceManager.addItems(player, inventory.values().stream().map(InventoryItemDto::getItemId).collect(Collectors.toSet()));
+		
+		// if the player is doing anything but walking, cancel their state.
+		// if they are, for example, mid-assemble and then they move their flatpack to a different slot
+		// then the finishAssemble code can't find the flatpack at the specified slot.
+		if (player.getState() != PlayerState.walking)
+			player.setState(PlayerState.idle);
 	}
 	
 	private void processInventoryMoveRequest(InventoryMoveRequest req, Player player) {

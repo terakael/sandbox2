@@ -57,27 +57,30 @@ public class FinishConstructionResponse extends Response {
 			return;
 		}
 		
-		final int existingSceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId());
-		if (existingSceneryId != -1) {
-			setRecoAndResponseText(0, "you can't build that here.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
+		if (!request.isFlatpack()) {
+			// not a flatpack so build the actual scenery
+			final int existingSceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId());
+			if (existingSceneryId != -1) {
+				setRecoAndResponseText(0, "you can't build that here.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
+			
+			ConstructableManager.add(player.getFloor(), request.getTileId(), constructable);
+			ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
+			TybaltsTaskManager.check(player, new ConstructTaskUpdate(constructable.getResultingSceneryId()), responseMaps);
+			
+			Map<Integer, Set<Integer>> instances = new HashMap<>();
+			instances.put(constructable.getResultingSceneryId(), Collections.singleton(request.getTileId()));
+			
+			AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
+			inRangeResponse.setInstances(instances);
+			
+			// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
+			inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
+			inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
+			responseMaps.addLocalResponse(player.getFloor(), request.getTileId(), inRangeResponse);
 		}
-		
-		ConstructableManager.add(player.getFloor(), request.getTileId(), constructable);
-		ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
-		TybaltsTaskManager.check(player, new ConstructTaskUpdate(constructable.getResultingSceneryId()), responseMaps);
-		
-		Map<Integer, Set<Integer>> instances = new HashMap<>();
-		instances.put(constructable.getResultingSceneryId(), Collections.singleton(request.getTileId()));
-		
-		AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
-		inRangeResponse.setInstances(instances);
-		
-		// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
-		inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
-		inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
-		responseMaps.addLocalResponse(player.getFloor(), request.getTileId(), inRangeResponse);
 
 		// get rid of all the materials
 		for (int i = 0; i < constructable.getPlankAmount(); ++i) {
@@ -100,6 +103,12 @@ public class FinishConstructionResponse extends Response {
 				invItemIds.set(tertiaryIndex, 0);
 			}
 		}
+		
+		if (request.isFlatpack()) {
+			// add the flatpack item to the inventory
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, constructable.getFlatpackItemId(), 1, ItemDao.getMaxCharges(constructable.getFlatpackItemId()));
+		}
+		
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		
 		AddExpRequest addExpReq = new AddExpRequest(player.getId(), Stats.CONSTRUCTION, constructable.getExp());

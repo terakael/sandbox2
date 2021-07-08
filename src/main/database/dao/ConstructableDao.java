@@ -23,7 +23,7 @@ public class ConstructableDao {
 	private static void cacheConstructables() {
 		constructables = new ArrayList<>();
 		
-		final String query = "select resulting_scenery_id, level, exp, tool_id, plank_id, plank_amount, bar_id, bar_amount, tertiary_id, tertiary_amount, lifetime_ticks from constructable";
+		final String query = "select resulting_scenery_id, level, exp, tool_id, plank_id, plank_amount, bar_id, bar_amount, tertiary_id, tertiary_amount, lifetime_ticks, flatpack_item_id from constructable";
 		
 		try (
 			Connection connection = DbConnection.get();
@@ -42,7 +42,8 @@ public class ConstructableDao {
 							rs.getInt("bar_amount"),
 							rs.getInt("tertiary_id"),
 							rs.getInt("tertiary_amount"),
-							rs.getInt("lifetime_ticks")));
+							rs.getInt("lifetime_ticks"),
+							rs.getInt("flatpack_item_id")));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -66,7 +67,22 @@ public class ConstructableDao {
 			}).collect(Collectors.toSet());
 	}
 	
+	public static Set<ConstructableDto> getAllConstructablesWithMaterials(int materialId) {
+		return constructables.stream()
+			.filter(e -> {
+				return (
+					e.getPlankId() == materialId ||
+					e.getBarId() == materialId ||
+					e.getTertiaryId() == materialId
+				);
+			}).collect(Collectors.toSet());
+	}
+	
 	public static ConstructableDto getConstructableBySceneryId(int sceneryId) {
 		return constructables.stream().filter(e -> e.getResultingSceneryId() == sceneryId).findFirst().orElse(null);
+	}
+	
+	public static ConstructableDto getConstructableByFlatpackItemId(int itemId) {
+		return constructables.stream().filter(e -> e.getFlatpackItemId() == itemId).findFirst().orElse(null);
 	}
 }

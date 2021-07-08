@@ -39,6 +39,7 @@ import main.responses.ChopResponse;
 import main.responses.DaylightResponse;
 import main.responses.DeathResponse;
 import main.responses.EquipResponse;
+import main.responses.FinishAssembleResponse;
 import main.responses.FinishChopResponse;
 import main.responses.FinishConstructionResponse;
 import main.responses.FinishCookingResponse;
@@ -84,6 +85,7 @@ public class Player extends Attackable {
 		woodcutting,
 		sawmill,
 		construction,
+		assembling,
 		fighting,
 		using,
 		climbing, // ladders etc, give a tick or so duration (like for climbing animation in the future)
@@ -403,6 +405,14 @@ public class Player extends Attackable {
 		case construction:
 			if (--tickCounter <= 0) {
 				new FinishConstructionResponse().process(savedRequest, this, responseMaps);
+				savedRequest = null;
+				setState(PlayerState.idle);
+			}
+			break;
+			
+		case assembling:
+			if (--tickCounter <= 0) {
+				new FinishAssembleResponse().process(savedRequest, this, responseMaps);
 				savedRequest = null;
 				setState(PlayerState.idle);
 			}

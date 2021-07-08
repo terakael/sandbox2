@@ -61,6 +61,7 @@ public class RequestFactory {
 		map.put("show_construction_materials", ShowConstructionMaterialsRequest.class);
 		map.put("storage_move", StorageMoveRequest.class);
 		map.put("repair", RepairRequest.class);
+		map.put("assemble", AssembleRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

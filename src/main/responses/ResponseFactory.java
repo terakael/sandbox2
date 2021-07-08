@@ -183,6 +183,9 @@ public class ResponseFactory {
 		case "repair":
 			response = new RepairResponse();
 			break;
+		case "assemble":
+			response = new AssembleResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

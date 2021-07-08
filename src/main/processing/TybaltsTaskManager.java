@@ -11,6 +11,7 @@ import main.tybaltstasks.BrewerOfStank;
 import main.tybaltstasks.ChickenSlayer;
 import main.tybaltstasks.LogBurner;
 import main.tybaltstasks.MakeCopperHelmet;
+import main.tybaltstasks.NefariousNuisance;
 import main.tybaltstasks.ReinforceCopperHelmet;
 import main.tybaltstasks.ShrimpCooker;
 import main.tybaltstasks.ShrineMaker;
@@ -29,6 +30,7 @@ public class TybaltsTaskManager {
 		tasks.put(6, new BoneTotem());
 		tasks.put(7, new BrewerOfStank());
 		tasks.put(8, new ShrineMaker());
+		tasks.put(9, new NefariousNuisance());
 	}
 	
 	public static void check(Player player, TybaltsTaskUpdate taskUpdate, ResponseMaps responseMaps) {

@@ -1,6 +1,5 @@
 package main.responses;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +122,7 @@ public class UseResponse extends Response {
 	private boolean handleUseOnItem(UseRequest request, Player player, ResponseMaps responseMaps) {
 		if (ConstructableDao.itemIsConstructionTool(request.getSrc()) || ConstructableDao.itemIsConstructionTool(request.getDest())) {
 			// construction special case
-			return handleConstruction(request, player, responseMaps);
+			return handleConstruction(request, player, responseMaps, false);
 		}
 		
 		int src = request.getSrc();
@@ -701,7 +700,7 @@ public class UseResponse extends Response {
 		return true;
 	}
 	
-	private boolean handleConstruction(UseRequest request, Player player, ResponseMaps responseMaps) {
+	private boolean handleConstruction(UseRequest request, Player player, ResponseMaps responseMaps, boolean flatpack) {
 		final int src = request.getSrc();
 		final int dest = request.getDest();
 		
@@ -719,11 +718,12 @@ public class UseResponse extends Response {
 				ConstructionRequest constructionRequest = new ConstructionRequest();
 				constructionRequest.setSceneryId(e.getResultingSceneryId());
 				constructionRequest.setTileId(player.getTileId());
+				constructionRequest.setFlatpack(flatpack);
 				new ConstructionResponse().process(constructionRequest, player, responseMaps);
 			});
 		} else {
 			// show a menu with all the constructables
-			new ShowConstructionTableResponse(constructables).process(null, player, responseMaps);
+			new ShowConstructionTableResponse(constructables, flatpack).process(null, player, responseMaps);
 		}
 		
 		return true;
