@@ -10,8 +10,10 @@ import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.processing.RoomGroundItemManager;
+import main.processing.TybaltsTaskManager;
 import main.requests.Request;
 import main.requests.TakeRequest;
+import main.tybaltstasks.updates.TakeTaskUpdate;
 import main.types.ItemAttributes;
 import main.types.StorageTypes;
 
@@ -39,8 +41,6 @@ public class TakeResponse extends Response {
 		
 		RoomGroundItemManager.GroundItem groundItem = GroundItemManager.getItemAtTileId(player.getFloor(), player.getId(), takeReq.getItemId(), takeReq.getTileId());
 		if (groundItem == null) {
-//			setRecoAndResponseText(0, "too late - it's gone!");
-//			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
 		
@@ -78,6 +78,7 @@ public class TakeResponse extends Response {
 		}
 		
 		GroundItemManager.remove(player.getFloor(), player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount(), groundItem.getCharges());
+		TybaltsTaskManager.check(player, new TakeTaskUpdate(takeReq.getItemId(), groundItem.getCount()), responseMaps);
 		
 		// update the player inventory/equipped items and only send it to the player
 		Response resp = ResponseFactory.create("invupdate");

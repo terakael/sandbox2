@@ -6,10 +6,12 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dto.FishableDto;
 import main.processing.ConstructableManager;
 import main.processing.Player;
+import main.processing.TybaltsTaskManager;
 import main.requests.AddExpRequest;
 import main.requests.FishRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.tybaltstasks.updates.FishTaskUpdate;
 import main.types.Stats;
 import main.types.StorageTypes;
 import main.utils.RandomUtil;
@@ -50,6 +52,8 @@ public class FinishFishingResponse extends Response {
 		
 		setResponseText(String.format("you catch some %s.", ItemDao.getNameFromId(fishable.getItemId())));
 		responseMaps.addClientOnlyResponse(player, this);
+		
+		TybaltsTaskManager.check(player, new FishTaskUpdate(fishable.getItemId()), responseMaps);
 	}
 
 }

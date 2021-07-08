@@ -9,9 +9,11 @@ import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
+import main.processing.TybaltsTaskManager;
 import main.requests.PickRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.tybaltstasks.updates.PickTaskUpdate;
 import main.types.StorageTypes;
 
 public class PickResponse extends Response {
@@ -61,6 +63,8 @@ public class PickResponse extends Response {
 			
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, freeSlotId, pickable.getItemId(), 1, ItemDao.getMaxCharges(pickable.getItemId()));
 			new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
+			
+			TybaltsTaskManager.check(player, new PickTaskUpdate(pickable.getItemId()), responseMaps);
 			
 			DepletionManager.addDepletedScenery(DepletionManager.DepletionType.flower, player.getFloor(), request.getTileId(), pickable.getRespawnTicks(), responseMaps);
 		}

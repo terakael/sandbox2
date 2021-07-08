@@ -10,10 +10,12 @@ import main.database.dto.InventoryItemDto;
 import main.database.dto.MineableDto;
 import main.processing.DepletionManager;
 import main.processing.Player;
+import main.processing.TybaltsTaskManager;
 import main.requests.AddExpRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
+import main.tybaltstasks.updates.MineTaskUpdate;
 import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
@@ -63,10 +65,12 @@ public class FinishMiningResponse extends Response {
 			final boolean minedGoldChips = RandomUtil.chance(mineable.getGoldChance());
 			if (minedGoldChips) {
 				// mine a gold chip
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, 351, 1, 0); // gold chips
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, Items.GOLD_CHIPS.getValue(), 1, 0);
+				TybaltsTaskManager.check(player, new MineTaskUpdate(Items.GOLD_CHIPS.getValue(), 1), responseMaps);
 			} else {
 				// mine the rock
 				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, mineable.getItemId(), 1, ItemDao.getMaxCharges(mineable.getItemId()));
+				TybaltsTaskManager.check(player, new MineTaskUpdate(mineable.getItemId(), 1), responseMaps);
 			}
 			// as there are multiple pickaxe types, there is a specific order that it uses.
 			// that is: magic golden pickaxe, magic pickaxe, golden pickaxe, pickaxe

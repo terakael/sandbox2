@@ -60,6 +60,7 @@ import main.responses.SmithResponse;
 import main.responses.StatBoostResponse;
 import main.responses.TogglePrayerResponse;
 import main.responses.UseResponse;
+import main.tybaltstasks.updates.KillNpcTaskUpdate;
 import main.types.Buffs;
 import main.types.DamageTypes;
 import main.types.DuelRules;
@@ -112,6 +113,7 @@ public class Player extends Attackable {
 	@Getter private float prayerPoints = 0;
 	@Setter private int range = 0; // if we're chasing with range (i.e. chasing to cast a spell or something), this is the range we want to be in
 	private boolean slowburnBlockedStatDrain = false;
+	private int tybaltsCapeTimer = 0; // tybalts cape gives 1hp per minute of wearing it (essentially doubling hp regen)
 	
 	// these two are used while the player is doing their death animation.
 	// technically they are at the respawn point, and if they disconnect during the death animation
@@ -215,6 +217,16 @@ public class Player extends Attackable {
 				restorationBuffCurrentTriggerTicks = restorationBuffTriggerTicks;
 				restoreNegativeStats(responseMaps);
 			}
+		}
+		
+		if (EquipmentDao.isItemEquipped(getId(), 359)) { // tybalt's cape
+			if (++tybaltsCapeTimer >= 100) { // once-per-minute hp regen; effectively doubling hp regen (still stackable with prayers etc)
+				tybaltsCapeTimer = 0;
+				incrementHitpoints(responseMaps);
+			}
+		} else {
+			if (tybaltsCapeTimer > 0) // to stop the ability to flick the cape, the timer resets to 0 if the cape is unequipped
+				tybaltsCapeTimer = 0;
 		}
 		
 		switch (state) {
@@ -406,7 +418,11 @@ public class Player extends Attackable {
 		case cooking:
 			if (--tickCounter <= 0) {
 				new FinishCookingResponse().process(savedRequest, this, responseMaps);
-				new UseResponse().process(savedRequest, this, responseMaps);
+				
+				// finishCooking response can set the state back to idle if the fire runs out during the cook.
+				// in this case, don't try and do another UseResponse as it'll result in an annoying "nothing interesting happens".
+				if (state == PlayerState.cooking)
+					new UseResponse().process(savedRequest, this, responseMaps);
 			}
 			break;
 			
@@ -722,6 +738,8 @@ public class Player extends Attackable {
 				
 				InventoryUpdateResponse.sendUpdate(this, responseMaps);
 			}
+		} else {
+			TybaltsTaskManager.check(this, new KillNpcTaskUpdate(((NPC)killed).getId(), killed.getFloor(), killed.getTileId()), responseMaps);
 		}
 		
 		// exp is doled out based on attackStyle and weapon type.

@@ -7,12 +7,14 @@ import lombok.Setter;
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerDao;
 import main.database.dao.PlayerStorageDao;
+import main.database.dao.PlayerTybaltsTaskDao;
 import main.database.dao.StatsDao;
 import main.database.dao.TeleportableDao;
 import main.database.dto.TeleportableDto;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
+import main.processing.TybaltsTaskManager;
 import main.processing.WorldProcessor;
 import main.requests.MessageRequest;
 import main.requests.Request;
@@ -109,6 +111,23 @@ public class MessageResponse extends Response {
 		
 		if (msgParts[0].equals("night")) {
 			WorldProcessor.setDaytime(false);
+			return;
+		}
+		
+		if (msgParts[0].equals("task")) {
+			if (msgParts.length < 2) {
+				setRecoAndResponseText(0, "syntax: ::task [taskId]");
+				return;
+			}
+			
+			try {
+				int taskId = Integer.parseInt(msgParts[1]);
+				PlayerTybaltsTaskDao.setNewTask(player, taskId, responseMaps);
+			} catch (NumberFormatException e) {
+				setRecoAndResponseText(0, String.format("invalid task id \"%s\".", msgParts[1]));
+				responseMaps.addClientOnlyResponse(player, this);
+			}
+			
 			return;
 		}
 	}

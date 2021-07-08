@@ -1,0 +1,10 @@
+package main.tybaltstasks.updates;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class UseItemOnItemTaskUpdate implements TybaltsTaskUpdate {
+	private int resultingItemId;
+}

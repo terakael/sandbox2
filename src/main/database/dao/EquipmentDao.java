@@ -80,54 +80,6 @@ public class EquipmentDao {
 			}
 	}
 	
-//	private static void cacheReinforcedtoBaseMap() {
-//		reinforcedToBase.put(Items.REINFORCED_COPPER_HELMET, Items.COPPER_HELMET);
-//		reinforcedToBase.put(Items.REINFORCED_COPPER_PLATEBODY, Items.COPPER_PLATEBODY);
-//		reinforcedToBase.put(Items.REINFORCED_COPPER_PLATELEGS, Items.COPPER_PLATELEGS);
-//		reinforcedToBase.put(Items.REINFORCED_COPPER_SHIELD, Items.COPPER_SHIELD);
-//		
-//		reinforcedToBase.put(Items.REINFORCED_IRON_HELMET, Items.IRON_HELMET);
-//		reinforcedToBase.put(Items.REINFORCED_IRON_PLATEBODY, Items.IRON_PLATEBODY);
-//		reinforcedToBase.put(Items.REINFORCED_IRON_PLATELEGS, Items.IRON_PLATELEGS);
-//		reinforcedToBase.put(Items.REINFORCED_IRON_SHIELD, Items.IRON_SHIELD);
-//		
-//		reinforcedToBase.put(Items.REINFORCED_STEEL_HELMET, Items.STEEL_HELMET);
-//		reinforcedToBase.put(Items.REINFORCED_STEEL_PLATEBODY, Items.STEEL_PLATEBODY);
-//		reinforcedToBase.put(Items.REINFORCED_STEEL_PLATELEGS, Items.STEEL_PLATELEGS);
-//		reinforcedToBase.put(Items.REINFORCED_STEEL_SHIELD, Items.STEEL_SHIELD);
-//		
-//		reinforcedToBase.put(Items.REINFORCED_MITHRIL_HELMET, Items.MITHRIL_HELMET);
-//		reinforcedToBase.put(Items.REINFORCED_MITHRIL_PLATEBODY, Items.MITHRIL_PLATEBODY);
-//		reinforcedToBase.put(Items.REINFORCED_MITHRIL_PLATELEGS, Items.MITHRIL_PLATELEGS);
-//		reinforcedToBase.put(Items.REINFORCED_MITHRIL_SHIELD, Items.MITHRIL_SHIELD);
-//		
-//		reinforcedToBase.put(Items.REINFORCED_ADDY_HELMET, Items.ADDY_HELMET);
-//		reinforcedToBase.put(Items.REINFORCED_ADDY_PLATEBODY, Items.ADDY_PLATEBODY);
-//		reinforcedToBase.put(Items.REINFORCED_ADDY_PLATELEGS, Items.ADDY_PLATELEGS);
-//		reinforcedToBase.put(Items.REINFORCED_ADDY_SHIELD, Items.ADDY_SHIELD);
-//		
-//		reinforcedToBase.put(Items.REINFORCED_RUNE_HELMET, Items.RUNE_HELMET);
-//		reinforcedToBase.put(Items.REINFORCED_RUNE_PLATEBODY, Items.RUNE_PLATEBODY);
-//		reinforcedToBase.put(Items.REINFORCED_RUNE_PLATELEGS, Items.RUNE_PLATELEGS);
-//		reinforcedToBase.put(Items.REINFORCED_RUNE_SHIELD, Items.RUNE_SHIELD);
-//		
-//		reinforcedToBase.put(Items.SHADOW_HELMET, Items.NONE);
-//		reinforcedToBase.put(Items.SHADOW_PLATEBODY, Items.NONE);
-//		reinforcedToBase.put(Items.SHADOW_PLATELEGS, Items.NONE);
-//		reinforcedToBase.put(Items.SHADOW_SHIELD, Items.NONE);
-//	}
-	
-//	public static int getBaseItemFromReinforcedItem(int reinforcedId) {
-//		Items reinforcedItem = Items.withValue(reinforcedId);
-//		if (reinforcedItem == null)
-//			return 0;
-//		
-//		if (reinforcedToBase.containsKey(reinforcedItem))
-//			return reinforcedToBase.get(reinforcedItem).getValue();
-//		
-//		return 0;
-//	}
-	
 	public static EquipmentTypes getEquipmentTypeByEquipmentId(int equipmentId) {
 		if (equipmentByType.containsKey(equipmentId))
 			return equipmentByType.get(equipmentId);
@@ -153,6 +105,13 @@ public class EquipmentDao {
 			return false;
 		
 		return playerEquipment.get(playerId).values().contains(slot);
+	}
+	
+	public static boolean isItemEquipped(int playerId, int itemId) {
+		if (!playerEquipment.containsKey(playerId))
+			return false;
+		
+		return playerEquipment.get(playerId).keySet().contains(itemId);
 	}
 
 	public static void clearEquippedItem(int playerId, int slot) {

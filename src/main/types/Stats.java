@@ -15,9 +15,9 @@ public enum Stats {
 	FISHING(10),
 	COOKING(11),
 	WOODCUTTING(12),
-	FLETCHING(13),
+	ARTISAN(13),
 	CONSTRUCTION(14),
-	RANGED(15);
+	SLAYER(15);
 	
 	@Getter private int value;
 	Stats(int value) {

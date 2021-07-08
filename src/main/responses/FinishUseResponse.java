@@ -10,9 +10,11 @@ import main.database.dao.StatsDao;
 import main.database.dao.UseItemOnItemDao;
 import main.database.dto.UseItemOnItemDto;
 import main.processing.Player;
+import main.processing.TybaltsTaskManager;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.UseRequest;
+import main.tybaltstasks.updates.UseItemOnItemTaskUpdate;
 import main.types.Stats;
 import main.types.StorageTypes;
 
@@ -90,6 +92,8 @@ public class FinishUseResponse extends Response {
 				expResponse.addExp(Stats.HERBLORE.getValue(), exp);
 				responseMaps.addClientOnlyResponse(player, expResponse);
 			}
+			
+			TybaltsTaskManager.check(player, new UseItemOnItemTaskUpdate(dto.getResultingItemId()), responseMaps);
 		} else {
 			String itemName = ItemDao.getNameFromId(src);
 			if (!itemName.endsWith("s"))

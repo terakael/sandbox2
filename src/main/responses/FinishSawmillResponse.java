@@ -9,10 +9,12 @@ import main.database.dao.SawmillableDao;
 import main.database.dto.SawmillableDto;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
+import main.processing.TybaltsTaskManager;
 import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.UseRequest;
+import main.tybaltstasks.updates.SawmillTaskUpdate;
 import main.types.Stats;
 import main.types.StorageTypes;
 
@@ -56,6 +58,8 @@ public class FinishSawmillResponse extends Response {
 		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, sawmillable.getResultingPlankId(), 1, ItemDao.getMaxCharges(sawmillable.getResultingPlankId()));
 		
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
+		
+		TybaltsTaskManager.check(player, new SawmillTaskUpdate(sawmillable.getResultingPlankId()), responseMaps);
 	}
 
 }

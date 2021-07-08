@@ -5,16 +5,17 @@ import java.util.Collections;
 import java.util.List;
 
 import main.database.dao.ItemDao;
-import main.database.dao.MineableDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SmeltableDao;
 import main.database.dao.SmithableDao;
 import main.database.dao.StatsDao;
 import main.database.dto.SmithableDto;
 import main.processing.Player;
+import main.processing.TybaltsTaskManager;
 import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.SmithRequest;
+import main.tybaltstasks.updates.SmithTaskUpdate;
 import main.types.Stats;
 import main.types.StorageTypes;
 
@@ -71,6 +72,7 @@ public class FinishSmithResponse extends Response {
 		
 		// update the inventory for the client
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
+		TybaltsTaskManager.check(player, new SmithTaskUpdate(dto.getItemId()), responseMaps);
 	}
 
 	List<Integer> getAffectedSlots(List<Integer> inventoryList, int itemId, int count) {

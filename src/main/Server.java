@@ -28,6 +28,7 @@ import main.database.dao.PickableDao;
 import main.database.dao.PlayerAnimationDao;
 import main.database.dao.PlayerDao;
 import main.database.dao.PlayerStorageDao;
+import main.database.dao.PlayerTybaltsTaskDao;
 import main.database.dao.PrayerDao;
 import main.database.dao.ReinforcementBonusesDao;
 import main.database.dao.RespawnableDao;
@@ -209,6 +210,9 @@ public class Server {
 		
 		System.out.println("caching constructables");
 		ConstructableDao.setupCaches();
+		
+		System.out.println("caching tybalt's tasks");
+		PlayerTybaltsTaskDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

@@ -15,13 +15,12 @@ import main.database.dao.StatsDao;
 import main.database.dto.NPCDto;
 import main.database.dto.NpcDropDto;
 import main.processing.Player.PlayerState;
-import main.requests.AddExpRequest;
-import main.responses.AddExpResponse;
 import main.responses.BuryResponse;
 import main.responses.MessageResponse;
 import main.responses.NpcUpdateResponse;
 import main.responses.PvmStartResponse;
 import main.responses.ResponseMaps;
+import main.tybaltstasks.updates.ItemDropFromNpcUpdate;
 import main.types.Buffs;
 import main.types.DamageTypes;
 import main.types.ItemAttributes;
@@ -59,7 +58,7 @@ public class NPC extends Attackable {
 		stats.put(Stats.MAGIC, dto.getMagic());
 		setStats(stats);
 		
-		combatLevel = StatsDao.getCombatLevelByStats(dto.getStr(), dto.getAcc(), dto.getDef(), dto.getPray(), dto.getHp(), dto.getMagic(), 1);
+		combatLevel = dto.getCmb();//StatsDao.getCombatLevelByStats(dto.getStr(), dto.getAcc(), dto.getDef(), dto.getPray(), dto.getHp(), dto.getMagic());
 		
 		HashMap<Stats, Integer> bonuses = new HashMap<>();
 		bonuses.put(Stats.STRENGTH, dto.getStrBonus());
@@ -238,6 +237,7 @@ public class NPC extends Attackable {
 					BuryResponse.handleBury(player, drop.getItemId(), responseMaps);
 				} else {
 					GroundItemManager.add(floor, player.getId(), drop.getItemId(), tileId, drop.getCount(), ItemDao.getMaxCharges(drop.getItemId()));
+					TybaltsTaskManager.check(player, new ItemDropFromNpcUpdate(drop.getItemId(), drop.getCount()), responseMaps);
 				}
 			}
 		}

@@ -4,16 +4,16 @@ import java.util.Collections;
 import java.util.List;
 
 import main.database.dao.ItemDao;
-import main.database.dao.MineableDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SmeltableDao;
 import main.database.dao.StatsDao;
 import main.database.dto.SmeltableDto;
 import main.processing.Player;
-import main.processing.Player.PlayerState;
+import main.processing.TybaltsTaskManager;
 import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.UseRequest;
+import main.tybaltstasks.updates.SmeltTaskUpdate;
 import main.types.ItemAttributes;
 import main.types.Stats;
 import main.types.StorageTypes;
@@ -80,6 +80,7 @@ public class FinishSmeltResponse extends Response {
 		
 		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING, smeltable.getExp()), player, responseMaps);
 		
+		TybaltsTaskManager.check(player, new SmeltTaskUpdate(smeltable.getBarId()), responseMaps);
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 	}
 

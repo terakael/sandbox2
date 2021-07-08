@@ -5,12 +5,16 @@ import java.util.List;
 import main.database.dao.CookableDao;
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
+import main.database.dao.SceneryDao;
 import main.database.dto.CookableDto;
 import main.processing.Player;
+import main.processing.TybaltsTaskManager;
+import main.processing.Player.PlayerState;
 import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.UseRequest;
+import main.tybaltstasks.updates.CookTaskUpdate;
 import main.types.Stats;
 import main.types.StorageTypes;
 import main.utils.RandomUtil;
@@ -35,6 +39,15 @@ public class FinishCookingResponse extends Response {
 		itemId = request.getSrc();// src is the raw item's itemId
 		tileId = request.getDest();// dest is the fire's tileId
 		type = request.getType();
+		
+		// if the fire is constructable it can run out between starting and finishing the cooking.
+		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), tileId);
+		if (sceneryId == -1) {
+			player.setState(PlayerState.idle);
+			setRecoAndResponseText(0, "the fire ran out.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
 		
 		CookableDto cookable = CookableDao.getCookable(itemId);
 		if (cookable != null) {
@@ -73,6 +86,8 @@ public class FinishCookingResponse extends Response {
 			}
 			
 			responseMaps.addClientOnlyResponse(player, this);
+			
+			TybaltsTaskManager.check(player, new CookTaskUpdate(cookable.getCookedItemId(), !success), responseMaps);
 		}
 	}
 

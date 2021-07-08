@@ -15,10 +15,11 @@ import main.database.dto.ConstructableDto;
 import main.processing.ClientResourceManager;
 import main.processing.ConstructableManager;
 import main.processing.Player;
-import main.processing.WorldProcessor;
+import main.processing.TybaltsTaskManager;
 import main.requests.AddExpRequest;
 import main.requests.ConstructionRequest;
 import main.requests.Request;
+import main.tybaltstasks.updates.ConstructTaskUpdate;
 import main.types.ItemAttributes;
 import main.types.Stats;
 import main.types.StorageTypes;
@@ -65,6 +66,7 @@ public class FinishConstructionResponse extends Response {
 		
 		ConstructableManager.add(player.getFloor(), request.getTileId(), constructable);
 		ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
+		TybaltsTaskManager.check(player, new ConstructTaskUpdate(constructable.getResultingSceneryId()), responseMaps);
 		
 		Map<Integer, Set<Integer>> instances = new HashMap<>();
 		instances.put(constructable.getResultingSceneryId(), Collections.singleton(request.getTileId()));

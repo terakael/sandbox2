@@ -9,14 +9,14 @@ public class Stats {
 	int prayer = 0;
 	int hitpoints = 10;
 	int magic = 0;
-	int ranged = 0;
+	int slayer = 0;
 	int mining = 0;
 	int smithing = 0;
 	int herblore = 0;
 	int fishing = 0;
 	int cooking = 0;
 	int woodcutting = 0;
-	int fletching = 0;
+	int artisan = 0;
 	int firemaking = 0;
 	int total = 0;
 	public Stats(Map<String, Integer> statList) {
@@ -26,15 +26,15 @@ public class Stats {
 		this.prayer = statList.get("prayer");
 		this.hitpoints = statList.get("hitpoints");
 		this.magic = statList.get("magic");
-		this.ranged = statList.get("ranged");
 		this.mining = statList.get("mining");
 		this.smithing = statList.get("smithing");
 		this.herblore = statList.get("herblore");
 		this.fishing = statList.get("fishing");
 		this.cooking = statList.get("cooking");
 		this.woodcutting = statList.get("woodcutting");
-		this.fletching = statList.get("fletching");
+		this.artisan = statList.get("artisan");
 		this.firemaking = statList.get("firemaking");
+		this.slayer = statList.get("slayer");
 		this.total = statList.get("total");
 	}
 }
