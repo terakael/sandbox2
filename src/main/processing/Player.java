@@ -29,6 +29,7 @@ import main.database.dto.ReinforcementBonusesDto;
 import main.database.dto.TeleportableDto;
 import main.database.entity.update.UpdatePlayerEntity;
 import main.processing.FightManager.Fight;
+import main.requests.ConstructionRequest;
 import main.requests.FishRequest;
 import main.requests.MineRequest;
 import main.requests.Request;
@@ -36,6 +37,7 @@ import main.requests.RequestFactory;
 import main.requests.SmithRequest;
 import main.responses.AddExpResponse;
 import main.responses.ChopResponse;
+import main.responses.ConstructionResponse;
 import main.responses.DaylightResponse;
 import main.responses.DeathResponse;
 import main.responses.EquipResponse;
@@ -405,8 +407,22 @@ public class Player extends Attackable {
 		case construction:
 			if (--tickCounter <= 0) {
 				new FinishConstructionResponse().process(savedRequest, this, responseMaps);
-				savedRequest = null;
-				setState(PlayerState.idle);
+				if (state == PlayerState.idle) // if we're flatpacking and the workbench disappears then the player state gets set to idle.
+					break;
+				
+				// special case here: if we're making flatpacks we can chain multiple requests.
+				ConstructionRequest constructionReq = (ConstructionRequest)savedRequest;
+				if (constructionReq.isFlatpack()) {
+					constructionReq.setAmount(constructionReq.getAmount() - 1);
+					if (constructionReq.getAmount() > 0) {
+						new ConstructionResponse().process(constructionReq, this, responseMaps);
+					} else {
+						setState(PlayerState.idle);
+					}
+				} else {
+					savedRequest = null;
+					setState(PlayerState.idle);
+				}
 			}
 			break;
 			

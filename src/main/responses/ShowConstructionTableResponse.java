@@ -12,11 +12,13 @@ import main.requests.Request;
 public class ShowConstructionTableResponse extends Response {
 	private Set<ConstructableDto> constructableOptions;
 	private boolean flatpack;
+	private int tileId;
 	
-	public ShowConstructionTableResponse(Set<ConstructableDto> options, boolean flatpack) {
+	public ShowConstructionTableResponse(Set<ConstructableDto> options, boolean flatpack, int tileId) {
 		setAction("show_construction_table");
 		constructableOptions = options;
 		this.flatpack = flatpack;
+		this.tileId = tileId;
 	}
 
 	@Override

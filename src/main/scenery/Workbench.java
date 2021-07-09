@@ -32,11 +32,12 @@ public class Workbench implements Scenery {
 				ConstructionRequest constructionRequest = new ConstructionRequest();
 				constructionRequest.setSceneryId(e.getResultingSceneryId());
 				constructionRequest.setFlatpack(true);
+				constructionRequest.setTileId(request.getDest());
 				new ConstructionResponse().process(constructionRequest, player, responseMaps);
 			});
 		} else {
 			// show a menu with all the constructables
-			new ShowConstructionTableResponse(constructables, true).process(null, player, responseMaps);
+			new ShowConstructionTableResponse(constructables, true, request.getDest()).process(null, player, responseMaps);
 		}
 		
 		return true;

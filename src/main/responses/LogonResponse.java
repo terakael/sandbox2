@@ -59,8 +59,8 @@ public class LogonResponse extends Response {
 		
 		PlayerDao.updateLastLoggedIn(playerDto.getId());
 		LocationManager.addPlayer(player);
-				
-		PlayerStorageDao.createBankSlotsIfNotExists(playerDto.getId());
+		
+		PlayerStorageDao.initStorageForNewPlayer(playerDto.getId());
 		
 		stats = StatsDao.getAllStatExpByPlayerId(playerDto.getId())
 				.entrySet()

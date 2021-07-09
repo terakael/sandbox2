@@ -383,7 +383,10 @@ public enum Items {
 	SHADOW_HELMET(354),
 	SHADOW_PLATEBODY(355),
 	SHADOW_PLATELEGS(356),
-	SHADOW_SHIELD(357);
+	SHADOW_SHIELD(357),
+	
+	TYBALTS_SWORD(373),
+	FLOWER_SACK(374);
 
 	@Getter private int value;
 	Items(int value) {

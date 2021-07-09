@@ -62,6 +62,8 @@ public class RequestFactory {
 		map.put("storage_move", StorageMoveRequest.class);
 		map.put("repair", RepairRequest.class);
 		map.put("assemble", AssembleRequest.class);
+		map.put("empty", EmptyRequest.class);
+		map.put("check", CheckRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

@@ -5,7 +5,7 @@ import lombok.Getter;
 public enum StorageTypes {
 	INVENTORY(1),
 	BANK(2),
-	FURNACE(3),
+	FLOWER_SACK(3),
 	TRADE(4);
 	
 	@Getter private int value;

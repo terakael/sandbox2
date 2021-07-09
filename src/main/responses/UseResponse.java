@@ -13,6 +13,7 @@ import main.database.dao.DoorDao;
 import main.database.dao.EquipmentDao;
 import main.database.dao.ItemDao;
 import main.database.dao.NPCDao;
+import main.database.dao.PickableDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.StatsDao;
@@ -120,15 +121,17 @@ public class UseResponse extends Response {
 	}
 	
 	private boolean handleUseOnItem(UseRequest request, Player player, ResponseMaps responseMaps) {
-		if (ConstructableDao.itemIsConstructionTool(request.getSrc()) || ConstructableDao.itemIsConstructionTool(request.getDest())) {
-			// construction special case
-			return handleConstruction(request, player, responseMaps, false);
-		}
-		
 		int src = request.getSrc();
 		int dest = request.getDest();
 		int srcSlot = request.getSrcSlot();
 		int destSlot = request.getSlot();
+		
+		if (ConstructableDao.itemIsConstructionTool(request.getSrc()) || ConstructableDao.itemIsConstructionTool(request.getDest())) {
+			// construction special case
+			return handleConstruction(request, player, responseMaps, false);
+		} else if (src == Items.FLOWER_SACK.getValue() || dest == Items.FLOWER_SACK.getValue()) {
+			return handleFlowerSack(request, player, responseMaps);
+		}
 		
 		UseItemOnItemDto dto = UseItemOnItemDao.getEntryBySrcIdDestId(src, dest);
 		if (dto == null) {
@@ -723,8 +726,42 @@ public class UseResponse extends Response {
 			});
 		} else {
 			// show a menu with all the constructables
-			new ShowConstructionTableResponse(constructables, flatpack).process(null, player, responseMaps);
+			new ShowConstructionTableResponse(constructables, flatpack, player.getTileId()).process(null, player, responseMaps);
 		}
+		
+		return true;
+	}
+	
+	private boolean handleFlowerSack(UseRequest request, Player player, ResponseMaps responseMaps) {
+		final int src = request.getSrc();
+		final int dest = request.getDest();
+		
+		// the thing that isn't the flower sack is the flower
+		int flowerId = src == Items.FLOWER_SACK.getValue() ? dest : src;
+		
+		if (!PickableDao.isItemPickable(flowerId))
+			return false;
+		
+		Map<Integer, InventoryItemDto> sackContents = PlayerStorageDao.getStorageDtoMapByPlayerId(player.getId(), StorageTypes.FLOWER_SACK);
+		int remainingSpace = 50 - sackContents.values().stream().reduce(0, (cumulative, item) -> cumulative + item.getCount(), Integer::sum);
+		if (remainingSpace == 0) {
+			setRecoAndResponseText(0, "the sack is full.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return true;
+		}
+		
+		// it's a flower, now put all the flowers of this type in the flower sack
+		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+		for (int i = 0; i < invItemIds.size(); ++i) {
+			if (invItemIds.get(i) == flowerId) {
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.FLOWER_SACK, flowerId, 1, 0);
+				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, i, 0, 0, 0);
+				if (--remainingSpace == 0)
+					break;
+			}
+		}
+		
+		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		
 		return true;
 	}

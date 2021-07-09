@@ -91,4 +91,8 @@ public class PickableDao {
 			return new HashMap<>();
 		return pickableInstances.get(floor);
 	}
+	
+	public static boolean isItemPickable(int itemId) {
+		return pickables.stream().filter(e -> e.getItemId() == itemId).findFirst().isPresent();
+	}
 }

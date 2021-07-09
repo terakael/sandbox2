@@ -14,8 +14,10 @@ import main.database.dao.StatsDao;
 import main.database.dto.ConstructableDto;
 import main.processing.ClientResourceManager;
 import main.processing.ConstructableManager;
+import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.TybaltsTaskManager;
+import main.processing.Player.PlayerState;
 import main.requests.AddExpRequest;
 import main.requests.ConstructionRequest;
 import main.requests.Request;
@@ -80,6 +82,14 @@ public class FinishConstructionResponse extends Response {
 			inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
 			inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
 			responseMaps.addLocalResponse(player.getFloor(), request.getTileId(), inRangeResponse);
+		} else {
+			// check that we're next to the workbench
+			if (SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId()) != 151 || !PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {
+				setRecoAndResponseText(0, "you need to be next to a workbench to make that.");
+				responseMaps.addClientOnlyResponse(player, this);
+				player.setState(PlayerState.idle);
+				return;
+			}
 		}
 
 		// get rid of all the materials

@@ -26,7 +26,7 @@ import main.types.Items;
 import main.types.StorageTypes;
 
 public class PlayerStorageDao {
-	private static Map<Integer, Map<StorageTypes, Map<Integer, PlayerStorageDto>>> playerStorage; // playerId, <storageTypeId, <slot, dto>>
+	private static Map<Integer, Map<StorageTypes, Map<Integer, PlayerStorageDto>>> playerStorage = new HashMap<>(); // playerId, <storageTypeId, <slot, dto>>
 	
 	private PlayerStorageDao() {}
 	
@@ -44,7 +44,7 @@ public class PlayerStorageDao {
 		
 		boolean existingStackableSlot = false;
 		int slot = -1;
-		if (ItemDao.itemHasAttribute(itemId, ItemAttributes.STACKABLE) || storageTypeId == StorageTypes.BANK) {
+		if (ItemDao.itemHasAttribute(itemId, ItemAttributes.STACKABLE) || storageTypeId == StorageTypes.BANK || storageTypeId == StorageTypes.FLOWER_SACK) {
 			if (ItemDao.itemHasAttribute(itemId, ItemAttributes.CHARGED)) {
 				for (int i = 0; i < invItemIds.size(); ++i) {
 					if (invItemIds.get(i) == itemId) {
@@ -266,7 +266,7 @@ public class PlayerStorageDao {
 		if (!validatePlayerStorageElement(playerId, storageType, slot))
 			return;
 		
-		if (count <= 0) {
+		if (count < 0) {
 			// BUG, somehow count went below 0
 			System.out.println(String.format("player %d got %d count on storage type %s!", playerId, count, storageType.name()));
 			count = 0;
@@ -287,15 +287,21 @@ public class PlayerStorageDao {
 									.count(count)
 									.build());
 	}
-
-	// TODO this should be done on character creation instead of login?
-	public static void createBankSlotsIfNotExists(int playerId) {
-		if (!getStorageDtoMapByPlayerId(playerId, StorageTypes.BANK).isEmpty())
+	
+	public static void initStorageForNewPlayer(int playerId) {
+		createStorageForNewPlayer(playerId, StorageTypes.INVENTORY, 20);
+		createStorageForNewPlayer(playerId, StorageTypes.BANK, 35);
+		createStorageForNewPlayer(playerId, StorageTypes.FLOWER_SACK, 10);
+		cachePlayerStorage(playerId);
+	}
+	
+	private static void createStorageForNewPlayer(int playerId, StorageTypes type, int slotCount) {
+		if (!getStorageDtoMapByPlayerId(playerId, type).isEmpty())
 			return;
 		
 		String query = "insert into player_storage values ";
-		for (int i = 0; i < 35; ++i) {
-			query += String.format("(%d,%d,%d,0,1,0),", playerId, StorageTypes.BANK.getValue(), i);
+		for (int i = 0; i < slotCount; ++i) {
+			query += String.format("(%d,%d,%d,0,0,0),", playerId, type.getValue(), i);
 		}
 		query = query.substring(0, query.length() - 1);
 		
@@ -308,28 +314,23 @@ public class PlayerStorageDao {
 			e.printStackTrace();
 		}
 	}
-	
-	public static void cachePlayerStorage() {
-		playerStorage = new HashMap<>();
 		
-		final String query = "select player_id, storage_id, slot, item_id, count, charges from player_storage";
+	public static void cachePlayerStorage(int playerId) {
+		playerStorage.put(playerId, new HashMap<>()); // reset it if it exists
+		
+		final String query = "select player_id, storage_id, slot, item_id, count, charges from player_storage where player_id=?";
 		
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query);
 		) {
+			ps.setInt(1, playerId);
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
-					final int playerId = rs.getInt("player_id");
 					final int storageId = rs.getInt("storage_id");
 					final StorageTypes storageType = StorageTypes.withValue(storageId);
 					
-					if (!playerStorage.containsKey(playerId))
-						playerStorage.put(playerId, new HashMap<>());
-					
-					if (!playerStorage.get(playerId).containsKey(storageType))
-						playerStorage.get(playerId).put(storageType, new HashMap<>());
-					
+					playerStorage.get(playerId).putIfAbsent(storageType, new HashMap<>());
 					PlayerStorageDto dto = new PlayerStorageDto(playerId, storageId, rs.getInt("slot"), rs.getInt("item_id"), rs.getInt("count"), rs.getInt("charges"));
 					playerStorage.get(playerId).get(storageType).put(rs.getInt("slot"), dto);
 				}

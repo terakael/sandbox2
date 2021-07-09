@@ -186,6 +186,12 @@ public class ResponseFactory {
 		case "assemble":
 			response = new AssembleResponse();
 			break;
+		case "empty":
+			response = new EmptyResponse();
+			break;
+		case "check":
+			response = new CheckResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

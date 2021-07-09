@@ -124,9 +124,6 @@ public class Server {
 		System.out.println("caching items");
 		ItemDao.setupCaches();
 		
-		System.out.println("caching player storage");
-		PlayerStorageDao.cachePlayerStorage();
-		
 		System.out.println("caching ground textures");
 		GroundTextureDao.cacheTextures();
 		
