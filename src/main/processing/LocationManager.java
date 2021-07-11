@@ -102,6 +102,41 @@ public class LocationManager {
 		});
 	}
 	
+	public static void removeNpc(NPC npc) {
+		getLocalSegments(npc.getInstanceId(), npc.getDto().getRoamRadius()).forEach(segment -> {
+			if (npc.getFloor() < 0) {
+				if (!undergroundNpcs.containsKey(npc.getFloor()))
+					return;
+				
+				if (!undergroundNpcs.get(npc.getFloor()).containsKey(segment))
+					return;
+				
+				undergroundNpcs.get(npc.getFloor()).get(segment).remove(npc);
+			} else {
+				boolean removedNpc = false;
+				if ((npc.getDto().getAttributes() & NpcAttributes.NOCTURNAL.getValue()) > 0) {
+					if (!nocturnalNpcs.containsKey(npc.getFloor()))
+						return;
+					
+					if (!nocturnalNpcs.get(npc.getFloor()).containsKey(segment))
+						return;
+					
+					removedNpc = nocturnalNpcs.get(npc.getFloor()).get(segment).remove(npc);
+				}
+				
+				if ((npc.getDto().getAttributes() & NpcAttributes.DIURNAL.getValue()) > 0) {
+					if (!diurnalNpcs.containsKey(npc.getFloor()))
+						return;
+					
+					if (!diurnalNpcs.get(npc.getFloor()).containsKey(segment))
+						return;
+					
+					removedNpc = diurnalNpcs.get(npc.getFloor()).get(segment).remove(npc);
+				}
+			}
+		});
+	}
+	
 	public static Set<Player> getLocalPlayers(int floor, int tileId, int radius) {
 		Set<Player> localPlayers = new HashSet<>();
 		if (!players.containsKey(floor))

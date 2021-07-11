@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 
 import main.database.dao.SceneryDao;
 import main.database.dto.ConstructableDto;
-import main.responses.ConstructableDespawnResponse;
 import main.responses.ResponseMaps;
+import main.responses.SceneryDespawnResponse;
 import main.scenery.constructable.BleedingTotemPole;
 import main.scenery.constructable.Constructable;
 import main.scenery.constructable.HolyTotemPole;
@@ -36,7 +36,7 @@ public class ConstructableManager {
 				constructable.process(tickId, responseMaps);
 				if (constructable.getRemainingTicks() <= 0) {
 					tileIdsToRemove.add(tileId);
-					responseMaps.addLocalResponse(floor, tileId, new ConstructableDespawnResponse(tileId));
+					responseMaps.addLocalResponse(floor, tileId, new SceneryDespawnResponse(tileId));
 				}
 			});
 			

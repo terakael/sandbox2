@@ -13,6 +13,7 @@ import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.NPCDto;
 import main.database.dto.NpcDropDto;
+import main.processing.UndeadArmyManager;
 import main.types.NpcAttributes;
 
 public class NPCDao {
@@ -189,9 +190,16 @@ public class NPCDao {
 	}
 	
 	public static String getNpcNameById(int npcId) {
+		NPCDto dto = getNpcById(npcId);
+		if (dto == null)
+			return null;
+		return dto.getName();
+	}
+	
+	public static NPCDto getNpcById(int npcId) {
 		for (NPCDto dto : npcList) {
 			if (dto.getId() == npcId)
-				return dto.getName();
+				return dto;
 		}
 		return null;
 	}

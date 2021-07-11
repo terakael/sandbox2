@@ -386,7 +386,9 @@ public enum Items {
 	SHADOW_SHIELD(357),
 	
 	TYBALTS_SWORD(373),
-	FLOWER_SACK(374);
+	FLOWER_SACK(374),
+	
+	ZOMBIE_EEL(391);
 
 	@Getter private int value;
 	Items(int value) {

@@ -11,4 +11,6 @@ public class FishableDto {
 	private int exp;
 	private int itemId;
 	private int respawnTicks;
+	private int toolId;
+	private int baitId;
 }

@@ -657,4 +657,15 @@ public class PathFinder {
 				|| src == (dest + LENGTH - 1)  // bottom-left
 				|| src == (dest + LENGTH + 1); // bottom-right
 	}
+	
+	public static void setImpassabilityOnTileId(int floor, int tileId, int impassability) {
+		// this is used for the undead army ents; they're impassable trees until a certain wave where they become npcs.
+		if (!nodesByFloor.containsKey(floor))
+			return;
+		
+		if (!nodesByFloor.get(floor).containsKey(tileId))
+			return;
+		
+		nodesByFloor.get(floor).get(tileId).setImpassableTypes(impassability);
+	}
 }

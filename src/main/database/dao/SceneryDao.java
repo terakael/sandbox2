@@ -15,12 +15,13 @@ import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.SceneryDto;
 import main.processing.ConstructableManager;
+import main.processing.UndeadArmyManager;
 import main.types.SceneryAttributes;
 
 public class SceneryDao {
 	private SceneryDao() {};
 	
-	@Getter private static List<SceneryDto> allScenery; // passed to player on page load
+	@Getter private static List<SceneryDto> allScenery;
 	private static HashMap<Integer, List<SceneryDto>> allSceneryByFloor;
 	private static Map<Integer, Map<Integer, Set<Integer>>> sceneryInstancesByFloor; // floor, <sceneryId, tileids>
 	@Getter private static HashMap<Integer, HashMap<Integer, Integer>> impassableTileIds = new HashMap<>();// floor, <tile_id, impassable_type>
@@ -191,7 +192,16 @@ public class SceneryDao {
 		}
 		
 		// fallback by checking the constructables
-		return ConstructableManager.getConstructableIdByTileId(floor, tileId);
+		int constructableId = ConstructableManager.getConstructableIdByTileId(floor, tileId);
+		if (constructableId != -1)
+			return constructableId;
+		
+		// fall back even more by checking if this is one of the undead army trees
+		int undeadArmyTreeId = UndeadArmyManager.getSceneryIdByTileId(tileId);
+		if (undeadArmyTreeId != -1)
+			return undeadArmyTreeId;
+		
+		return -1;
 	}
 	
 	public static int getImpassableTypeByFloor(int floor, int tileId) {

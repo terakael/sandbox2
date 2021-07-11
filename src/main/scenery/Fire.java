@@ -23,10 +23,6 @@ public class Fire implements Scenery {
 		int srcItemId = request.getSrc();
 		int slot = request.getSlot();
 		
-		Items item = Items.withValue(srcItemId);
-		if (item == null)
-			return false;
-		
 		CookableDto cookable = CookableDao.getCookable(srcItemId);
 		if (cookable == null) {
 			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("you can't cook that.", null));

@@ -121,7 +121,11 @@ public abstract class ConsumableResponse extends Response {
 	}
 	
 	private void handleCustomActions(int itemId, Player player, ResponseMaps responseMaps) {
-		switch (Items.withValue(itemId)) {
+		Items item = Items.withValue(itemId);
+		if (item == null)
+			return;// isn't in the enum, doesn't necessarily mean it's invalid though.
+		
+		switch (item) {
 		case RESTORATION_POTION_4:
 		case RESTORATION_POTION_3:
 		case RESTORATION_POTION_2:
@@ -145,6 +149,12 @@ public abstract class ConsumableResponse extends Response {
 			resp.setColour("white");
 			resp.setResponseText("goblin scent starts coming out of your pores...");
 			responseMaps.addClientOnlyResponse(player, resp);
+			break;
+		}
+		
+		case ZOMBIE_EEL: {
+			player.inflictPoison(4);
+			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("the decay starts eating away at your insides!", "#00aa00"));
 			break;
 		}
 		default:

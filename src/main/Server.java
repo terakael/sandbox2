@@ -27,7 +27,6 @@ import main.database.dao.NpcMessageDao;
 import main.database.dao.PickableDao;
 import main.database.dao.PlayerAnimationDao;
 import main.database.dao.PlayerDao;
-import main.database.dao.PlayerStorageDao;
 import main.database.dao.PlayerTybaltsTaskDao;
 import main.database.dao.PrayerDao;
 import main.database.dao.ReinforcementBonusesDao;
@@ -40,6 +39,7 @@ import main.database.dao.SmithableDao;
 import main.database.dao.SpriteFrameDao;
 import main.database.dao.SpriteMapDao;
 import main.database.dao.TeleportableDao;
+import main.database.dao.UndeadArmyWavesDao;
 import main.database.dao.UseItemOnItemDao;
 import main.processing.DatabaseUpdater;
 import main.processing.NPCManager;
@@ -202,7 +202,7 @@ public class Server {
 		System.out.println("caching choppables");
 		ChoppableDao.setupCaches();
 		
-		System.out.println("caching sawmill");
+		System.out.println("caching sawmillables");
 		SawmillableDao.setupCaches();
 		
 		System.out.println("caching constructables");
@@ -210,6 +210,9 @@ public class Server {
 		
 		System.out.println("caching tybalt's tasks");
 		PlayerTybaltsTaskDao.setupCaches();
+		
+		System.out.println("caching undead army waves");
+		UndeadArmyWavesDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

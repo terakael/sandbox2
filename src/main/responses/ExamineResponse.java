@@ -10,6 +10,8 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
 import main.database.dto.ConstructableDto;
 import main.processing.ConstructableManager;
+import main.processing.NPC;
+import main.processing.NPCManager;
 import main.processing.Player;
 import main.requests.ExamineRequest;
 import main.requests.Request;
@@ -77,8 +79,11 @@ public class ExamineResponse extends Response {
 			break;
 		}
 		case "npc": {
-			int npcId = NPCDao.getNpcIdFromInstanceId(player.getFloor(), request.getObjectId());
-			examineText = npcExamineMap.get(npcId);
+			NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());
+			if (npc != null) {
+//				int npcId = NPCDao.getNpcIdFromInstanceId(player.getFloor(), request.getObjectId());
+				examineText = npcExamineMap.get(npc.getId());
+			}
 			break;
 		}
 		default:

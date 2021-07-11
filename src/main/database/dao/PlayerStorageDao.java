@@ -289,6 +289,7 @@ public class PlayerStorageDao {
 	}
 	
 	public static void initStorageForNewPlayer(int playerId) {
+		cachePlayerStorage(playerId);
 		createStorageForNewPlayer(playerId, StorageTypes.INVENTORY, 20);
 		createStorageForNewPlayer(playerId, StorageTypes.BANK, 35);
 		createStorageForNewPlayer(playerId, StorageTypes.FLOWER_SACK, 10);

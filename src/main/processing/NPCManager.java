@@ -16,7 +16,7 @@ public class NPCManager {
 	private NPCManager() {};
 	
 	private static NPCManager instance;
-	@Getter private Map<Integer, List<NPC>> npcs = new HashMap<>();
+	@Getter private Map<Integer, List<NPC>> npcs = new HashMap<>();// floor, <npc>
 	
 	public static NPCManager get() {
 		if (instance == null)
@@ -47,7 +47,9 @@ public class NPCManager {
 			if (npc.getDto().getTileId() == id)// tileId is the instance id
 				return npc;
 		}
-		return null;
+		
+		// also check the undead army as these are handled differently
+		return UndeadArmyManager.getNpcByInstanceId(id);
 	}
 	
 	public void process(ResponseMaps responseMaps, int tick) {

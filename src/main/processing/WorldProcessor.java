@@ -46,6 +46,7 @@ import main.responses.Response;
 import main.responses.ResponseFactory;
 import main.responses.ResponseMaps;
 import main.responses.SceneryDepleteResponse;
+import main.responses.SceneryDespawnResponse;
 import main.responses.SceneryRespawnResponse;
 import main.responses.ShopResponse;
 import main.types.SceneryAttributes;
@@ -128,6 +129,7 @@ public class WorldProcessor implements Runnable {
 		
 		// process all requests and add all responses to this object which will be compiled into the response list for each player
 		ResponseMaps responseMaps = new ResponseMaps();
+		UndeadArmyManager.init(responseMaps); // once-only check done inside this function.  initializes the ents as trees.
 
 		Stopwatch.start("player requests");
 		// process player requests for this tick
@@ -166,6 +168,9 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.end("process players");
 		
 		updateInRangePlayers(responseMaps);
+		
+		if (daytimeChanged)
+			UndeadArmyManager.onDaytimeChange(daytime, responseMaps);
 		
 		Stopwatch.start("process npcs");
 		NPCManager.get().process(responseMaps, tickId);
@@ -500,6 +505,7 @@ public class WorldProcessor implements Runnable {
 
 		Set<Integer> currentLocalTiles = player.getLocalTiles();
 		Set<Integer> newLocalTiles = WorldProcessor.getLocalTiles(player.getTileId(), 12);
+		Map<Integer, Set<Integer>> addedTileIdsBySceneryId = new HashMap<>();
 		
 		if (daytimeChanged) {
 			// TODO iterating through every local tile is slow and unnecessary.
@@ -517,6 +523,25 @@ public class WorldProcessor implements Runnable {
 					respawnResponse.setTileId(tileId);
 					responseMaps.addLocalResponse(player.getFloor(), tileId, respawnResponse);
 				}
+				
+				int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), tileId);
+
+				if (sceneryId != -1) {
+					final boolean isDiurnal = SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.DIURNAL);
+					final boolean isNocturnal = SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.NOCTURNAL);
+					
+					if (((daytime && !isDiurnal) || (!daytime && !isNocturnal))) {
+//						PathFinder.setImpassabilityOnTileId(0, tileId, 0);
+						SceneryDespawnResponse despawnResponse = new SceneryDespawnResponse(tileId);
+						responseMaps.addClientOnlyResponse(player, despawnResponse);
+					}
+					
+					if ((daytime && !isNocturnal && isDiurnal) || (!daytime && !isDiurnal && isNocturnal)) {
+//						PathFinder.setImpassabilityOnTileId(0, tileId, );
+						addedTileIdsBySceneryId.putIfAbsent(sceneryId, new HashSet<>());
+						addedTileIdsBySceneryId.get(sceneryId).add(tileId);
+					}
+				}
 			});
 		}
 		
@@ -530,7 +555,6 @@ public class WorldProcessor implements Runnable {
 		Set<Integer> addedTileIds = newLocalTiles.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !currentLocalTiles.contains(e)).collect(Collectors.toSet());
 		if (!addedTileIds.isEmpty()) {
 			Map<Integer, Set<Integer>> tileIdsByGroundTextureId = new HashMap<>();
-			Map<Integer, Set<Integer>> addedTileIdsBySceneryId = new HashMap<>();
 			
 			for (int tileId : addedTileIds) {
 				int groundTextureId = GroundTextureDao.getGroundTextureIdByTileId(player.getFloor(), tileId);
@@ -539,7 +563,10 @@ public class WorldProcessor implements Runnable {
 				tileIdsByGroundTextureId.get(groundTextureId).add(tileId);
 				
 				int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), tileId);
-				if (sceneryId != -1 && !SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.INVISIBLE)) {
+				if (sceneryId != -1 && 
+						!SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.INVISIBLE) && 
+						((daytime && SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.DIURNAL)) ||
+						  (!daytime && SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.NOCTURNAL)))) {
 					addedTileIdsBySceneryId.putIfAbsent(sceneryId, new HashSet<>());
 					addedTileIdsBySceneryId.get(sceneryId).add(tileId);
 				}
@@ -549,18 +576,18 @@ public class WorldProcessor implements Runnable {
 			addResponse.setInstances(tileIdsByGroundTextureId);
 			responseMaps.addClientOnlyResponse(player, addResponse);
 			ClientResourceManager.addGroundTextures(player, tileIdsByGroundTextureId.keySet());
+		}
+		
+		if (!addedTileIdsBySceneryId.isEmpty()) {
+			AddSceneryInstancesResponse addSceneryResponse = new AddSceneryInstancesResponse();
+			responseMaps.addClientOnlyResponse(player, addSceneryResponse);
 			
-			if (!addedTileIdsBySceneryId.isEmpty()) {
-				AddSceneryInstancesResponse addSceneryResponse = new AddSceneryInstancesResponse();
-				responseMaps.addClientOnlyResponse(player, addSceneryResponse);
-				
-				addSceneryResponse.setInstances(addedTileIdsBySceneryId);
-				addSceneryResponse.setDepletedScenery(player.getFloor(), newLocalTiles);
-				addSceneryResponse.setOpenDoors(player.getFloor(), newLocalTiles);
-				
-				// if the scenery has never been sent to the player, then also send the corresponding sprite map to them
-				ClientResourceManager.addScenery(player, addedTileIdsBySceneryId.keySet());
-			}
+			addSceneryResponse.setInstances(addedTileIdsBySceneryId);
+			addSceneryResponse.setDepletedScenery(player.getFloor(), newLocalTiles);
+			addSceneryResponse.setOpenDoors(player.getFloor(), newLocalTiles);
+			
+			// if the scenery has never been sent to the player, then also send the corresponding sprite map to them
+			ClientResourceManager.addScenery(player, addedTileIdsBySceneryId.keySet());
 		}
 		
 		// minimap segments

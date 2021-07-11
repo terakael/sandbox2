@@ -35,7 +35,7 @@ public class FishableDao {
 	}
 	
 	private static void cacheFishables() {
-		final String query = "select scenery_id, level, exp, item_id, respawn_ticks from fishable";
+		final String query = "select scenery_id, level, exp, item_id, respawn_ticks, tool_id, bait_id from fishable";
 		
 		List<FishableDto> dtos = new ArrayList<>();
 		try (
@@ -44,7 +44,14 @@ public class FishableDao {
 			ResultSet rs = ps.executeQuery()
 		) {
 			while (rs.next())
-				dtos.add(new FishableDto(rs.getInt("scenery_id"), rs.getInt("level"), rs.getInt("exp"), rs.getInt("item_id"), rs.getInt("respawn_ticks")));
+				dtos.add(new FishableDto(
+						rs.getInt("scenery_id"), 
+						rs.getInt("level"), 
+						rs.getInt("exp"), 
+						rs.getInt("item_id"), 
+						rs.getInt("respawn_ticks"),
+						rs.getInt("tool_id"),
+						rs.getInt("bait_id")));
 
 			fishables = dtos;
 		} catch (SQLException e) {

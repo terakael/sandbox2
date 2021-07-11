@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import lombok.Setter;
 import main.GroundItemManager;
 import main.database.dao.BuryableDao;
 import main.database.dao.ItemDao;
@@ -35,9 +36,10 @@ public class NPC extends Attackable {
 	private final transient int maxTickCount = 15;
 	private final transient int minTickCount = 5;
 	private transient int tickCounter = 0;
-	private int deathTimer = 0;
+	protected int deathTimer = 0;
 	private final transient int MAX_HUNT_TIMER = 5;
 	private transient int huntTimer = 0;
+	@Setter @Getter private transient int instanceId = 0;
 	@Getter private boolean moving = false;
 		
 	private int combatLevel = 0;
@@ -48,6 +50,7 @@ public class NPC extends Attackable {
 		this.dto = dto;
 		tileId = dto.getTileId();
 		floor = dto.getFloor();
+		instanceId = dto.getTileId(); // legacy dto does it this way
 		
 		HashMap<Stats, Integer> stats = new HashMap<>();
 		stats.put(Stats.STRENGTH, dto.getStr());
@@ -192,10 +195,6 @@ public class NPC extends Attackable {
 		}
 	}
 	
-	public int getInstanceId() {
-		return dto.getTileId();// the spawn tileId is used for the id
-	}
-	
 	public int getId() {
 		return dto.getId();
 	}
@@ -272,16 +271,16 @@ public class NPC extends Attackable {
 	}
 	
 	public boolean isDead() {
-		return deathTimer > 0;
+		return currentHp == 0;
 	}
 	
 	// first two seconds of death; we don't want to send the clients that the npc is dead
 	// (and therefore should no longer be drawn) as we want to show the death animation on the client.
 	public boolean isDeadWithDelay() {
-		return deathTimer > 0 && deathTimer < dto.getRespawnTicks() - 2;
+		return isDead() && deathTimer < dto.getRespawnTicks() - 2;
 	}
 	
-	private void handleRespawn(ResponseMaps responseMaps, int deltaTicks) {
+	protected void handleRespawn(ResponseMaps responseMaps, int deltaTicks) {
 		deathTimer -= deltaTicks;
 		if (deathTimer <= 0) {
 			deathTimer = 0;
