@@ -15,6 +15,7 @@ import main.GroundItemManager;
 import main.database.dao.CastableDao;
 import main.database.dao.EquipmentDao;
 import main.database.dao.ItemDao;
+import main.database.dao.NPCDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.PrayerDao;
 import main.database.dao.ReinforcementBonusesDao;
@@ -69,6 +70,7 @@ import main.types.DamageTypes;
 import main.types.DuelRules;
 import main.types.ItemAttributes;
 import main.types.Items;
+import main.types.NpcAttributes;
 import main.types.Prayers;
 import main.types.Stats;
 import main.types.StorageTypes;
@@ -877,6 +879,21 @@ public class Player extends Attackable {
 				// drain the remainder of the prayer points, remainder of the damage still gets hit
 				setPrayerPoints(0, responseMaps);
 				damage += damageToPrayer; // damageToPrayer is negative
+			}
+		}
+		
+		if (!isImmuneToPoison() && damage > 0) {
+			Fight fight = FightManager.getFightByPlayerId(getId());
+			if (fight != null) {
+				Attackable opponent = fight.getFighter1() == this ? fight.getFighter2() : fight.getFighter1();
+				if ((opponent instanceof NPC)) {				
+					if (NPCDao.npcHasAttribute(((NPC)opponent).getId(), NpcAttributes.VENOMOUS)) {
+						if (RandomUtil.chance(20)) {
+							inflictPoison(4);
+							responseMaps.addClientOnlyResponse(this, MessageResponse.newMessageResponse("you have been poisoned!", "#00aa00"));
+						}
+					}
+				}
 			}
 		}
 		
