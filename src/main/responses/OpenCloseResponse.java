@@ -1,9 +1,11 @@
 package main.responses;
 
+import java.util.List;
 import java.util.Stack;
 
 import lombok.Setter;
 import main.database.dao.DoorDao;
+import main.database.dao.PlayerStorageDao;
 import main.database.dto.DoorDto;
 import main.database.dto.LockedDoorDto;
 import main.processing.FightManager;
@@ -13,6 +15,7 @@ import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.OpenRequest;
 import main.requests.Request;
+import main.types.StorageTypes;
 
 public class OpenCloseResponse extends Response {
 	@Setter private int tileId;
@@ -66,6 +69,16 @@ public class OpenCloseResponse extends Response {
 					playerUpdate.setTileId(newPlayerTileId);
 					player.setTileId(newPlayerTileId);
 					responseMaps.addLocalResponse(player.getFloor(), tileId, playerUpdate);
+					
+					// sometimes a key should be used only once, and removed from inventory on use.
+					if (lockedDoor.isDestroyOnUse()) {
+						List<Integer> playerInvIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+						int slot = playerInvIds.indexOf(lockedDoor.getUnlockItemId());
+						if (slot != -1) {
+							PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, 0, 0, 0);
+							InventoryUpdateResponse.sendUpdate(player, responseMaps);
+						}
+					}
 				} else {
 					setRecoAndResponseText(0, failedRequirementReason);
 					responseMaps.addClientOnlyResponse(player, this);

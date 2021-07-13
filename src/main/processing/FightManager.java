@@ -43,10 +43,10 @@ public class FightManager {
 			return battleLockTicks > 0;
 		}
 		
-		public boolean process(ResponseMaps responseMaps) {
+		public void process(ResponseMaps responseMaps) {
 			// if the players aren't on the same tile then they are still closing in on eachother
 			if (!PathFinder.isNextTo(fighter1.getFloor(), fighter1.getTileId(), fighter2.getTileId())) {
-				return false;
+				return;
 			}
 			
 			if (battleLockTicks > 0) {
@@ -59,7 +59,7 @@ public class FightManager {
 				if (fighter2Dead) {
 					fighter1.onKill(fighter2, responseMaps);
 					fighter2.onDeath(fighter1, responseMaps);
-					return true;
+					return;
 				}
 			}
 			
@@ -68,10 +68,9 @@ public class FightManager {
 				if (fighter1Dead) {
 					fighter2.onKill(fighter1, responseMaps);
 					fighter1.onDeath(fighter2, responseMaps);
-					return true;
+					return;
 				}
 			}
-			return false;
 		}
 		
 		private boolean processHit(Attackable attackable, Attackable other, ResponseMaps responseMaps) {
@@ -113,7 +112,7 @@ public class FightManager {
 		}
 	}
 	
-	private static Fight getFightWithFighter(Attackable fighter) {
+	public static Fight getFightWithFighter(Attackable fighter) {
 		for (Fight fight : fights) {
 			if (fight.getFighter1() == fighter || fight.getFighter2() == fighter)
 				return fight;

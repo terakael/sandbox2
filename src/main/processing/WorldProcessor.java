@@ -129,7 +129,7 @@ public class WorldProcessor implements Runnable {
 		
 		// process all requests and add all responses to this object which will be compiled into the response list for each player
 		ResponseMaps responseMaps = new ResponseMaps();
-		UndeadArmyManager.init(responseMaps); // once-only check done inside this function.  initializes the ents as trees.
+		UndeadArmyManager.process(responseMaps);
 
 		Stopwatch.start("player requests");
 		// process player requests for this tick

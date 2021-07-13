@@ -197,7 +197,7 @@ public class SceneryDao {
 			return constructableId;
 		
 		// fall back even more by checking if this is one of the undead army trees
-		int undeadArmyTreeId = UndeadArmyManager.getSceneryIdByTileId(tileId);
+		int undeadArmyTreeId = UndeadArmyManager.getSceneryIdByTileId(floor, tileId);
 		if (undeadArmyTreeId != -1)
 			return undeadArmyTreeId;
 		

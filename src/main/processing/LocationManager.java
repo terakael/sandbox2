@@ -161,6 +161,46 @@ public class LocationManager {
 		return localPlayers;
 	}
 	
+	public static Set<Player> getLocalPlayersWithinRect(int floor, int topLeftTileId, int bottomRightTileId) {
+		Set<Player> localPlayers = new HashSet<>();
+		if (!players.containsKey(floor))
+			return localPlayers;
+		
+		final int x1 = topLeftTileId % PathFinder.LENGTH;
+		final int x2 = bottomRightTileId % PathFinder.LENGTH;
+		
+		final int y1 = topLeftTileId / PathFinder.LENGTH;
+		final int y2 = bottomRightTileId / PathFinder.LENGTH;
+		
+		final int rectWidth = x2 - x1;
+		final int rectHeight = y2 - y1;
+		
+		Set<Integer> cornerTileIds = Set.<Integer>of(
+			topLeftTileId,
+			topLeftTileId + rectWidth,
+			topLeftTileId + rectHeight,
+			bottomRightTileId
+		);
+		
+		Set<Integer> localSegments = cornerTileIds.stream()
+			.map(cornerTileId -> getSegmentFromTileId(cornerTileId)).collect(Collectors.toSet());
+		
+		
+		localSegments.forEach(segment -> {
+			if (players.get(floor).containsKey(segment)) {
+				localPlayers.addAll(players.get(floor).get(segment).stream()
+					.filter(player -> {
+						final int playerTileX = player.getTileId() % PathFinder.LENGTH;
+						final int playerTileY = player.getTileId() / PathFinder.LENGTH;
+						
+						return playerTileX >= x1 && playerTileX <= x2 && playerTileY >= y1 && playerTileY <= y2;
+					}).collect(Collectors.toSet()));
+			}
+		});
+		
+		return localPlayers;
+	}
+	
 	public static void addPlayer(Player player) {
 		// first check if the player already exists in its current segments
 		final Set<Integer> currentSegments = getLocalSegments(player.getTileId(), 12);

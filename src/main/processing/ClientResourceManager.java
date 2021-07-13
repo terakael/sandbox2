@@ -90,7 +90,7 @@ public class ClientResourceManager {
 		}
 	}
 	
-	private static void addSpriteFramesAndSpriteMaps(Player player, Set<Integer> spriteFrameIds) {
+	public static void addSpriteFramesAndSpriteMaps(Player player, Set<Integer> spriteFrameIds) {
 		// the scenery's sprite frames
 		Set<Integer> selectedSpriteFrameIds = extractUnloadedSpriteFrameIds(player, spriteFrameIds);
 				

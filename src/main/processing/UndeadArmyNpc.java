@@ -23,11 +23,4 @@ public class UndeadArmyNpc extends NPC {
 			}
 		}
 	}
-	
-	@Override
-	public void onDeath(Attackable killer, ResponseMaps responseMaps) {
-		super.onDeath(killer, responseMaps);
-		
-		
-	}
 }

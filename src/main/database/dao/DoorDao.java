@@ -146,7 +146,7 @@ public class DoorDao {
 	}
 	
 	private static void setupLockedDoorCache() {
-		final String query = "select floor, tile_id, unlock_item_id from locked_door_instances";
+		final String query = "select floor, tile_id, unlock_item_id, destroy_on_use from locked_door_instances";
 		
 		Map<Integer, Map<Integer, LockedDoorDto>> lockedDoorInstances = new HashMap<>();
 		
@@ -158,7 +158,7 @@ public class DoorDao {
 				while (rs.next()) {
 					if (!lockedDoorInstances.containsKey(rs.getInt("floor")))
 						lockedDoorInstances.put(rs.getInt("floor"), new HashMap<>());
-					lockedDoorInstances.get(rs.getInt("floor")).put(rs.getInt("tile_id"), new LockedDoorDto(rs.getInt("floor"), rs.getInt("tile_id"), rs.getInt("unlock_item_id")));
+					lockedDoorInstances.get(rs.getInt("floor")).put(rs.getInt("tile_id"), new LockedDoorDto(rs.getInt("floor"), rs.getInt("tile_id"), rs.getInt("unlock_item_id"), rs.getBoolean("destroy_on_use")));
 				}
 				
 				LockedDoorManager.setLockedDoorInstances(lockedDoorInstances);

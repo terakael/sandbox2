@@ -189,7 +189,7 @@ public class NPC extends Attackable {
 					pvmStart.setPlayerId(p.getId());
 					pvmStart.setMonsterId(getInstanceId());
 					pvmStart.setTileId(getTileId());
-					responseMaps.addBroadcastResponse(pvmStart);
+					responseMaps.addLocalResponse(p.getFloor(), getTileId(), pvmStart);
 				}
 			}
 		}

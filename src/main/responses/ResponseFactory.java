@@ -192,6 +192,9 @@ public class ResponseFactory {
 		case "check":
 			response = new CheckResponse();
 			break;
+		case "loot":
+			response = new LootResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

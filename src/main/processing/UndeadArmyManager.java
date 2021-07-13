@@ -2,6 +2,7 @@ package main.processing;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -10,18 +11,30 @@ import main.database.dao.NPCDao;
 import main.database.dao.UndeadArmyWavesDao;
 import main.database.dto.NPCDto;
 import main.responses.AddSceneryInstancesResponse;
+import main.responses.MessageResponse;
+import main.responses.NpcInRangeResponse;
 import main.responses.NpcOutOfRangeResponse;
+import main.responses.PvmStartResponse;
 import main.responses.ResponseMaps;
 import main.responses.SceneryDespawnResponse;
+import main.responses.TeleportExplosionResponse;
+import main.utils.RandomUtil;
+import main.utils.Utils;
 
 public class UndeadArmyManager {
 	private static boolean alreadyInitialized = false;
 	private static int currentWave = 0;
 	private static Map<Integer, UndeadArmyNpc> currentWaveNpcs = new HashMap<>();
 	
-	private static int entWave = 2;
+	private static int entWave = 3;
 	private static NPCDto entDto = NPCDao.getNpcById(48); // ent TODO dead ent
 	private static final int entSceneryId = 9;// dead tree
+	
+	private static final int firstFormNecromancerNpcId = 55;
+	private static final int secondFormNecromancerNpcId = 56;
+	
+	private static int timer = 0;
+	private static boolean initWaveAfterTimer = false;
 	
 	// before wave 50 and during the day these are just the locations of dead trees.
 	// on wave 50 during the night they become ent npcs' instanceIds
@@ -34,16 +47,25 @@ public class UndeadArmyManager {
 																	937730947,
 																	937221364);
 	
-	public static void init(ResponseMaps responseMaps) {
-		if (alreadyInitialized)
-			return;
-		alreadyInitialized = true;
-		resetEnts(responseMaps);
-	}
-	
 	public static void reset(ResponseMaps responseMaps) {		
 		currentWave = 0;
 		newWave(responseMaps);
+	}
+	
+	public static void process(ResponseMaps responseMaps) {
+		if (!alreadyInitialized) {
+			alreadyInitialized = true;
+			resetEnts(responseMaps);
+		}
+		
+		if (timer > 0) {
+			if (--timer == 0) {
+				if (initWaveAfterTimer) {
+					initWaveAfterTimer = false;
+					newWave(responseMaps);
+				}
+			}
+		}
 	}
 	
 	public static void onDaytimeChange(boolean isDaytime, ResponseMaps responseMaps) {
@@ -64,6 +86,12 @@ public class UndeadArmyManager {
 			newWave(responseMaps);
 	}
 	
+	public static void newWaveAfterTimer(int ticks, ResponseMaps responseMaps) {
+		clearExistingNpcs(responseMaps);
+		timer = ticks;
+		initWaveAfterTimer = true;
+	}
+	
 	private static void newWave(ResponseMaps responseMaps) {
 		clearExistingNpcs(responseMaps);
 		++currentWave;
@@ -81,7 +109,14 @@ public class UndeadArmyManager {
 			}
 		});
 		
-		if (currentWave == entWave) {
+		if (currentWave == entWave - 1) {
+			// this is the wave the first-form necromancer spawns.
+			final int tileId = 937360338; // idk here i guess
+			NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(firstFormNecromancerNpcId));
+			deepCopy.setFloor(0);
+			deepCopy.setTileId(tileId);
+			currentWaveNpcs.put(tileId, new NecromancerFirstForm(deepCopy));
+		} else if (currentWave == entWave) {
 			// the locations of the trees are no longer non-walkable
 			undeadEntLocations.forEach(tileId -> {
 				PathFinder.setImpassabilityOnTileId(0, tileId, 0); // when the trees aren't scenery, players can walk on the tile.
@@ -92,6 +127,52 @@ public class UndeadArmyManager {
 				deepCopy.setTileId(tileId);
 				currentWaveNpcs.put(tileId, new UndeadArmyNpc(deepCopy));
 			});
+		} else if (currentWave == entWave + 1) {
+			// second form necromancer.
+			final List<Player> localPlayers = LocationManager.getLocalPlayersWithinRect(0, 936943400, 937823599).stream()
+					.filter(player -> !FightManager.fightWithFighterExists(player)) // exclude any players currently fighting (could be duelling or whatevs)
+					.collect(Collectors.toList());
+			
+			// if we choose a player inside the crypt room, then the necromancer will teleport inside, then nobody will be able to attack him if they don't have the key
+			final List<Player> playersOutsideCryptRoom = localPlayers.stream()
+					.filter(player -> !Utils.tileIdWithinRect(player.getTileId(), 937591957, 937684609))
+					.collect(Collectors.toList());
+			
+			Player targetPlayer = null;
+			if (!playersOutsideCryptRoom.isEmpty()) {
+				targetPlayer = playersOutsideCryptRoom.get(RandomUtil.getRandom(0, playersOutsideCryptRoom.size()));
+			}
+			
+			final int tileId = targetPlayer == null ? 937360337 : targetPlayer.getTileId(); // idk here i guess
+			NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(secondFormNecromancerNpcId));
+			deepCopy.setFloor(0);
+			deepCopy.setTileId(tileId);
+			NecromancerSecondForm necromancer = new NecromancerSecondForm(deepCopy);
+			
+			currentWaveNpcs.put(tileId, necromancer);
+			
+			if (targetPlayer != null) {
+				FightManager.addFight(targetPlayer, necromancer, false);
+				
+				// we're forced to hack the npcInRangeResponse here because 
+				// the client needs to recognize the npc before the pvm start message appears.
+				NpcInRangeResponse npcInRangeResponse = new NpcInRangeResponse();
+				npcInRangeResponse.addInstances(0, Collections.singleton(necromancer.getInstanceId()));
+				responseMaps.addLocalResponse(0, tileId, npcInRangeResponse);
+				
+				PvmStartResponse pvmStart = new PvmStartResponse();
+				pvmStart.setPlayerId(targetPlayer.getId());
+				pvmStart.setMonsterId(necromancer.getInstanceId());
+				pvmStart.setTileId(tileId);
+				responseMaps.addLocalResponse(0, tileId, pvmStart);
+				
+				localPlayers.forEach(player -> {
+					player.getInRangeNpcs().add(necromancer.getInstanceId());
+					ClientResourceManager.addNpcs(player, Collections.singleton(necromancer.getId()));
+				});
+			}
+			responseMaps.addLocalResponse(0, tileId, new TeleportExplosionResponse(tileId));
+			responseMaps.addLocalResponse(0, tileId, MessageResponse.newMessageResponse("necromancer: alright that's it, say hello to my final form!", "yellow"));
 		}
 		
 		// if we exceed the max waves then this will be empty.
@@ -132,10 +213,17 @@ public class UndeadArmyManager {
 		return currentWaveNpcs.get(instanceId);
 	}
 	
-	public static int getSceneryIdByTileId(int tileId) {
+	public static int getSceneryIdByTileId(int floor, int tileId) {
+		if (floor != 0)
+			return -1;
+		
 		if (undeadEntLocations.contains(tileId) && currentWave < entWave) {
 			return entSceneryId; // dead tree
 		}
 		return -1;
+	}
+	
+	public static int getNumAliveNpcsInCurrentWave() {
+		return (int)currentWaveNpcs.values().stream().filter(e -> e.getCurrentHp() > 0).count();
 	}
 }
