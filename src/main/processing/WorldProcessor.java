@@ -51,6 +51,7 @@ import main.responses.SceneryRespawnResponse;
 import main.responses.ShopResponse;
 import main.types.SceneryAttributes;
 import main.utils.Stopwatch;
+import main.utils.Utils;
 
 public class WorldProcessor implements Runnable {
 	private Thread thread;
@@ -341,21 +342,6 @@ public class WorldProcessor implements Runnable {
 		return null;
 	}
 	
-	public static Set<Integer> getLocalTiles(int tileId, int radius) {
-		int topLeft = tileId - radius - (radius * PathFinder.LENGTH);
-		
-		Set<Integer> localTiles = new HashSet<>();
-		
-		// (radius * 2) + 1 because the centre tile as well
-		// e.g. radius of 2 gives us a 5x5 grid (2 left tiles, centre tile, 2 right tiles)
-		for (int y = 0; y < (radius * 2) + 1; ++y) {
-			for (int x = 0; x < (radius * 2) + 1; ++x)
-				localTiles.add(topLeft + (y * PathFinder.LENGTH) + x);
-		}
-		
-		return localTiles;
-	}
-	
 	private void updateInRangePlayers(ResponseMaps responseMaps) {
 		Stopwatch.start("updating in-range players");
 		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
@@ -504,7 +490,7 @@ public class WorldProcessor implements Runnable {
 			return; // we dont want to update the client while the "you are dead" screen is fading in
 
 		Set<Integer> currentLocalTiles = player.getLocalTiles();
-		Set<Integer> newLocalTiles = WorldProcessor.getLocalTiles(player.getTileId(), 12);
+		Set<Integer> newLocalTiles = Utils.getLocalTiles(player.getTileId(), 12);
 		Map<Integer, Set<Integer>> addedTileIdsBySceneryId = new HashMap<>();
 		
 		if (daytimeChanged) {

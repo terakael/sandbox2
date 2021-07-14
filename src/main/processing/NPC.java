@@ -44,7 +44,7 @@ public class NPC extends Attackable {
 		
 	private int combatLevel = 0;
 	
-	private int lastProcessedTick = 0;
+	protected int lastProcessedTick = 0;
 	
 	public NPC(NPCDto dto) {
 		this.dto = dto;
@@ -155,8 +155,7 @@ public class NPC extends Attackable {
 				Random r = new Random();
 				tickCounter = r.nextInt((maxTickCount - minTickCount) + 1) + minTickCount;
 				
-				int destTile = PathFinder.chooseRandomTileIdInRadius(dto.getTileId(), dto.getRoamRadius());
-				path = PathFinder.findPath(floor, tileId, destTile, true, dto.getTileId(), dto.getRoamRadius());
+				setPathToRandomTileInRadius(responseMaps);
 			}
 		} else {
 			// chase the target if not next to it
@@ -195,6 +194,11 @@ public class NPC extends Attackable {
 		}
 	}
 	
+	protected void setPathToRandomTileInRadius(ResponseMaps responseMaps) {
+		int destTile = PathFinder.chooseRandomTileIdInRadius(dto.getTileId(), dto.getRoamRadius());
+		path = PathFinder.findPath(floor, tileId, destTile, true, dto.getTileId(), dto.getRoamRadius());
+	}
+	
 	public int getId() {
 		return dto.getId();
 	}
@@ -211,13 +215,17 @@ public class NPC extends Attackable {
 		if (FightManager.fightWithFighterExists(this)) {
 			FightManager.cancelFight(this, responseMaps);
 		}
-		// also drop an item
 		
+		// also drop an item
+		handleLootDrop((Player)killer, responseMaps);
+	}
+	
+	protected void handleLootDrop(Player killer, ResponseMaps responseMaps) {
 		List<NpcDropDto> potentialDrops = NPCDao.getDropsByNpcId(dto.getId())
 				.stream()
 				.filter(dto -> {
 					if (ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.UNIQUE)) {
-						int playerId = ((Player)killer).getId();
+						int playerId = killer.getId();
 						if (PlayerStorageDao.itemExistsInPlayerStorage(playerId, dto.getItemId()))
 							return false;
 						
@@ -228,7 +236,7 @@ public class NPC extends Attackable {
 				})
 				.collect(Collectors.toList());
 		
-		final Player player = (Player)killer;
+		final Player player = killer;
 		for (NpcDropDto drop : potentialDrops) {
 			if (RandomUtil.getRandom(0, drop.getRate()) == 0) {
 				if (ConstructableManager.constructableIsInRadius(floor, tileId, 129, 3) &&  BuryableDao.isBuryable(drop.getItemId())) {

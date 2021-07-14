@@ -65,6 +65,7 @@ public class RequestFactory {
 		map.put("empty", EmptyRequest.class);
 		map.put("check", CheckRequest.class);
 		map.put("loot", LootRequest.class);
+		map.put("throw", ThrowRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

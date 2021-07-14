@@ -7,6 +7,7 @@ import java.util.Random;
 
 import main.database.dao.CastableDao;
 import main.database.dao.EquipmentDao;
+import main.database.dao.NPCDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.StatsDao;
 import main.database.dao.TeleportableDao;
@@ -18,13 +19,14 @@ import main.processing.Attackable;
 import main.processing.ClientResourceManager;
 import main.processing.ConstructableManager;
 import main.processing.FightManager;
+import main.processing.FightManager.Fight;
 import main.processing.NPC;
 import main.processing.Player;
-import main.processing.FightManager.Fight;
 import main.requests.Request;
 import main.requests.UseRequest;
 import main.types.DamageTypes;
 import main.types.Items;
+import main.types.NpcAttributes;
 import main.types.Prayers;
 import main.types.Stats;
 import main.types.StorageTypes;
@@ -116,6 +118,11 @@ public class CastSpellResponse extends Response {
 		}
 		
 		opponent.onHit(damage, DamageTypes.MAGIC, responseMaps);
+		if (castable.getItemId() == Items.CRUMBLE_UNDEAD_RUNE.getValue()) { // crumble undead rune
+			if (opponent instanceof NPC && NPCDao.npcHasAttribute(((NPC)opponent).getId(), NpcAttributes.UNDEAD)) {
+				opponent.onHit(new Random().nextInt(castable.getMaxHit() + 1), DamageTypes.MAGIC, responseMaps);
+			}
+		}
 		if (opponent.getCurrentHp() == 0) {
 			opponent.onDeath(player, responseMaps);
 		} else {

@@ -8,9 +8,9 @@ import main.database.dao.ItemDao;
 import main.database.dao.SceneryDao;
 import main.database.dto.ConstructableDto;
 import main.processing.PathFinder;
-import main.processing.WorldProcessor;
 import main.responses.ResponseMaps;
 import main.utils.RandomUtil;
+import main.utils.Utils;
 
 public class NaturesShrine extends Constructable {
 	private List<Integer> spawnableTileIds; // list due to random access
@@ -52,7 +52,7 @@ public class NaturesShrine extends Constructable {
 	}
 	
 	private List<Integer> findSpawnableTileIds() {
-		return WorldProcessor.getLocalTiles(tileId, 2).stream()
+		return Utils.getLocalTiles(tileId, 2).stream()
 				.filter(e -> {
 					return PathFinder.tileIsValid(floor, e) && SceneryDao.getSceneryIdByTileId(floor, e) == -1 && e != tileId;
 				}).collect(Collectors.toList());

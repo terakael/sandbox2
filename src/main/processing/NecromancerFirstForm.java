@@ -1,5 +1,7 @@
 package main.processing;
 
+import java.util.Stack;
+
 import main.database.dto.NPCDto;
 import main.processing.FightManager.Fight;
 import main.responses.MessageResponse;
@@ -7,11 +9,74 @@ import main.responses.NpcUpdateResponse;
 import main.responses.ResponseMaps;
 import main.responses.TeleportExplosionResponse;
 import main.types.DamageTypes;
+import main.utils.RandomUtil;
+import main.utils.Utils;
 
 public class NecromancerFirstForm extends UndeadArmyNpc {
+	
+	private UndeadArmyNpc healTarget = null;
+	private int teleportCooldownTicks = 0;
 
 	public NecromancerFirstForm(NPCDto dto) {
 		super(dto);
+	}
+	
+	@Override
+	public void process(int currentTick, ResponseMaps responseMaps) {
+		super.process(currentTick, responseMaps);
+		
+		if (teleportCooldownTicks > 0)
+			--teleportCooldownTicks;
+		
+		if (target == null) {
+			if (healTarget != null && healTarget.isDead())
+				healTarget = null;
+			
+			if (healTarget != null) {
+				if (!PathFinder.isNextTo(floor, tileId, healTarget.tileId)) {
+					path = PathFinder.findPath(floor, tileId, healTarget.tileId, false);
+					
+					if (teleportCooldownTicks == 0) {
+						// this is unfortunate but we need to get the destination tile so we know whether to teleport or walk
+						Stack<Integer> pathCopy = (Stack<Integer>) path.clone();
+						if (pathCopy.size() > 1) {
+							while (pathCopy.size() > 1)
+								pathCopy.pop();
+							int destinationTileId = pathCopy.pop();
+							if (!Utils.areTileIdsWithinRadius(getTileId(), destinationTileId, 6))
+								teleportToPosition(getTileId(), destinationTileId, responseMaps);
+						}
+					}
+				} 
+
+				if (Utils.areTileIdsWithinRadius(getTileId(), healTarget.getTileId(), 2)) {
+//				else {
+					// do a heal every three ticks
+					if (currentTick % 3 == 0) {
+						if (healTarget.getCurrentHp() < healTarget.getDto().getHp()) {
+							int healAmount = RandomUtil.getRandom(1, 15);
+							if (healTarget.getCurrentHp() + healAmount > healTarget.getDto().getHp()) {
+								healAmount = healTarget.getDto().getHp() - healTarget.getCurrentHp();
+							}
+							healTarget.onHit(-healAmount, DamageTypes.MAGIC, responseMaps);
+						} else {
+							// current heal target is full health, chance to switch to a diffferent one
+							healTarget = null;
+						}
+					}
+				}
+			} else {
+				UndeadArmyManager.getAliveNpcsInCurrentWave().forEach(npc -> {
+					if (npc.getCurrentHp() < npc.getDto().getHp() && RandomUtil.chance(10) && npc != this) {
+						healTarget = npc;
+						return;
+					}
+				});
+			}
+		} else {
+			if (healTarget != null)
+				healTarget = null; // if the necromancer gets attacked then he stops healing his target
+		}
 	}
 	
 	@Override
@@ -46,6 +111,38 @@ public class NecromancerFirstForm extends UndeadArmyNpc {
 				responseMaps.addLocalResponse(0, getTileId(), MessageResponse.newMessageResponse("necromancer: i'll let my ents deal with you...", "yellow"));
 			}
 		}
+	}
+	
+	@Override
+	protected void setPathToRandomTileInRadius(ResponseMaps responseMaps) {
+		if (healTarget != null)
+			return;
+		
+		int destTile = PathFinder.chooseRandomTileIdInRadius(getDto().getTileId(), getDto().getRoamRadius());
+		while (!PathFinder.tileIsValid(0, destTile))
+			destTile = PathFinder.chooseRandomTileIdInRadius(getDto().getTileId(), getDto().getRoamRadius());
+		
+		if (Utils.areTileIdsWithinRadius(getTileId(), destTile, 6) || teleportCooldownTicks > 0) {
+			path = PathFinder.findPath(floor, tileId, destTile, true, getDto().getTileId(), getDto().getRoamRadius());
+		} else {
+			teleportToPosition(getTileId(), destTile, responseMaps);
+		}
+	}
+	
+	private void teleportToPosition(int fromTileId, int toTileId, ResponseMaps responseMaps) {
+		setTileId(toTileId);
+		clearPath();
+		
+		responseMaps.addLocalResponse(0, fromTileId, new TeleportExplosionResponse(fromTileId));
+		responseMaps.addLocalResponse(0, toTileId, new TeleportExplosionResponse(toTileId));
+		
+		NpcUpdateResponse updateResponse = new NpcUpdateResponse();
+		updateResponse.setInstanceId(getInstanceId());
+		updateResponse.setTileId(toTileId);
+		updateResponse.setSnapToTile(true);
+		responseMaps.addLocalResponse(0, toTileId, updateResponse);
+		
+		teleportCooldownTicks = 15 + RandomUtil.getRandom(0, 10);
 	}
 
 }

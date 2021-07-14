@@ -49,7 +49,7 @@ public class NPCManager {
 		}
 		
 		// also check the undead army as these are handled differently
-		return UndeadArmyManager.getNpcByInstanceId(id);
+		return UndeadArmyManager.getNpcByInstanceId(floor, id);
 	}
 	
 	public void process(ResponseMaps responseMaps, int tick) {

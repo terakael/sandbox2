@@ -1,5 +1,8 @@
 package main.utils;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import main.processing.PathFinder;
 
 public class Utils {
@@ -32,5 +35,20 @@ public class Utils {
 	// find the greatest common denominator of two numbers
 	public static int gcm(int a, int b) {
 	    return b == 0 ? a : gcm(b, a % b);
+	}
+	
+	public static Set<Integer> getLocalTiles(int tileId, int radius) {
+		int topLeft = tileId - radius - (radius * PathFinder.LENGTH);
+		
+		Set<Integer> localTiles = new HashSet<>();
+		
+		// (radius * 2) + 1 because the centre tile as well
+		// e.g. radius of 2 gives us a 5x5 grid (2 left tiles, centre tile, 2 right tiles)
+		for (int y = 0; y < (radius * 2) + 1; ++y) {
+			for (int x = 0; x < (radius * 2) + 1; ++x)
+				localTiles.add(topLeft + (y * PathFinder.LENGTH) + x);
+		}
+		
+		return localTiles;
 	}
 }

@@ -16,6 +16,7 @@ import main.scenery.constructable.HolyTotemPole;
 import main.scenery.constructable.LargeStorageChest;
 import main.scenery.constructable.NaturesShrine;
 import main.scenery.constructable.SmallStorageChest;
+import main.utils.Utils;
 
 public class ConstructableManager {
 	private static Map<Integer, Class<? extends Constructable>> constructables = new HashMap<>(); // sceneryId, constructable class
@@ -81,7 +82,7 @@ public class ConstructableManager {
 		if (!constructableInstances.containsKey(floor))
 			return false;
 		
-		final Set<Integer> allLocalTiles = WorldProcessor.getLocalTiles(tileId, radius);
+		final Set<Integer> allLocalTiles = Utils.getLocalTiles(tileId, radius);
 		final Set<Integer> localTilesWithConstructableInstance = constructableInstances.get(floor).keySet().stream()
 				.filter(e -> allLocalTiles.contains(e))
 				.collect(Collectors.toSet());

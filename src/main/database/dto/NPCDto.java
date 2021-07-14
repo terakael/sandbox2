@@ -66,6 +66,6 @@ public class NPCDto {
 	private transient int prayBonus;
 	private transient int attackSpeed;
 	private transient int roamRadius;
-	private transient int attributes;
-	private transient int respawnTicks;
+	@Setter private transient int attributes;
+	@Setter private transient int respawnTicks;
 }

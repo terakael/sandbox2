@@ -274,7 +274,7 @@ public class PlayerStorageDao {
 		
 		if (count == 0) {
 			// in the case of a stackable, if we are setting the count to zero then remove the item from the inventory (set the item to 0)
-			setItemFromPlayerIdAndSlot(playerId, storageType, slot, 0, 1, 0);
+			setItemFromPlayerIdAndSlot(playerId, storageType, slot, 0, 0, 0);
 			return;
 		}
 		

@@ -388,7 +388,10 @@ public enum Items {
 	TYBALTS_SWORD(373),
 	FLOWER_SACK(374),
 	
-	ZOMBIE_EEL(391);
+	ZOMBIE_EEL(391),
+	
+	CRUMBLE_UNDEAD_RUNE(397),
+	ZOMBIE_SEEDS(398);
 
 	@Getter private int value;
 	Items(int value) {

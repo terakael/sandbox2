@@ -51,6 +51,7 @@ import main.responses.FinishMiningResponse;
 import main.responses.FinishSawmillResponse;
 import main.responses.FinishSmeltResponse;
 import main.responses.FinishSmithResponse;
+import main.responses.FinishThrowResponse;
 import main.responses.FinishUseResponse;
 import main.responses.FishResponse;
 import main.responses.InventoryUpdateResponse;
@@ -95,6 +96,7 @@ public class Player extends Attackable {
 		climbing, // ladders etc, give a tick or so duration (like for climbing animation in the future)
 		cooking,
 		fishing,
+		growing_zombie,
 		dead
 	};
 	
@@ -458,6 +460,14 @@ public class Player extends Attackable {
 			if (--tickCounter <= 0) {
 				new FinishChopResponse().process(savedRequest, this, responseMaps);
 				new ChopResponse().process(savedRequest, this, responseMaps);
+			}
+			break;
+			
+		case growing_zombie:
+			if (--tickCounter <= 0) {
+				new FinishThrowResponse().process(savedRequest, this, responseMaps);
+				savedRequest = null;
+				state = PlayerState.idle;
 			}
 			break;
 			

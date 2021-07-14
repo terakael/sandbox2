@@ -7,7 +7,8 @@ public enum NpcAttributes {
 	AGGRESSIVE(2),
 	NOCTURNAL(4),
 	DIURNAL(8),
-	VENOMOUS(16);
+	VENOMOUS(16),
+	UNDEAD(32);
 	
 	@Getter private int value;
 	NpcAttributes(int value) {

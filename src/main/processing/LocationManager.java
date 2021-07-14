@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import main.responses.ResponseMaps;
 import main.types.NpcAttributes;
+import main.utils.Utils;
 
 public class LocationManager {
 	private static final int SEGMENT_SIZE = 25;
@@ -189,12 +190,8 @@ public class LocationManager {
 		localSegments.forEach(segment -> {
 			if (players.get(floor).containsKey(segment)) {
 				localPlayers.addAll(players.get(floor).get(segment).stream()
-					.filter(player -> {
-						final int playerTileX = player.getTileId() % PathFinder.LENGTH;
-						final int playerTileY = player.getTileId() / PathFinder.LENGTH;
-						
-						return playerTileX >= x1 && playerTileX <= x2 && playerTileY >= y1 && playerTileY <= y2;
-					}).collect(Collectors.toSet()));
+					.filter(player -> 
+						Utils.tileIdWithinRect(player.getTileId(), topLeftTileId, bottomRightTileId)).collect(Collectors.toSet()));
 			}
 		});
 		

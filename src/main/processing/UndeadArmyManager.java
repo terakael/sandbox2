@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import main.database.dao.NPCDao;
+import main.database.dao.SceneryDao;
 import main.database.dao.UndeadArmyWavesDao;
 import main.database.dto.NPCDto;
 import main.responses.AddSceneryInstancesResponse;
@@ -17,21 +19,25 @@ import main.responses.NpcOutOfRangeResponse;
 import main.responses.PvmStartResponse;
 import main.responses.ResponseMaps;
 import main.responses.SceneryDespawnResponse;
+import main.responses.TalkToResponse;
 import main.responses.TeleportExplosionResponse;
+import main.types.NpcAttributes;
 import main.utils.RandomUtil;
 import main.utils.Utils;
 
 public class UndeadArmyManager {
 	private static boolean alreadyInitialized = false;
 	private static int currentWave = 0;
-	private static Map<Integer, UndeadArmyNpc> currentWaveNpcs = new HashMap<>();
+	@Getter private static Map<Integer, UndeadArmyNpc> currentWaveNpcs = new HashMap<>();
+	private static Map<Integer, Map<Integer, PlayerGrownZombie>> playerGrownZombies = new HashMap<>();
 	
-	private static int entWave = 3;
+	private static int entWave = 31;
 	private static NPCDto entDto = NPCDao.getNpcById(48); // ent TODO dead ent
 	private static final int entSceneryId = 9;// dead tree
 	
 	private static final int firstFormNecromancerNpcId = 55;
 	private static final int secondFormNecromancerNpcId = 56;
+	private static final int graveyardCentreTileId = 937406662;
 	
 	private static int timer = 0;
 	private static boolean initWaveAfterTimer = false;
@@ -82,8 +88,14 @@ public class UndeadArmyManager {
 		if (currentWaveNpcs.isEmpty())
 			return; // if we exceeded the max waves then this will be empty
 		
-		if (currentWaveNpcs.values().stream().filter(e -> e.getCurrentHp() > 0).findAny().isEmpty())
-			newWave(responseMaps);
+		if (currentWaveNpcs.values().stream().filter(e -> e.getCurrentHp() > 0).findAny().isEmpty()) {
+			if (currentWave == entWave) {
+				// the next wave is the second form necromancer, so add a delay
+				newWaveAfterTimer(10, responseMaps); // nice six second delay
+				responseMaps.addLocalResponse(0, graveyardCentreTileId, MessageResponse.newMessageResponse("necromancer: you killed all my trees...", "yellow"));
+			} else 
+				newWave(responseMaps);
+		}
 	}
 	
 	public static void newWaveAfterTimer(int ticks, ResponseMaps responseMaps) {
@@ -93,7 +105,7 @@ public class UndeadArmyManager {
 	}
 	
 	private static void newWave(ResponseMaps responseMaps) {
-		clearExistingNpcs(responseMaps);
+		clearExistingNpcs(responseMaps);		
 		++currentWave;
 		
 		UndeadArmyWavesDao.getWave(currentWave).forEach(dto -> {
@@ -111,11 +123,10 @@ public class UndeadArmyManager {
 		
 		if (currentWave == entWave - 1) {
 			// this is the wave the first-form necromancer spawns.
-			final int tileId = 937360338; // idk here i guess
 			NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(firstFormNecromancerNpcId));
 			deepCopy.setFloor(0);
-			deepCopy.setTileId(tileId);
-			currentWaveNpcs.put(tileId, new NecromancerFirstForm(deepCopy));
+			deepCopy.setTileId(graveyardCentreTileId);
+			currentWaveNpcs.put(graveyardCentreTileId, new NecromancerFirstForm(deepCopy));
 		} else if (currentWave == entWave) {
 			// the locations of the trees are no longer non-walkable
 			undeadEntLocations.forEach(tileId -> {
@@ -129,7 +140,7 @@ public class UndeadArmyManager {
 			});
 		} else if (currentWave == entWave + 1) {
 			// second form necromancer.
-			final List<Player> localPlayers = LocationManager.getLocalPlayersWithinRect(0, 936943400, 937823599).stream()
+			final List<Player> localPlayers = getPlayersInGraveyard().stream()
 					.filter(player -> !FightManager.fightWithFighterExists(player)) // exclude any players currently fighting (could be duelling or whatevs)
 					.collect(Collectors.toList());
 			
@@ -143,19 +154,21 @@ public class UndeadArmyManager {
 				targetPlayer = playersOutsideCryptRoom.get(RandomUtil.getRandom(0, playersOutsideCryptRoom.size()));
 			}
 			
-			final int tileId = targetPlayer == null ? 937360337 : targetPlayer.getTileId(); // idk here i guess
+			final int tileId = targetPlayer == null ? graveyardCentreTileId : targetPlayer.getTileId(); // idk here i guess
 			NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(secondFormNecromancerNpcId));
 			deepCopy.setFloor(0);
-			deepCopy.setTileId(tileId);
+			deepCopy.setTileId(graveyardCentreTileId); // for the instanceId
 			NecromancerSecondForm necromancer = new NecromancerSecondForm(deepCopy);
 			
-			currentWaveNpcs.put(tileId, necromancer);
+			
+			currentWaveNpcs.put(graveyardCentreTileId, necromancer);
 			
 			if (targetPlayer != null) {
 				FightManager.addFight(targetPlayer, necromancer, false);
 				
 				// we're forced to hack the npcInRangeResponse here because 
 				// the client needs to recognize the npc before the pvm start message appears.
+				necromancer.setTileId(tileId); // for the actual location of the npc
 				NpcInRangeResponse npcInRangeResponse = new NpcInRangeResponse();
 				npcInRangeResponse.addInstances(0, Collections.singleton(necromancer.getInstanceId()));
 				responseMaps.addLocalResponse(0, tileId, npcInRangeResponse);
@@ -171,8 +184,11 @@ public class UndeadArmyManager {
 					ClientResourceManager.addNpcs(player, Collections.singleton(necromancer.getId()));
 				});
 			}
+			
+			final String message = "you will pay for this!";
 			responseMaps.addLocalResponse(0, tileId, new TeleportExplosionResponse(tileId));
-			responseMaps.addLocalResponse(0, tileId, MessageResponse.newMessageResponse("necromancer: alright that's it, say hello to my final form!", "yellow"));
+			responseMaps.addLocalResponse(0, tileId, MessageResponse.newMessageResponse(String.format("necromancer: %s", message), "yellow"));
+			responseMaps.addLocalResponse(0, tileId, new TalkToResponse(necromancer.getInstanceId(), message));
 		}
 		
 		// if we exceed the max waves then this will be empty.
@@ -192,25 +208,32 @@ public class UndeadArmyManager {
 	
 	private static void resetEnts(ResponseMaps responseMaps) {
 		undeadEntLocations.forEach(tileId -> {
-			PathFinder.setImpassabilityOnTileId(0, tileId, 15); // completely impassable
-			
-			// there might be some players that have not loaded a dead tree that arrived as the trees were ents
-			LocationManager.getLocalPlayers(0, tileId, 12).forEach(player -> {
-				ClientResourceManager.addLocalScenery(player, Collections.singleton(9));
+			if (SceneryDao.getSceneryIdByTileId(0, tileId) == -1) {
+				PathFinder.setImpassabilityOnTileId(0, tileId, 15); // completely impassable
 				
-				AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
-				inRangeResponse.setInstances(Map.<Integer, Set<Integer>>of(9, Collections.singleton(tileId)));
-				
-				// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
-				inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
-				inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
-				responseMaps.addClientOnlyResponse(player, inRangeResponse);
-			});
+				// there might be some players that have not loaded a dead tree that arrived as the trees were ents
+				LocationManager.getLocalPlayers(0, tileId, 12).forEach(player -> {
+					ClientResourceManager.addLocalScenery(player, Collections.singleton(9));
+					
+					AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
+					inRangeResponse.setInstances(Map.<Integer, Set<Integer>>of(9, Collections.singleton(tileId)));
+					
+					// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
+					inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
+					inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
+					responseMaps.addClientOnlyResponse(player, inRangeResponse);
+				});
+			}
 		});
 	}
 	
-	public static NPC getNpcByInstanceId(int instanceId) {
-		return currentWaveNpcs.get(instanceId);
+	public static NPC getNpcByInstanceId(int floor, int instanceId) {
+		if (currentWaveNpcs.containsKey(instanceId))
+			return currentWaveNpcs.get(instanceId);
+		
+		if (!playerGrownZombies.containsKey(floor))
+			return null;
+		return playerGrownZombies.get(floor).get(instanceId);
 	}
 	
 	public static int getSceneryIdByTileId(int floor, int tileId) {
@@ -224,6 +247,41 @@ public class UndeadArmyManager {
 	}
 	
 	public static int getNumAliveNpcsInCurrentWave() {
-		return (int)currentWaveNpcs.values().stream().filter(e -> e.getCurrentHp() > 0).count();
+		return getAliveNpcsInCurrentWave().size();
+	}
+	
+	public static Set<UndeadArmyNpc> getAliveNpcsInCurrentWave() {
+		return currentWaveNpcs.values().stream().filter(e -> e.getCurrentHp() > 0).collect(Collectors.toSet());
+	}
+	
+	public static Set<Player> getPlayersInGraveyard() {
+		return LocationManager.getLocalPlayersWithinRect(0, 936943400, 937823599);
+	}
+	
+	public static List<Player> getPlayersInGraveyardExcludingCrypt() {
+		return getPlayersInGraveyard().stream()
+				.filter(player -> !Utils.tileIdWithinRect(player.getTileId(), 937591957, 937684609))
+				.collect(Collectors.toList());
+	}
+	
+	public static void addPlayerGrownZombie(Player planter, int floor, int tileId) {
+		NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(51));
+		deepCopy.setFloor(floor);
+		deepCopy.setTileId(tileId); // for the instanceId
+		deepCopy.setAttributes(deepCopy.getAttributes() & ~NpcAttributes.AGGRESSIVE.getValue()); // they should be unaggressive otherwise mad griefing ensues
+		deepCopy.setAttributes(deepCopy.getAttributes() | NpcAttributes.DIURNAL.getValue()); // should show at all times of the day
+		deepCopy.setAttributes(deepCopy.getAttributes() | NpcAttributes.NOCTURNAL.getValue());
+		deepCopy.setRespawnTicks(5); // onRespawn is where the zombie is removed from the game (onDeath is too early as we wanna see the death animation)
+		PlayerGrownZombie zombie = new PlayerGrownZombie(deepCopy);
+		zombie.setPlanter(planter);
+		playerGrownZombies.putIfAbsent(floor, new HashMap<>());
+		playerGrownZombies.get(floor).put(tileId, zombie);
+		
+		LocationManager.addNpcs(Collections.singletonList(zombie));
+	}
+	
+	public static void removePlayerGrownZombie(PlayerGrownZombie zombie) {
+		playerGrownZombies.get(zombie.getFloor()).remove(zombie.getInstanceId());
+		LocationManager.removeNpc(zombie);
 	}
 }

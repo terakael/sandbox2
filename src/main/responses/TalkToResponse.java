@@ -24,6 +24,12 @@ public class TalkToResponse extends Response {
 		setAction("talk to");
 	}
 	
+	public TalkToResponse(int objectId, String message) {
+		setAction("talk to");
+		this.objectId = objectId;
+		this.message = message;
+	}
+	
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof TalkToRequest))

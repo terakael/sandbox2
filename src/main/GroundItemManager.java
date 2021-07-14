@@ -8,10 +8,6 @@ import main.database.dao.GroundTextureDao;
 import main.processing.RoomGroundItemManager;
 import main.processing.RoomGroundItemManager.GroundItem;
 
-interface IGenericFunc {
-	void handle(RoomGroundItemManager groundItemManager);
-}
-
 public class GroundItemManager {
 	private static HashMap<Integer, RoomGroundItemManager> groundItemManagers = new HashMap<>();
 	
@@ -23,12 +19,6 @@ public class GroundItemManager {
 		}
 	}
 	
-	private static void allGroundItemManagers(IGenericFunc func) {
-		for (Map.Entry<Integer, RoomGroundItemManager> entry : groundItemManagers.entrySet()) {
-			func.handle(entry.getValue());
-		}
-	}
-	
 	public static boolean itemIsRespawnable(int floor, int tileId, int itemId) {
 		if (!groundItemManagers.containsKey(floor))
 			return false;
@@ -37,7 +27,7 @@ public class GroundItemManager {
 	}
 	
 	public static void process() {
-		allGroundItemManagers(RoomGroundItemManager::process);
+		groundItemManagers.forEach((floor, groundItemManager) -> groundItemManager.process());
 	}
 
 	public static void add(int floor, int playerId, int itemId, int tileId, int count, int charges) {
