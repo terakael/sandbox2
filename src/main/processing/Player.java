@@ -933,6 +933,14 @@ public class Player extends Attackable {
 		new StatBoostResponse().process(null, this, responseMaps);
 	}
 	
+	@Override
+	public void onAttack(int damage, DamageTypes type, ResponseMaps responseMaps) {
+		PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+		playerUpdateResponse.setId(getId());
+		playerUpdateResponse.setDoAttack(true);
+		responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);	
+	}
+	
 	private int handleReinforcedItemDegradation(int damage, ResponseMaps responseMaps) {
 		// reinforced armour has a chance each hit to soak part of the damage.
 		// the damage that it soaks will come out of its charges, and once the

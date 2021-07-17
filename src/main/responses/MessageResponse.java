@@ -14,7 +14,7 @@ import main.database.dto.TeleportableDto;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
-import main.processing.TybaltsTaskManager;
+import main.processing.UndeadArmyManager;
 import main.processing.WorldProcessor;
 import main.requests.MessageRequest;
 import main.requests.Request;
@@ -129,6 +129,27 @@ public class MessageResponse extends Response {
 			}
 			
 			return;
+		}
+		
+		if (msgParts[0].equals("wave")) {			
+			if (msgParts.length < 2) {
+				setRecoAndResponseText(0, "syntax: ::wave [wavenum]");
+				return;
+			}
+			
+			if (WorldProcessor.isDaytime()) {
+				setRecoAndResponseText(0, "this command only works at ::night.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
+			
+			try {
+				int waveNum = Integer.parseInt(msgParts[1]);
+				UndeadArmyManager.setWave(waveNum, responseMaps);
+			} catch (NumberFormatException e) {
+				setRecoAndResponseText(0, String.format("invalid wave \"%s\".", msgParts[1]));
+				responseMaps.addClientOnlyResponse(player, this);
+			}
 		}
 	}
 	

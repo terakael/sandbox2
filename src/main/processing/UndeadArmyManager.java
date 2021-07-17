@@ -31,8 +31,8 @@ public class UndeadArmyManager {
 	@Getter private static Map<Integer, UndeadArmyNpc> currentWaveNpcs = new HashMap<>();
 	private static Map<Integer, Map<Integer, PlayerGrownZombie>> playerGrownZombies = new HashMap<>();
 	
-	private static int entWave = 31;
-	private static NPCDto entDto = NPCDao.getNpcById(48); // ent TODO dead ent
+	private static int entWave = 32;
+	private static NPCDto entDto = NPCDao.getNpcById(57); // ent
 	private static final int entSceneryId = 9;// dead tree
 	
 	private static final int firstFormNecromancerNpcId = 55;
@@ -52,6 +52,11 @@ public class UndeadArmyManager {
 																	937777267,
 																	937730947,
 																	937221364);
+	
+	public static void setWave(int wave, ResponseMaps responseMaps) {
+		currentWave = wave - 1;
+		newWave(responseMaps);
+	}
 	
 	public static void reset(ResponseMaps responseMaps) {		
 		currentWave = 0;
@@ -208,9 +213,9 @@ public class UndeadArmyManager {
 	
 	private static void resetEnts(ResponseMaps responseMaps) {
 		undeadEntLocations.forEach(tileId -> {
+			PathFinder.setImpassabilityOnTileId(0, tileId, 15); // completely impassable
+			
 			if (SceneryDao.getSceneryIdByTileId(0, tileId) == -1) {
-				PathFinder.setImpassabilityOnTileId(0, tileId, 15); // completely impassable
-				
 				// there might be some players that have not loaded a dead tree that arrived as the trees were ents
 				LocationManager.getLocalPlayers(0, tileId, 12).forEach(player -> {
 					ClientResourceManager.addLocalScenery(player, Collections.singleton(9));
@@ -265,7 +270,19 @@ public class UndeadArmyManager {
 	}
 	
 	public static void addPlayerGrownZombie(Player planter, int floor, int tileId) {
-		NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(51));
+		int npcId = 51; // reg zombie by default
+		if (RandomUtil.chance(1)) {
+			npcId = 57;
+		} else if (RandomUtil.chance(10)) {
+			npcId = 53;
+		} else if (RandomUtil.chance(15)) {
+			npcId = 52;
+		} else if (RandomUtil.chance(25)) {
+			npcId = 39;
+		}
+		
+		
+		NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(npcId));
 		deepCopy.setFloor(floor);
 		deepCopy.setTileId(tileId); // for the instanceId
 		deepCopy.setAttributes(deepCopy.getAttributes() & ~NpcAttributes.AGGRESSIVE.getValue()); // they should be unaggressive otherwise mad griefing ensues

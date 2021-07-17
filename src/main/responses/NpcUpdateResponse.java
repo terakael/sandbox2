@@ -13,6 +13,7 @@ public class NpcUpdateResponse extends Response {
 	@Setter private Integer hp = null;
 	@Setter private Integer tileId = null;
 	@Setter private Boolean snapToTile = null;
+	@Setter private Boolean doAttack = null;
 	
 	public NpcUpdateResponse() {
 		setAction("npc_update");

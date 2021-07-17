@@ -1,7 +1,9 @@
 package main.responses;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
@@ -19,7 +21,6 @@ import main.utils.Utils;
 public class FinishThrowResponse extends Response {
 	
 	private static final int throwRange = 2;
-
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		final List<Integer> playerInvIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);

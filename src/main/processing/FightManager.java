@@ -81,7 +81,8 @@ public class FightManager {
 			int hit = attackable.hit(other, responseMaps);
 			if (other.block(attackable))
 				hit = 0;
-						
+			
+			attackable.onAttack(hit, attackable.getDamageType(), responseMaps);
 			other.onHit(hit, attackable.getDamageType(), responseMaps);
 			
 			// smite code... pretty awkward to have it here...

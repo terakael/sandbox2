@@ -45,6 +45,7 @@ public abstract class Attackable {
 	public abstract void onDeath(Attackable killer, ResponseMaps responseMaps);
 	public abstract void onKill(Attackable killed, ResponseMaps responseMaps);
 	public abstract void onHit(int damage, DamageTypes type, ResponseMaps responseMaps);
+	public abstract void onAttack(int damage, DamageTypes type, ResponseMaps responseMaps);
 	public abstract void setStatsAndBonuses();
 	public abstract int getExp();
 	

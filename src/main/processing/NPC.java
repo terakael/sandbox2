@@ -269,6 +269,14 @@ public class NPC extends Attackable {
 	}
 	
 	@Override
+	public void onAttack(int damage, DamageTypes type, ResponseMaps responseMaps) {
+		NpcUpdateResponse updateResponse = new NpcUpdateResponse();
+		updateResponse.setInstanceId(dto.getTileId());
+		updateResponse.setDoAttack(true);
+		responseMaps.addLocalResponse(floor, tileId, updateResponse);
+	}
+	
+	@Override
 	public void setStatsAndBonuses() {
 		// already set on instantiation
 	}
