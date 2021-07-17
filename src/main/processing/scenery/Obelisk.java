@@ -6,7 +6,7 @@ import java.util.Set;
 import main.database.dao.EquipmentDao;
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.RequestFactory;
 import main.responses.InventoryUpdateResponse;
 import main.responses.MessageResponse;

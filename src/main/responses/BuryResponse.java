@@ -7,7 +7,7 @@ import main.database.dao.BuryableDao;
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.StatsDao;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.BuryRequest;
 import main.requests.Request;
 import main.types.Stats;

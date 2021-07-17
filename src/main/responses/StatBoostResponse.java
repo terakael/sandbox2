@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import main.database.dao.StatsDao;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 @SuppressWarnings("unused")

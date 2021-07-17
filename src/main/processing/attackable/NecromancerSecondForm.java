@@ -1,15 +1,14 @@
-package main.processing.npcs;
+package main.processing.attackable;
 
 import java.util.Collections;
 import java.util.Set;
 
 import main.database.dto.NPCDto;
-import main.processing.ClientResourceManager;
-import main.processing.FightManager;
-import main.processing.LocationManager;
 import main.processing.PathFinder;
-import main.processing.Player;
-import main.processing.FightManager.Fight;
+import main.processing.managers.ClientResourceManager;
+import main.processing.managers.FightManager;
+import main.processing.managers.LocationManager;
+import main.processing.managers.FightManager.Fight;
 import main.responses.CastSpellResponse;
 import main.responses.NpcUpdateResponse;
 import main.responses.ResponseMaps;

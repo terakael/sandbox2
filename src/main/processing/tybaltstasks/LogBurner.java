@@ -4,7 +4,7 @@ import java.util.Set;
 
 import main.database.dao.PlayerTybaltsTaskDao;
 import main.database.dto.PlayerTybaltsTaskDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.processing.tybaltstasks.updates.ChopTaskUpdate;
 import main.processing.tybaltstasks.updates.ConstructTaskUpdate;
 import main.processing.tybaltstasks.updates.TybaltsTaskUpdate;

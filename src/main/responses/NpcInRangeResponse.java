@@ -6,9 +6,9 @@ import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Setter;
-import main.processing.NPCManager;
-import main.processing.Player;
-import main.processing.npcs.NPC;
+import main.processing.attackable.NPC;
+import main.processing.attackable.Player;
+import main.processing.managers.NPCManager;
 import main.requests.Request;
 
 @Setter

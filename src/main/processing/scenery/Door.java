@@ -2,8 +2,8 @@ package main.processing.scenery;
 
 import main.database.dao.DoorDao;
 import main.database.dto.LockedDoorDto;
-import main.processing.LockedDoorManager;
-import main.processing.Player;
+import main.processing.attackable.Player;
+import main.processing.managers.LockedDoorManager;
 import main.requests.UseRequest;
 import main.responses.OpenCloseResponse;
 import main.responses.PlayerUpdateResponse;

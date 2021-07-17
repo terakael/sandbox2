@@ -2,7 +2,7 @@ package main.responses;
 
 import main.database.dao.SceneryDao;
 import main.processing.PathFinder;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 import main.requests.WithdrawRequest;
 

@@ -11,8 +11,8 @@ import java.util.Optional;
 import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.PlayerDto;
-import main.processing.Player;
 import main.processing.WorldProcessor;
+import main.processing.attackable.Player;
 
 public class PlayerDao {
 	@Getter private static Map<Integer, String> attackStyles;

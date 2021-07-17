@@ -14,7 +14,7 @@ import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.DoorDto;
 import main.database.dto.LockedDoorDto;
-import main.processing.LockedDoorManager;
+import main.processing.managers.LockedDoorManager;
 
 public class DoorDao {
 	private static Map<Integer, DoorDto> doors; // <scenery_id, dto>

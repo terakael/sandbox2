@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import main.database.dao.ConstructableDao;
 import main.database.dto.ConstructableDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.ConstructionRequest;
 import main.requests.UseRequest;
 import main.responses.ConstructionResponse;

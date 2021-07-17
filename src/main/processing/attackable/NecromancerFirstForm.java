@@ -1,13 +1,12 @@
-package main.processing.npcs;
+package main.processing.attackable;
 
 import java.util.Stack;
 
 import main.database.dto.NPCDto;
-import main.processing.Attackable;
-import main.processing.FightManager;
 import main.processing.PathFinder;
-import main.processing.UndeadArmyManager;
-import main.processing.FightManager.Fight;
+import main.processing.managers.FightManager;
+import main.processing.managers.UndeadArmyManager;
+import main.processing.managers.FightManager.Fight;
 import main.responses.MessageResponse;
 import main.responses.NpcUpdateResponse;
 import main.responses.ResponseMaps;

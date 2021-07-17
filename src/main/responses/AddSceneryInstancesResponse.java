@@ -7,9 +7,9 @@ import java.util.stream.Collectors;
 
 import lombok.Setter;
 import main.database.dao.DoorDao;
-import main.processing.DepletionManager;
-import main.processing.LockedDoorManager;
-import main.processing.Player;
+import main.processing.attackable.Player;
+import main.processing.managers.DepletionManager;
+import main.processing.managers.LockedDoorManager;
 import main.requests.Request;
 
 @SuppressWarnings("unused")

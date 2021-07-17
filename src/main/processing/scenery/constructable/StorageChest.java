@@ -8,8 +8,8 @@ import java.util.Map;
 import main.GroundItemManager;
 import main.database.dto.ConstructableDto;
 import main.database.dto.InventoryItemDto;
-import main.processing.Player;
 import main.processing.WorldProcessor;
+import main.processing.attackable.Player;
 import main.responses.ResponseMaps;
 
 public abstract class StorageChest extends Constructable {

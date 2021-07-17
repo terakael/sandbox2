@@ -14,8 +14,8 @@ import java.util.Set;
 import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.SceneryDto;
-import main.processing.ConstructableManager;
-import main.processing.UndeadArmyManager;
+import main.processing.managers.ConstructableManager;
+import main.processing.managers.UndeadArmyManager;
 import main.types.SceneryAttributes;
 
 public class SceneryDao {

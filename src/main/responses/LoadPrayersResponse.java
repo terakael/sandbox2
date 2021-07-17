@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import main.database.dao.PrayerDao;
 import main.database.dto.PrayerDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 import main.types.Stats;
 

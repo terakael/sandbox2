@@ -1,7 +1,7 @@
 package main.responses;
 
 import lombok.Setter;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 public class RockRespawnResponse extends Response {

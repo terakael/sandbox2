@@ -10,7 +10,7 @@ import main.database.dao.NPCDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dto.NpcDialogueDto;
 import main.database.dto.NpcDialogueOptionDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.DialogueOptionRequest;
 import main.requests.Request;
 import main.types.Items;

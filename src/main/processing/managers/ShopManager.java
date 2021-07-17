@@ -1,9 +1,12 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.ArrayList;
 import lombok.Getter;
 import main.database.dao.ShopDao;
 import main.database.dto.ShopDto;
+import main.processing.stores.GeneralStore;
+import main.processing.stores.SpecialtyStore;
+import main.processing.stores.Store;
 import main.responses.ResponseMaps;
 import main.types.ShopTypes;
 

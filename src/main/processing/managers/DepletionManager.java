@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import main.database.dao.PickableDao;
 import main.database.dto.PickableDto;
+import main.processing.WorldProcessor;
 import main.responses.ResponseMaps;
 import main.responses.SceneryDepleteResponse;
 import main.responses.SceneryRespawnResponse;

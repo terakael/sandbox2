@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.stores;
 
 import main.database.dto.ShopDto;
 import main.database.dto.ShopItemDto;

@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.attackable;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,8 +29,13 @@ import main.database.dto.PlayerDto;
 import main.database.dto.ReinforcementBonusesDto;
 import main.database.dto.TeleportableDto;
 import main.database.entity.update.UpdatePlayerEntity;
-import main.processing.FightManager.Fight;
-import main.processing.npcs.NPC;
+import main.processing.PathFinder;
+import main.processing.WorldProcessor;
+import main.processing.managers.DatabaseUpdater;
+import main.processing.managers.FightManager;
+import main.processing.managers.LocationManager;
+import main.processing.managers.TybaltsTaskManager;
+import main.processing.managers.FightManager.Fight;
 import main.processing.tybaltstasks.updates.KillNpcTaskUpdate;
 import main.requests.ConstructionRequest;
 import main.requests.FishRequest;

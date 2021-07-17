@@ -3,8 +3,8 @@ package main.responses;
 import java.util.List;
 
 import main.database.dto.InventoryItemDto;
-import main.processing.ConstructableManager;
-import main.processing.Player;
+import main.processing.attackable.Player;
+import main.processing.managers.ConstructableManager;
 import main.processing.scenery.constructable.Constructable;
 import main.processing.scenery.constructable.StorageChest;
 import main.requests.Request;

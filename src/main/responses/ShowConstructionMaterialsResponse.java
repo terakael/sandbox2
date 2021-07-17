@@ -4,7 +4,7 @@ import main.database.dao.ConstructableDao;
 import main.database.dao.ItemDao;
 import main.database.dao.SceneryDao;
 import main.database.dto.ConstructableDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 import main.requests.ShowConstructionMaterialsRequest;
 

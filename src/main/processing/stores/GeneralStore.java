@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.stores;
 
 import java.util.ArrayList;
 import java.util.HashMap;

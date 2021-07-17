@@ -3,7 +3,7 @@ package main.responses;
 import java.util.Map;
 
 import lombok.Setter;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 @Setter

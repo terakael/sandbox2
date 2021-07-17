@@ -4,8 +4,8 @@ import java.util.Set;
 
 import main.database.dao.PlayerTybaltsTaskDao;
 import main.database.dto.PlayerTybaltsTaskDto;
-import main.processing.ConstructableManager;
-import main.processing.Player;
+import main.processing.attackable.Player;
+import main.processing.managers.ConstructableManager;
 import main.processing.tybaltstasks.updates.ConstructTaskUpdate;
 import main.processing.tybaltstasks.updates.KillNpcTaskUpdate;
 import main.processing.tybaltstasks.updates.SawmillTaskUpdate;

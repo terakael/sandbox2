@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import main.processing.npcs.NPC;
+import main.processing.PathFinder;
+import main.processing.attackable.NPC;
+import main.processing.attackable.Player;
 import main.types.NpcAttributes;
 import main.utils.Utils;
 

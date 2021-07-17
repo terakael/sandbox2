@@ -1,8 +1,8 @@
 package main.responses;
 
 import main.database.entity.update.UpdatePlayerEntity;
-import main.processing.DatabaseUpdater;
-import main.processing.Player;
+import main.processing.attackable.Player;
+import main.processing.managers.DatabaseUpdater;
 import main.requests.Request;
 
 public class ToggleAttackStyleResponse extends Response {

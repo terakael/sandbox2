@@ -5,7 +5,7 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import main.database.dto.PlayerAnimationDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 import main.types.DamageTypes;
 import main.types.PlayerPartType;

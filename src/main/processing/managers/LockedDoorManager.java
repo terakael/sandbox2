@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +11,8 @@ import lombok.Setter;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.StatsDao;
 import main.database.dto.LockedDoorDto;
+import main.processing.PathFinder;
+import main.processing.attackable.Player;
 import main.responses.OpenCloseResponse;
 import main.responses.ResponseMaps;
 import main.types.StorageTypes;

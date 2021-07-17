@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +13,7 @@ import lombok.Setter;
 import main.database.dao.ItemDao;
 import main.database.dao.RespawnableDao;
 import main.database.dto.RespawnableDto;
+import main.processing.PathFinder;
 import main.types.ItemAttributes;
 
 public class RoomGroundItemManager {

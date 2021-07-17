@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Setter;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 public class GroundItemInRangeResponse extends Response {

@@ -1,9 +1,9 @@
 package main.responses;
 
-import main.processing.FightManager;
-import main.processing.Player;
 import main.processing.WorldProcessor;
-import main.processing.Player.PlayerState;
+import main.processing.attackable.Player;
+import main.processing.attackable.Player.PlayerState;
+import main.processing.managers.FightManager;
 import main.requests.FollowRequest;
 import main.requests.Request;
 

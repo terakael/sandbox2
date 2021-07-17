@@ -16,7 +16,7 @@ import main.database.dto.EquipmentDto;
 import main.database.dto.PlayerAnimationDto;
 import main.database.entity.delete.DeletePlayerEquipment;
 import main.database.entity.insert.InsertPlayerEquipment;
-import main.processing.DatabaseUpdater;
+import main.processing.managers.DatabaseUpdater;
 import main.types.EquipmentTypes;
 import main.types.PlayerPartType;
 

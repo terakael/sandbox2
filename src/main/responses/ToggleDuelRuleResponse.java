@@ -3,9 +3,9 @@ package main.responses;
 import java.util.HashMap;
 import java.util.Map;
 
-import main.processing.Player;
-import main.processing.TradeManager;
-import main.processing.TradeManager.Trade;
+import main.processing.attackable.Player;
+import main.processing.managers.TradeManager;
+import main.processing.managers.TradeManager.Trade;
 import main.requests.Request;
 import main.requests.ToggleDuelRuleRequest;
 import main.types.DuelRules;

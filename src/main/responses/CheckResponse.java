@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dto.InventoryItemDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.CheckRequest;
 import main.requests.Request;
 import main.types.StorageTypes;

@@ -9,7 +9,7 @@ import main.database.dto.NPCDto;
 import main.database.dto.SceneryDto;
 import main.database.dto.SpriteFrameDto;
 import main.database.dto.SpriteMapDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 public class AddResourceResponse extends Response {

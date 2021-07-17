@@ -1,11 +1,14 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
-import main.processing.npcs.NPC;
+import main.processing.PathFinder;
+import main.processing.attackable.Attackable;
+import main.processing.attackable.NPC;
+import main.processing.attackable.Player;
 import main.responses.PvmEndResponse;
 import main.responses.PvpEndResponse;
 import main.responses.ResponseMaps;

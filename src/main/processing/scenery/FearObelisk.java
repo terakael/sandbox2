@@ -1,6 +1,6 @@
 package main.processing.scenery;
 
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.UseRequest;
 import main.responses.ResponseMaps;
 import main.types.Items;

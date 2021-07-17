@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import main.database.dao.GroundTextureDao;
-import main.processing.RoomGroundItemManager;
-import main.processing.RoomGroundItemManager.GroundItem;
+import main.processing.managers.RoomGroundItemManager;
+import main.processing.managers.RoomGroundItemManager.GroundItem;
 
 public class GroundItemManager {
 	private static HashMap<Integer, RoomGroundItemManager> groundItemManagers = new HashMap<>();

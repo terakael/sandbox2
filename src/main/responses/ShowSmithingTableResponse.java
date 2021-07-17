@@ -4,7 +4,7 @@ import java.util.List;
 
 import lombok.Setter;
 import main.database.dto.SmithableDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 public class ShowSmithingTableResponse extends Response { 

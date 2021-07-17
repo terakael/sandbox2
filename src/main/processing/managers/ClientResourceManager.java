@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +25,8 @@ import main.database.dto.PlayerAnimationDto;
 import main.database.dto.SceneryDto;
 import main.database.dto.SpriteFrameDto;
 import main.database.dto.SpriteMapDto;
+import main.processing.WorldProcessor;
+import main.processing.attackable.Player;
 import main.responses.AddResourceResponse;
 import main.responses.ResponseMaps;
 import main.types.PlayerPartType;

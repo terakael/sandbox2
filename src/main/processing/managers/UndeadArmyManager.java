@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,11 +12,13 @@ import main.database.dao.NPCDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.UndeadArmyWavesDao;
 import main.database.dto.NPCDto;
-import main.processing.npcs.NPC;
-import main.processing.npcs.NecromancerFirstForm;
-import main.processing.npcs.NecromancerSecondForm;
-import main.processing.npcs.PlayerGrownZombie;
-import main.processing.npcs.UndeadArmyNpc;
+import main.processing.PathFinder;
+import main.processing.attackable.NPC;
+import main.processing.attackable.NecromancerFirstForm;
+import main.processing.attackable.NecromancerSecondForm;
+import main.processing.attackable.Player;
+import main.processing.attackable.PlayerGrownZombie;
+import main.processing.attackable.UndeadArmyNpc;
 import main.responses.AddSceneryInstancesResponse;
 import main.responses.MessageResponse;
 import main.responses.NpcInRangeResponse;

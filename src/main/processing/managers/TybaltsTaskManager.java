@@ -1,10 +1,11 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import main.database.dao.PlayerTybaltsTaskDao;
 import main.database.dto.PlayerTybaltsTaskDto;
+import main.processing.attackable.Player;
 import main.processing.tybaltstasks.BoneTotem;
 import main.processing.tybaltstasks.BrewerOfStank;
 import main.processing.tybaltstasks.ChickenSlayer;

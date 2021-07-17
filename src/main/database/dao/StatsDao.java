@@ -13,7 +13,7 @@ import main.database.DbConnection;
 import main.database.dto.StatWindowRowDto;
 import main.database.dto.StatsDto;
 import main.database.entity.update.UpdatePlayerStatsEntity;
-import main.processing.DatabaseUpdater;
+import main.processing.managers.DatabaseUpdater;
 import main.types.Stats;
 
 public class StatsDao {

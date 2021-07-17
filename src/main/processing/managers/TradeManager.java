@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import main.database.dao.PlayerStorageDao;
 import main.database.dto.InventoryItemDto;
+import main.processing.attackable.Player;
 import main.types.StorageTypes;
 
 // despite being called TradeManager, this is used for both trades and duels

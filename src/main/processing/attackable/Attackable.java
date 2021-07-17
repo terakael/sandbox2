@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.attackable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import main.database.dao.DoorDao;
+import main.processing.PathFinder;
+import main.processing.managers.FightManager;
 import main.responses.ResponseMaps;
 import main.types.DamageTypes;
 import main.types.Stats;

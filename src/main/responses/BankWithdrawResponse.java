@@ -9,7 +9,7 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
 import main.database.dto.InventoryItemDto;
 import main.processing.PathFinder;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.WithdrawRequest;

@@ -6,8 +6,8 @@ import java.util.Set;
 import main.database.dao.EquipmentDao;
 import main.database.dao.PlayerAnimationDao;
 import main.database.dao.StatsDao;
-import main.processing.Player;
 import main.processing.WorldProcessor;
+import main.processing.attackable.Player;
 import main.requests.Request;
 import main.types.Stats;
 

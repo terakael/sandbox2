@@ -3,8 +3,8 @@ package main.responses;
 import main.database.dao.DoorDao;
 import main.database.dao.SceneryDao;
 import main.database.dto.DoorDto;
-import main.processing.FightManager;
-import main.processing.Player;
+import main.processing.attackable.Player;
+import main.processing.managers.FightManager;
 import main.requests.OpenRequest;
 import main.requests.Request;
 

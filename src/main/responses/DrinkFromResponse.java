@@ -3,11 +3,11 @@ package main.responses;
 import main.database.dao.ConstructableDao;
 import main.database.dao.ConsumableDao;
 import main.database.dto.ConstructableDto;
-import main.processing.ConstructableManager;
-import main.processing.FightManager;
 import main.processing.PathFinder;
-import main.processing.Player;
-import main.processing.Player.PlayerState;
+import main.processing.attackable.Player;
+import main.processing.attackable.Player.PlayerState;
+import main.processing.managers.ConstructableManager;
+import main.processing.managers.FightManager;
 import main.requests.DrinkFromRequest;
 import main.requests.Request;
 

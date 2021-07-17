@@ -1,7 +1,7 @@
 package main.processing.scenery.constructable;
 
 import main.database.dto.ConstructableDto;
-import main.processing.LocationManager;
+import main.processing.managers.LocationManager;
 import main.responses.ResponseMaps;
 
 public class BleedingTotemPole extends Constructable {

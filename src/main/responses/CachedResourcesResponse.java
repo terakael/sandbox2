@@ -13,7 +13,7 @@ import main.database.dao.StatsDao;
 import main.database.dto.ContextOptionsDto;
 import main.database.dto.SpriteFrameDto;
 import main.database.dto.SpriteMapDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 @Getter

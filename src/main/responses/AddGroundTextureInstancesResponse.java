@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 import lombok.Setter;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 public class AddGroundTextureInstancesResponse extends Response {

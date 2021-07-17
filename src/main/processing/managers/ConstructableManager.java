@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import main.database.dao.SceneryDao;
 import main.database.dto.ConstructableDto;
+import main.processing.PathFinder;
 import main.processing.scenery.constructable.BleedingTotemPole;
 import main.processing.scenery.constructable.Constructable;
 import main.processing.scenery.constructable.HolyTotemPole;

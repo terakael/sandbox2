@@ -1,4 +1,4 @@
-package main.processing.npcs;
+package main.processing.attackable;
 
 import java.util.Collections;
 
@@ -6,9 +6,8 @@ import lombok.Setter;
 import main.GroundItemManager;
 import main.database.dao.ItemDao;
 import main.database.dto.NPCDto;
-import main.processing.ConstructableManager;
-import main.processing.Player;
-import main.processing.UndeadArmyManager;
+import main.processing.managers.ConstructableManager;
+import main.processing.managers.UndeadArmyManager;
 import main.responses.BuryResponse;
 import main.responses.NpcOutOfRangeResponse;
 import main.responses.NpcUpdateResponse;

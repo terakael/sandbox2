@@ -1,7 +1,7 @@
 package main.processing.tybaltstasks;
 
 import main.database.dto.PlayerTybaltsTaskDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.processing.tybaltstasks.updates.TybaltsTaskUpdate;
 import main.responses.MessageResponse;
 import main.responses.ResponseMaps;

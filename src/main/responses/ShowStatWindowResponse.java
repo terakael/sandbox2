@@ -6,8 +6,8 @@ import java.util.Set;
 
 import main.database.dao.StatsDao;
 import main.database.dto.StatWindowRowDto;
-import main.processing.ClientResourceManager;
-import main.processing.Player;
+import main.processing.attackable.Player;
+import main.processing.managers.ClientResourceManager;
 import main.requests.Request;
 import main.requests.ShowStatWindowRequest;
 import main.types.Stats;

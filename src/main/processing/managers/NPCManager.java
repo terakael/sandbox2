@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,7 +9,9 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import main.database.dao.NPCDao;
 import main.database.dto.NPCDto;
-import main.processing.npcs.NPC;
+import main.processing.PathFinder;
+import main.processing.WorldProcessor;
+import main.processing.attackable.NPC;
 import main.responses.ResponseMaps;
 
 public class NPCManager {

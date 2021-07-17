@@ -3,8 +3,8 @@ package main.responses;
 import java.util.Collections;
 
 import main.database.dto.ItemDto;
-import main.processing.ClientResourceManager;
-import main.processing.Player;
+import main.processing.attackable.Player;
+import main.processing.managers.ClientResourceManager;
 import main.requests.Request;
 
 @SuppressWarnings("unused")

@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import main.database.dto.InventoryItemDto;
-import main.processing.ClientResourceManager;
-import main.processing.ConstructableManager;
 import main.processing.PathFinder;
-import main.processing.Player;
-import main.processing.Player.PlayerState;
+import main.processing.attackable.Player;
+import main.processing.attackable.Player.PlayerState;
+import main.processing.managers.ClientResourceManager;
+import main.processing.managers.ConstructableManager;
 import main.processing.scenery.constructable.Constructable;
 import main.processing.scenery.constructable.StorageChest;
 import main.requests.OpenRequest;

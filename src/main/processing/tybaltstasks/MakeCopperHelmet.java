@@ -2,7 +2,7 @@ package main.processing.tybaltstasks;
 
 import main.database.dao.PlayerTybaltsTaskDao;
 import main.database.dto.PlayerTybaltsTaskDto;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.processing.tybaltstasks.updates.MineTaskUpdate;
 import main.processing.tybaltstasks.updates.SmeltTaskUpdate;
 import main.processing.tybaltstasks.updates.SmithTaskUpdate;

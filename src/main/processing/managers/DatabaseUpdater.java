@@ -1,4 +1,4 @@
-package main.processing;
+package main.processing.managers;
 
 import java.util.LinkedList;
 import java.util.Queue;

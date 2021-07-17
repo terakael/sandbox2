@@ -3,7 +3,7 @@ package main.responses;
 import java.util.Set;
 
 import lombok.Setter;
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 public class NpcOutOfRangeResponse extends Response {

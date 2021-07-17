@@ -1,6 +1,6 @@
 package main.responses;
 
-import main.processing.Player;
+import main.processing.attackable.Player;
 import main.requests.Request;
 
 public class UnknownResponse extends Response {

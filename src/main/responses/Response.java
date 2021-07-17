@@ -2,8 +2,8 @@ package main.responses;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.processing.Player;
-import main.processing.Player.PlayerState;
+import main.processing.attackable.Player;
+import main.processing.attackable.Player.PlayerState;
 import main.requests.MessageRequest;
 import main.requests.Request;
 

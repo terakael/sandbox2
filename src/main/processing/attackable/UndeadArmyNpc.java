@@ -1,7 +1,7 @@
-package main.processing.npcs;
+package main.processing.attackable;
 
 import main.database.dto.NPCDto;
-import main.processing.UndeadArmyManager;
+import main.processing.managers.UndeadArmyManager;
 import main.responses.ResponseMaps;
 
 public class UndeadArmyNpc extends NPC {

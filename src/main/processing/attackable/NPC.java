@@ -1,4 +1,4 @@
-package main.processing.npcs;
+package main.processing.attackable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,14 +15,12 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dao.StatsDao;
 import main.database.dto.NPCDto;
 import main.database.dto.NpcDropDto;
-import main.processing.Attackable;
-import main.processing.ConstructableManager;
-import main.processing.FightManager;
 import main.processing.PathFinder;
-import main.processing.Player;
-import main.processing.TybaltsTaskManager;
 import main.processing.WorldProcessor;
-import main.processing.Player.PlayerState;
+import main.processing.attackable.Player.PlayerState;
+import main.processing.managers.ConstructableManager;
+import main.processing.managers.FightManager;
+import main.processing.managers.TybaltsTaskManager;
 import main.processing.tybaltstasks.updates.ItemDropFromNpcUpdate;
 import main.responses.BuryResponse;
 import main.responses.MessageResponse;

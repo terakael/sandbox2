@@ -5,8 +5,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import main.database.dto.ConstructableDto;
-import main.processing.ClientResourceManager;
-import main.processing.Player;
+import main.processing.attackable.Player;
+import main.processing.managers.ClientResourceManager;
 import main.requests.Request;
 
 @SuppressWarnings("unused")

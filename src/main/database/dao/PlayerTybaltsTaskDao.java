@@ -11,9 +11,9 @@ import main.database.DbConnection;
 import main.database.dto.PlayerTybaltsTaskDto;
 import main.database.entity.insert.InsertTybaltsTaskEntity;
 import main.database.entity.update.UpdateTybaltsTaskEntity;
-import main.processing.DatabaseUpdater;
-import main.processing.Player;
-import main.processing.TybaltsTaskManager;
+import main.processing.attackable.Player;
+import main.processing.managers.DatabaseUpdater;
+import main.processing.managers.TybaltsTaskManager;
 import main.responses.ResponseMaps;
 
 public class PlayerTybaltsTaskDao {

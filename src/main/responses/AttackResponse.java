@@ -1,13 +1,13 @@
 package main.responses;
 
 import main.database.dao.NPCDao;
-import main.processing.FightManager;
-import main.processing.NPCManager;
 import main.processing.PathFinder;
-import main.processing.Player;
 import main.processing.WorldProcessor;
-import main.processing.Player.PlayerState;
-import main.processing.npcs.NPC;
+import main.processing.attackable.NPC;
+import main.processing.attackable.Player;
+import main.processing.attackable.Player.PlayerState;
+import main.processing.managers.FightManager;
+import main.processing.managers.NPCManager;
 import main.requests.AttackRequest;
 import main.requests.Request;
 import main.types.NpcAttributes;

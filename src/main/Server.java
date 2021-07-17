@@ -41,11 +41,11 @@ import main.database.dao.SpriteMapDao;
 import main.database.dao.TeleportableDao;
 import main.database.dao.UndeadArmyWavesDao;
 import main.database.dao.UseItemOnItemDao;
-import main.processing.DatabaseUpdater;
-import main.processing.NPCManager;
 import main.processing.PathFinder;
-import main.processing.ShopManager;
 import main.processing.WorldProcessor;
+import main.processing.managers.DatabaseUpdater;
+import main.processing.managers.NPCManager;
+import main.processing.managers.ShopManager;
 import main.responses.CachedResourcesResponse;
 import main.responses.ExamineResponse;
 
