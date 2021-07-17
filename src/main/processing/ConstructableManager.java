@@ -8,14 +8,14 @@ import java.util.stream.Collectors;
 
 import main.database.dao.SceneryDao;
 import main.database.dto.ConstructableDto;
+import main.processing.scenery.constructable.BleedingTotemPole;
+import main.processing.scenery.constructable.Constructable;
+import main.processing.scenery.constructable.HolyTotemPole;
+import main.processing.scenery.constructable.LargeStorageChest;
+import main.processing.scenery.constructable.NaturesShrine;
+import main.processing.scenery.constructable.SmallStorageChest;
 import main.responses.ResponseMaps;
 import main.responses.SceneryDespawnResponse;
-import main.scenery.constructable.BleedingTotemPole;
-import main.scenery.constructable.Constructable;
-import main.scenery.constructable.HolyTotemPole;
-import main.scenery.constructable.LargeStorageChest;
-import main.scenery.constructable.NaturesShrine;
-import main.scenery.constructable.SmallStorageChest;
 import main.utils.Utils;
 
 public class ConstructableManager {

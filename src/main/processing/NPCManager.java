@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
 import main.database.dao.NPCDao;
 import main.database.dto.NPCDto;
+import main.processing.npcs.NPC;
 import main.responses.ResponseMaps;
 
 public class NPCManager {

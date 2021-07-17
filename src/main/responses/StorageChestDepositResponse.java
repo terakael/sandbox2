@@ -11,13 +11,14 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dto.InventoryItemDto;
 import main.processing.ConstructableManager;
 import main.processing.Player;
+import main.processing.scenery.constructable.Constructable;
+import main.processing.scenery.constructable.StorageChest;
 import main.requests.DepositRequest;
 import main.requests.Request;
-import main.scenery.constructable.Constructable;
-import main.scenery.constructable.StorageChest;
 import main.types.ItemAttributes;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class StorageChestDepositResponse extends Response {
 	private List<InventoryItemDto> items = null;
 	

@@ -12,7 +12,6 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.StatsDao;
 import main.database.dto.ConstructableDto;
-import main.processing.ClientResourceManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;

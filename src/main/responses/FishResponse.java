@@ -1,19 +1,16 @@
 package main.responses;
 
-import java.util.Collections;
-
 import main.database.dao.FishableDao;
 import main.database.dao.ItemDao;
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.StatsDao;
 import main.database.dto.FishableDto;
-import main.processing.ClientResourceManager;
 import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
-import main.processing.WorldProcessor;
 import main.processing.Player.PlayerState;
+import main.processing.WorldProcessor;
 import main.requests.FishRequest;
 import main.requests.Request;
 import main.types.SceneryAttributes;

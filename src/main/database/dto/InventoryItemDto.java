@@ -2,7 +2,6 @@ package main.database.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import main.utils.Utils;
 
 @Getter
 @AllArgsConstructor

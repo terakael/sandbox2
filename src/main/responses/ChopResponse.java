@@ -8,7 +8,6 @@ import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;
 import main.database.dao.StatsDao;
 import main.database.dto.ChoppableDto;
-import main.processing.ConstructableManager;
 import main.processing.DepletionManager;
 import main.processing.FightManager;
 import main.processing.PathFinder;

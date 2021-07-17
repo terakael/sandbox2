@@ -13,7 +13,6 @@ import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.NPCDto;
 import main.database.dto.NpcDropDto;
-import main.processing.UndeadArmyManager;
 import main.types.NpcAttributes;
 
 public class NPCDao {

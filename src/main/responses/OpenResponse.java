@@ -3,7 +3,6 @@ package main.responses;
 import main.database.dao.DoorDao;
 import main.database.dao.SceneryDao;
 import main.database.dto.DoorDto;
-import main.processing.ConstructableManager;
 import main.processing.FightManager;
 import main.processing.Player;
 import main.requests.OpenRequest;
@@ -28,7 +27,6 @@ public class OpenResponse extends Response {
 		
 		DoorDto door = DoorDao.getDoorDtoByTileId(player.getFloor(), request.getTileId());
 		if (door != null) {
-//			handleDoor(door, request, player, responseMaps);
 			new OpenCloseResponse().process(req, player, responseMaps);
 			return;
 		}

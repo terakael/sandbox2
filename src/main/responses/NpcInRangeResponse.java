@@ -6,9 +6,9 @@ import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Setter;
-import main.processing.NPC;
 import main.processing.NPCManager;
 import main.processing.Player;
+import main.processing.npcs.NPC;
 import main.requests.Request;
 
 @Setter

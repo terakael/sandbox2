@@ -13,7 +13,6 @@ import main.processing.Player;
 import main.processing.Player.PlayerState;
 import main.requests.Request;
 import main.requests.SmithRequest;
-import main.types.Items;
 import main.types.Stats;
 import main.types.StorageTypes;
 

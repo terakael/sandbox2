@@ -5,11 +5,12 @@ import java.util.List;
 import main.database.dto.InventoryItemDto;
 import main.processing.ConstructableManager;
 import main.processing.Player;
+import main.processing.scenery.constructable.Constructable;
+import main.processing.scenery.constructable.StorageChest;
 import main.requests.Request;
 import main.requests.StorageMoveRequest;
-import main.scenery.constructable.Constructable;
-import main.scenery.constructable.StorageChest;
 
+@SuppressWarnings("unused")
 public class StorageMoveResponse extends Response {
 	private List<InventoryItemDto> items;
 	

@@ -12,10 +12,10 @@ import main.database.dao.StatsDao;
 import main.database.dto.SmithableDto;
 import main.processing.Player;
 import main.processing.TybaltsTaskManager;
+import main.processing.tybaltstasks.updates.SmithTaskUpdate;
 import main.requests.AddExpRequest;
 import main.requests.Request;
 import main.requests.SmithRequest;
-import main.tybaltstasks.updates.SmithTaskUpdate;
 import main.types.Stats;
 import main.types.StorageTypes;
 

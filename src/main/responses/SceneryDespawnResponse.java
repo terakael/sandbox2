@@ -3,6 +3,7 @@ package main.responses;
 import main.processing.Player;
 import main.requests.Request;
 
+@SuppressWarnings("unused")
 public class SceneryDespawnResponse extends Response {
 	private int tileId;
 	public SceneryDespawnResponse(int tileId) {

@@ -26,6 +26,7 @@ import main.database.dto.PickableDto;
 import main.database.dto.ShopItemDto;
 import main.processing.FightManager.Fight;
 import main.processing.Player.PlayerState;
+import main.processing.npcs.NPC;
 import main.requests.Request;
 import main.responses.AddGroundTextureInstancesResponse;
 import main.responses.AddMinimapSegmentsResponse;

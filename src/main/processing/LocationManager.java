@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import main.responses.ResponseMaps;
+import main.processing.npcs.NPC;
 import main.types.NpcAttributes;
 import main.utils.Utils;
 
@@ -114,15 +114,12 @@ public class LocationManager {
 				
 				undergroundNpcs.get(npc.getFloor()).get(segment).remove(npc);
 			} else {
-				boolean removedNpc = false;
 				if ((npc.getDto().getAttributes() & NpcAttributes.NOCTURNAL.getValue()) > 0) {
 					if (!nocturnalNpcs.containsKey(npc.getFloor()))
 						return;
 					
 					if (!nocturnalNpcs.get(npc.getFloor()).containsKey(segment))
 						return;
-					
-					removedNpc = nocturnalNpcs.get(npc.getFloor()).get(segment).remove(npc);
 				}
 				
 				if ((npc.getDto().getAttributes() & NpcAttributes.DIURNAL.getValue()) > 0) {
@@ -131,8 +128,6 @@ public class LocationManager {
 					
 					if (!diurnalNpcs.get(npc.getFloor()).containsKey(segment))
 						return;
-					
-					removedNpc = diurnalNpcs.get(npc.getFloor()).get(segment).remove(npc);
 				}
 			}
 		});

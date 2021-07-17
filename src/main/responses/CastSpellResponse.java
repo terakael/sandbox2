@@ -20,7 +20,7 @@ import main.processing.ClientResourceManager;
 import main.processing.ConstructableManager;
 import main.processing.FightManager;
 import main.processing.FightManager.Fight;
-import main.processing.NPC;
+import main.processing.npcs.NPC;
 import main.processing.Player;
 import main.requests.Request;
 import main.requests.UseRequest;

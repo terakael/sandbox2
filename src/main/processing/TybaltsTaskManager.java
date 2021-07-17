@@ -5,18 +5,18 @@ import java.util.Map;
 
 import main.database.dao.PlayerTybaltsTaskDao;
 import main.database.dto.PlayerTybaltsTaskDto;
+import main.processing.tybaltstasks.BoneTotem;
+import main.processing.tybaltstasks.BrewerOfStank;
+import main.processing.tybaltstasks.ChickenSlayer;
+import main.processing.tybaltstasks.LogBurner;
+import main.processing.tybaltstasks.MakeCopperHelmet;
+import main.processing.tybaltstasks.NefariousNuisance;
+import main.processing.tybaltstasks.ReinforceCopperHelmet;
+import main.processing.tybaltstasks.ShrimpCooker;
+import main.processing.tybaltstasks.ShrineMaker;
+import main.processing.tybaltstasks.TybaltsTask;
+import main.processing.tybaltstasks.updates.TybaltsTaskUpdate;
 import main.responses.ResponseMaps;
-import main.tybaltstasks.BoneTotem;
-import main.tybaltstasks.BrewerOfStank;
-import main.tybaltstasks.ChickenSlayer;
-import main.tybaltstasks.LogBurner;
-import main.tybaltstasks.MakeCopperHelmet;
-import main.tybaltstasks.NefariousNuisance;
-import main.tybaltstasks.ReinforceCopperHelmet;
-import main.tybaltstasks.ShrimpCooker;
-import main.tybaltstasks.ShrineMaker;
-import main.tybaltstasks.TybaltsTask;
-import main.tybaltstasks.updates.TybaltsTaskUpdate;
 
 public class TybaltsTaskManager {	
 	private static Map<Integer, TybaltsTask> tasks;

@@ -1,9 +1,7 @@
 package main.responses;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import main.database.dao.PlayerStorageDao;
 import main.database.dao.SceneryDao;

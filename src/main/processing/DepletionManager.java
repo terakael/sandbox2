@@ -11,7 +11,6 @@ import main.database.dto.PickableDto;
 import main.responses.ResponseMaps;
 import main.responses.SceneryDepleteResponse;
 import main.responses.SceneryRespawnResponse;
-import main.types.SceneryAttributes;
 
 public class DepletionManager {
 	public enum DepletionType {

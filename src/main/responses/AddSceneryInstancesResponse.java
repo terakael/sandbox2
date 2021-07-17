@@ -12,6 +12,7 @@ import main.processing.LockedDoorManager;
 import main.processing.Player;
 import main.requests.Request;
 
+@SuppressWarnings("unused")
 public class AddSceneryInstancesResponse extends Response {
 	@Setter private Map<Integer, Set<Integer>> instances; // <sceneryId, <tileIds>>>
 	private Set<Integer> depletedScenery = null;

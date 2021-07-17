@@ -9,11 +9,11 @@ import main.processing.FightManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
+import main.processing.tybaltstasks.updates.PickTaskUpdate;
 import main.processing.TybaltsTaskManager;
 import main.requests.PickRequest;
 import main.requests.Request;
 import main.requests.RequestFactory;
-import main.tybaltstasks.updates.PickTaskUpdate;
 import main.types.StorageTypes;
 
 public class PickResponse extends Response {

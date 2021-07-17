@@ -9,6 +9,7 @@ import main.processing.ClientResourceManager;
 import main.processing.Player;
 import main.requests.Request;
 
+@SuppressWarnings("unused")
 public class ShowConstructionTableResponse extends Response {
 	private Set<ConstructableDto> constructableOptions;
 	private boolean flatpack;

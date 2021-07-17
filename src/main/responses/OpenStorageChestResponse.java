@@ -9,11 +9,12 @@ import main.processing.ConstructableManager;
 import main.processing.PathFinder;
 import main.processing.Player;
 import main.processing.Player.PlayerState;
+import main.processing.scenery.constructable.Constructable;
+import main.processing.scenery.constructable.StorageChest;
 import main.requests.OpenRequest;
 import main.requests.Request;
-import main.scenery.constructable.Constructable;
-import main.scenery.constructable.StorageChest;
 
+@SuppressWarnings("unused")
 public class OpenStorageChestResponse extends Response {
 	private List<InventoryItemDto> items = null;
 	private int tileId;

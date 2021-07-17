@@ -1,7 +1,5 @@
 package main.responses;
 
-import com.google.gson.Gson;
-
 import lombok.Getter;
 import lombok.Setter;
 import main.processing.Player;
@@ -10,8 +8,6 @@ import main.requests.MessageRequest;
 import main.requests.Request;
 
 public abstract class Response {
-	protected static Gson gson = new Gson();
-	
 	public enum ResponseType {
 		broadcast,
 		client_only,

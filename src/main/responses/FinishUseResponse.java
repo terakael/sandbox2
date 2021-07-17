@@ -11,10 +11,10 @@ import main.database.dao.UseItemOnItemDao;
 import main.database.dto.UseItemOnItemDto;
 import main.processing.Player;
 import main.processing.TybaltsTaskManager;
+import main.processing.tybaltstasks.updates.UseItemOnItemTaskUpdate;
 import main.requests.Request;
 import main.requests.RequestFactory;
 import main.requests.UseRequest;
-import main.tybaltstasks.updates.UseItemOnItemTaskUpdate;
 import main.types.Stats;
 import main.types.StorageTypes;
 

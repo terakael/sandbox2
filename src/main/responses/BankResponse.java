@@ -14,6 +14,7 @@ import main.requests.OpenRequest;
 import main.requests.Request;
 import main.types.StorageTypes;
 
+@SuppressWarnings("unused")
 public class BankResponse extends Response {
 	private Map<Integer, InventoryItemDto> items;
 	private int tileId;
