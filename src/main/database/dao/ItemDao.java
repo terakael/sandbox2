@@ -1,9 +1,5 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,43 +36,23 @@ public class ItemDao {
 	
 	private static void populateItemCache() {
 		final String query = "select id, name, sprite_frame_id, leftclick_option, other_options, attributes, price, shiftclick_option from items";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					itemMap.put(rs.getInt("id"), new ItemDto(rs.getInt("id"), 
-							rs.getString("name"), 
-							rs.getInt("sprite_frame_id"), 
-							rs.getInt("leftclick_option"), 
-							rs.getInt("other_options"), 
-							rs.getInt("attributes"),
-							rs.getInt("price"),
-							rs.getInt("shiftclick_option")));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			itemMap.put(rs.getInt("id"), new ItemDto(rs.getInt("id"), 
+					rs.getString("name"), 
+					rs.getInt("sprite_frame_id"), 
+					rs.getInt("leftclick_option"), 
+					rs.getInt("other_options"), 
+					rs.getInt("attributes"),
+					rs.getInt("price"),
+					rs.getInt("shiftclick_option")));
+		});
 	}
 	
 	private static void populateMaxChargesCache() {
 		final String query = "select item_id, max_charges, degraded_item_id from item_charges";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					itemMaxCharges.put(rs.getInt("item_id"), new ItemChargesDto(rs.getInt("item_id"), rs.getInt("max_charges"), rs.getInt("degraded_item_id")));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			itemMaxCharges.put(rs.getInt("item_id"), new ItemChargesDto(rs.getInt("item_id"), rs.getInt("max_charges"), rs.getInt("degraded_item_id")));
+		});
 	}
 	
 	public static int getMaxCharges(int itemId) {
@@ -96,21 +72,9 @@ public class ItemDao {
 	}
 	
 	public static HashMap<Integer, String> getExamineMap() {
-		final String query = "select id, description from items";
 		HashMap<Integer, String> examineMap = new HashMap<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					examineMap.put(rs.getInt("id"), rs.getString("description"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
+		DbConnection.load("select id, description from items", 
+				rs -> examineMap.put(rs.getInt("id"), rs.getString("description")));
 		return examineMap;
 	}
 	

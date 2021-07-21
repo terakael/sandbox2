@@ -1,9 +1,5 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,8 +10,8 @@ import main.database.DbConnection;
 import main.database.dto.PickableDto;
 
 public class PickableDao {
-	private static ArrayList<PickableDto> pickables;
-	private static Map<Integer, Map<Integer, Set<Integer>>> pickableInstances; // floor, <sceneryId, <tileIds>>
+	private static ArrayList<PickableDto> pickables = new ArrayList<>();
+	private static Map<Integer, Map<Integer, Set<Integer>>> pickableInstances = new HashMap<>(); // floor, <sceneryId, <tileIds>>
 	
 	public static void setupCaches() {
 		cachePickables();
@@ -24,20 +20,8 @@ public class PickableDao {
 	
 	private static void cachePickables() {
 		final String query = "select scenery_id, item_id, respawn_ticks, scenery_attributes from pickable";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery()
-		) {
-			pickables = new ArrayList<>();
-			
-			while (rs.next())
-				pickables.add(new PickableDto(rs.getInt("scenery_id"), rs.getInt("item_id"), rs.getInt("respawn_ticks"), rs.getInt("scenery_attributes")));
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> 
+			pickables.add(new PickableDto(rs.getInt("scenery_id"), rs.getInt("item_id"), rs.getInt("respawn_ticks"), rs.getInt("scenery_attributes"))));
 	}
 	
 	private static void cachePickableInstances() {
@@ -46,24 +30,11 @@ public class PickableDao {
 		// run through every rock's scenery_id and pull out all the instance tiles
 		for (PickableDto dto : pickables) {
 			final String query = "select floor, tile_id from room_scenery where scenery_id = ?";
-			
-			try (
-				Connection connection = DbConnection.get();
-				PreparedStatement ps = connection.prepareStatement(query);
-			) {
-				ps.setInt(1, dto.getSceneryId());
-				
-				try (ResultSet rs = ps.executeQuery()) {
-					while (rs.next()) {
-						pickableInstances.putIfAbsent(rs.getInt("floor"), new HashMap<>());
-						pickableInstances.get(rs.getInt("floor")).putIfAbsent(dto.getSceneryId(), new HashSet<>());
-						pickableInstances.get(rs.getInt("floor")).get(dto.getSceneryId()).add(rs.getInt("tile_id"));
-					}
-				}	
-				
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			DbConnection.load(query, rs -> {
+				pickableInstances.putIfAbsent(rs.getInt("floor"), new HashMap<>());
+				pickableInstances.get(rs.getInt("floor")).putIfAbsent(dto.getSceneryId(), new HashSet<>());
+				pickableInstances.get(rs.getInt("floor")).get(dto.getSceneryId()).add(rs.getInt("tile_id"));
+			}, dto.getSceneryId());
 		}
 	}
 	
@@ -94,5 +65,9 @@ public class PickableDao {
 	
 	public static boolean isItemPickable(int itemId) {
 		return pickables.stream().filter(e -> e.getItemId() == itemId).findFirst().isPresent();
+	}
+	
+	public static Set<PickableDto> getAllPickables() {
+		return new HashSet<>(pickables);
 	}
 }

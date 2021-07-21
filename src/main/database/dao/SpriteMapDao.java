@@ -1,10 +1,6 @@
 package main.database.dao;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -19,8 +15,8 @@ import main.database.dto.SpriteMapDto;
 public class SpriteMapDao {
 	private SpriteMapDao() {}
 	
-	private static Map<Integer, SpriteMapDto> spriteMaps = null;
-	private static List<SpriteMapDto> alwaysLoadedSpriteMaps = null;
+	private static Map<Integer, SpriteMapDto> spriteMaps = new HashMap<>();
+	private static List<SpriteMapDto> alwaysLoadedSpriteMaps = new ArrayList<>();
 	
 	public static void setupCaches() throws IOException {
 		cacheSpriteMaps();
@@ -41,33 +37,25 @@ public class SpriteMapDao {
 	private static void cacheSpriteMaps() throws IOException {
 		final String query = "select id, filename, always_load from sprite_maps where id > 0";
 		
-		spriteMaps = new HashMap<>();
-		alwaysLoadedSpriteMaps = new ArrayList<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery();
-		) {
-			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+		DbConnection.load(query, rs -> {
+			String encodedString = "";
+			final String filename = rs.getString("filename"); 
 			
-			while (rs.next()) {
-				String encodedString = "";
-				final String filename = rs.getString("filename"); 
-				
-				if (!filename.isEmpty()) {
+			if (!filename.isEmpty()) {
+				try {
 					byte[] data = IOUtils.toByteArray(classloader.getResourceAsStream("spritemaps/" + filename));
 					encodedString = Base64.getEncoder().encodeToString(data);
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-				
-				SpriteMapDto dto = new SpriteMapDto(rs.getInt("id"), encodedString);
-				spriteMaps.put(rs.getInt("id"), dto);
-				
-				if (rs.getInt("always_load") == 1)
-					alwaysLoadedSpriteMaps.add(dto);
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+			
+			SpriteMapDto dto = new SpriteMapDto(rs.getInt("id"), encodedString);
+			spriteMaps.put(rs.getInt("id"), dto);
+			
+			if (rs.getInt("always_load") == 1)
+				alwaysLoadedSpriteMaps.add(dto);
+		});
 	}
 }

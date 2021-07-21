@@ -1,16 +1,12 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 import main.database.DbConnection;
 import main.database.dto.NpcMessageDto;
 
 public class NpcMessageDao {
-	private static ArrayList<NpcMessageDto> npcMessages = null;
+	private static ArrayList<NpcMessageDto> npcMessages = new ArrayList<>();
 	
 	public static void setupCaches() {
 		loadNpcMessages();
@@ -18,20 +14,7 @@ public class NpcMessageDao {
 	
 	private static void loadNpcMessages() {
 		final String query = "select npc_id, message_id, message from npc_messages";
-		
-		npcMessages = new ArrayList<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					npcMessages.add(new NpcMessageDto(rs.getInt("npc_id"), rs.getInt("message_id"), rs.getString("message")));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> npcMessages.add(new NpcMessageDto(rs.getInt("npc_id"), rs.getInt("message_id"), rs.getString("message"))));
 	}
 	
 	public static ArrayList<String> getMessagesByNpcId(int npcId) {

@@ -23,35 +23,13 @@ public class ShopDao {
 	}
 	
 	private static void cacheShopOwnerMap() {
-		final String query = "select shop_id, owner_id from shop_owners";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					shopIdsByOwnerId.put(rs.getInt("owner_id"), rs.getInt("shop_id"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select shop_id, owner_id from shop_owners", 
+				rs -> shopIdsByOwnerId.put(rs.getInt("owner_id"), rs.getInt("shop_id")));
 	}
 	
 	private static void cacheShopNames() {
-		final String query = "select id, name from shops";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					shopNames.put(rs.getInt("id"), rs.getString("name"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select id, name from shops", 
+				rs -> shopNames.put(rs.getInt("id"), rs.getString("name")));
 	}
 	
 	public static ArrayList<ShopDto> getShopsAndItems() {
@@ -59,59 +37,36 @@ public class ShopDao {
 				"select shops.id, shops.name, shops.shop_type, owner_id from shops" + 
 				" inner join shop_owners on shop_owners.shop_id = shops.id";
 		ArrayList<ShopDto> dtos = new ArrayList<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					int shopId = rs.getInt("id");
-					ArrayList<ShopItemDto> shopItems = getShopStockById(shopId);
-					
-					dtos.add(new ShopDto(shopId, rs.getInt("owner_id"), rs.getString("name"), rs.getInt("shop_type"), shopItems));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			int shopId = rs.getInt("id");
+			ArrayList<ShopItemDto> shopItems = getShopStockById(shopId);
+			
+			dtos.add(new ShopDto(shopId, rs.getInt("owner_id"), rs.getString("name"), rs.getInt("shop_type"), shopItems));
+		});
 		
 		return dtos;
 	}
 	
 	public static String getShopNameById(int shopId) {
-		if (shopNames.containsKey(shopId))
-			return shopNames.get(shopId);
-		return null;
+		return shopNames.get(shopId);
 	}
 	
 	public static Integer getShopIdByOwnerId(int ownerId) {
-		if (shopIdsByOwnerId.containsKey(ownerId))
-			return shopIdsByOwnerId.get(ownerId);
-		return null;
+		return shopIdsByOwnerId.get(ownerId);
 	}
 	
 	public static ArrayList<ShopItemDto> getShopStockById(int shopId) {
 		final String query = "select shop_id, item_id, default_stock, respawn_ticks from shop_stock where shop_id = ? order by item_id";
 		
 		ArrayList<ShopItemDto> list = new ArrayList<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, shopId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					list.add(new ShopItemDto(
-								rs.getInt("item_id"), 
-								rs.getInt("default_stock"), 
-								rs.getInt("default_stock"), 
-								ItemDao.getItem(rs.getInt("item_id")).getPrice(), 
-								rs.getInt("respawn_ticks")));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			list.add(new ShopItemDto(
+					rs.getInt("item_id"), 
+					rs.getInt("default_stock"), 
+					rs.getInt("default_stock"), 
+					ItemDao.getItem(rs.getInt("item_id")).getPrice(), 
+					rs.getInt("respawn_ticks")));
+		}, shopId);
 		
 		return list;
 	}

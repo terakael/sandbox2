@@ -2,7 +2,6 @@ package main.database.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -320,25 +319,14 @@ public class PlayerStorageDao {
 		playerStorage.put(playerId, new HashMap<>()); // reset it if it exists
 		
 		final String query = "select player_id, storage_id, slot, item_id, count, charges from player_storage where player_id=?";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, playerId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					final int storageId = rs.getInt("storage_id");
-					final StorageTypes storageType = StorageTypes.withValue(storageId);
-					
-					playerStorage.get(playerId).putIfAbsent(storageType, new HashMap<>());
-					PlayerStorageDto dto = new PlayerStorageDto(playerId, storageId, rs.getInt("slot"), rs.getInt("item_id"), rs.getInt("count"), rs.getInt("charges"));
-					playerStorage.get(playerId).get(storageType).put(rs.getInt("slot"), dto);
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			final int storageId = rs.getInt("storage_id");
+			final StorageTypes storageType = StorageTypes.withValue(storageId);
+			
+			playerStorage.get(playerId).putIfAbsent(storageType, new HashMap<>());
+			PlayerStorageDto dto = new PlayerStorageDto(playerId, storageId, rs.getInt("slot"), rs.getInt("item_id"), rs.getInt("count"), rs.getInt("charges"));
+			playerStorage.get(playerId).get(storageType).put(rs.getInt("slot"), dto);
+		}, playerId);
 	}
 	
 	private static boolean validatePlayerStorageElement(int playerId, StorageTypes storageType, int slot) {

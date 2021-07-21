@@ -1,9 +1,5 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +13,7 @@ import main.processing.managers.TybaltsTaskManager;
 import main.responses.ResponseMaps;
 
 public class PlayerTybaltsTaskDao {
-	private static Map<Integer, PlayerTybaltsTaskDto> tasksByPlayerId; // playerId, dto
+	private static Map<Integer, PlayerTybaltsTaskDto> tasksByPlayerId = new HashMap<>(); // playerId, dto
 	
 	public static void setupCaches() {
 		setupPlayerTybaltsTasks();
@@ -25,21 +21,10 @@ public class PlayerTybaltsTaskDao {
 	
 	private static void setupPlayerTybaltsTasks() {
 		final String query = "select player_id, task_id, progress1, progress2, progress3, progress4 from player_tybalts_tasks";
-		
-		tasksByPlayerId = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					tasksByPlayerId.put(rs.getInt("player_id"), new PlayerTybaltsTaskDto(
-							rs.getInt("player_id"), rs.getInt("task_id"), rs.getInt("progress1"), rs.getInt("progress2"), rs.getInt("progress3"), rs.getInt("progress4")));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			tasksByPlayerId.put(rs.getInt("player_id"), new PlayerTybaltsTaskDto(
+					rs.getInt("player_id"), rs.getInt("task_id"), rs.getInt("progress1"), rs.getInt("progress2"), rs.getInt("progress3"), rs.getInt("progress4")));
+		});
 	}
 	
 	public static PlayerTybaltsTaskDto getCurrentTaskByPlayerId(int playerId) {

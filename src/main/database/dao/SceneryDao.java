@@ -21,13 +21,13 @@ import main.types.SceneryAttributes;
 public class SceneryDao {
 	private SceneryDao() {};
 	
-	@Getter private static List<SceneryDto> allScenery;
+	@Getter private static List<SceneryDto> allScenery = new ArrayList<>();
 	private static HashMap<Integer, List<SceneryDto>> allSceneryByFloor;
 	private static Map<Integer, Map<Integer, Set<Integer>>> sceneryInstancesByFloor; // floor, <sceneryId, tileids>
 	@Getter private static HashMap<Integer, HashMap<Integer, Integer>> impassableTileIds = new HashMap<>();// floor, <tile_id, impassable_type>
 	
 	public static void setupCaches() {
-		allScenery = loadAllScenery();
+		loadAllScenery();
 		allSceneryByFloor = new HashMap<>();
 		sceneryInstancesByFloor = new HashMap<>();
 		for (int floor : GroundTextureDao.getDistinctFloors()) {
@@ -38,34 +38,22 @@ public class SceneryDao {
 		}
 	}
 	
-	private static List<SceneryDto> loadAllScenery() {
+	private static void loadAllScenery() {
 		final String query = 
 				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes, lightsource_radius from scenery " +
 						" where attributes != 2 ";
-		List<SceneryDto> sceneryList = new ArrayList<>();
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					SceneryDto dto = new SceneryDto();
-					dto.setId(rs.getInt("id"));
-					dto.setName(rs.getString("name"));
-					dto.setSpriteFrameId(rs.getInt("sprite_frame_id"));
-					dto.setLeftclickOption(rs.getInt("leftclick_option"));
-					dto.setOtherOptions(rs.getInt("other_options"));
-					dto.setAttributes(rs.getInt("attributes"));
-					dto.setLightsourceRadius(rs.getInt("lightsource_radius"));
-					sceneryList.add(dto);
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		return sceneryList;
+		DbConnection.load(query, rs -> {
+			final SceneryDto dto = new SceneryDto();
+			dto.setId(rs.getInt("id"));
+			dto.setName(rs.getString("name"));
+			dto.setSpriteFrameId(rs.getInt("sprite_frame_id"));
+			dto.setLeftclickOption(rs.getInt("leftclick_option"));
+			dto.setOtherOptions(rs.getInt("other_options"));
+			dto.setAttributes(rs.getInt("attributes"));
+			dto.setLightsourceRadius(rs.getInt("lightsource_radius"));
+			allScenery.add(dto);
+		});
 	}
 
 	private static List<SceneryDto> loadAllSceneryByFloor(int floor) {
@@ -75,27 +63,18 @@ public class SceneryDao {
 		
 		List<SceneryDto> sceneryList = new ArrayList<>();
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, floor);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					SceneryDto dto = new SceneryDto();
-					dto.setId(rs.getInt("id"));
-					dto.setName(rs.getString("name"));
-					dto.setSpriteFrameId(rs.getInt("sprite_frame_id"));
-					dto.setLeftclickOption(rs.getInt("leftclick_option"));
-					dto.setOtherOptions(rs.getInt("other_options"));
-					dto.setAttributes(rs.getInt("attributes"));
-					dto.setLightsourceRadius(rs.getInt("lightsource_radius"));
-					sceneryList.add(dto);
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			SceneryDto dto = new SceneryDto();
+			dto.setId(rs.getInt("id"));
+			dto.setName(rs.getString("name"));
+			dto.setSpriteFrameId(rs.getInt("sprite_frame_id"));
+			dto.setLeftclickOption(rs.getInt("leftclick_option"));
+			dto.setOtherOptions(rs.getInt("other_options"));
+			dto.setAttributes(rs.getInt("attributes"));
+			dto.setLightsourceRadius(rs.getInt("lightsource_radius"));
+			sceneryList.add(dto);
+		}, floor);
+		
 		return sceneryList;
 	}
 	
@@ -117,21 +96,9 @@ public class SceneryDao {
 		String query = "select tile_id from room_scenery where floor=? and scenery_id=?";
 		
 		HashSet<Integer> instanceList = new HashSet<>();
+		DbConnection.load(query, 
+				rs -> instanceList.add(rs.getInt("tile_id")), floor, sceneryId);
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, floor);
-			ps.setInt(2, sceneryId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					instanceList.add(rs.getInt("tile_id"));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 		return instanceList;
 	}
 	
@@ -140,40 +107,16 @@ public class SceneryDao {
 		query += " inner join scenery on room_scenery.scenery_id=scenery.id and impassable > 0";
 		query += " where floor=?";
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, floor);
-			try (ResultSet rs = ps.executeQuery()) {
-				impassableTileIds.put(floor, new HashMap<>());
-				while (rs.next()) {
-					impassableTileIds.get(floor).put(rs.getInt("tile_id"), rs.getInt("impassable"));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		impassableTileIds.put(floor, new HashMap<>());
+		DbConnection.load(query, rs -> {
+			impassableTileIds.get(floor).put(rs.getInt("tile_id"), rs.getInt("impassable"));
+		}, floor);
 	}
 	
 	public static HashMap<Integer, String> getExamineMap() {
-		String query = "select id, examine from scenery";
-		
 		HashMap<Integer, String> examineMap = new HashMap<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					examineMap.put(rs.getInt("id"), rs.getString("examine"));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
+		DbConnection.load("select id, examine from scenery", 
+				rs -> examineMap.put(rs.getInt("id"), rs.getString("examine")));
 		return examineMap;
 	}
 	
@@ -215,8 +158,6 @@ public class SceneryDao {
 	}
 	
 	public static HashMap<Integer, Integer> getImpassableTileIdsByFloor(int floor) {
-		if (!impassableTileIds.containsKey(floor))
-			return null;
 		return impassableTileIds.get(floor);
 	}
 	

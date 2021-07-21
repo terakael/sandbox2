@@ -1,9 +1,5 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -17,7 +13,7 @@ import main.database.dto.LockedDoorDto;
 import main.processing.managers.LockedDoorManager;
 
 public class DoorDao {
-	private static Map<Integer, DoorDto> doors; // <scenery_id, dto>
+	private static Map<Integer, DoorDto> doors = new HashMap<>(); // <scenery_id, dto>
 	@Getter private static HashMap<Integer, HashMap<Integer, HashSet<Integer>>> doorInstances = null; // <floor, <scenery_id, tile_id>>
 	
 	private static Map<Integer, Map<Integer, Boolean>> doorStatuses = null; // open = true, closed = false
@@ -91,19 +87,8 @@ public class DoorDao {
 	}
 	
 	private static void setupDoorCache() {
-		final String query = "select scenery_id, open_impassable, closed_impassable from doors";
-		doors = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					doors.put(rs.getInt("scenery_id"), new DoorDto(rs.getInt("scenery_id"), rs.getInt("open_impassable"), rs.getInt("closed_impassable")));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select scenery_id, open_impassable, closed_impassable from doors", 
+				rs -> doors.put(rs.getInt("scenery_id"), new DoorDto(rs.getInt("scenery_id"), rs.getInt("open_impassable"), rs.getInt("closed_impassable"))));
 	}
 	
 	private static void setupDoorInstanceCache() {
@@ -116,32 +101,16 @@ public class DoorDao {
 		for (Map.Entry<Integer, DoorDto> entry : doors.entrySet()) {
 			final String query = "select floor, tile_id from room_scenery where scenery_id = ?";
 			
-			try (
-				Connection connection = DbConnection.get();
-				PreparedStatement ps = connection.prepareStatement(query);
-			) {
-				final int sceneryId = entry.getValue().getSceneryId();
-				ps.setInt(1, sceneryId);
+			final int sceneryId = entry.getValue().getSceneryId();
+			DbConnection.load(query, rs -> {
+				doorInstances.putIfAbsent(rs.getInt("floor"), new HashMap<>());
+				doorInstances.get(rs.getInt("floor")).putIfAbsent(sceneryId, new HashSet<>());
+				doorInstances.get(rs.getInt("floor")).get(sceneryId).add(rs.getInt("tile_id"));
 				
-				try (ResultSet rs = ps.executeQuery()) {
-					while (rs.next()) {
-						if (!doorInstances.containsKey(rs.getInt("floor")))
-							doorInstances.put(rs.getInt("floor"), new HashMap<>());
-						
-						if (!doorInstances.get(rs.getInt("floor")).containsKey(sceneryId))
-							doorInstances.get(rs.getInt("floor")).put(sceneryId, new HashSet<>());
-						
-						doorInstances.get(rs.getInt("floor")).get(sceneryId).add(rs.getInt("tile_id"));
-						
-						// set all the door statuses while we're here
-						if (!doorStatuses.containsKey(rs.getInt("floor")))
-							doorStatuses.put(rs.getInt("floor"), new HashMap<>());
-						doorStatuses.get(rs.getInt("floor")).put(rs.getInt("tile_id"), false); // all doors are closed on server startup.
-					}
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+				// set all the door statuses while we're here
+				doorStatuses.putIfAbsent(rs.getInt("floor"), new HashMap<>());
+				doorStatuses.get(rs.getInt("floor")).put(rs.getInt("tile_id"), false); // all doors are closed on server startup.
+			}, sceneryId);
 		}
 	}
 	
@@ -149,22 +118,11 @@ public class DoorDao {
 		final String query = "select floor, tile_id, unlock_item_id, destroy_on_use from locked_door_instances";
 		
 		Map<Integer, Map<Integer, LockedDoorDto>> lockedDoorInstances = new HashMap<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					if (!lockedDoorInstances.containsKey(rs.getInt("floor")))
-						lockedDoorInstances.put(rs.getInt("floor"), new HashMap<>());
-					lockedDoorInstances.get(rs.getInt("floor")).put(rs.getInt("tile_id"), new LockedDoorDto(rs.getInt("floor"), rs.getInt("tile_id"), rs.getInt("unlock_item_id"), rs.getBoolean("destroy_on_use")));
-				}
-				
-				LockedDoorManager.setLockedDoorInstances(lockedDoorInstances);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			if (!lockedDoorInstances.containsKey(rs.getInt("floor")))
+				lockedDoorInstances.put(rs.getInt("floor"), new HashMap<>());
+			lockedDoorInstances.get(rs.getInt("floor")).put(rs.getInt("tile_id"), new LockedDoorDto(rs.getInt("floor"), rs.getInt("tile_id"), rs.getInt("unlock_item_id"), rs.getBoolean("destroy_on_use")));
+		});
+		LockedDoorManager.setLockedDoorInstances(lockedDoorInstances);
 	}
 }

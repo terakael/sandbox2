@@ -1,9 +1,5 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,53 +26,41 @@ public class NPCDao {
 	}
 	
 	private static List<NPCDto> getNpcs() {
-		final String query = "select * from npcs";
-		
 		List<NPCDto> npcList = new ArrayList<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					npcList.add(new NPCDto(
-						rs.getInt("id"),
-						rs.getString("name"),
-						rs.getInt("up_id"),
-						rs.getInt("down_id"),
-						rs.getInt("left_id"),
-						rs.getInt("right_id"),
-						rs.getInt("attack_id"),
-						rs.getFloat("scale_x"),
-						rs.getFloat("scale_y"),
-						0,// tileId (not used in this map as this is not the instance list, just all npc types)
-						rs.getInt("hp"),
-						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), rs.getInt("magic")),
-						rs.getInt("leftclick_option"),
-						rs.getInt("other_options"),
-						0,// floor (not used in this map as this is not the instance list, just all npc types)
-						rs.getInt("acc"),
-						rs.getInt("str"),
-						rs.getInt("def"),
-						rs.getInt("pray"),
-						rs.getInt("magic"),
-						rs.getInt("acc_bonus"),
-						rs.getInt("str_bonus"),
-						rs.getInt("def_bonus"),
-						rs.getInt("pray_bonus"),
-						rs.getInt("attack_speed"),
-						rs.getInt("roam_radius"),
-						rs.getInt("attributes"),
-						rs.getInt("respawn_ticks")
-					));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select * from npcs", rs -> {
+			npcList.add(new NPCDto(
+					rs.getInt("id"),
+					rs.getString("name"),
+					rs.getInt("up_id"),
+					rs.getInt("down_id"),
+					rs.getInt("left_id"),
+					rs.getInt("right_id"),
+					rs.getInt("attack_id"),
+					rs.getFloat("scale_x"),
+					rs.getFloat("scale_y"),
+					0,// tileId (not used in this map as this is not the instance list, just all npc types)
+					rs.getInt("hp"),
+					StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), rs.getInt("magic")),
+					rs.getInt("leftclick_option"),
+					rs.getInt("other_options"),
+					0,// floor (not used in this map as this is not the instance list, just all npc types)
+					rs.getInt("acc"),
+					rs.getInt("str"),
+					rs.getInt("def"),
+					rs.getInt("pray"),
+					rs.getInt("magic"),
+					rs.getInt("acc_bonus"),
+					rs.getInt("str_bonus"),
+					rs.getInt("def_bonus"),
+					rs.getInt("pray_bonus"),
+					rs.getInt("attack_speed"),
+					rs.getInt("roam_radius"),
+					rs.getInt("attributes"),
+					rs.getInt("respawn_ticks")
+				));
+		});
+
 		return npcList;
-		
 	}
 	
 	public static List<NPCDto> getAllNpcsByFloor(int floor) {
@@ -86,68 +70,46 @@ public class NPCDao {
 			" where floor=?";
 		
 		List<NPCDto> npcList = new ArrayList<>();
+		DbConnection.load(query, rs -> {
+			npcList.add(new NPCDto(
+					rs.getInt("id"),
+					rs.getString("name"),
+					rs.getInt("up_id"),
+					rs.getInt("down_id"),
+					rs.getInt("left_id"),
+					rs.getInt("right_id"),
+					rs.getInt("attack_id"),
+					rs.getFloat("scale_x"),
+					rs.getFloat("scale_y"),
+					rs.getInt("tile_id"),
+					rs.getInt("hp"),
+					StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), rs.getInt("magic")),
+					rs.getInt("leftclick_option"),
+					rs.getInt("other_options"),
+					floor,
+					rs.getInt("acc"),
+					rs.getInt("str"),
+					rs.getInt("def"),
+					rs.getInt("pray"),
+					rs.getInt("magic"),
+					rs.getInt("acc_bonus"),
+					rs.getInt("str_bonus"),
+					rs.getInt("def_bonus"),
+					rs.getInt("pray_bonus"),
+					rs.getInt("attack_speed"),
+					rs.getInt("roam_radius"),
+					rs.getInt("attributes"),
+					rs.getInt("respawn_ticks")
+				));
+		}, floor);
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, floor);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					npcList.add(new NPCDto(
-						rs.getInt("id"),
-						rs.getString("name"),
-						rs.getInt("up_id"),
-						rs.getInt("down_id"),
-						rs.getInt("left_id"),
-						rs.getInt("right_id"),
-						rs.getInt("attack_id"),
-						rs.getFloat("scale_x"),
-						rs.getFloat("scale_y"),
-						rs.getInt("tile_id"),
-						rs.getInt("hp"),
-						StatsDao.getCombatLevelByStats(rs.getInt("str"), rs.getInt("acc"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("hp"), rs.getInt("magic")),
-						rs.getInt("leftclick_option"),
-						rs.getInt("other_options"),
-						floor,
-						rs.getInt("acc"),
-						rs.getInt("str"),
-						rs.getInt("def"),
-						rs.getInt("pray"),
-						rs.getInt("magic"),
-						rs.getInt("acc_bonus"),
-						rs.getInt("str_bonus"),
-						rs.getInt("def_bonus"),
-						rs.getInt("pray_bonus"),
-						rs.getInt("attack_speed"),
-						rs.getInt("roam_radius"),
-						rs.getInt("attributes"),
-						rs.getInt("respawn_ticks")
-					));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 		return npcList;
 	}
 	
 	public static Map<Integer, String> getExamineMap() {
 		final String query = "select id, description from npcs";
 		Map<Integer, String> examineMap = new HashMap<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					examineMap.put(rs.getInt("id"), rs.getString("description"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
+		DbConnection.load(query, rs -> examineMap.put(rs.getInt("id"), rs.getString("description")));
 		return examineMap;
 	}
 	
@@ -165,21 +127,12 @@ public class NPCDao {
 	public static void cacheNpcDrops() {
 		final String query = "select npc_id, item_id, count, rate from npc_drops";
 		npcDrops = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					int npcId = rs.getInt("npc_id");
-					if (!npcDrops.containsKey(npcId))
-						npcDrops.put(npcId, new ArrayList<>());
-					npcDrops.get(npcId).add(new NpcDropDto(rs.getInt("npc_id"), rs.getInt("item_id"), rs.getInt("count"), rs.getInt("rate")));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			int npcId = rs.getInt("npc_id");
+			if (!npcDrops.containsKey(npcId))
+				npcDrops.put(npcId, new ArrayList<>());
+			npcDrops.get(npcId).add(new NpcDropDto(rs.getInt("npc_id"), rs.getInt("item_id"), rs.getInt("count"), rs.getInt("rate")));
+		});
 	}
 	
 	public static List<NpcDropDto> getDropsByNpcId(int npcId) {

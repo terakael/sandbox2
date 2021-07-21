@@ -1,32 +1,18 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import main.database.DbConnection;
 import main.database.dto.BrewableDto;
 
 public class BrewableDao {
-	private static HashMap<Integer, BrewableDto> brewables;
+	private static HashMap<Integer, BrewableDto> brewables = new HashMap<>(); // potionId, dto
 	
 	public static void cacheBrewables() {
-		final String query = "select potion_id, level, exp from brewable";
-		
-		brewables = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					brewables.put(rs.getInt("potion_id"), new BrewableDto(rs.getInt("potion_id"), rs.getInt("level"), rs.getInt("exp")));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select potion_id, level, exp from brewable", 
+				rs -> brewables.put(rs.getInt("potion_id"), new BrewableDto(rs.getInt("potion_id"), rs.getInt("level"), rs.getInt("exp"))));
 	}
 	
 	public static boolean isBrewable(int id) {
@@ -49,5 +35,9 @@ public class BrewableDao {
 		if (brewables.containsKey(id))
 			return brewables.get(id).getExp();
 		return 0;
+	}
+	
+	public static Set<BrewableDto> getAllBrewables() {
+		return new HashSet<>(brewables.values());
 	}
 }

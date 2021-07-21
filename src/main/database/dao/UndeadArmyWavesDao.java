@@ -13,30 +13,19 @@ import main.database.DbConnection;
 import main.database.dto.UndeadArmyWavesDto;
 
 public class UndeadArmyWavesDao {
-	private static Map<Integer, Set<UndeadArmyWavesDto>> waves;
+	private static Map<Integer, Set<UndeadArmyWavesDto>> waves = new HashMap<>();
 	
 	public static void setupCaches() {
 		setupWaves();
 	}
 	
 	private static void setupWaves() {
-		waves = new HashMap<>();
 		
 		final String query = "select wave, npc_id, tile_id from undead_army_waves";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					waves.putIfAbsent(rs.getInt("wave"), new HashSet<>());
-					waves.get(rs.getInt("wave")).add(new UndeadArmyWavesDto(rs.getInt("wave"), rs.getInt("npc_id"), rs.getInt("tile_id")));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			waves.putIfAbsent(rs.getInt("wave"), new HashSet<>());
+			waves.get(rs.getInt("wave")).add(new UndeadArmyWavesDto(rs.getInt("wave"), rs.getInt("npc_id"), rs.getInt("tile_id")));
+		});
 	}
 	
 	public static Set<UndeadArmyWavesDto> getWave(int wave) {

@@ -1,7 +1,10 @@
 package main.database;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.apache.commons.dbcp.BasicDataSource;
 
@@ -27,6 +30,37 @@ public class DbConnection {
 		} catch (SQLException e) {
 			System.out.println(e);
 			return null;
+		}
+	}
+	
+	public static void load(String query, ThrowingConsumer<ResultSet, SQLException> fn) {
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					fn.accept(rs);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void load(String query, ThrowingConsumer<ResultSet, SQLException> fn, Integer... params) {
+		try (
+			Connection connection = DbConnection.get();
+			PreparedStatement ps = connection.prepareStatement(query);
+		) {
+			for (int i = 0; i < params.length; ++i)
+				ps.setInt(i + 1, params[i]);
+			
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next())
+					fn.accept(rs);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 }

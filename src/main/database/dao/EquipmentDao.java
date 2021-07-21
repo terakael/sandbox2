@@ -1,9 +1,5 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -25,38 +21,27 @@ public class EquipmentDao {
 	
 	private static HashMap<Integer, EquipmentTypes> equipmentByType = new HashMap<>();
 	private static HashMap<Integer, EquipmentDto> equipment = new HashMap<>();
-//	private static HashMap<Items, Items> reinforcedToBase = new HashMap<>();// reinforced_id, base_id
 	
 	@Getter private static Map<Integer, HashMap<Integer, Integer>> playerEquipment; // playerId, <equipmentId, slot>
 	
 	public static void setupCaches() {
 		cacheEquipmentByType();
 		cacheEquipment();
-//		cacheReinforcedtoBaseMap();
 		cachePlayerEquipment();
 	}
 	
 	private static void cacheEquipment() {
 		final String query = "select item_id, player_part_id, animation_id, color, requirement, acc, str, def, pray, mage, hp, speed from equipment";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					final int itemId = rs.getInt("item_id");
-					equipment.put(itemId, 
-								new EquipmentDto(itemId, 
-												 rs.getInt("player_part_id"), 
-												 rs.getInt("requirement"), 
-												 getEquipmentTypeByEquipmentId(itemId),
-												 new PlayerAnimationDto(AnimationDao.getAnimationDtoById(rs.getInt("animation_id")), rs.getInt("color") == 0 ? null : rs.getInt("color")),
-												 new EquipmentBonusDto(rs.getInt("acc"), rs.getInt("str"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("mage"), rs.getInt("hp"), rs.getInt("speed"))));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			final int itemId = rs.getInt("item_id");
+			equipment.put(itemId, 
+				new EquipmentDto(itemId, 
+								 rs.getInt("player_part_id"), 
+								 rs.getInt("requirement"), 
+								 getEquipmentTypeByEquipmentId(itemId),
+								 new PlayerAnimationDto(AnimationDao.getAnimationDtoById(rs.getInt("animation_id")), rs.getInt("color") == 0 ? null : rs.getInt("color")),
+								 new EquipmentBonusDto(rs.getInt("acc"), rs.getInt("str"), rs.getInt("def"), rs.getInt("pray"), rs.getInt("mage"), rs.getInt("hp"), rs.getInt("speed"))));
+		});
 	}
 	
 	private static void cacheEquipmentByType() {
@@ -64,20 +49,11 @@ public class EquipmentDao {
 				"select equipment_types.id, equipment.item_id from equipment" + 
 				" inner join equipment_types on equipment.equipment_type_id = equipment_types.id";
 		
-		try (
-				Connection connection = DbConnection.get();
-				PreparedStatement ps = connection.prepareStatement(query)
-			) {
-				try (ResultSet rs = ps.executeQuery()) {
-					while (rs.next()) {
-						EquipmentTypes type = EquipmentTypes.withValue(rs.getInt("id"));
-						if (type != null)
-							equipmentByType.put(rs.getInt("item_id"), type);
-					}
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+		DbConnection.load(query, rs -> {
+			EquipmentTypes type = EquipmentTypes.withValue(rs.getInt("id"));
+			if (type != null)
+				equipmentByType.put(rs.getInt("item_id"), type);
+		});
 	}
 	
 	public static EquipmentTypes getEquipmentTypeByEquipmentId(int equipmentId) {
@@ -214,24 +190,13 @@ public class EquipmentDao {
 		playerEquipment = new HashMap<>();
 		
 		final String query = "select player_id, equipment_id, slot from player_equipment";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					final int playerId = rs.getInt("player_id");
-					final int slot = rs.getInt("slot");
-					final int equipmentId = rs.getInt("equipment_id");
-					if (!playerEquipment.containsKey(playerId))
-						playerEquipment.put(playerId, new HashMap<>());
-					playerEquipment.get(playerId).put(equipmentId, slot);
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			final int playerId = rs.getInt("player_id");
+			final int slot = rs.getInt("slot");
+			final int equipmentId = rs.getInt("equipment_id");
+			playerEquipment.putIfAbsent(playerId, new HashMap<>());
+			playerEquipment.get(playerId).put(equipmentId, slot);
+		});
 	}
 
 	public static Map<PlayerPartType, PlayerAnimationDto> getEquipmentAnimationsByPlayerId(int playerId) {

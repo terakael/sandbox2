@@ -1,9 +1,5 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,11 +15,11 @@ import main.types.Stats;
 public class StatsDao {
 	private StatsDao() {}
 	
-	@Getter private static Map<Integer, String> cachedStats = null;
-	@Getter private static HashMap<Integer, Integer> expMap = null;
-	@Getter private static Map<Stats, ArrayList<StatWindowRowDto>> statWindowRows;
+	@Getter private static Map<Integer, String> cachedStats = new HashMap<>();
+	@Getter private static HashMap<Integer, Integer> expMap = new HashMap<>();
+	@Getter private static Map<Stats, ArrayList<StatWindowRowDto>> statWindowRows = new HashMap<>();
 	
-	private static Map<Integer, Map<Integer, StatsDto>> playerStatExpMap; // playerId, <statId, dto>
+	private static Map<Integer, Map<Integer, StatsDto>> playerStatExpMap = new HashMap<>(); // playerId, <statId, dto>
 	
 	static {
 		expMap = new HashMap<>();
@@ -44,32 +40,15 @@ public class StatsDao {
 	
 	private static void cachePlayerStatExp() {
 		final String query = "select player_id, stat_id, exp, relative_boost from player_stats";
-		
-		playerStatExpMap = new HashMap<>();
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {			
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					final int playerId = rs.getInt("player_id");
-					final int statId = rs.getInt("stat_id");
-					final double exp = rs.getDouble("exp");
-					final int relativeBoost = rs.getInt("relative_boost");
-					
-					StatsDto dto = new StatsDto(playerId, statId, exp, relativeBoost);
-					
-					if (!playerStatExpMap.containsKey(playerId))
-						playerStatExpMap.put(playerId, new HashMap<>());
-					
-					if (!playerStatExpMap.get(playerId).containsKey(statId))
-						playerStatExpMap.get(playerId).put(statId, dto);
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			final int playerId = rs.getInt("player_id");
+			final int statId = rs.getInt("stat_id");
+			final double exp = rs.getDouble("exp");
+			final int relativeBoost = rs.getInt("relative_boost");
+			
+			playerStatExpMap.putIfAbsent(playerId, new HashMap<>());
+			playerStatExpMap.get(playerId).putIfAbsent(statId, new StatsDto(playerId, statId, exp, relativeBoost));
+		});
 	}
 	
 	public static Map<Integer, Double> getAllStatExpByPlayerId(int id) {
@@ -111,19 +90,8 @@ public class StatsDao {
 	}
 	
 	private static void cacheStats() {
-		final String query = "select id, short_name from stats";
-		
-		cachedStats = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery()
-		) {
-			while (rs.next())
-				cachedStats.put(rs.getInt("id"), rs.getString("short_name"));
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select id, short_name from stats", 
+				rs -> cachedStats.put(rs.getInt("id"), rs.getString("short_name")));
 	}
 
 	public static int getStatIdByName(String stat) {
@@ -241,21 +209,13 @@ public class StatsDao {
 				"order by level";
 		
 		ArrayList<StatWindowRowDto> dtos = new ArrayList<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery();
-		) {			
-			while (rs.next()) {
-				StatWindowRowDto statWindowRow = new StatWindowRowDto(rs.getInt("level"), rs.getInt("itemId"));
-				statWindowRow.setItemId2(rs.getInt("itemId2"));
-				statWindowRow.setItemId3(rs.getInt("itemId3"));
-				dtos.add(statWindowRow);
-			}
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-		
+		DbConnection.load(query, rs -> {
+			StatWindowRowDto statWindowRow = new StatWindowRowDto(rs.getInt("level"), rs.getInt("itemId"));
+			statWindowRow.setItemId2(rs.getInt("itemId2"));
+			statWindowRow.setItemId3(rs.getInt("itemId3"));
+			dtos.add(statWindowRow);
+		});
+
 		return dtos;
 	}
 }

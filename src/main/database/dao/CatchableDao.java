@@ -1,31 +1,15 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 
 import main.database.DbConnection;
 
 public class CatchableDao {
-	private static HashMap<Integer, Integer> catchables;
+	private static HashMap<Integer, Integer> catchables = new HashMap<>();
 	
 	public static void cacheCatchables() {
-		final String query = "select npc_id, item_id from catchable";
-		
-		catchables = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					catchables.put(rs.getInt("npc_id"), rs.getInt("item_id"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select npc_id, item_id from catchable", 
+				rs -> catchables.put(rs.getInt("npc_id"), rs.getInt("item_id")));
 	}
 	
 	public static boolean isCatchable(int npcId) {

@@ -5,10 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,20 +74,8 @@ public class MinimapSegmentDao {
 	
 	private static Map<Integer, Integer> loadMinimapIcons() {
 		Map<Integer, Integer> sceneryIdIconId = new HashMap<>();
-		final String query = "select scenery_id, sprite_frame_id from minimap_icons";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					sceneryIdIconId.put(rs.getInt("scenery_id"), rs.getInt("sprite_frame_id"));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
+		DbConnection.load("select scenery_id, sprite_frame_id from minimap_icons", 
+				rs -> sceneryIdIconId.put(rs.getInt("scenery_id"), rs.getInt("sprite_frame_id")));
 		return sceneryIdIconId;
 	}
 	

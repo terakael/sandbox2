@@ -1,6 +1,9 @@
 package main;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import javax.websocket.DeploymentException;
@@ -43,6 +46,7 @@ import main.database.dao.UndeadArmyWavesDao;
 import main.database.dao.UseItemOnItemDao;
 import main.processing.PathFinder;
 import main.processing.WorldProcessor;
+import main.processing.managers.ArtisanManager;
 import main.processing.managers.DatabaseUpdater;
 import main.processing.managers.NPCManager;
 import main.processing.managers.ShopManager;
@@ -213,6 +217,15 @@ public class Server {
 		
 		System.out.println("caching undead army waves");
 		UndeadArmyWavesDao.setupCaches();
+		
+		System.out.println("caching artisan items");
+		ArtisanManager.setupCaches();
+		
+		Map<Integer, Map<Integer, Integer>> steps = ArtisanManager.getStepsFromItemId(213, 1);
+		steps.forEach((depth, map) -> {
+			map.forEach((itemId, requiredCount) ->
+				System.out.println(" ".repeat(depth * 2) + ArtisanManager.getActionFromItemId(itemId) + String.format(" %dx %s", requiredCount, ItemDao.getNameFromId(itemId))));
+		});
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

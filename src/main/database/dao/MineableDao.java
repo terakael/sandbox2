@@ -1,13 +1,10 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import lombok.Getter;
 import main.database.DbConnection;
@@ -16,7 +13,7 @@ import main.database.dto.MineableDto;
 public class MineableDao {
 	private MineableDao() {}
 	
-	private static List<MineableDto> mineables = null;
+	private static List<MineableDto> mineables = new ArrayList<>();
 	@Getter private static HashMap<Integer, HashMap<Integer, HashSet<Integer>>> mineableInstances = null;
 	
 	public static void setupCaches() {
@@ -45,62 +42,26 @@ public class MineableDao {
 		// run through every rock's scenery_id and pull out all the instance tiles
 		for (MineableDto dto : mineables) {
 			final String query = "select floor, tile_id from room_scenery where scenery_id = ?";
-			
-			try (
-				Connection connection = DbConnection.get();
-				PreparedStatement ps = connection.prepareStatement(query);
-			) {
-				ps.setInt(1, dto.getSceneryId());
+			DbConnection.load(query, rs -> {
+				if (!mineableInstances.containsKey(rs.getInt("floor")))
+					mineableInstances.put(rs.getInt("floor"), new HashMap<>());
 				
-				try (ResultSet rs = ps.executeQuery()) {
-					while (rs.next()) {
-						if (!mineableInstances.containsKey(rs.getInt("floor")))
-							mineableInstances.put(rs.getInt("floor"), new HashMap<>());
-						
-						if (!mineableInstances.get(rs.getInt("floor")).containsKey(dto.getSceneryId()))
-							mineableInstances.get(rs.getInt("floor")).put(dto.getSceneryId(), new HashSet<>());
-						
-						mineableInstances.get(rs.getInt("floor")).get(dto.getSceneryId()).add(rs.getInt("tile_id"));
-					}
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+				if (!mineableInstances.get(rs.getInt("floor")).containsKey(dto.getSceneryId()))
+					mineableInstances.get(rs.getInt("floor")).put(dto.getSceneryId(), new HashSet<>());
+				
+				mineableInstances.get(rs.getInt("floor")).get(dto.getSceneryId()).add(rs.getInt("tile_id"));
+			}, dto.getSceneryId());
 		}
 	}
 	
 	private static void cacheMineables() {
 		final String query = "select scenery_id, level, exp, item_id, respawn_ticks, gold_chance from mineable";
-		
-		List<MineableDto> dtos = new ArrayList<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery()
-		) {
-			while (rs.next())
-				dtos.add(new MineableDto(rs.getInt("scenery_id"), rs.getInt("level"), rs.getInt("exp"), rs.getInt("item_id"), rs.getInt("respawn_ticks"), rs.getInt("gold_chance")));
-
-			mineables = dtos;
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			mineables.add(new MineableDto(rs.getInt("scenery_id"), rs.getInt("level"), rs.getInt("exp"), rs.getInt("item_id"), rs.getInt("respawn_ticks"), rs.getInt("gold_chance")));
+		});
 	}
 	
-	public static int getMineableExpByItemId(int itemId) {
-		final String query = "select exp from mineable where item_id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			ps.setInt(1, itemId);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getInt("exp");
-			}	
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0;
+	public static Set<MineableDto> getAllMineables() {
+		return new HashSet<>(mineables);
 	}
 }

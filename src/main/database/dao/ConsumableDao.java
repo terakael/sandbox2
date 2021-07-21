@@ -1,9 +1,5 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -11,45 +7,22 @@ import main.database.DbConnection;
 import main.database.dto.ConsumableEffectsDto;
 
 public class ConsumableDao {
-	private static HashMap<Integer, Integer> consumables;
-	private static HashMap<Integer, ArrayList<ConsumableEffectsDto>> consumableEffects;
+	private static HashMap<Integer, Integer> consumables = new HashMap<>();
+	private static HashMap<Integer, ArrayList<ConsumableEffectsDto>> consumableEffects = new HashMap<>();
 	
 	public static void cacheConsumables() {
-		final String query = "select item_id, becomes_id from consumable";
-		
-		consumables = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					consumables.put(rs.getInt("item_id"), rs.getInt("becomes_id"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select item_id, becomes_id from consumable", 
+				rs -> consumables.put(rs.getInt("item_id"), rs.getInt("becomes_id")));
 	}
 	
 	public static void cacheConsumableEffects() {
 		final String query = "select item_id, stat_id, amount, pct from consumable_effects";
-		
-		consumableEffects = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					int itemId = rs.getInt("item_id");
-					if (!consumableEffects.containsKey(itemId))
-						consumableEffects.put(itemId, new ArrayList<>());
-					consumableEffects.get(itemId).add(new ConsumableEffectsDto(itemId, rs.getInt("stat_id"), rs.getInt("amount"), rs.getInt("pct")));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			int itemId = rs.getInt("item_id");
+			if (!consumableEffects.containsKey(itemId))
+				consumableEffects.put(itemId, new ArrayList<>());
+			consumableEffects.get(itemId).add(new ConsumableEffectsDto(itemId, rs.getInt("stat_id"), rs.getInt("amount"), rs.getInt("pct")));
+		});
 	}
 	
 	public static boolean isConsumable(int itemId) {

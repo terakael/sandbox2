@@ -8,13 +8,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.FishableDto;
 
 public class FishableDao {
-	private static List<FishableDto> fishables = null;
+	private static List<FishableDto> fishables = new ArrayList<>();
 	@Getter private static HashMap<Integer, HashSet<Integer>> fishableInstances = null; 
 	
 	public static void setupCaches() {
@@ -36,27 +37,16 @@ public class FishableDao {
 	
 	private static void cacheFishables() {
 		final String query = "select scenery_id, level, exp, item_id, respawn_ticks, tool_id, bait_id from fishable";
-		
-		List<FishableDto> dtos = new ArrayList<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery()
-		) {
-			while (rs.next())
-				dtos.add(new FishableDto(
-						rs.getInt("scenery_id"), 
-						rs.getInt("level"), 
-						rs.getInt("exp"), 
-						rs.getInt("item_id"), 
-						rs.getInt("respawn_ticks"),
-						rs.getInt("tool_id"),
-						rs.getInt("bait_id")));
-
-			fishables = dtos;
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query,  rs -> {
+			fishables.add(new FishableDto(
+					rs.getInt("scenery_id"), 
+					rs.getInt("level"), 
+					rs.getInt("exp"), 
+					rs.getInt("item_id"), 
+					rs.getInt("respawn_ticks"),
+					rs.getInt("tool_id"),
+					rs.getInt("bait_id")));
+		});
 	}
 	
 	private static void cacheFishableInstances() {
@@ -84,5 +74,9 @@ public class FishableDao {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public static Set<FishableDto> getAllFishables() {
+		return new HashSet<>(fishables);
 	}
 }

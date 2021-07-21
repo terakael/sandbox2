@@ -15,7 +15,7 @@ import main.processing.WorldProcessor;
 import main.processing.attackable.Player;
 
 public class PlayerDao {
-	@Getter private static Map<Integer, String> attackStyles;
+	@Getter private static Map<Integer, String> attackStyles = new HashMap<>();
 	
 	private PlayerDao() {}
 	
@@ -80,21 +80,7 @@ public class PlayerDao {
 	}
 	
 	public static void cacheAttackStyles() {
-		attackStyles = new HashMap<>();
-		
-		final String query = "select id, name from attack_styles";
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-			ResultSet rs = ps.executeQuery();
-		) {
-			while (rs.next()) {
-				attackStyles.put(rs.getInt("id"), rs.getString("name"));
-			}
-				
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
+		DbConnection.load("select id, name from attack_styles", 
+				rs -> attackStyles.put(rs.getInt("id"), rs.getString("name")));
 	}
 }

@@ -1,9 +1,5 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,20 +22,8 @@ public class ContextOptionsDao {
 	
 	public static List<ContextOptionsDto> cacheContextOptions(String category) {
 		List<ContextOptionsDto> list = new ArrayList<>();
-		final String query = String.format("select id, name from %s_context_options", category);
-		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					list.add(new ContextOptionsDto(rs.getInt("id"), rs.getString("name")));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
+		DbConnection.load(String.format("select id, name from %s_context_options", category), 
+				rs -> list.add(new ContextOptionsDto(rs.getInt("id"), rs.getString("name"))));
 		return list;
 	}
 }

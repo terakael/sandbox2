@@ -1,36 +1,20 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
 import main.database.DbConnection;
 
 public class ClimbableDao {
-	private static Map<Integer, Integer> climbables;
+	private static Map<Integer, Integer> climbables = new HashMap<>();
 	
 	public static void setupCaches() {
 		cacheClimbables();
 	}
 	
 	private static void cacheClimbables() {
-		final String query = "select scenery_id, relative_floors from climbable";
-		
-		climbables = new HashMap<>();
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next())
-					climbables.put(rs.getInt("scenery_id"), rs.getInt("relative_floors"));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select scenery_id, relative_floors from climbable", 
+				rs -> climbables.put(rs.getInt("scenery_id"), rs.getInt("relative_floors")));
 	}
 	
 	public static boolean isClimbable(int sceneryId) {

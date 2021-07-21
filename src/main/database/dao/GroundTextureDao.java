@@ -1,15 +1,12 @@
 package main.database.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import lombok.Getter;
 import main.database.DbConnection;
 import main.database.dto.GroundTextureDto;
@@ -22,28 +19,15 @@ public class GroundTextureDao {
 	
 	public static void cacheTileIdsByGroundTextureId() {
 		final String query = "select floor, ground_texture_id, tile_id from room_ground_textures";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					final int floor = rs.getInt("floor");
-					final int groundTextureId = rs.getInt("ground_texture_id");
-					final int tileId = rs.getInt("tile_id");
-					
-					if (!tileIdsByGroundTextureId.containsKey(floor))
-						tileIdsByGroundTextureId.put(floor, new HashMap<>());
-					
-					if (!tileIdsByGroundTextureId.get(floor).containsKey(groundTextureId))
-						tileIdsByGroundTextureId.get(floor).put(groundTextureId, new HashSet<>());
-					
-					tileIdsByGroundTextureId.get(floor).get(groundTextureId).add(tileId);
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, rs -> {
+			final int floor = rs.getInt("floor");
+			final int groundTextureId = rs.getInt("ground_texture_id");
+			final int tileId = rs.getInt("tile_id");
+			
+			tileIdsByGroundTextureId.putIfAbsent(floor, new HashMap<>());
+			tileIdsByGroundTextureId.get(floor).putIfAbsent(groundTextureId, new HashSet<>());
+			tileIdsByGroundTextureId.get(floor).get(groundTextureId).add(tileId);
+		});
 	}
 	
 	public static Integer getGroundTextureIdByTileId(int floor, int tileId) {
@@ -59,35 +43,13 @@ public class GroundTextureDao {
 	}
 	
 	public static void cacheDistinctFloors() {
-		final String query = "select distinct floor from room_ground_textures";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					distinctFloors.add(rs.getInt("floor"));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select distinct floor from room_ground_textures", 
+				rs -> distinctFloors.add(rs.getInt("floor")));
 	}
 	
 	public static void cacheTextures() {
-		final String query = "select id, sprite_map_id, x, y, walkable from ground_textures ";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					groundTextures.add(new GroundTextureDto(rs.getInt("id"), rs.getInt("sprite_map_id"), rs.getInt("x"), rs.getInt("y"), rs.getBoolean("walkable")));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load("select id, sprite_map_id, x, y, walkable from ground_textures", 
+				rs -> groundTextures.add(new GroundTextureDto(rs.getInt("id"), rs.getInt("sprite_map_id"), rs.getInt("x"), rs.getInt("y"), rs.getBoolean("walkable"))));
 	}
 	
 	public static Set<Integer> getAllWalkableTileIdsByFloor(int floor) {
@@ -96,19 +58,9 @@ public class GroundTextureDao {
 		final String query = "select tile_id from room_ground_textures where floor=? and ground_texture_id in "
 								+ "(select id from ground_textures where walkable=1)";
 		
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, floor);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					allTileIdsByFloor.add(rs.getInt("tile_id"));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		DbConnection.load(query, 
+				rs -> allTileIdsByFloor.add(rs.getInt("tile_id")), 
+				floor);
 		
 		return allTileIdsByFloor;
 	}
