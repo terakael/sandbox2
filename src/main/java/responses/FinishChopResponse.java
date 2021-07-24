@@ -9,6 +9,7 @@ import database.dao.SceneryDao;
 import database.dto.ChoppableDto;
 import database.dto.InventoryItemDto;
 import processing.attackable.Player;
+import processing.managers.ArtisanManager;
 import processing.managers.DepletionManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.ChopTaskUpdate;
@@ -81,6 +82,7 @@ public class FinishChopResponse extends Response {
 			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, choppable.getLogId(), 1, ItemDao.getMaxCharges(choppable.getLogId()));
 			InventoryUpdateResponse.sendUpdate(player, responseMaps);
 			TybaltsTaskManager.check(player, new ChopTaskUpdate(choppable.getSceneryId()), responseMaps);
+			ArtisanManager.check(player, choppable.getLogId(), responseMaps);
 			
 			// flat 20% chance of depletion
 			if (RandomUtil.chance(20)) {

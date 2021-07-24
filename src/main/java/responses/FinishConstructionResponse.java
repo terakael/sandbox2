@@ -15,6 +15,7 @@ import database.dto.ConstructableDto;
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
+import processing.managers.ArtisanManager;
 import processing.managers.ClientResourceManager;
 import processing.managers.ConstructableManager;
 import processing.managers.TybaltsTaskManager;
@@ -72,6 +73,9 @@ public class FinishConstructionResponse extends Response {
 			ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
 			TybaltsTaskManager.check(player, new ConstructTaskUpdate(constructable.getResultingSceneryId()), responseMaps);
 			
+			if (constructable.getFlatpackItemId() != 0)
+				ArtisanManager.check(player, constructable.getFlatpackItemId(), responseMaps); // artisan task still counts even if its not a flatpack
+			
 			Map<Integer, Set<Integer>> instances = new HashMap<>();
 			instances.put(constructable.getResultingSceneryId(), Collections.singleton(request.getTileId()));
 			
@@ -85,7 +89,7 @@ public class FinishConstructionResponse extends Response {
 		} else {
 			// check that we're next to the workbench
 			if (SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId()) != 151 || !PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {
-				setRecoAndResponseText(0, "you need to be next to a workbench to make that.");
+				setRecoAndResponseText(0, "you need to be at a workbench to make that.");
 				responseMaps.addClientOnlyResponse(player, this);
 				player.setState(PlayerState.idle);
 				return;
@@ -117,6 +121,7 @@ public class FinishConstructionResponse extends Response {
 		if (request.isFlatpack()) {
 			// add the flatpack item to the inventory
 			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, constructable.getFlatpackItemId(), 1, ItemDao.getMaxCharges(constructable.getFlatpackItemId()));
+			ArtisanManager.check(player, constructable.getFlatpackItemId(), responseMaps);
 		}
 		
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);

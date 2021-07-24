@@ -6,12 +6,13 @@ import java.util.List;
 import database.dao.BrewableDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
-import database.dao.StatsDao;
 import database.dao.UseItemOnItemDao;
 import database.dto.UseItemOnItemDto;
 import processing.attackable.Player;
+import processing.managers.ArtisanManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.UseItemOnItemTaskUpdate;
+import requests.AddExpRequest;
 import requests.Request;
 import requests.RequestFactory;
 import requests.UseRequest;
@@ -85,15 +86,11 @@ public class FinishUseResponse extends Response {
 			responseMaps.addClientOnlyResponse(player, this);
 			
 			if (BrewableDao.isBrewable(dto.getResultingItemId())) {
-				int exp = BrewableDao.getExpById(dto.getResultingItemId());
-				StatsDao.addExpToPlayer(player.getId(), Stats.HERBLORE, exp);
-				
-				AddExpResponse expResponse = new AddExpResponse();
-				expResponse.addExp(Stats.HERBLORE.getValue(), exp);
-				responseMaps.addClientOnlyResponse(player, expResponse);
+				new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.HERBLORE, BrewableDao.getExpById(dto.getResultingItemId())), player, responseMaps);
 			}
 			
 			TybaltsTaskManager.check(player, new UseItemOnItemTaskUpdate(dto.getResultingItemId()), responseMaps);
+			ArtisanManager.check(player, dto.getResultingItemId(), responseMaps);
 		} else {
 			String itemName = ItemDao.getNameFromId(src);
 			if (!itemName.endsWith("s"))

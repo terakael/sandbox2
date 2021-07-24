@@ -9,6 +9,7 @@ import database.dao.SceneryDao;
 import database.dto.CookableDto;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
+import processing.managers.ArtisanManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.CookTaskUpdate;
 import requests.AddExpRequest;
@@ -88,6 +89,9 @@ public class FinishCookingResponse extends Response {
 			responseMaps.addClientOnlyResponse(player, this);
 			
 			TybaltsTaskManager.check(player, new CookTaskUpdate(cookable.getCookedItemId(), !success), responseMaps);
+			
+			if (success)
+				ArtisanManager.check(player, cookable.getCookedItemId(), responseMaps);
 		}
 	}
 

@@ -2,13 +2,14 @@ package responses;
 
 import java.util.List;
 
-import lombok.Setter;
 import database.dao.ItemDao;
 import database.dao.MineableDao;
 import database.dao.PlayerStorageDao;
 import database.dto.InventoryItemDto;
 import database.dto.MineableDto;
+import lombok.Setter;
 import processing.attackable.Player;
+import processing.managers.ArtisanManager;
 import processing.managers.DepletionManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.MineTaskUpdate;
@@ -72,6 +73,7 @@ public class FinishMiningResponse extends Response {
 				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, mineable.getItemId(), 1, ItemDao.getMaxCharges(mineable.getItemId()));
 				TybaltsTaskManager.check(player, new MineTaskUpdate(mineable.getItemId(), 1), responseMaps);
 			}
+			ArtisanManager.check(player, minedGoldChips ? Items.GOLD_CHIPS.getValue() : mineable.getItemId(), responseMaps);
 			// as there are multiple pickaxe types, there is a specific order that it uses.
 			// that is: magic golden pickaxe, magic pickaxe, golden pickaxe, pickaxe
 			

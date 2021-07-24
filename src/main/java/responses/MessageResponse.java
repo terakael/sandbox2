@@ -152,10 +152,6 @@ public class MessageResponse extends Response {
 				responseMaps.addClientOnlyResponse(player, this);
 			}
 		}
-		
-		if (msgParts[0].equals("artisan")) {
-			ArtisanManager.newTask(player, responseMaps);
-		}
 	}
 	
 	private void handleDebugTele(Player player, String[] msgParts, ResponseMaps responseMaps) {		

@@ -9,6 +9,7 @@ import database.dao.SmeltableDao;
 import database.dao.StatsDao;
 import database.dto.SmeltableDto;
 import processing.attackable.Player;
+import processing.managers.ArtisanManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.SmeltTaskUpdate;
 import requests.AddExpRequest;
@@ -81,6 +82,7 @@ public class FinishSmeltResponse extends Response {
 		new AddExpResponse().process(new AddExpRequest(player.getId(), Stats.SMITHING, smeltable.getExp()), player, responseMaps);
 		
 		TybaltsTaskManager.check(player, new SmeltTaskUpdate(smeltable.getBarId()), responseMaps);
+		ArtisanManager.check(player, smeltable.getBarId(), responseMaps);
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 	}
 

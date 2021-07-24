@@ -5,6 +5,7 @@ import java.util.Scanner;
 import javax.websocket.DeploymentException;
 
 import database.dao.AnimationDao;
+import database.dao.ArtisanMasterDao;
 import database.dao.BrewableDao;
 import database.dao.BuryableDao;
 import database.dao.CastableDao;
@@ -25,6 +26,8 @@ import database.dao.MinimapSegmentDao;
 import database.dao.NpcMessageDao;
 import database.dao.PickableDao;
 import database.dao.PlayerAnimationDao;
+import database.dao.PlayerArtisanTaskDao;
+import database.dao.PlayerArtisanTaskItemDao;
 import database.dao.PlayerDao;
 import database.dao.PlayerTybaltsTaskDao;
 import database.dao.PrayerDao;
@@ -216,6 +219,15 @@ public class Server {
 		
 		System.out.println("caching artisan items");
 		ArtisanManager.setupCaches();
+		
+		System.out.println("caching artisan tasks");
+		PlayerArtisanTaskDao.setupCaches();
+		
+		System.out.println("caching artisan task items");
+		PlayerArtisanTaskItemDao.setupCaches();
+		
+		System.out.println("caching artisan masters");
+		ArtisanMasterDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

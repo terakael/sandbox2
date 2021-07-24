@@ -7,6 +7,7 @@ import database.dto.PickableDto;
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
+import processing.managers.ArtisanManager;
 import processing.managers.DepletionManager;
 import processing.managers.FightManager;
 import processing.managers.TybaltsTaskManager;
@@ -65,6 +66,7 @@ public class PickResponse extends Response {
 			new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 			
 			TybaltsTaskManager.check(player, new PickTaskUpdate(pickable.getItemId()), responseMaps);
+			ArtisanManager.check(player, pickable.getItemId(), responseMaps);
 			
 			DepletionManager.addDepletedScenery(DepletionManager.DepletionType.flower, player.getFloor(), request.getTileId(), pickable.getRespawnTicks(), responseMaps);
 		}

@@ -11,6 +11,7 @@ import database.dao.SmithableDao;
 import database.dao.StatsDao;
 import database.dto.SmithableDto;
 import processing.attackable.Player;
+import processing.managers.ArtisanManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.SmithTaskUpdate;
 import requests.AddExpRequest;
@@ -73,6 +74,7 @@ public class FinishSmithResponse extends Response {
 		// update the inventory for the client
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		TybaltsTaskManager.check(player, new SmithTaskUpdate(dto.getItemId()), responseMaps);
+		ArtisanManager.check(player, dto.getItemId(), responseMaps);
 	}
 
 	List<Integer> getAffectedSlots(List<Integer> inventoryList, int itemId, int count) {

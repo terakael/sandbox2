@@ -9,6 +9,7 @@ import database.dao.SawmillableDao;
 import database.dto.SawmillableDto;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
+import processing.managers.ArtisanManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.SawmillTaskUpdate;
 import requests.AddExpRequest;
@@ -60,6 +61,7 @@ public class FinishSawmillResponse extends Response {
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 		
 		TybaltsTaskManager.check(player, new SawmillTaskUpdate(sawmillable.getResultingPlankId()), responseMaps);
+		ArtisanManager.check(player, sawmillable.getResultingPlankId(), responseMaps);
 	}
 
 }

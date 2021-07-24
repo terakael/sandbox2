@@ -198,6 +198,9 @@ public class ResponseFactory {
 		case "throw":
 			response = new ThrowResponse();
 			break;
+		case "task":
+			response = new TaskResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

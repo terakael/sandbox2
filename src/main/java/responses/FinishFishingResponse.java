@@ -9,6 +9,7 @@ import database.dao.SceneryDao;
 import database.dto.FishableDto;
 import processing.WorldProcessor;
 import processing.attackable.Player;
+import processing.managers.ArtisanManager;
 import processing.managers.ConstructableManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.FishTaskUpdate;
@@ -75,6 +76,7 @@ public class FinishFishingResponse extends Response {
 		responseMaps.addClientOnlyResponse(player, this);
 		
 		TybaltsTaskManager.check(player, new FishTaskUpdate(fishable.getItemId()), responseMaps);
+		ArtisanManager.check(player, fishable.getItemId(), responseMaps);
 	}
 
 }
