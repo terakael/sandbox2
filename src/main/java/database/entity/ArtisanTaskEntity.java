@@ -1,21 +1,23 @@
 package database.entity;
 
-import lombok.AllArgsConstructor;
 import database.entity.annotations.Column;
 import database.entity.annotations.Id;
 import database.entity.annotations.Table;
+import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Table("player_artisan_task")
 public abstract class ArtisanTaskEntity extends UpdateableEntity {
 	@Id
 	@Column("player_id")
-	private Integer playerId;
+	private final Integer playerId;
 	
-	@Id
 	@Column("item_id")
-	private Integer itemId;
+	private final Integer itemId;
 	
-	@Column("amount")
-	private Integer amount;
+	@Column("assigned_amount")
+	private final Integer assignedAmount;
+	
+	@Column("handed_in_amount")
+	private final Integer handedInAmount;
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import database.dao.ArtisanMasterDao;
 import database.dao.BrewableDao;
 import database.dao.CastableDao;
 import database.dao.ConstructableDao;
@@ -22,13 +23,14 @@ import database.dto.ConstructableDto;
 import database.dto.InventoryItemDto;
 import database.dto.UseItemOnItemDto;
 import processing.PathFinder;
-import processing.managers.FightManager;
-import processing.managers.NPCManager;
-import processing.managers.FightManager.Fight;
 import processing.WorldProcessor;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
+import processing.managers.ArtisanManager;
+import processing.managers.FightManager;
+import processing.managers.FightManager.Fight;
+import processing.managers.NPCManager;
 import processing.scenery.Scenery;
 import processing.scenery.SceneryManager;
 import requests.AttackRequest;
@@ -228,6 +230,11 @@ public class UseResponse extends Response {
 			player.setSavedRequest(request);
 			return true;
 		} else {
+			// using your assigned artisan task item on a master gives you points
+			if (ArtisanMasterDao.npcIsArtisanMaster(targetNpc.getId())) {
+				return ArtisanManager.handleUseItemOnMaster(player, ArtisanMasterDao.getArtisanMasterByNpcId(targetNpc.getId()), request.getSrc(), responseMaps);
+			}
+			
 			// for now you can only use poison on enemies, which requires you to be in combat.
 			Items item = Items.withValue(request.getSrc());
 			if (item == null)

@@ -22,4 +22,8 @@ public class ArtisanMasterDao {
 	public static ArtisanMasterDto getArtisanMasterByNpcId(int npcId) {
 		return artisanMasters.get(npcId);
 	}
+	
+	public static boolean npcIsArtisanMaster(int npcId) {
+		return getArtisanMasterByNpcId(npcId) != null;
+	}
 }

@@ -1,15 +1,15 @@
 package database.entity.update;
 
-import lombok.Builder;
 import database.entity.ArtisanTaskEntity;
 import database.entity.annotations.Operation;
+import lombok.Builder;
 
 @Operation("update")
 public class UpdateArtisanTaskEntity extends ArtisanTaskEntity {
 
 	@Builder
-	public UpdateArtisanTaskEntity(Integer playerId, Integer itemId, Integer amount) {
-		super(playerId, itemId, amount);
+	public UpdateArtisanTaskEntity(Integer playerId, Integer itemId, Integer assignedAmount, Integer handedInAmount) {
+		super(playerId, itemId, assignedAmount, handedInAmount);
 	}
 
 }

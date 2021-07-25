@@ -1,7 +1,6 @@
 package responses;
 
 import database.dao.ArtisanMasterDao;
-import database.dao.PlayerArtisanTaskDao;
 import database.dao.StatsDao;
 import database.dto.ArtisanMasterDto;
 import processing.PathFinder;
@@ -53,11 +52,11 @@ public class TaskResponse extends Response {
 			return;
 		}
 		
-		if (PlayerArtisanTaskDao.taskInProgress(player.getId())) {
-			setRecoAndResponseText(0, "you are already assigned a task; click the artisan skill icon for details.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (PlayerArtisanTaskBreakdownDao.taskInProgress(player.getId())) {
+//			setRecoAndResponseText(0, "you are already assigned a task; click the artisan skill icon for details.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		ArtisanManager.newTask(player, master.getAssignmentLevelRangeMin(), master.getAssignmentLevelRangeMax(), responseMaps);
 	}

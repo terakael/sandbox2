@@ -26,8 +26,8 @@ import database.dao.MinimapSegmentDao;
 import database.dao.NpcMessageDao;
 import database.dao.PickableDao;
 import database.dao.PlayerAnimationDao;
+import database.dao.PlayerArtisanTaskBreakdownDao;
 import database.dao.PlayerArtisanTaskDao;
-import database.dao.PlayerArtisanTaskItemDao;
 import database.dao.PlayerDao;
 import database.dao.PlayerTybaltsTaskDao;
 import database.dao.PrayerDao;
@@ -220,11 +220,11 @@ public class Server {
 		System.out.println("caching artisan items");
 		ArtisanManager.setupCaches();
 		
+		System.out.println("caching artisan task breakdown");
+		PlayerArtisanTaskBreakdownDao.setupCaches();
+		
 		System.out.println("caching artisan tasks");
 		PlayerArtisanTaskDao.setupCaches();
-		
-		System.out.println("caching artisan task items");
-		PlayerArtisanTaskItemDao.setupCaches();
 		
 		System.out.println("caching artisan masters");
 		ArtisanMasterDao.setupCaches();
