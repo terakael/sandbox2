@@ -12,6 +12,9 @@ public abstract class ArtisanTaskEntity extends UpdateableEntity {
 	@Column("player_id")
 	private final Integer playerId;
 	
+	@Column("assigned_master_id")
+	private final Integer assignedMasterId;
+	
 	@Column("item_id")
 	private final Integer itemId;
 	
@@ -20,4 +23,10 @@ public abstract class ArtisanTaskEntity extends UpdateableEntity {
 	
 	@Column("handed_in_amount")
 	private final Integer handedInAmount;
+	
+	@Column("total_tasks")
+	private final Integer totalTasks;
+	
+	@Column("total_points")
+	private final Integer totalPoints;
 }

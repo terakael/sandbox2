@@ -58,7 +58,7 @@ public class TaskResponse extends Response {
 //			return;
 //		}
 		
-		ArtisanManager.newTask(player, master.getAssignmentLevelRangeMin(), master.getAssignmentLevelRangeMax(), responseMaps);
+		ArtisanManager.newTask(player, master, responseMaps);
 	}
 
 }

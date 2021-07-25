@@ -279,8 +279,8 @@ public class ArtisanManager {
 		.collect(Collectors.toList());
 	}
 	
-	public static void newTask(Player player, int minRange, int maxRange, ResponseMaps responseMaps) {
-		final List<Integer> itemsPlayerCanMake = getItemsPlayerCanMake(player.getId(), minRange, maxRange);
+	public static void newTask(Player player, ArtisanMasterDto master, ResponseMaps responseMaps) {
+		final List<Integer> itemsPlayerCanMake = getItemsPlayerCanMake(player.getId(), master.getAssignmentLevelRangeMin(), master.getAssignmentLevelRangeMax());
 		final int taskItemId = itemsPlayerCanMake.get(RandomUtil.getRandom(0, itemsPlayerCanMake.size()));
 		
 		int numItemsToMake = 100;
@@ -292,13 +292,13 @@ public class ArtisanManager {
 		}
 		
 		// different masters give different ranges; this range is based on level range as a percentage, i.e. maxRange 20 means 20% of the total need to be made
-		numItemsToMake /= (100 / maxRange);
+		numItemsToMake /= (100 / master.getAssignmentLevelRangeMax());
 		
 		// artisan task dao holds all the artisan tasks (main and subtasks) and tracks how many remain
 		PlayerArtisanTaskBreakdownDao.clearTask(player.getId());
 		
 		// artisan task item dao holds the main task item, and records how many finished items are handed in to the artisan master
-		PlayerArtisanTaskDao.newTask(player.getId(), taskItemId, numItemsToMake);
+		PlayerArtisanTaskDao.newTask(player.getId(), master.getNpcId(), taskItemId, numItemsToMake);
 		
 		final String taskMessage = String.format("new artisan task: %s %dx %s.", getActionFromItemId(taskItemId), numItemsToMake, ItemDao.getNameFromId(taskItemId));
 		responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(taskMessage, "#23f5b4"));

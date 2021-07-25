@@ -7,12 +7,16 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PlayerArtisanTaskDto {
 	private int playerId;
+	private int assignedMasterId;
 	private int itemId;
 	private int assignedAmount;
 	private int handedInAmount;
+	private int totalTasks;
+	private int totalPoints;
 	
-	public void reset(int itemId, int assignedAmount) {
+	public void reset(int assignedMasterId, int itemId, int assignedAmount) {
 		this.itemId = itemId;
+		this.assignedMasterId = assignedMasterId;
 		this.assignedAmount = assignedAmount;
 		this.handedInAmount = 0;
 	}
@@ -25,6 +29,7 @@ public class PlayerArtisanTaskDto {
 		
 		final int actualAmountHandedIn = assignedAmount - handedInAmount;
 		handedInAmount = assignedAmount;
+		totalPoints += actualAmountHandedIn;
 		return actualAmountHandedIn;
 	}
 }

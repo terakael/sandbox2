@@ -8,8 +8,10 @@ import lombok.Builder;
 public class UpdateArtisanTaskEntity extends ArtisanTaskEntity {
 
 	@Builder
-	public UpdateArtisanTaskEntity(Integer playerId, Integer itemId, Integer assignedAmount, Integer handedInAmount) {
-		super(playerId, itemId, assignedAmount, handedInAmount);
+	public UpdateArtisanTaskEntity(Integer playerId, Integer assignedMasterId, Integer itemId, Integer assignedAmount,
+			Integer handedInAmount, Integer totalTasks, Integer totalPoints) {
+		super(playerId, assignedMasterId, itemId, assignedAmount, handedInAmount, totalTasks, totalPoints);
+		// TODO Auto-generated constructor stub
 	}
 
 }
