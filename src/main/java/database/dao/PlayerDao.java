@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.Getter;
 import database.DbConnection;
 import database.dto.PlayerDto;
+import lombok.Getter;
 import processing.WorldProcessor;
 import processing.attackable.Player;
 
@@ -45,7 +45,7 @@ public class PlayerDao {
 							StatsDao.getCurrentPrayerByPlayerId(rs.getInt("id")),
 							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
 							rs.getInt("attack_style_id"), 
-							PlayerAnimationDao.loadAnimationsByPlayerId(rs.getInt("id")),
+							PlayerBaseAnimationsDao.loadAnimationsByPlayerId(rs.getInt("id")),
 							EquipmentDao.getEquipmentAnimationsByPlayerId(rs.getInt("id")));
 				
 				return null;

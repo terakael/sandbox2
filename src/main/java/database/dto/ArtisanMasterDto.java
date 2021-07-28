@@ -10,4 +10,5 @@ public class ArtisanMasterDto {
 	private final int artisanRequirement;
 	private final int assignmentLevelRangeMin;
 	private final int assignmentLevelRangeMax;
+	private final int completionPoints;
 }

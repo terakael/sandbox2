@@ -2,6 +2,7 @@ package database.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @AllArgsConstructor
@@ -11,8 +12,8 @@ public class PlayerArtisanTaskDto {
 	private int itemId;
 	private int assignedAmount;
 	private int handedInAmount;
-	private int totalTasks;
-	private int totalPoints;
+	@Setter private int totalTasks;
+	@Setter private int totalPoints;
 	
 	public void reset(int assignedMasterId, int itemId, int assignedAmount) {
 		this.itemId = itemId;

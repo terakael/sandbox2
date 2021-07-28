@@ -67,6 +67,9 @@ public class RequestFactory {
 		map.put("loot", LootRequest.class);
 		map.put("throw", ThrowRequest.class);
 		map.put("task", TaskRequest.class);
+		map.put("show_base_animations_window", ShowBaseAnimationsWindowRequest.class);
+		map.put("cycle_base_animation", CycleBaseAnimationRequest.class);
+		map.put("save_base_animations", SaveBaseAnimationsRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

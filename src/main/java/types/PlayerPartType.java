@@ -10,7 +10,13 @@ public enum PlayerPartType {
 	OFFHAND(5),
 	RING(6),
 	CAPE(7),
-	NECKLACE(8);
+	NECKLACE(8),
+	
+	HAIR(9),
+	SHIRT(10),
+	PANTS(11),
+	SHOES(12),
+	BEARD(13);
 	
 	@Getter private int value;
 	PlayerPartType(int value) {

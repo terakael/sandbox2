@@ -35,8 +35,11 @@ public class AnimationDao {
 	}
 	
 	public static AnimationDto getAnimationDtoById(int animationId) {
-		if (!animations.containsKey(animationId))
-			return null;
 		return animations.get(animationId);
+	}
+	
+	// upId should be unique i think; no reason for multiple animations to have the same one
+	public static AnimationDto getAnimationDtoByUpId(int upId) {
+		return animations.values().stream().filter(e -> e.getUpId() == upId).findFirst().orElse(null);
 	}
 }

@@ -4,14 +4,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import lombok.Getter;
 import database.DbConnection;
 import database.dto.EquipmentBonusDto;
 import database.dto.EquipmentDto;
 import database.dto.PlayerAnimationDto;
 import database.entity.delete.DeletePlayerEquipment;
 import database.entity.insert.InsertPlayerEquipment;
+import lombok.Getter;
 import processing.managers.DatabaseUpdater;
 import types.EquipmentTypes;
 import types.PlayerPartType;
@@ -206,7 +207,7 @@ public class EquipmentDao {
 			return animationMap;
 		
 		for (int equipmentId : playerEquipment.get(playerId).keySet()) {
-			EquipmentDto dto = equipment.get(equipmentId);
+			final EquipmentDto dto = equipment.get(equipmentId);
 			animationMap.put(PlayerPartType.withValue(dto.getPartId()), dto.getAnimations());
 		}
 		
@@ -215,6 +216,12 @@ public class EquipmentDao {
 	
 	public static boolean isEquippable(int itemId) {
 		return equipment.keySet().contains(itemId);
+	}
+	
+	public static Set<EquipmentTypes> getPlayerEquipmentTypes(int playerId) {
+		return getEquippedSlotsAndItemIdsByPlayerId(playerId).keySet().stream()
+				.map(e -> getEquipmentTypeByEquipmentId(e))
+				.collect(Collectors.toSet());
 	}
 	
 } 

@@ -17,6 +17,7 @@ public class PlayerAnimationDto {
 		this.attack_right = dto.getAttackRightId();
 		this.color = color;
 	}
+	
 	private int up;
 	private int down;
 	private int left;

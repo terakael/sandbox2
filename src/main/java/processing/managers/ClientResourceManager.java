@@ -13,7 +13,7 @@ import database.dao.EquipmentDao;
 import database.dao.GroundTextureDao;
 import database.dao.ItemDao;
 import database.dao.NPCDao;
-import database.dao.PlayerAnimationDao;
+import database.dao.PlayerBaseAnimationsDao;
 import database.dao.SceneryDao;
 import database.dao.SpriteFrameDao;
 import database.dao.SpriteMapDao;
@@ -29,7 +29,6 @@ import processing.WorldProcessor;
 import processing.attackable.Player;
 import responses.AddResourceResponse;
 import responses.ResponseMaps;
-import types.PlayerPartType;
 
 public class ClientResourceManager {
 	// keeps track of what each player has loaded, decaches on player logout. key is playerId.
@@ -201,24 +200,7 @@ public class ClientResourceManager {
 			addItems(localPlayer, itemIds);
 	}
 	
-	public static void addAnimations(Player player, Set<Integer> playerIds) {
-		Set<PlayerAnimationDto> animations = new HashSet<>();
-		for (Map.Entry<Integer, Map<PlayerPartType, PlayerAnimationDto>> entry : PlayerAnimationDao.getPlayerBaseAnimations().entrySet()) {
-			if (playerIds.contains(entry.getKey()))
-				animations.addAll(entry.getValue().values());
-		}
-		
-		for (Map.Entry<Integer, HashMap<Integer, Integer>> entry : EquipmentDao.getPlayerEquipment().entrySet()) {
-			if (playerIds.contains(entry.getKey())) {
-				for (Map.Entry<Integer, Integer> equipmentEntries : entry.getValue().entrySet()) {
-					animations.add(EquipmentDao.getEquipmentByItemId(equipmentEntries.getKey()).getAnimations());
-				}
-			}
-		}
-		
-		if (animations.isEmpty())
-			return;
-		
+	public static void addAnimationDtos(Player player, Set<PlayerAnimationDto> animations) {
 		Set<Integer> selectedSpriteFrameIds = new HashSet<>();
 		selectedSpriteFrameIds.addAll(animations.stream().map(PlayerAnimationDto::getUp).collect(Collectors.toSet()));
 		selectedSpriteFrameIds.addAll(animations.stream().map(PlayerAnimationDto::getDown).collect(Collectors.toSet()));
@@ -228,6 +210,21 @@ public class ClientResourceManager {
 		selectedSpriteFrameIds.addAll(animations.stream().map(PlayerAnimationDto::getAttack_right).collect(Collectors.toSet()));
 		
 		addSpriteFramesAndSpriteMaps(player, selectedSpriteFrameIds);
+	}
+	
+	public static void addAnimations(Player player, Set<Integer> playerIds) {
+		Set<PlayerAnimationDto> animations = new HashSet<>();
+		EquipmentDao.getPlayerEquipment().forEach((playerId, equipmentDtoMap) -> {
+			if (playerIds.contains(playerId))
+				equipmentDtoMap.forEach((equipmentId, slot) -> animations.add(EquipmentDao.getEquipmentByItemId(equipmentId).getAnimations()));
+		});
+
+		playerIds.forEach(playerId -> animations.addAll(PlayerBaseAnimationsDao.loadAnimationsByPlayerId(playerId).values()));
+
+		if (animations.isEmpty())
+			return;
+		
+		addAnimationDtos(player, animations);
 	}
 	
 	public static void addLocalAnimations(Player player, Set<Integer> playerIds) {

@@ -3,7 +3,6 @@ package responses;
 import java.util.Collections;
 import java.util.List;
 
-import lombok.Setter;
 import database.dao.ItemDao;
 import database.dao.PlayerDao;
 import database.dao.PlayerStorageDao;
@@ -11,10 +10,10 @@ import database.dao.PlayerTybaltsTaskDao;
 import database.dao.StatsDao;
 import database.dao.TeleportableDao;
 import database.dto.TeleportableDto;
+import lombok.Setter;
 import processing.PathFinder;
 import processing.WorldProcessor;
 import processing.attackable.Player;
-import processing.managers.ArtisanManager;
 import processing.managers.FightManager;
 import processing.managers.UndeadArmyManager;
 import requests.MessageRequest;
@@ -151,6 +150,13 @@ public class MessageResponse extends Response {
 				setRecoAndResponseText(0, String.format("invalid wave \"%s\".", msgParts[1]));
 				responseMaps.addClientOnlyResponse(player, this);
 			}
+			
+			return;
+		}
+		
+		if (msgParts[0].equals("setbase")) {
+			new ShowBaseAnimationsWindowResponse().process(null, player, responseMaps);
+			return;
 		}
 	}
 	

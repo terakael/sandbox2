@@ -1,29 +1,25 @@
 package responses;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import database.dao.EquipmentDao;
+import database.dao.PlayerBaseAnimationsDao;
 import database.dao.PlayerStorageDao;
 import database.dto.EquipmentBonusDto;
 import database.dto.EquipmentDto;
 import database.dto.ItemDto;
-import database.dto.PlayerAnimationDto;
 import processing.attackable.Player;
 import processing.managers.ClientResourceManager;
 import requests.EquipRequest;
 import requests.Request;
 import types.EquipmentTypes;
-import types.PlayerPartType;
 import types.Stats;
 
 @SuppressWarnings("unused")
 public class EquipResponse extends Response {
 	private Set<Integer> equippedSlots = new HashSet<>();
-	private Map<PlayerPartType, PlayerAnimationDto> equipAnimations = new HashMap<>();
 	private EquipmentBonusDto bonuses = null;
 
 	public EquipResponse() {
@@ -63,10 +59,11 @@ public class EquipResponse extends Response {
 				EquipmentDao.clearEquippedItemByPartId(player.getId(), equip.getPartId());
 				EquipmentDao.setEquippedItem(player.getId(), equipReq.getSlot(), equip.getItemId());
 			}
+			
+			
 		}
 		
 		equippedSlots = EquipmentDao.getEquippedSlotsByPlayerId(player.getId());
-		equipAnimations = EquipmentDao.getEquipmentAnimationsByPlayerId(player.getId());
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(player.getId());
 		
 		player.recacheEquippedItems();
@@ -76,7 +73,10 @@ public class EquipResponse extends Response {
 		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
-		playerUpdate.setEquipAnimations(equipAnimations);
+		playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(player.getId()));
+		
+		// sometimes an equipped item overrides one or more base animations (e.g. full helmet removes hair and beard).
+		playerUpdate.setBaseAnimations(PlayerBaseAnimationsDao.getBaseAnimationsBasedOnEquipmentTypes(player.getId()));
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), playerUpdate);
 		
 		ClientResourceManager.addLocalAnimations(player, Collections.singleton(player.getId()));

@@ -6,6 +6,7 @@ import javax.websocket.DeploymentException;
 
 import database.dao.AnimationDao;
 import database.dao.ArtisanMasterDao;
+import database.dao.BaseAnimationsDao;
 import database.dao.BrewableDao;
 import database.dao.BuryableDao;
 import database.dao.CastableDao;
@@ -25,9 +26,9 @@ import database.dao.MineableDao;
 import database.dao.MinimapSegmentDao;
 import database.dao.NpcMessageDao;
 import database.dao.PickableDao;
-import database.dao.PlayerAnimationDao;
 import database.dao.PlayerArtisanTaskBreakdownDao;
 import database.dao.PlayerArtisanTaskDao;
+import database.dao.PlayerBaseAnimationsDao;
 import database.dao.PlayerDao;
 import database.dao.PlayerTybaltsTaskDao;
 import database.dao.PrayerDao;
@@ -98,7 +99,8 @@ public class Server {
 		ContextOptionsDao.setupCaches();
 		
 		System.out.println("caching base player animations");
-		PlayerAnimationDao.setupCaches();
+		BaseAnimationsDao.setupCaches();
+		PlayerBaseAnimationsDao.setupCaches();
 		
 		System.out.println("caching distinct roomIds");
 		GroundTextureDao.cacheDistinctFloors(); // what constitutes a room is having at least one ground texture: no ground textures, the room doesnt exist.

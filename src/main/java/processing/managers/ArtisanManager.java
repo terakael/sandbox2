@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import database.dao.ArtisanMasterDao;
 import database.dao.BrewableDao;
 import database.dao.ChoppableDao;
 import database.dao.ConstructableDao;
@@ -334,7 +335,12 @@ public class ArtisanManager {
 		
 		final int playerMainTaskItemId = PlayerArtisanTaskDao.getTaskItemId(player.getId());
 		if (!PlayerArtisanTaskBreakdownDao.taskIsValid(player.getId(), playerMainTaskItemId)) {
-			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("artisan task complete; talk to an artisan master to get a new one.", "#23f5b4"));
+			PlayerArtisanTaskDto updatedTask = PlayerArtisanTaskDao.finishTask(player.getId());
+			final String message = String.format("you have completed %d artisan tasks, and receive %d points for a total of %d points.", 
+									updatedTask.getTotalTasks(),
+									ArtisanMasterDao.getCompletionPointsByArtisanMasterId(updatedTask.getAssignedMasterId()),
+									updatedTask.getTotalPoints());
+			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(message, "#23f5b4"));
 		}
 	}
 	
@@ -403,8 +409,6 @@ public class ArtisanManager {
 			}
 			InventoryUpdateResponse.sendUpdate(player, responseMaps);
 			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(String.format("%s grants you some points.", NPCDao.getNpcNameById(master.getNpcId())), "white"));
-		} else {
-			
 		}
 	
 		return true;

@@ -201,6 +201,12 @@ public class ResponseFactory {
 		case "task":
 			response = new TaskResponse();
 			break;
+		case "cycle_base_animation":
+			response = new CycleBaseAnimationResponse();
+			break;
+		case "save_base_animations":
+			response = new SaveBaseAnimationsResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

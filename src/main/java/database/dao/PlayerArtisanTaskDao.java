@@ -61,6 +61,23 @@ public class PlayerArtisanTaskDao {
 		return amountHandedIn;
 	}
 	
+	public static PlayerArtisanTaskDto finishTask(int playerId) {
+		if (!playerTaskItem.containsKey(playerId))
+			return null;
+		
+		final PlayerArtisanTaskDto task = playerTaskItem.get(playerId);
+		task.setTotalTasks(task.getTotalTasks() + 1);
+		task.setTotalPoints(task.getTotalPoints() + ArtisanMasterDao.getCompletionPointsByArtisanMasterId(task.getAssignedMasterId()));
+		
+		DatabaseUpdater.enqueue(UpdateArtisanTaskEntity.builder()
+				.playerId(playerId)
+				.totalTasks(task.getTotalTasks())
+				.totalPoints(task.getTotalPoints())
+				.build());
+		
+		return task;
+	}
+	
 	public static int getTaskItemId(int playerId) {
 		if (!playerTaskItem.containsKey(playerId))
 			return -1;
