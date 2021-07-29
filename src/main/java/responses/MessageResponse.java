@@ -75,6 +75,11 @@ public class MessageResponse extends Response {
 			return;
 		}
 		
+		if (msgParts[0].equals("setbase")) {
+			new ShowBaseAnimationsWindowResponse().process(null, player, responseMaps);
+			return;
+		}
+		
 		// below are the god-only commands
 		if (!player.isGod()) {
 			setRecoAndResponseText(0, "You can't do that.  You're not god.  Hurrrr.  Wololololo!");
@@ -151,11 +156,6 @@ public class MessageResponse extends Response {
 				responseMaps.addClientOnlyResponse(player, this);
 			}
 			
-			return;
-		}
-		
-		if (msgParts[0].equals("setbase")) {
-			new ShowBaseAnimationsWindowResponse().process(null, player, responseMaps);
 			return;
 		}
 	}
