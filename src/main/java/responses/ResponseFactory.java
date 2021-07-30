@@ -207,6 +207,9 @@ public class ResponseFactory {
 		case "save_base_animations":
 			response = new SaveBaseAnimationsResponse();
 			break;
+		case "makeover":
+			response = new MakeoverResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

@@ -1,5 +1,6 @@
 package responses;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -7,6 +8,7 @@ import database.dao.BaseAnimationsDao;
 import database.dao.PlayerBaseAnimationsDao;
 import database.dto.PlayerAnimationDto;
 import processing.attackable.Player;
+import processing.managers.ClientResourceManager;
 import requests.Request;
 import types.PlayerPartType;
 
@@ -33,6 +35,7 @@ public class ShowBaseAnimationsWindowResponse extends Response {
 		});
 		
 		responseMaps.addClientOnlyResponse(player, this);
+		ClientResourceManager.addAnimationDtos(player, new HashSet<>(playerAnimations.values()));
 	}
 
 }

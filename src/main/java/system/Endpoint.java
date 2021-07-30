@@ -40,7 +40,10 @@ public class Endpoint {
 	@OnMessage
 	public void onMessage(Request msg, Session client) {
 		// collect the messages for the WorldProcessor to process every tick
-		System.out.println("action: " + msg.getAction());
+		Player messagePlayer = WorldProcessor.playerSessions.get(client);
+		if (messagePlayer != null)
+			System.out.println(String.format("player %d (%s): %s", messagePlayer.getDto().getId(), messagePlayer.getDto().getName(), msg.getAction()));
+			
 		if (msg instanceof MultiRequest) {
 			multiRequestMap.putIfAbsent(client, new ArrayList<>());
 			multiRequestMap.get(client).add(msg);

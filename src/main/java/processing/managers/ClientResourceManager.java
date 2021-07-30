@@ -219,7 +219,7 @@ public class ClientResourceManager {
 				equipmentDtoMap.forEach((equipmentId, slot) -> animations.add(EquipmentDao.getEquipmentByItemId(equipmentId).getAnimations()));
 		});
 
-		playerIds.forEach(playerId -> animations.addAll(PlayerBaseAnimationsDao.loadAnimationsByPlayerId(playerId).values()));
+		playerIds.forEach(playerId -> animations.addAll(PlayerBaseAnimationsDao.getBaseAnimationsBasedOnEquipmentTypes(playerId).values()));
 
 		if (animations.isEmpty())
 			return;

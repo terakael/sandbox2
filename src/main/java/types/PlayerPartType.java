@@ -3,7 +3,7 @@ package types;
 import lombok.Getter;
 
 public enum PlayerPartType {
-	HEAD(1),
+	HEAD(1), // literally player base head
 	TORSO(2),
 	LEGS(3),
 	ONHAND(4),
@@ -12,11 +12,17 @@ public enum PlayerPartType {
 	CAPE(7),
 	NECKLACE(8),
 	
+	// base stuff
 	HAIR(9),
 	SHIRT(10),
 	PANTS(11),
 	SHOES(12),
-	BEARD(13);
+	BEARD(13),
+	
+	// equip stuff
+	HEADWEAR(14), // helmets, hats, etc
+	BODYWEAR(15),
+	LEGWEAR(16);
 	
 	@Getter private int value;
 	PlayerPartType(int value) {

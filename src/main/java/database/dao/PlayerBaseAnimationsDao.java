@@ -27,6 +27,7 @@ public class PlayerBaseAnimationsDao {
 		playerPartsToIgnoreByEquipmentType.put(EquipmentTypes.HELMET_MED, Set.<PlayerPartType>of(PlayerPartType.HAIR));
 		playerPartsToIgnoreByEquipmentType.put(EquipmentTypes.BODY, Set.<PlayerPartType>of(PlayerPartType.TORSO, PlayerPartType.SHIRT));
 		playerPartsToIgnoreByEquipmentType.put(EquipmentTypes.LEGS, Set.<PlayerPartType>of(PlayerPartType.LEGS, PlayerPartType.PANTS, PlayerPartType.SHOES));
+		playerPartsToIgnoreByEquipmentType.put(EquipmentTypes.CHAINSKIRT, Set.<PlayerPartType>of(PlayerPartType.PANTS));
 	}
 	
 	public static void setupCaches() {

@@ -18,7 +18,9 @@ public enum EquipmentTypes {
 	NECKLACE(10),
 	HELMET_MED(11),
 	HAT(12),
-	WAND(13);
+	WAND(13),
+	CHAINBODY(14),
+	CHAINSKIRT(15);
 	
 	private final int value;
 	

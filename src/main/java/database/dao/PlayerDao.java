@@ -45,7 +45,7 @@ public class PlayerDao {
 							StatsDao.getCurrentPrayerByPlayerId(rs.getInt("id")),
 							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
 							rs.getInt("attack_style_id"), 
-							PlayerBaseAnimationsDao.loadAnimationsByPlayerId(rs.getInt("id")),
+							PlayerBaseAnimationsDao.getBaseAnimationsBasedOnEquipmentTypes(rs.getInt("id")),
 							EquipmentDao.getEquipmentAnimationsByPlayerId(rs.getInt("id")));
 				
 				return null;
