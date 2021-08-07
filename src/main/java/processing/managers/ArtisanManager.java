@@ -34,6 +34,7 @@ import database.dto.PlayerArtisanTaskDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import processing.attackable.Player;
+import processing.tybaltstasks.updates.CompleteArtisanTaskUpdate;
 import requests.AddExpRequest;
 import responses.AddExpResponse;
 import responses.InventoryUpdateResponse;
@@ -309,6 +310,25 @@ public class ArtisanManager {
 		});
 	}
 	
+	public static boolean playerHasTask(int playerId) {
+		return PlayerArtisanTaskDao.getTask(playerId) != null && !currentTaskIsFinished(playerId);
+	}
+	
+	public static String getTaskString(int playerId) {
+		// "your current task is ${artisanTask}."
+		
+		final PlayerArtisanTaskDto task = PlayerArtisanTaskDao.getTask(playerId);
+		if (task == null)
+			return "not assigned";
+		
+		return String.format("to %s %d %ss", getActionFromItemId(task.getItemId()), task.getAssignedAmount(), ItemDao.getNameFromId(task.getItemId()));
+	}
+	
+	public static boolean currentTaskIsFinished(int playerId) {
+		final PlayerArtisanTaskDto task = PlayerArtisanTaskDao.getTask(playerId);
+		return task == null || !PlayerArtisanTaskBreakdownDao.taskIsValid(playerId, task.getItemId());
+	}
+	
 	public static void check(Player player, int itemId, ResponseMaps responseMaps) {
 		if (!PlayerArtisanTaskBreakdownDao.taskIsValid(player.getId(), itemId))
 			return;
@@ -341,6 +361,8 @@ public class ArtisanManager {
 									ArtisanMasterDao.getCompletionPointsByArtisanMasterId(updatedTask.getAssignedMasterId()),
 									updatedTask.getTotalPoints());
 			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(message, "#23f5b4"));
+			
+			TybaltsTaskManager.check(player, new CompleteArtisanTaskUpdate(updatedTask.getAssignedMasterId()), responseMaps);
 		}
 	}
 	

@@ -17,6 +17,7 @@ import database.dao.ConstructableDao;
 import database.dao.ConsumableDao;
 import database.dao.ContextOptionsDao;
 import database.dao.CookableDao;
+import database.dao.DialogueDao;
 import database.dao.DoorDao;
 import database.dao.EquipmentDao;
 import database.dao.FishableDao;
@@ -140,6 +141,9 @@ public class Server {
 		
 		System.out.println("caching npc messages");
 		NpcMessageDao.setupCaches();
+		
+		System.out.println("caching dialogue");
+		DialogueDao.setupCaches();
 		
 		System.out.println("caching consumables");
 		ConsumableDao.cacheConsumables();

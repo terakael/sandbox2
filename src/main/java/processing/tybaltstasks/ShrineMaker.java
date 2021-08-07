@@ -96,4 +96,10 @@ public class ShrineMaker extends TybaltsTask {
 		PlayerTybaltsTaskDao.updateProgress(player.getId(), 3, 1);
 		taskUpdateMessage(completionMessage, player, responseMaps);
 	}
+	
+	@Override
+	public boolean isFinished(int playerId) {
+		final PlayerTybaltsTaskDto currentTask = PlayerTybaltsTaskDao.getCurrentTaskByPlayerId(playerId);
+		return currentTask == null || currentTask.getProgress3() == 1;
+	}
 }

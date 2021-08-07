@@ -96,4 +96,10 @@ public class BoneTotem extends TybaltsTask {
 			return;
 		}		
 	}
+	
+	@Override
+	public boolean isFinished(int playerId) {
+		final PlayerTybaltsTaskDto currentTask = PlayerTybaltsTaskDao.getCurrentTaskByPlayerId(playerId);
+		return currentTask == null || currentTask.getProgress3() == requiredKills;
+	}
 }

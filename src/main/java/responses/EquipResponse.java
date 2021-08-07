@@ -91,6 +91,8 @@ public class EquipResponse extends Response {
 		case LEGS:
 		case SHIELD:
 		case CAPE:
+		case CHAINBODY:
+		case CHAINSKIRT:
 			if (player.getStats().get(Stats.DEFENCE) < equip.getRequirement()) {
 				setRecoAndResponseText(0, String.format("you need %d defence to equip that.", equip.getRequirement()));
 				responseMaps.addClientOnlyResponse(player, this);

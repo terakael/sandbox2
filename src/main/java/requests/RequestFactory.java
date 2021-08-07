@@ -30,8 +30,8 @@ public class RequestFactory {
 		map.put("toggle_attack_style", ToggleAttackStyleRequest.class);
 		map.put("talk to", TalkToRequest.class);
 		map.put("eat", EatRequest.class);
-		map.put("dialogue", DialogueRequest.class);
-		map.put("dialogue_option", DialogueOptionRequest.class);
+		map.put("next_dialogue", NextDialogueRequest.class);
+		map.put("select_dialogue_option", SelectDialogueOptionRequest.class);
 		map.put("shop", ShopRequest.class);
 		map.put("value", ShopValueRequest.class);
 		map.put("buy", ShopBuyRequest.class);

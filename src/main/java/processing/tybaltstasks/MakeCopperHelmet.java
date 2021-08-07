@@ -90,4 +90,10 @@ public class MakeCopperHelmet extends TybaltsTask {
 			}
 		}
 	}
+	
+	@Override
+	public boolean isFinished(int playerId) {
+		final PlayerTybaltsTaskDto currentTask = PlayerTybaltsTaskDao.getCurrentTaskByPlayerId(playerId);
+		return currentTask == null || currentTask.getProgress3() == 1;
+	}
 }

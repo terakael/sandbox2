@@ -82,65 +82,22 @@ public abstract class Attackable {
 	}
 	
 	public int hit(Attackable target, ResponseMaps responseMaps) {
-		cooldown = maxCooldown;
+		cooldown = 3;// TODO testing one speed fits all; maxCooldown;
 		
-		int maxHitFromLevel = ((getStats().get(Stats.STRENGTH) + getBoosts().get(Stats.STRENGTH)) / 6) + 1;
-		int maxHitFromBonus = (bonuses.get(Stats.STRENGTH) * 2) / 10;
+		int totalStrength = getStats().get(Stats.STRENGTH) + getBoosts().get(Stats.STRENGTH) + bonuses.get(Stats.STRENGTH);
+		totalStrength = postDamageModifications(totalStrength);
 		
-		int maxHit = maxHitFromLevel + maxHitFromBonus;
-		maxHit = postMaxHitModifications(maxHit);
+		int totalAccuracy = getStats().get(Stats.ACCURACY) + getBoosts().get(Stats.ACCURACY) + (bonuses.get(Stats.ACCURACY) * 2);
+		totalAccuracy = postAccuracyModifications(totalAccuracy);
 		
-		// number line starts with 100 evenly distributed elements
-		// e.g. if your max hit is 1, it will have 50 0s and 50 1s
-		// if your max hit is 9, it will have 10 0s, 10 1s etc
+		int opponentTotalDefence =  target.getStats().get(Stats.DEFENCE) + target.getBoosts().get(Stats.DEFENCE) + (target.getBonuses().get(Stats.DEFENCE) * 2);
+		opponentTotalDefence = target.postBlockChanceModifications(opponentTotalDefence);
 		
-		// include 0 so maxHit + 1
-		int distribution = 100 / (maxHit + 1);
-		List<Integer> numberLine = new ArrayList<>();
-		for (int i = 0; i <= maxHit; ++i) {
-			for (int j = 0; j < distribution; ++j)
-				numberLine.add(i);
-		}
+		final float ratio = (float)totalAccuracy / (float)opponentTotalDefence;
+		final int blockChance = Math.round(ratio/(ratio+1) * 100);
 		
-		while (numberLine.size() < 100)
-			numberLine.add(0);
-		Collections.sort(numberLine);
-		
-		int totalAccuracy = getStats().get(Stats.ACCURACY) + getBoosts().get(Stats.ACCURACY);
-		int totalDamage = getStats().get(Stats.STRENGTH) + getBoosts().get(Stats.STRENGTH);
-		int spread = (totalAccuracy + bonuses.get(Stats.ACCURACY)) / 10;
-		int origin = (maxHit/2) + Math.min((maxHit/2), Math.max(-(maxHit/2) + spread, totalAccuracy - totalDamage));
-		origin = postAccuracyModifications(origin);
-		
-		
-		final List<Integer> distinctNumberLine = numberLine.stream().distinct().collect(Collectors.toList());
-		List<Integer> numbersToBoost = new ArrayList<>();
-		for (int i = spread, counter = 0; i >= 0; --i, ++counter) {
-			if (origin + counter < distinctNumberLine.size()) {
-				for (int j = 0; j < i; ++j)
-					numbersToBoost.add(distinctNumberLine.get(origin + counter));
-			}
-			
-			if (origin - (counter + 1) >= 0 && origin - (counter + 1) < distinctNumberLine.size()) {
-				for (int j = 0; j < i; ++j)
-					numbersToBoost.add(distinctNumberLine.get(origin - (counter + 1)));
-			}
-		}
-		numberLine.addAll(numbersToBoost);
-		Collections.sort(numberLine);
-
-		return numberLine.get(rand.nextInt(numberLine.size()));
-	}
-	
-	public boolean block(Attackable attacker) {
-		int attackBonus = attacker.getStats().get(Stats.ACCURACY) + attacker.getBoosts().get(Stats.ACCURACY) + attacker.getBonuses().get(Stats.ACCURACY);
-		int defenceBonus = getStats().get(Stats.DEFENCE) + getBoosts().get(Stats.DEFENCE) + getBonuses().get(Stats.DEFENCE);
-		
-		int baseBlockChance = 25;
-		int blockChance = baseBlockChance + Math.max(-baseBlockChance, (defenceBonus - attackBonus) / 2);
-		blockChance = postBlockChanceModifications(blockChance);
-		
-		return RandomUtil.getRandom(0, 100) < blockChance;
+		final int maxHit = (int)Math.ceil(totalStrength/7.0);
+		return RandomUtil.chance(blockChance) ? RandomUtil.getRandom(1, maxHit + 1) : 0;
 	}
 	
 	public DamageTypes getDamageType() {
@@ -193,7 +150,7 @@ public abstract class Attackable {
 			this.lastTarget = target;// this one remains until death (in case the player dies of poison or in some way when they're not under attack)
 	}
 	
-	protected int postMaxHitModifications(int maxHit) {
+	protected int postDamageModifications(int maxHit) {
 		return maxHit;
 	}
 	

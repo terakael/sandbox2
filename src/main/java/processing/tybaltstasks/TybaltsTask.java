@@ -14,6 +14,7 @@ public abstract class TybaltsTask {
 	
 	public abstract void process(PlayerTybaltsTaskDto currentTask, Player player, TybaltsTaskUpdate taskUpdate, ResponseMaps responseMaps);
 	public abstract void initNewTask(PlayerTybaltsTaskDto currentTask, Player player, ResponseMaps responseMaps);
+	public abstract boolean isFinished(int playerId);
 	
 	protected void taskUpdateMessage(String message, Player player, ResponseMaps responseMaps) {
 		responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(message, newTaskColour));

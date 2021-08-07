@@ -28,4 +28,9 @@ public class ReinforceCopperHelmet extends TybaltsTask {
 		}
 	}
 
+	@Override
+	public boolean isFinished(int playerId) {
+		final PlayerTybaltsTaskDto currentTask = PlayerTybaltsTaskDao.getCurrentTaskByPlayerId(playerId);
+		return currentTask == null || currentTask.getProgress1() == 1;
+	}
 }

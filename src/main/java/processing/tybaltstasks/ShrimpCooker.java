@@ -67,4 +67,10 @@ public class ShrimpCooker extends TybaltsTask {
 			}
 		}
 	}
+	
+	@Override
+	public boolean isFinished(int playerId) {
+		final PlayerTybaltsTaskDto currentTask = PlayerTybaltsTaskDao.getCurrentTaskByPlayerId(playerId);
+		return currentTask == null || currentTask.getProgress2() == shrimpToCook;
+	}
 }

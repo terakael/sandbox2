@@ -75,6 +75,7 @@ import system.GroundItemManager;
 import types.Buffs;
 import types.DamageTypes;
 import types.DuelRules;
+import types.EquipmentTypes;
 import types.ItemAttributes;
 import types.Items;
 import types.NpcAttributes;
@@ -789,6 +790,8 @@ public class Player extends Attackable {
 		// exp is doled out based on attackStyle and weapon type.
 		// exp is split into five parts (called points) and the points are stored as follows:
 		int weaponId = EquipmentDao.getWeaponIdByPlayerId(getId());
+		EquipmentTypes weaponType = EquipmentDao.getEquipmentTypeByEquipmentId(weaponId);
+		
 		String weaponName = ItemDao.getNameFromId(weaponId);
 		if (weaponName == null) {
 			// error: invalid weaponId (0 is no weapon and returns the string "null")
@@ -800,7 +803,7 @@ public class Player extends Attackable {
 		// hammer/aggressive: 4str, 1hp
 		// hammer/defensive: 4def, 1hp
 		// hammer/shared: 2str, 2def, 1hp
-		if (weaponName.contains(" hammer" )) {// TODO add weapon_type enum
+		if (weaponType == EquipmentTypes.HAMMER) {
 			switch (getDto().getAttackStyleId()) {
 				case 1:// aggressive
 					StatsDao.addExpToPlayer(getId(), Stats.STRENGTH, points * 4);
@@ -821,7 +824,7 @@ public class Player extends Attackable {
 		// daggers/aggressive: 4acc, 1hp
 		// daggers/defensive: 4agil, 1hp
 		// daggers/shared: 2acc, 2agil, 1hp
-		else if (weaponName.contains(" daggers")) {// TODO ad weapon_type enum
+		else if (weaponType == EquipmentTypes.DAGGERS) {
 			switch (getDto().getAttackStyleId()) {
 				case 1:// aggressive
 					StatsDao.addExpToPlayer(getId(), Stats.ACCURACY, points * 4);
@@ -1109,22 +1112,30 @@ public class Player extends Attackable {
 	}
 	
 	@Override
-	protected int postMaxHitModifications(int maxHit) {
+	protected int postDamageModifications(int damageBonus) {
+		if (getDto().getAttackStyleId() == 1)
+			damageBonus += 10;
+		
+//		EquipmentDao.getWeaponIdByPlayerId(getId())
+		
 		if (prayerIsActive(Prayers.BURST_OF_STRENGTH)) {
-			float newBonus = (float)maxHit * 1.05f;
-			maxHit = (int)Math.ceil(newBonus);
+			float newBonus = (float)damageBonus * 1.05f;
+			damageBonus = (int)Math.ceil(newBonus);
 		} else if (prayerIsActive(Prayers.SUPERIOR_STRENGTH)) {
-			float newBonus = (float)maxHit * 1.1f;
-			maxHit = (int)Math.ceil(newBonus);
+			float newBonus = (float)damageBonus * 1.1f;
+			damageBonus = (int)Math.ceil(newBonus);
 		} else if (prayerIsActive(Prayers.ULTIMATE_STRENGTH)) {
-			float newBonus = (float)maxHit * 1.2f;
-			maxHit = (int)Math.ceil(newBonus);
+			float newBonus = (float)damageBonus * 1.15f;
+			damageBonus = (int)Math.ceil(newBonus);
 		}
-		return maxHit;
+		return damageBonus;
 	}
 	
 	@Override
 	protected int postAccuracyModifications(int accuracy) {
+		if (getDto().getAttackStyleId() == 1)
+			accuracy += 10;
+		
 		if (prayerIsActive(Prayers.CALM_MIND)) {
 			float newBonus = (float)accuracy * 1.05f;
 			accuracy = (int)Math.ceil(newBonus);
@@ -1132,22 +1143,28 @@ public class Player extends Attackable {
 			float newBonus = (float)accuracy * 1.1f;
 			accuracy = (int)Math.ceil(newBonus);
 		} else if (prayerIsActive(Prayers.ZEN_MIND)) {
-			float newBonus = (float)accuracy * 1.2f;
+			float newBonus = (float)accuracy * 1.15f;
 			accuracy = (int)Math.ceil(newBonus);
 		}
 		return accuracy;
 	}
 	
 	@Override
-	protected int postBlockChanceModifications(int blockChance) {
+	protected int postBlockChanceModifications(int defenceBonus) {
+		if (getDto().getAttackStyleId() == 1)
+			defenceBonus += 10;
+		
 		if (prayerIsActive(Prayers.THICK_SKIN)) {
-			blockChance += 5;
+			float newBonus = (float)defenceBonus * 1.05f;
+			defenceBonus = (int)Math.ceil(newBonus);
 		} else if (prayerIsActive(Prayers.STONE_SKIN)) {
-			blockChance += 10;
+			float newBonus = (float)defenceBonus * 1.1f;
+			defenceBonus = (int)Math.ceil(newBonus);
 		} else if (prayerIsActive(Prayers.STEEL_SKIN)) {
-			blockChance += 15;
+			float newBonus = (float)defenceBonus * 1.15f;
+			defenceBonus = (int)Math.ceil(newBonus);
 		}
-		return blockChance;
+		return defenceBonus;
 	}
 	
 	@Override

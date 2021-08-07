@@ -1,6 +1,6 @@
 package responses;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import database.dao.DialogueDao;
 import database.dao.NPCDao;
@@ -9,6 +9,7 @@ import database.dto.NpcDialogueDto;
 import processing.PathFinder;
 import processing.attackable.NPC;
 import processing.attackable.Player;
+import processing.managers.DialogueManager;
 import processing.managers.FightManager;
 import processing.managers.NPCManager;
 import requests.Request;
@@ -63,27 +64,22 @@ public class TalkToResponse extends Response {
 		NpcDialogueDto initialDialogue = DialogueDao.getEntryDialogueByPlayerIdNpcId(player.getId(), npc.getId());
 		if (initialDialogue == null)
 			initialDialogue = DialogueDao.getDialogue(npc.getId(), 1, 1);
-		
-		// if there's no dialogue, maybe there's a simple message from the npc
-		if (initialDialogue == null) {
-			objectId = npc.getInstanceId();
-			ArrayList<String> messages = NpcMessageDao.getMessagesByNpcId(npc.getId()); 
-			if (!messages.isEmpty()) {
-				message = messages.get(RandomUtil.getRandom(0, messages.size()));
-				responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), this);
-			} else {
-				setRecoAndResponseText(0, "they don't seem interested in talking.");
-				responseMaps.addClientOnlyResponse(player, this);
-			}
+
+		if (initialDialogue != null) {
+			DialogueManager.showDialogue(initialDialogue, player, responseMaps);
 			return;
 		}
 		
-		player.setCurrentDialogue(initialDialogue);
-		
-		DialogueResponse dialogue = new DialogueResponse();
-		dialogue.setDialogue(initialDialogue.getDialogue());
-		dialogue.setSpeaker(NPCDao.getNpcNameById(npc.getId()));
-		responseMaps.addClientOnlyResponse(player, dialogue);
+		// if there's no dialogue, maybe there's a simple message from the npc
+		objectId = npc.getInstanceId();
+		List<String> messages = NpcMessageDao.getMessagesByNpcId(npc.getId()); 
+		if (!messages.isEmpty()) {
+			message = messages.get(RandomUtil.getRandom(0, messages.size()));
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), this);
+		} else {
+			setRecoAndResponseText(0, "they don't seem interested in talking.");
+			responseMaps.addClientOnlyResponse(player, this);
+		}
 	}
 	
 }

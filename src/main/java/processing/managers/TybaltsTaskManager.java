@@ -12,6 +12,7 @@ import processing.tybaltstasks.ChickenSlayer;
 import processing.tybaltstasks.LogBurner;
 import processing.tybaltstasks.MakeCopperHelmet;
 import processing.tybaltstasks.NefariousNuisance;
+import processing.tybaltstasks.RealArtisan;
 import processing.tybaltstasks.ReinforceCopperHelmet;
 import processing.tybaltstasks.ShrimpCooker;
 import processing.tybaltstasks.ShrineMaker;
@@ -31,7 +32,8 @@ public class TybaltsTaskManager {
 		tasks.put(6, new BoneTotem());
 		tasks.put(7, new BrewerOfStank());
 		tasks.put(8, new ShrineMaker());
-		tasks.put(9, new NefariousNuisance());
+		tasks.put(9, new RealArtisan());
+		tasks.put(10, new NefariousNuisance());
 	}
 	
 	public static void check(Player player, TybaltsTaskUpdate taskUpdate, ResponseMaps responseMaps) {
@@ -50,5 +52,16 @@ public class TybaltsTaskManager {
 		
 		if (tasks.containsKey(currentTask.getTaskId()))
 			tasks.get(currentTask.getTaskId()).initNewTask(currentTask, player, responseMaps);
+	}
+	
+	public static boolean taskIsFinished(int playerId) {
+		PlayerTybaltsTaskDto currentTask = PlayerTybaltsTaskDao.getCurrentTaskByPlayerId(playerId);
+		if (currentTask == null)
+			return true;
+		
+		if (!tasks.containsKey(currentTask.getTaskId()))
+			return true;
+		
+		return tasks.get(currentTask.getTaskId()).isFinished(playerId);
 	}
 }

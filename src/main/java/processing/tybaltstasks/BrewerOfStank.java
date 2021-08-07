@@ -111,4 +111,10 @@ public class BrewerOfStank extends TybaltsTask {
 			break;
 		}
 	}
+	
+	@Override
+	public boolean isFinished(int playerId) {
+		final PlayerTybaltsTaskDto currentTask = PlayerTybaltsTaskDao.getCurrentTaskByPlayerId(playerId);
+		return currentTask == null || currentTask.getProgress2() == 2;
+	}
 }

@@ -1,13 +1,13 @@
 package database.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class NpcDialogueDto {
-	private int npcId;
-	private int pointId;
-	private int dialogueId;
-	private String dialogue;
+	private final int npcId;
+	private final int pointId;
+	private final int dialogueId;
+	private final String dialogue;
 }

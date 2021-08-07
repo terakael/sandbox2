@@ -43,5 +43,11 @@ public class NefariousNuisance extends TybaltsTask {
 		taskUpdateMessage("new task: kill the nefarious man lurking in north-east tyrotown.", player, responseMaps);
 		message("he only seems to show up at night, so be prepared when the sun falls.", player, responseMaps);
 	}
+	
+	@Override
+	public boolean isFinished(int playerId) {
+		final PlayerTybaltsTaskDto currentTask = PlayerTybaltsTaskDao.getCurrentTaskByPlayerId(playerId);
+		return currentTask == null || currentTask.getProgress1() == 1;
+	}
 
 }

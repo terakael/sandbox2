@@ -11,7 +11,7 @@ import processing.tybaltstasks.updates.TybaltsTaskUpdate;
 import responses.ResponseMaps;
 
 public class LogBurner extends TybaltsTask {
-
+	
 	@Override
 	public void process(PlayerTybaltsTaskDto currentTask, Player player, TybaltsTaskUpdate taskUpdate, ResponseMaps responseMaps) {
 		// progress1: cut a log
@@ -39,6 +39,12 @@ public class LogBurner extends TybaltsTask {
 	public void initNewTask(PlayerTybaltsTaskDto currentTask, Player player, ResponseMaps responseMaps) {
 		taskUpdateMessage("new task: log burner.", player, responseMaps);
 		message("use a hatchet to cut logs from the nearest tree, then burn the logs with a tinderbox.", player, responseMaps);
+	}
+
+	@Override
+	public boolean isFinished(int playerId) {
+		final PlayerTybaltsTaskDto currentTask = PlayerTybaltsTaskDao.getCurrentTaskByPlayerId(playerId);
+		return currentTask == null || currentTask.getProgress2() == 1;
 	}
 
 }

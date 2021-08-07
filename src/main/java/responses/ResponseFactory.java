@@ -87,11 +87,11 @@ public class ResponseFactory {
 		case "drink":
 			response = new DrinkResponse();
 			break;
-		case "dialogue":
-			response = new DialogueResponse();
+		case "next_dialogue":
+			response = new NextDialogueResponse();
 			break;
-		case "dialogue_option":
-			response = new DialogueOptionResponse();
+		case "select_dialogue_option":
+			response = new SelectDialogueOptionResponse();
 			break;
 		case "shop":
 			response = new ShopResponse();

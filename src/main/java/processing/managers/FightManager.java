@@ -82,9 +82,7 @@ public class FightManager {
 			attackable.setStatsAndBonuses();
 			other.setStatsAndBonuses();
 
-			int hit = attackable.hit(other, responseMaps);
-			if (other.block(attackable))
-				hit = 0;
+			final int hit = attackable.hit(other, responseMaps);
 			
 			attackable.onAttack(hit, attackable.getDamageType(), responseMaps);
 			other.onHit(hit, attackable.getDamageType(), responseMaps);
