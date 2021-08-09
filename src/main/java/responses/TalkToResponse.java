@@ -61,6 +61,8 @@ public class TalkToResponse extends Response {
 	}
 	
 	private void handleTalkTo(NPC npc, Player player, ResponseMaps responseMaps) {
+		player.setCurrentDialogue(null); // reset the dialogue as this is a new convo
+		
 		NpcDialogueDto initialDialogue = DialogueDao.getEntryDialogueByPlayerIdNpcId(player.getId(), npc.getId());
 		if (initialDialogue == null)
 			initialDialogue = DialogueDao.getDialogue(npc.getId(), 1, 1);

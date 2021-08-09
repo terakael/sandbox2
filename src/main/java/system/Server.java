@@ -5,7 +5,10 @@ import java.util.Scanner;
 import javax.websocket.DeploymentException;
 
 import database.dao.AnimationDao;
+import database.dao.ArtisanEnhanceableItemsDao;
 import database.dao.ArtisanMasterDao;
+import database.dao.ArtisanShopStockDao;
+import database.dao.ArtisanTaskOptionsDao;
 import database.dao.BaseAnimationsDao;
 import database.dao.BrewableDao;
 import database.dao.BuryableDao;
@@ -234,6 +237,15 @@ public class Server {
 		
 		System.out.println("caching artisan masters");
 		ArtisanMasterDao.setupCaches();
+		
+		System.out.println("caching artisan task options");
+		ArtisanTaskOptionsDao.setupCaches();
+		
+		System.out.println("caching artisan shop stock");
+		ArtisanShopStockDao.setupCaches();
+		
+		System.out.println("caching artisan enhanceable items");
+		ArtisanEnhanceableItemsDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

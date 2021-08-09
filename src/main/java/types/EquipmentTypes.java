@@ -20,7 +20,8 @@ public enum EquipmentTypes {
 	HAT(12),
 	WAND(13),
 	CHAINBODY(14),
-	CHAINSKIRT(15);
+	CHAINSKIRT(15),
+	GLOVES(16);
 	
 	private final int value;
 	

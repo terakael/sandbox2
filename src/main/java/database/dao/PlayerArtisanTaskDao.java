@@ -61,6 +61,21 @@ public class PlayerArtisanTaskDao {
 		return amountHandedIn;
 	}
 	
+	public static void spendPoints(int playerId, int spentPoints) {
+		if (!playerTaskItem.containsKey(playerId))
+			return;
+		
+		if (spentPoints == 0)
+			return;
+		
+		final int newPoints = Math.max(0, playerTaskItem.get(playerId).getTotalPoints() - spentPoints);
+		playerTaskItem.get(playerId).setTotalPoints(newPoints);
+		DatabaseUpdater.enqueue(UpdateArtisanTaskEntity.builder()
+				.playerId(playerId)
+				.totalPoints(newPoints)
+				.build());
+	}
+	
 	public static PlayerArtisanTaskDto finishTask(int playerId) {
 		if (!playerTaskItem.containsKey(playerId))
 			return null;

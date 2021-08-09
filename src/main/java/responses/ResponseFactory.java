@@ -210,6 +210,12 @@ public class ResponseFactory {
 		case "makeover":
 			response = new MakeoverResponse();
 			break;
+		case "switch_artisan_shop_tab":
+			response = new SwitchArtisanShopTabResponse();
+			break;
+		case "buy_artisan_stock":
+			response = new BuyArtisanStockResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

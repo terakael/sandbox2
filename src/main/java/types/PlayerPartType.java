@@ -22,7 +22,8 @@ public enum PlayerPartType {
 	// equip stuff
 	HEADWEAR(14), // helmets, hats, etc
 	BODYWEAR(15),
-	LEGWEAR(16);
+	LEGWEAR(16),
+	GLOVES(17);
 	
 	@Getter private int value;
 	PlayerPartType(int value) {

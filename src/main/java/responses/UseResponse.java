@@ -252,6 +252,12 @@ public class UseResponse extends Response {
 				slot = invItemIds.indexOf(request.getSrc());
 			
 			switch (item) {
+			case POISON_FLASK_1:
+			case POISON_FLASK_2:
+			case POISON_FLASK_3:
+			case POISON_FLASK_4:
+			case POISON_FLASK_5:
+			case POISON_FLASK_6:
 			case POISON_1:
 			case POISON_2:
 			case POISON_3:
@@ -259,7 +265,7 @@ public class UseResponse extends Response {
 				// need to be in melee range, this also starts the fight so it works like an attack option
 				// also obviously cannot be used on non-attackables.
 				int becomesItemId = 0;
-				if (item != Items.POISON_1)
+				if (item != Items.POISON_1 && item != Items.POISON_FLASK_1)
 					becomesItemId = item.getValue() + 1;// the item ids are in incremental order ((4) -> (3) -> (2) -> (1))
 				
 				if (!NPCDao.npcHasAttribute(targetNpc.getId(), NpcAttributes.ATTACKABLE))
@@ -378,6 +384,12 @@ public class UseResponse extends Response {
 				slot = invItemIds.indexOf(request.getSrc());
 			
 			switch (item) {
+			case POISON_FLASK_1:
+			case POISON_FLASK_2:
+			case POISON_FLASK_3:
+			case POISON_FLASK_4:
+			case POISON_FLASK_5:
+			case POISON_FLASK_6:
 			case POISON_1:
 			case POISON_2:
 			case POISON_3:
@@ -385,7 +397,7 @@ public class UseResponse extends Response {
 				// need to be in melee range, this also starts the fight so it works like an attack option
 				// also obviously cannot be used on non-attackables.
 				int becomesItemId = 0;
-				if (item != Items.POISON_1)
+				if (item != Items.POISON_1 && item != Items.POISON_FLASK_1)
 					becomesItemId = item.getValue() + 1;// the item ids are in incremental order ((4) -> (3) -> (2) -> (1))
 				
 				if (FightManager.fightingWith(player, targetPlayer)) {

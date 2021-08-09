@@ -3,6 +3,7 @@ package responses;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import database.dao.EquipmentDao;
 import database.dao.PlayerBaseAnimationsDao;
@@ -56,6 +57,22 @@ public class EquipResponse extends Response {
 					if (weaponType == EquipmentTypes.DAGGERS || weaponType == EquipmentTypes.HAMMER)
 						EquipmentDao.clearEquippedItemByPartId(player.getId(), 4);// 4 == onhand
 				}
+				
+				if (equip.getType() == EquipmentTypes.GLOVES) {
+					Integer bodySlot = EquipmentDao.getEquippedSlotsAndItemIdsByPlayerId(player.getId()).entrySet().stream()
+						.filter(e -> EquipmentDao.getEquipmentTypeByEquipmentId(e.getKey()) == EquipmentTypes.BODY)
+						.map(e -> e.getValue())
+						.findFirst()
+						.orElse(null);
+					
+					if (bodySlot != null) {
+						EquipmentDao.clearEquippedItem(player.getId(), bodySlot);
+					}
+					
+				} else if (equip.getType() == EquipmentTypes.BODY) {
+					EquipmentDao.clearEquippedItemByPartId(player.getId(), 17); // gloves
+				}
+				
 				EquipmentDao.clearEquippedItemByPartId(player.getId(), equip.getPartId());
 				EquipmentDao.setEquippedItem(player.getId(), equipReq.getSlot(), equip.getItemId());
 			}
@@ -93,6 +110,7 @@ public class EquipResponse extends Response {
 		case CAPE:
 		case CHAINBODY:
 		case CHAINSKIRT:
+		case GLOVES:
 			if (player.getStats().get(Stats.DEFENCE) < equip.getRequirement()) {
 				setRecoAndResponseText(0, String.format("you need %d defence to equip that.", equip.getRequirement()));
 				responseMaps.addClientOnlyResponse(player, this);

@@ -50,7 +50,12 @@ public class GroundItemManager {
 		groundItemManagers.get(floor).remove(playerId, tileId, itemId, count, charges);
 	}
 	
-	public static boolean itemIsOnGround(int floor, int playerId, int itemId) {		
+	public static boolean itemIsOnGround(int playerId, int itemId) {		
+		return groundItemManagers.values().stream()
+				.anyMatch(e -> e.itemIsOnGround(playerId, itemId));
+	}
+	
+	public static boolean itemIsOnGround(int floor, int playerId, int itemId) {
 		if (!groundItemManagers.containsKey(floor))
 			return false;
 		

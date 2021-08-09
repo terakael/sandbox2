@@ -14,7 +14,6 @@ import javax.websocket.Session;
 
 import com.google.gson.Gson;
 
-import lombok.Getter;
 import database.dao.GroundTextureDao;
 import database.dao.MinimapSegmentDao;
 import database.dao.PickableDao;
@@ -22,6 +21,7 @@ import database.dao.SceneryDao;
 import database.dao.ShopDao;
 import database.dto.PickableDto;
 import database.dto.ShopItemDto;
+import lombok.Getter;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
@@ -30,12 +30,12 @@ import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.DepletionManager;
 import processing.managers.FightManager;
+import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
 import processing.managers.LockedDoorManager;
 import processing.managers.NPCManager;
 import processing.managers.ShopManager;
 import processing.managers.UndeadArmyManager;
-import processing.managers.FightManager.Fight;
 import processing.stores.Store;
 import requests.Request;
 import responses.AddGroundTextureInstancesResponse;
@@ -60,6 +60,7 @@ import responses.SceneryDepleteResponse;
 import responses.SceneryDespawnResponse;
 import responses.SceneryRespawnResponse;
 import responses.ShopResponse;
+import responses.ShowShopResponse;
 import system.Endpoint;
 import system.GroundItemManager;
 import types.SceneryAttributes;
@@ -478,16 +479,13 @@ public class WorldProcessor implements Runnable {
 	
 	private void updateShopStock(ResponseMaps responseMaps) {
 		Stopwatch.start("update shop stock");
-		for (Store store : ShopManager.getShops()) {
+		for (Store store : ShopManager.getAllShops()) {
 			if (store.isDirty()) {
-				ShopResponse shopResponse = new ShopResponse();
-				shopResponse.setShopStock(store.getStock());
-				shopResponse.setShopName(ShopDao.getShopNameById(store.getShopId()));
+				ShowShopResponse shopResponse = new ShowShopResponse(store);
 				
 				for (Player player : playerSessions.values()) {
 					if (player.getShopId() == store.getShopId()) {
-						ClientResourceManager.addItems(player, store.getStock().values().stream().map(ShopItemDto::getItemId).collect(Collectors.toSet()));
-						responseMaps.addClientOnlyResponse(player, shopResponse);
+						shopResponse.process(null, player, responseMaps);
 					}
 				}
 				

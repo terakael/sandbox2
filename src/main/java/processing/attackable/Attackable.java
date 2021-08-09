@@ -137,10 +137,18 @@ public abstract class Attackable {
 		}
 	}
 	
-	protected void clearPoison() {
+	public void clearPoison() {
 		poisonDamage = 0;
 		poisonDamageRemainingTicks = 0;
 		poisonImmunityRemainingTicks = 0;
+	}
+	
+	public void setPoisonImmunity(int ticks) {
+		poisonImmunityRemainingTicks = ticks;
+	}
+	
+	public boolean isPoisoned() {
+		return poisonDamage > 0;
 	}
 	
 	public void setTarget(Attackable target) {

@@ -1,26 +1,20 @@
 package responses;
 
-import java.util.HashMap;
-import java.util.stream.Collectors;
-
-import lombok.Setter;
-import database.dao.ShopDao;
-import database.dto.ShopItemDto;
+import database.dao.ArtisanMasterDao;
 import processing.PathFinder;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
-import processing.managers.ClientResourceManager;
 import processing.managers.FightManager;
 import processing.managers.NPCManager;
 import processing.managers.ShopManager;
-import processing.stores.Store;
 import requests.Request;
 import requests.ShopRequest;
+import types.ArtisanShopTabs;
 
 public class ShopResponse extends Response {
-	@Setter private HashMap<Integer, ShopItemDto> shopStock = new HashMap<>();
-	@Setter private String shopName;
+//	@Setter private HashMap<Integer, ShopItemDto> shopStock = new HashMap<>();
+//	@Setter private String shopName;
 	
 	public ShopResponse() {
 		setAction("shop");
@@ -51,14 +45,12 @@ public class ShopResponse extends Response {
 			return;
 		} else {
 			player.faceDirection(npc.getTileId(), responseMaps);
-			Store shop = ShopManager.getShopByOwnerId(npc.getId());
-			if (shop != null) {
-				ClientResourceManager.addItems(player, shop.getStock().values().stream().map(ShopItemDto::getItemId).collect(Collectors.toSet()));
-				
-				player.setShopId(shop.getShopId());
-				shopStock = shop.getStock();
-				shopName = ShopDao.getShopNameById(shop.getShopId());
-				responseMaps.addClientOnlyResponse(player, this);
+			
+			if (ArtisanMasterDao.npcIsArtisanMaster(npc.getId())) {
+				// artisan shops are different from regular shops (stuff is bought with points etc)
+				new ShowArtisanShopResponse(ArtisanShopTabs.task).process(null, player, responseMaps);
+			} else {
+				new ShowShopResponse(ShopManager.getShopByOwnerId(npc.getId())).process(null, player, responseMaps);
 			}
 		}
 	}

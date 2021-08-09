@@ -1,9 +1,13 @@
 package processing.managers;
 
 import java.util.ArrayList;
-import lombok.Getter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import database.dao.ShopDao;
 import database.dto.ShopDto;
+import lombok.Getter;
 import processing.stores.GeneralStore;
 import processing.stores.SpecialtyStore;
 import processing.stores.Store;
@@ -11,7 +15,7 @@ import responses.ResponseMaps;
 import types.ShopTypes;
 
 public class ShopManager {
-	@Getter private static ArrayList<Store> shops = new ArrayList<>();
+	@Getter private static Map<Integer, Store> shopsByShopId = new HashMap<>();
 	
 	public static void setupShops() {
 		ArrayList<ShopDto> shopDtos = ShopDao.getShopsAndItems();
@@ -23,12 +27,12 @@ public class ShopManager {
 			
 			switch (type) {
 			case GENERAL: {//general
-				shops.add(new GeneralStore(dto));
+				shopsByShopId.put(dto.getId(), new GeneralStore(dto));
 				break;
 			}
 			
 			case SPECIALTY: {//specialty
-				shops.add(new SpecialtyStore(dto));
+				shopsByShopId.put(dto.getId(), new SpecialtyStore(dto));
 				break;
 			}
 			
@@ -39,32 +43,26 @@ public class ShopManager {
 	}
 	
 	public static void process(ResponseMaps responseMaps) {
-		for (Store shop : shops) {
-			shop.process(responseMaps);
-		}
+		shopsByShopId.forEach((id, shop) -> shop.process(responseMaps));
 	}
 	
 	public static void addItem(int shopId, int itemId, int count) {
-		for (Store shop : shops) {
-			if (shop.getShopId() == shopId) {
-				shop.addItem(itemId, count);
-			}
-		}
+		if (shopsByShopId.containsKey(shopId))
+			shopsByShopId.get(shopId).addItem(itemId, count);
 	}
 	
 	public static Store getShopByOwnerId(int ownerId) {
-		for (Store shop : shops) {
-			if (shop.getOwnerId() == ownerId)
-				return shop;
-		}
-		return null;
+		return shopsByShopId.values().stream()
+				.filter(e -> e.getOwnerId() == ownerId)
+				.findFirst()
+				.orElse(null);
 	}
 	
 	public static Store getShopByShopId(int shopId) {
-		for (Store shop : shops) {
-			if (shop.getShopId() == shopId)
-				return shop;
-		}
-		return null;
+		return shopsByShopId.get(shopId);
+	}
+	
+	public static List<Store> getAllShops() {
+		return new ArrayList<>(shopsByShopId.values());
 	}
 }

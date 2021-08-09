@@ -704,7 +704,7 @@ public class Player extends Attackable {
 					if (killer instanceof Player && ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.TRADEABLE)) {
 						// if it's a tradeable unique, the killer should only see it if they don't already have one.
 						if (ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.UNIQUE)) {
-							if (PlayerStorageDao.itemExistsInPlayerStorage(((Player)killer).getId(), dto.getItemId()) || GroundItemManager.itemIsOnGround(getFloor(), ((Player)killer).getId(), dto.getItemId())) {
+							if (PlayerStorageDao.itemExistsInPlayerStorage(((Player)killer).getId(), dto.getItemId()) || GroundItemManager.itemIsOnGround(((Player)killer).getId(), dto.getItemId())) {
 								continue;
 							}
 						}

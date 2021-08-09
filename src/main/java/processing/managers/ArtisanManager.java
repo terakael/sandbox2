@@ -435,4 +435,15 @@ public class ArtisanManager {
 	
 		return true;
 	}
+	
+	public static int getTotalPointsByPlayerId(int playerId) {
+		final PlayerArtisanTaskDto task = PlayerArtisanTaskDao.getTask(playerId);
+		if (task == null)
+			return 0;
+		return task.getTotalPoints();
+	}
+	
+	public static void spendPoints(int playerId, int spentPoints) {
+		PlayerArtisanTaskDao.spendPoints(playerId, spentPoints);
+	}
 }

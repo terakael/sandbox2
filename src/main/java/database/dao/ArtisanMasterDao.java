@@ -2,6 +2,7 @@ package database.dao;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import database.DbConnection;
 import database.dto.ArtisanMasterDto;
@@ -32,5 +33,9 @@ public class ArtisanMasterDao {
 		if (!artisanMasters.containsKey(masterId))
 			return 0;
 		return artisanMasters.get(masterId).getCompletionPoints();
+	}
+	
+	public static Set<Integer> getAllArtisanMasterNpcIds() {
+		return artisanMasters.keySet();
 	}
 }

@@ -6,6 +6,8 @@ import database.dto.NpcDialogueOptionDto;
 import processing.attackable.Player;
 import processing.managers.ArtisanManager;
 import responses.ResponseMaps;
+import responses.ShowArtisanShopResponse;
+import types.ArtisanShopTabs;
 
 public class Alaina implements Speaker {
 
@@ -21,7 +23,7 @@ public class Alaina implements Speaker {
 	@Override
 	public void postShowDialogue(NpcDialogueDto dialogueDto, Player player, ResponseMaps responseMaps) {
 		if (dialogueDto.getDialogueId() == 50) {
-			// TODO open shop
+			new ShowArtisanShopResponse(ArtisanShopTabs.task).process(null, player, responseMaps);
 		}
 	}
 

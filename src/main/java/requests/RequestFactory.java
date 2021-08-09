@@ -71,6 +71,8 @@ public class RequestFactory {
 		map.put("cycle_base_animation", CycleBaseAnimationRequest.class);
 		map.put("save_base_animations", SaveBaseAnimationsRequest.class);
 		map.put("makeover", MakeoverRequest.class);
+		map.put("switch_artisan_shop_tab", SwitchArtisanShopTabRequest.class);
+		map.put("buy_artisan_stock", BuyArtisanStockRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

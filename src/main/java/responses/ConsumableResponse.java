@@ -126,6 +126,12 @@ public abstract class ConsumableResponse extends Response {
 			return;// isn't in the enum, doesn't necessarily mean it's invalid though.
 		
 		switch (item) {
+		case RESTORATION_FLASK_6:
+		case RESTORATION_FLASK_5:
+		case RESTORATION_FLASK_4:
+		case RESTORATION_FLASK_3:
+		case RESTORATION_FLASK_2:
+		case RESTORATION_FLASK_1:
 		case RESTORATION_POTION_4:
 		case RESTORATION_POTION_3:
 		case RESTORATION_POTION_2:
@@ -138,7 +144,13 @@ public abstract class ConsumableResponse extends Response {
 			responseMaps.addClientOnlyResponse(player, resp);
 			break;
 		}
-			
+		
+		case GOBLIN_STANK_FLASK_6:
+		case GOBLIN_STANK_FLASK_5:
+		case GOBLIN_STANK_FLASK_4:
+		case GOBLIN_STANK_FLASK_3:
+		case GOBLIN_STANK_FLASK_2:
+		case GOBLIN_STANK_FLASK_1:
 		case GOBLIN_STANK_4:
 		case GOBLIN_STANK_3:
 		case GOBLIN_STANK_2:
@@ -149,6 +161,24 @@ public abstract class ConsumableResponse extends Response {
 			resp.setColour("white");
 			resp.setResponseText("goblin scent starts coming out of your pores...");
 			responseMaps.addClientOnlyResponse(player, resp);
+			break;
+		}
+		
+		case ANTIPOISON_FLASK_6:
+		case ANTIPOISON_FLASK_5:
+		case ANTIPOISON_FLASK_4:
+		case ANTIPOISON_FLASK_3:
+		case ANTIPOISON_FLASK_2:
+		case ANTIPOISON_FLASK_1:
+		case ANTIPOISON_4:
+		case ANTIPOISON_3:
+		case ANTIPOISON_2:
+		case ANTIPOISON_1: {
+			if (player.isPoisoned()) {
+				player.clearPoison();
+				responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("you immediately feel better.", "white"));
+			}
+			player.setPoisonImmunity(30);
 			break;
 		}
 		
