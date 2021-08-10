@@ -96,6 +96,7 @@ public class Player extends Attackable {
 		smelting,
 		woodcutting,
 		sawmill,
+		sawmill_knife,
 		construction,
 		assembling,
 		fighting,
@@ -410,7 +411,13 @@ public class Player extends Attackable {
 			
 		case sawmill:
 			if (--tickCounter <= 0) {
-				new FinishSawmillResponse().process(savedRequest, this, responseMaps);
+				new FinishSawmillResponse(false).process(savedRequest, this, responseMaps);
+				new UseResponse().process(savedRequest, this, responseMaps);
+			}
+			break;
+		case sawmill_knife:
+			if (--tickCounter <= 0) {
+				new FinishSawmillResponse(true).process(savedRequest, this, responseMaps);
 				new UseResponse().process(savedRequest, this, responseMaps);
 			}
 			break;
@@ -448,7 +455,8 @@ public class Player extends Attackable {
 		case using:
 			if (--tickCounter <= 0) {
 				new FinishUseResponse().process(savedRequest, this, responseMaps);
-				new UseResponse().process(savedRequest, this, responseMaps);
+				if (state == PlayerState.using)
+					new UseResponse().process(savedRequest, this, responseMaps);
 			}
 			break;
 			

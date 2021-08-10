@@ -93,7 +93,7 @@ public abstract class Attackable {
 		int opponentTotalDefence =  target.getStats().get(Stats.DEFENCE) + target.getBoosts().get(Stats.DEFENCE) + (target.getBonuses().get(Stats.DEFENCE) * 2);
 		opponentTotalDefence = target.postBlockChanceModifications(opponentTotalDefence);
 		
-		final float ratio = (float)totalAccuracy / (float)opponentTotalDefence;
+		final float ratio = opponentTotalDefence == 0 ? 100 : (float)totalAccuracy / (float)opponentTotalDefence;
 		final int blockChance = Math.round(ratio/(ratio+1) * 100);
 		
 		final int maxHit = (int)Math.ceil(totalStrength/7.0);

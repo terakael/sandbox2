@@ -46,7 +46,8 @@ public class PlayerDao {
 							StatsDao.getCombatLevelByPlayerId(rs.getInt("id")), 
 							rs.getInt("attack_style_id"), 
 							PlayerBaseAnimationsDao.getBaseAnimationsBasedOnEquipmentTypes(rs.getInt("id")),
-							EquipmentDao.getEquipmentAnimationsByPlayerId(rs.getInt("id")));
+							EquipmentDao.getEquipmentAnimationsByPlayerId(rs.getInt("id")),
+							EquipmentDao.getEquipmentTypeByEquipmentId(EquipmentDao.getWeaponIdByPlayerId(rs.getInt("id"))));
 				
 				return null;
 			}

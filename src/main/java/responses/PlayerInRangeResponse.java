@@ -39,6 +39,9 @@ public class PlayerInRangeResponse extends Response {
 			playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(localPlayer.getId()));
 			playerUpdate.setBaseAnimations(PlayerBaseAnimationsDao.getBaseAnimationsBasedOnEquipmentTypes(localPlayer.getId()));
 			
+			// literally only needed so we can check if the player is equipping daggers, so we can draw them correctly.
+			playerUpdate.setWeaponType(EquipmentDao.getEquipmentTypeByEquipmentId(EquipmentDao.getWeaponIdByPlayerId(localPlayer.getId())));
+			
 			players.add(playerUpdate);
 		}
 	}

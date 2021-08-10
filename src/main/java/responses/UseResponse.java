@@ -123,6 +123,9 @@ public class UseResponse extends Response {
 			return handleConstruction(request, player, responseMaps, false);
 		} else if (src == Items.FLOWER_SACK.getValue() || dest == Items.FLOWER_SACK.getValue()) {
 			return handleFlowerSack(request, player, responseMaps);
+		} else if (src == Items.PLANKCRAFTING_KNIFE.getValue() || dest == Items.PLANKCRAFTING_KNIFE.getValue()) {
+			new SawmillResponse(true).process(request, player, responseMaps);
+			return true;
 		}
 		
 		UseItemOnItemDto dto = UseItemOnItemDao.getEntryBySrcIdDestId(src, dest);

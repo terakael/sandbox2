@@ -216,6 +216,9 @@ public class ResponseFactory {
 		case "buy_artisan_stock":
 			response = new BuyArtisanStockResponse();
 			break;
+		case "enhance_item":
+			response = new EnhanceItemResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

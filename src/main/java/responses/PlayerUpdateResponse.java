@@ -2,12 +2,13 @@ package responses;
 
 import java.util.Map;
 
+import database.dto.PlayerAnimationDto;
 import lombok.Getter;
 import lombok.Setter;
-import database.dto.PlayerAnimationDto;
 import processing.attackable.Player;
 import requests.Request;
 import types.DamageTypes;
+import types.EquipmentTypes;
 import types.PlayerPartType;
 
 @SuppressWarnings("unused")
@@ -26,6 +27,7 @@ public class PlayerUpdateResponse extends Response {
 	@Setter private Boolean doAttack = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> baseAnimations = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> equipAnimations = null;
+	@Setter private EquipmentTypes weaponType = null;
 	private Integer damage = null;
 	private Integer damageSpriteFrameId = null;
 

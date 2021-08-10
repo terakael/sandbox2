@@ -92,6 +92,9 @@ public class EquipResponse extends Response {
 		playerUpdate.setId(player.getId());
 		playerUpdate.setEquipAnimations(EquipmentDao.getEquipmentAnimationsByPlayerId(player.getId()));
 		
+		// literally only needed so we can check if the player is equipping daggers, so we can draw them correctly.
+		playerUpdate.setWeaponType(EquipmentDao.getEquipmentTypeByEquipmentId((EquipmentDao.getWeaponIdByPlayerId(player.getId()))));
+		
 		// sometimes an equipped item overrides one or more base animations (e.g. full helmet removes hair and beard).
 		playerUpdate.setBaseAnimations(PlayerBaseAnimationsDao.getBaseAnimationsBasedOnEquipmentTypes(player.getId()));
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), playerUpdate);
