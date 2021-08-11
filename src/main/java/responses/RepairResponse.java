@@ -66,7 +66,7 @@ public class RepairResponse extends Response {
 			}
 			
 			if (!invItemIds.contains(constructable.getToolId())) {
-				setRecoAndResponseText(0, String.format("you need a %s to repair that.", ItemDao.getNameFromId(constructable.getToolId())));
+				setRecoAndResponseText(0, String.format("you need a %s to repair that.", ItemDao.getNameFromId(constructable.getToolId(), false)));
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
 			}

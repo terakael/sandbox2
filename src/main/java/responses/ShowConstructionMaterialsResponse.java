@@ -26,11 +26,11 @@ public class ShowConstructionMaterialsResponse extends Response {
 	public static String compileMaterialList(ConstructableDto dto) {
 		String message = "";
 		if (dto.getPlankAmount() > 0)
-			message += String.format("%dx %s, ", dto.getPlankAmount(), ItemDao.getNameFromId(dto.getPlankId()));
+			message += String.format("%dx %s, ", dto.getPlankAmount(), ItemDao.getNameFromId(dto.getPlankId(), dto.getPlankAmount() != 1));
 		if (dto.getBarAmount() > 0)
-			message += String.format("%dx %s, ", dto.getBarAmount(), ItemDao.getNameFromId(dto.getBarId()));
+			message += String.format("%dx %s, ", dto.getBarAmount(), ItemDao.getNameFromId(dto.getBarId(), dto.getBarAmount() != 1));
 		if (dto.getTertiaryAmount() > 0)
-			message += String.format("%dx %s, ", dto.getTertiaryAmount(), ItemDao.getNameFromId(dto.getTertiaryId()));
+			message += String.format("%dx %s, ", dto.getTertiaryAmount(), ItemDao.getNameFromId(dto.getTertiaryId(), dto.getTertiaryAmount() != 1));
 		
 		return message.substring(0, message.length() - 2);
 	}

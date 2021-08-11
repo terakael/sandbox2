@@ -65,7 +65,7 @@ public class ExamineResponse extends Response {
 			if (ItemDao.itemHasAttribute(request.getObjectId(), ItemAttributes.STACKABLE)) {
 				int stackCount = PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), request.getObjectId(), StorageTypes.INVENTORY); 
 				if (stackCount >= 100000) {
-					examineText = String.format("%,d %s.", stackCount , ItemDao.getNameFromId(request.getObjectId()));
+					examineText = String.format("%,d %s.", stackCount , ItemDao.getNameFromId(request.getObjectId(), stackCount != 1));
 					break;
 				}
 			}

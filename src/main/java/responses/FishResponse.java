@@ -60,17 +60,17 @@ public class FishResponse extends Response {
 			}
 			
 			if (PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), fishable.getToolId(), StorageTypes.INVENTORY) == 0) {
-				setRecoAndResponseText(0, String.format("you need a %s to fish here.", ItemDao.getNameFromId(fishable.getToolId())));
+				setRecoAndResponseText(0, String.format("you need a %s to fish here.", ItemDao.getNameFromId(fishable.getToolId(), false)));
 				responseMaps.addClientOnlyResponse(player, this);
 				player.setState(PlayerState.idle);
 				return;
 			}
 			
 			if (fishable.getBaitId() != 0 && PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), fishable.getBaitId(), StorageTypes.INVENTORY) == 0) {
-				final String baitName = ItemDao.getNameFromId(fishable.getBaitId());
+				final String baitName = ItemDao.getNameFromId(fishable.getBaitId(), true);
 				final String message = player.getState() == PlayerState.fishing
-						? String.format("you have run out of %ss.", baitName)
-						: String.format("you need some %ss to fish here.", baitName);
+						? String.format("you have run out of %s.", baitName)
+						: String.format("you need some %s to fish here.", baitName);
 				setRecoAndResponseText(0, message);
 				responseMaps.addClientOnlyResponse(player, this);
 				player.setState(PlayerState.idle);

@@ -43,7 +43,7 @@ public class ConstructionResponse extends Response {
 
 		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (!invItemIds.contains(constructable.getToolId())) {
-			setRecoAndResponseText(0, String.format("you need a %s to build that.", ItemDao.getNameFromId(constructable.getToolId())));
+			setRecoAndResponseText(0, String.format("you need a %s to build that.", ItemDao.getNameFromId(constructable.getToolId(), false)));
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}

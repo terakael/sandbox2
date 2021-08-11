@@ -96,7 +96,7 @@ public class FinishMiningResponse extends Response {
 			new AddExpResponse().process(addExpReq, player, responseMaps);
 			new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 			
-			setResponseText(String.format("you mine some %s.", minedGoldChips ? "gold chips" : ItemDao.getNameFromId(mineable.getItemId())));
+			setResponseText(String.format("you mine some %s.", minedGoldChips ? "gold chips" : ItemDao.getNameFromId(mineable.getItemId(), false)));
 			
 			// there's a chance the rock depletes on a successful mine (unless the player has a magic pickaxe variant
 			if (!invItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue()) && !invItemIds.contains(Items.MAGIC_PICKAXE.getValue())) {

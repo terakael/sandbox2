@@ -36,7 +36,7 @@ public class BuryResponse extends Response {
 		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, request.getSlot(), 0, 1, 0);
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		
-		setResponseText(String.format("you bury the %s.", ItemDao.getNameFromId(boneId)));
+		setResponseText(String.format("you bury the %s.", ItemDao.getNameFromId(boneId, false)));
 		responseMaps.addClientOnlyResponse(player, this);
 		
 		handleBury(player, boneId, responseMaps);

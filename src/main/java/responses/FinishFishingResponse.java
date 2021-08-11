@@ -72,7 +72,7 @@ public class FinishFishingResponse extends Response {
 		new AddExpResponse().process(addExpReq, player, responseMaps);
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 		
-		setResponseText(String.format("you catch some %s.", ItemDao.getNameFromId(fishable.getItemId())));
+		setResponseText(String.format("you catch some %s.", ItemDao.getNameFromId(fishable.getItemId(), false)));
 		responseMaps.addClientOnlyResponse(player, this);
 		
 		TybaltsTaskManager.check(player, new FishTaskUpdate(fishable.getItemId()), responseMaps);

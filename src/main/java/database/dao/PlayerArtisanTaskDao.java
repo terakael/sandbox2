@@ -44,6 +44,23 @@ public class PlayerArtisanTaskDao {
 		}
 	}
 	
+	public static void cancelTask(int playerId) {
+		final PlayerArtisanTaskDto task = playerTaskItem.get(playerId);
+		if (task == null)
+			return;
+		
+		task.setItemId(0);
+		task.setAssignedAmount(0);
+		task.setHandedInAmount(0);
+		
+		DatabaseUpdater.enqueue(UpdateArtisanTaskEntity.builder()
+				.playerId(playerId)
+				.itemId(0)
+				.assignedAmount(0)
+				.handedInAmount(0)
+				.build());
+	}
+	
 	public static int handInItems(int playerId, int amountToHandIn) {
 		if (!playerTaskItem.containsKey(playerId))
 			return 0;

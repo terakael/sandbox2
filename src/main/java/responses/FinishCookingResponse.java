@@ -76,7 +76,7 @@ public class FinishCookingResponse extends Response {
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, success ? cookable.getCookedItemId() : cookable.getBurntItemId(), 1, ItemDao.getMaxCharges(cookable.getCookedItemId()));
 			InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
 			invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
-			invUpdate.setResponseText(String.format("you %s the %s.", success ? "cook" : "burn", ItemDao.getNameFromId(cookable.getCookedItemId())));
+			invUpdate.setResponseText(String.format("you %s the %s.", success ? "cook" : "burn", ItemDao.getNameFromId(cookable.getCookedItemId(), false)));
 			
 			if (success) {
 				AddExpRequest addExpReq = new AddExpRequest();

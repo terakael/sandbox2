@@ -49,7 +49,7 @@ public abstract class ConsumableResponse extends Response {
 		
 		InventoryUpdateResponse invUpdate = new InventoryUpdateResponse(); 
 		invUpdate.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
-		invUpdate.setResponseText(String.format("you %s the %s.", getAction(), ItemDao.getNameFromId(itemId)));
+		invUpdate.setResponseText(String.format("you %s the %s.", getAction(), ItemDao.getNameFromId(itemId, false)));
 		
 		consume(player, itemId, responseMaps);
 	}

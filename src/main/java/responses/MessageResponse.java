@@ -317,7 +317,7 @@ public class MessageResponse extends Response {
 			}
 		}
 		
-		if (ItemDao.getNameFromId(itemId) == null) {
+		if (ItemDao.getNameFromId(itemId, false) == null) {
 			setRecoAndResponseText(0, "invalid itemId.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;

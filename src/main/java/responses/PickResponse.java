@@ -59,7 +59,7 @@ public class PickResponse extends Response {
 				return;
 			}
 			
-			setRecoAndResponseText(1, String.format("you pick some %s.", ItemDao.getNameFromId(pickable.getItemId())));
+			setRecoAndResponseText(1, String.format("you pick some %s.", ItemDao.getNameFromId(pickable.getItemId(), false)));
 			responseMaps.addClientOnlyResponse(player, this);
 			
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, freeSlotId, pickable.getItemId(), 1, ItemDao.getMaxCharges(pickable.getItemId()));

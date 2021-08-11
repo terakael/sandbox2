@@ -800,11 +800,11 @@ public class Player extends Attackable {
 		int weaponId = EquipmentDao.getWeaponIdByPlayerId(getId());
 		EquipmentTypes weaponType = EquipmentDao.getEquipmentTypeByEquipmentId(weaponId);
 		
-		String weaponName = ItemDao.getNameFromId(weaponId);
-		if (weaponName == null) {
-			// error: invalid weaponId (0 is no weapon and returns the string "null")
-			return;
-		}
+//		String weaponName = ItemDao.getNameFromId(weaponId, false);
+//		if (weaponName == null) {
+//			// error: invalid weaponId (0 is no weapon and returns the string "null")
+//			return;
+//		}
 		
 		Map<Integer, Double> expBefore = StatsDao.getAllStatExpByPlayerId(getId());
 		
@@ -1018,7 +1018,7 @@ public class Player extends Attackable {
 						
 						// it degraded so throw up a message
 						responseMaps.addClientOnlyResponse(this, 
-								MessageResponse.newMessageResponse(String.format("Your %s degraded!", ItemDao.getNameFromId(item.getItemId())), "white"));
+								MessageResponse.newMessageResponse(String.format("Your %s degraded!", ItemDao.getNameFromId(item.getItemId(), false)), "white"));
 					}
 					itemUpdated = true;
 				}

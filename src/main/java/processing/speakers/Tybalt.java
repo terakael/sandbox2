@@ -124,7 +124,7 @@ public class Tybalt implements Speaker {
 				
 				if (rewardsByTaskId.containsKey(task.getTaskId())) {
 					final String rewardMessage = rewardsByTaskId.get(task.getTaskId()).stream()
-							.map(e -> String.format("%dx %s", e.getCount(), ItemDao.getNameFromId(e.getItemId())))
+							.map(e -> String.format("%dx %s", e.getCount(), ItemDao.getNameFromId(e.getItemId(), e.getCount() != 1)))
 							.collect(Collectors.joining(", "));
 					responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(String.format("tybalt hands you %s.", rewardMessage), "white"));
 					

@@ -1,17 +1,18 @@
 package database.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter 
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ItemDto {
-	private int id;
-	private String name;
-	private int spriteFrameId;
-	private int leftclickOption;
-	private int otherOptions;
-	private int attributes;
-	private int price;
-	private int shiftclickOption;
+	private final int id;
+	private final String name;
+	private final String namePlural;
+	private final int spriteFrameId;
+	private final int leftclickOption;
+	private final int otherOptions;
+	private final int attributes;
+	private final int price;
+	private final int shiftclickOption;
 }

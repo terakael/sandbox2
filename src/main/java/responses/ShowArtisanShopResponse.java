@@ -1,24 +1,25 @@
 package responses;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import database.dao.ArtisanEnhanceableItemsDao;
-import database.dao.ArtisanMasterDao;
 import database.dao.ArtisanShopStockDao;
-import database.dao.ArtisanTaskOptionsDao;
+import database.dao.PlayerArtisanBlockedTaskDao;
+import database.dao.PlayerArtisanTaskBreakdownDao;
 import database.dao.PlayerArtisanTaskDao;
 import database.dao.PlayerStorageDao;
 import database.dto.ArtisanEnhanceableItemsDto;
-import database.dto.ArtisanTaskOptionsDto;
+import database.dto.PlayerArtisanBlockedTaskDto;
 import database.dto.PlayerArtisanTaskDto;
-import processing.WorldProcessor;
 import processing.attackable.Player;
+import processing.managers.ArtisanManager;
 import processing.managers.ClientResourceManager;
-import processing.managers.LocationManager;
 import requests.Request;
 import system.GroundItemManager;
 import types.ArtisanShopTabs;
@@ -31,7 +32,11 @@ public class ShowArtisanShopResponse extends Response {
 	private ArtisanShopTabs[] tabs;
 	
 	// for selectedTab == task
-	private Set<ArtisanTaskOptionsDto> taskOptions = null;
+//	private Set<ArtisanTaskOptionsDto> taskOptions = null;
+	private Integer currentTaskItemId = null;
+	private Integer numAssigned = null;
+	private Integer numCompleted = null;
+	private Map<Integer, Integer> blockedTaskItemIds = null;
 	
 	// for selectedTab == enhance
 	private Set<ArtisanEnhanceableItemsDto> enhanceableItems = null;
@@ -46,11 +51,7 @@ public class ShowArtisanShopResponse extends Response {
 	
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		final boolean playerIsNearArtisanMaster = LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 5, WorldProcessor.isDaytime()).stream()
-				.map(npc -> npc.getDto().getId())
-				.collect(Collectors.toSet())
-				.containsAll(ArtisanMasterDao.getAllArtisanMasterNpcIds());
-		if (!playerIsNearArtisanMaster)
+		if (!ArtisanManager.playerIsNearMaster(player))
 			return;
 		
 		final PlayerArtisanTaskDto task = PlayerArtisanTaskDao.getTask(player.getId());
@@ -59,8 +60,19 @@ public class ShowArtisanShopResponse extends Response {
 		
 		switch (selectedTab) {
 		case task: {
-			taskOptions = ArtisanTaskOptionsDao.getTaskOptions();
-			ClientResourceManager.addSpriteFramesAndSpriteMaps(player, taskOptions.stream().map(ArtisanTaskOptionsDto::getIconId).collect(Collectors.toSet()));
+			currentTaskItemId = task.getItemId();
+			numAssigned = task.getAssignedAmount();
+			numCompleted = numAssigned - PlayerArtisanTaskBreakdownDao.getRemainingTaskCount(player.getId(), currentTaskItemId);
+			ClientResourceManager.addItems(player, Collections.singleton(currentTaskItemId));
+			
+			PlayerArtisanBlockedTaskDto blockedTaskDto = PlayerArtisanBlockedTaskDao.getBlockedTasksByPlayerId(player.getId());
+			blockedTaskItemIds = new LinkedHashMap<>();
+			blockedTaskItemIds.put(1, blockedTaskDto.getItem1());
+			blockedTaskItemIds.put(2, blockedTaskDto.getItem2());
+			blockedTaskItemIds.put(3, blockedTaskDto.getItem3());
+			blockedTaskItemIds.put(4, blockedTaskDto.getItem4());
+			blockedTaskItemIds.put(5, blockedTaskDto.getItem5());
+			ClientResourceManager.addItems(player, new HashSet<>(blockedTaskItemIds.values()));
 			break;
 		}
 		case enhance: {

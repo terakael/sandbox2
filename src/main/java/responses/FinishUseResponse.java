@@ -82,7 +82,7 @@ public class FinishUseResponse extends Response {
 				}
 			}
 			
-			setRecoAndResponseText(1, String.format("you create your %s.", ItemDao.getNameFromId(dto.getResultingItemId())));
+			setRecoAndResponseText(1, String.format("you create your %s.", ItemDao.getNameFromId(dto.getResultingItemId(), false)));
 			responseMaps.addClientOnlyResponse(player, this);
 			
 			if (BrewableDao.isBrewable(dto.getResultingItemId())) {
@@ -92,11 +92,7 @@ public class FinishUseResponse extends Response {
 			TybaltsTaskManager.check(player, new UseItemOnItemTaskUpdate(dto.getResultingItemId()), responseMaps);
 			ArtisanManager.check(player, dto.getResultingItemId(), responseMaps);
 		} else {
-			String itemName = ItemDao.getNameFromId(src);
-			if (!itemName.endsWith("s"))
-				itemName += "s";
-			
-			setRecoAndResponseText(0, String.format("you need %d %s to do that.", dto.getRequiredSrcCount(), itemName));
+			setRecoAndResponseText(0, String.format("you need %d %s to do that.", dto.getRequiredSrcCount(), ItemDao.getNameFromId(src, dto.getRequiredSrcCount() != 1)));
 			responseMaps.addClientOnlyResponse(player, this);
 		}
 		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);

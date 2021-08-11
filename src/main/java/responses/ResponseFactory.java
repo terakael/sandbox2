@@ -219,6 +219,15 @@ public class ResponseFactory {
 		case "enhance_item":
 			response = new EnhanceItemResponse();
 			break;
+		case "block_artisan_task":
+			response = new BlockArtisanTaskResponse();
+			break;
+		case "unblock_artisan_task":
+			response = new UnblockArtisanTaskResponse();
+			break;
+		case "skip_artisan_task":
+			response = new SkipArtisanTaskResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

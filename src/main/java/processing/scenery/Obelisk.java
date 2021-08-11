@@ -43,7 +43,7 @@ public abstract class Obelisk implements Scenery {
 			InventoryUpdateResponse updateResponse = new InventoryUpdateResponse();
 			updateResponse.process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
 			
-			String itemName = ItemDao.getNameFromId(src.getValue());
+			String itemName = ItemDao.getNameFromId(src.getValue(), false);
 			String responseText = success
 					? String.format("you successfully enchant the %s.", itemName)
 					: String.format("the %s fails to enchant, and is destroyed in the process.", itemName);

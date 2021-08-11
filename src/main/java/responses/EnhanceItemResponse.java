@@ -2,17 +2,13 @@ package responses;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import database.dao.ArtisanEnhanceableItemsDao;
-import database.dao.ArtisanMasterDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
 import database.dto.ArtisanEnhanceableItemsDto;
-import processing.WorldProcessor;
 import processing.attackable.Player;
 import processing.managers.ArtisanManager;
-import processing.managers.LocationManager;
 import requests.EnhanceItemRequest;
 import requests.Request;
 import types.ArtisanShopTabs;
@@ -28,11 +24,7 @@ public class EnhanceItemResponse extends Response {
 		EnhanceItemRequest request = (EnhanceItemRequest)req;
 		final int amount = request.getAmount() == -1 ? Integer.MAX_VALUE : request.getAmount();
 		
-		final boolean playerIsNearArtisanMaster = LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 5, WorldProcessor.isDaytime()).stream()
-				.map(npc -> npc.getDto().getId())
-				.collect(Collectors.toSet())
-				.containsAll(ArtisanMasterDao.getAllArtisanMasterNpcIds());
-		if (!playerIsNearArtisanMaster)
+		if (!ArtisanManager.playerIsNearMaster(player))
 			return;
 		
 		ArtisanEnhanceableItemsDto enhancedItemDto = ArtisanEnhanceableItemsDao.getEnhanceableItems().get(request.getItemId());

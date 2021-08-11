@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+@Setter
 @Getter
 @AllArgsConstructor
 public class PlayerArtisanTaskDto {
@@ -12,8 +13,8 @@ public class PlayerArtisanTaskDto {
 	private int itemId;
 	private int assignedAmount;
 	private int handedInAmount;
-	@Setter private int totalTasks;
-	@Setter private int totalPoints;
+	private int totalTasks;
+	private int totalPoints;
 	
 	public void reset(int assignedMasterId, int itemId, int assignedAmount) {
 		this.itemId = itemId;

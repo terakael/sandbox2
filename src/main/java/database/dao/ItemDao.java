@@ -15,9 +15,9 @@ public class ItemDao {
 	private static HashMap<Integer, ItemDto> itemMap = new HashMap<>();
 	private static HashMap<Integer, ItemChargesDto> itemMaxCharges = new HashMap<>();
 	
-	public static String getNameFromId(int id) {
+	public static String getNameFromId(int id, boolean plural) {
 		if (itemMap.containsKey(id))
-			return itemMap.get(id).getName();
+			return plural ? itemMap.get(id).getNamePlural() : itemMap.get(id).getName();
 		return null;
 	}
 	
@@ -35,10 +35,11 @@ public class ItemDao {
 	}
 	
 	private static void populateItemCache() {
-		final String query = "select id, name, sprite_frame_id, leftclick_option, other_options, attributes, price, shiftclick_option from items";
+		final String query = "select id, name, name_plural, sprite_frame_id, leftclick_option, other_options, attributes, price, shiftclick_option from items";
 		DbConnection.load(query, rs -> {
 			itemMap.put(rs.getInt("id"), new ItemDto(rs.getInt("id"), 
-					rs.getString("name"), 
+					rs.getString("name"),
+					rs.getString("name_plural"), 
 					rs.getInt("sprite_frame_id"), 
 					rs.getInt("leftclick_option"), 
 					rs.getInt("other_options"), 

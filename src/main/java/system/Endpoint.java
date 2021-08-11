@@ -23,7 +23,6 @@ import requests.Request;
 import requests.RequestDecoder;
 import responses.ResponseEncoder;
 
-@SuppressWarnings("unused")
 @ServerEndpoint(value = "/game", encoders = ResponseEncoder.class, decoders = RequestDecoder.class)
 public class Endpoint {
 	// the reason we have two maps, is because in some cases we want the user to be able to do multiple requests in the same tick.

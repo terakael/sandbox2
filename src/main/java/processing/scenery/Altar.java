@@ -28,7 +28,7 @@ public class Altar implements Scenery {
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		
 		MessageResponse messageResponse = new MessageResponse();
-		messageResponse.setResponseText(String.format("you sacrifice the %s at the altar.", ItemDao.getNameFromId(srcItemId)));
+		messageResponse.setResponseText(String.format("you sacrifice the %s at the altar.", ItemDao.getNameFromId(srcItemId, false)));
 		messageResponse.setColour("white");
 		responseMaps.addClientOnlyResponse(player, messageResponse);
 		

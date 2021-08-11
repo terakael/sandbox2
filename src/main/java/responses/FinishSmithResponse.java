@@ -65,7 +65,7 @@ public class FinishSmithResponse extends Response {
 		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, dto.getItemId(), 1, ItemDao.getMaxCharges(dto.getItemId()));
 		
 		
-		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId())));
+		setResponseText(String.format("you smith a %s.", ItemDao.getNameFromId(dto.getItemId(), false)));
 		responseMaps.addClientOnlyResponse(player, this);
 		
 		final int exp = SmeltableDao.getSmeltableByBarId(dto.getBarId()).getExp() * dto.getRequiredBars();

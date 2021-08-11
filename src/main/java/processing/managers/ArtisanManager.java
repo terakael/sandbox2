@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,7 @@ import database.dao.ItemDao;
 import database.dao.MineableDao;
 import database.dao.NPCDao;
 import database.dao.PickableDao;
+import database.dao.PlayerArtisanBlockedTaskDao;
 import database.dao.PlayerArtisanTaskBreakdownDao;
 import database.dao.PlayerArtisanTaskDao;
 import database.dao.PlayerStorageDao;
@@ -33,6 +35,7 @@ import database.dto.PlayerArtisanTaskBreakdownDto;
 import database.dto.PlayerArtisanTaskDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import processing.WorldProcessor;
 import processing.attackable.Player;
 import processing.tybaltstasks.updates.CompleteArtisanTaskUpdate;
 import requests.AddExpRequest;
@@ -282,14 +285,19 @@ public class ArtisanManager {
 	}
 	
 	public static void newTask(Player player, ArtisanMasterDto master, ResponseMaps responseMaps) {
-		final List<Integer> itemsPlayerCanMake = getItemsPlayerCanMake(player.getId(), master.getAssignmentLevelRangeMin(), master.getAssignmentLevelRangeMax());
+		final Set<Integer> blockedItems = PlayerArtisanBlockedTaskDao.getBlockedItemIds(player.getId());
+		final List<Integer> itemsPlayerCanMake = getItemsPlayerCanMake(player.getId(), master.getAssignmentLevelRangeMin(), master.getAssignmentLevelRangeMax()).stream()
+				.filter(itemId -> !blockedItems.contains(itemId))
+				.collect(Collectors.toList());
+		
+		
 		final int taskItemId = itemsPlayerCanMake.get(RandomUtil.getRandom(0, itemsPlayerCanMake.size()));
 		
 		int numItemsToMake = 100;
 		if (itemAmounts.containsKey(taskItemId)) {
 			numItemsToMake = RandomUtil.getRandomInRange(itemAmounts.get(taskItemId), itemAmounts.get(taskItemId) / 3);
 		} else {
-			System.out.println(String.format("taskItemId %d (%s) not found in itemAmounts map", taskItemId, ItemDao.getNameFromId(taskItemId)));
+			System.out.println(String.format("taskItemId %d (%s) not found in itemAmounts map", taskItemId, ItemDao.getNameFromId(taskItemId, false)));
 			return;
 		}
 		
@@ -302,7 +310,7 @@ public class ArtisanManager {
 		// artisan task item dao holds the main task item, and records how many finished items are handed in to the artisan master
 		PlayerArtisanTaskDao.newTask(player.getId(), master.getNpcId(), taskItemId, numItemsToMake);
 		
-		final String taskMessage = String.format("new artisan task: %s %dx %s.", getActionFromItemId(taskItemId), numItemsToMake, ItemDao.getNameFromId(taskItemId));
+		final String taskMessage = String.format("new artisan task: %s %dx %s.", getActionFromItemId(taskItemId), numItemsToMake, ItemDao.getNameFromId(taskItemId, numItemsToMake != 1));
 		responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(taskMessage, "#23f5b4"));
 		
 		ArtisanManager.getStepsFromItemId(taskItemId, numItemsToMake).forEach((itemId, requiredCount) -> {
@@ -321,7 +329,7 @@ public class ArtisanManager {
 		if (task == null)
 			return "not assigned";
 		
-		return String.format("to %s %d %ss", getActionFromItemId(task.getItemId()), task.getAssignedAmount(), ItemDao.getNameFromId(task.getItemId()));
+		return String.format("to %s %d %s", getActionFromItemId(task.getItemId()), task.getAssignedAmount(), ItemDao.getNameFromId(task.getItemId(), task.getAssignedAmount() != 1));
 	}
 	
 	public static boolean currentTaskIsFinished(int playerId) {
@@ -420,7 +428,7 @@ public class ArtisanManager {
 		
 		final int numItemsHandedIn = PlayerArtisanTaskDao.handInItems(player.getId(), numTaskItemsToHandIn);
 		
-		final String message = String.format("you have completed %d/%d %s, and handed in %d.", task.getAssignedAmount() - remainingTaskCount, task.getAssignedAmount(), ItemDao.getNameFromId(itemId), task.getHandedInAmount());
+		final String message = String.format("you have completed %d/%d %s, and handed in %d.", task.getAssignedAmount() - remainingTaskCount, task.getAssignedAmount(), ItemDao.getNameFromId(itemId, true), task.getHandedInAmount());
 		responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(message, "white"));
 		
 		if (numItemsHandedIn > 0) {
@@ -445,5 +453,11 @@ public class ArtisanManager {
 	
 	public static void spendPoints(int playerId, int spentPoints) {
 		PlayerArtisanTaskDao.spendPoints(playerId, spentPoints);
+	}
+	
+	public static boolean playerIsNearMaster(Player player) {
+		return LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 5, WorldProcessor.isDaytime()).stream()
+				.map(npc -> npc.getDto().getId())
+				.anyMatch(ArtisanMasterDao.getAllArtisanMasterNpcIds()::contains);
 	}
 }

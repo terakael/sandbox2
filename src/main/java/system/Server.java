@@ -30,6 +30,7 @@ import database.dao.MineableDao;
 import database.dao.MinimapSegmentDao;
 import database.dao.NpcMessageDao;
 import database.dao.PickableDao;
+import database.dao.PlayerArtisanBlockedTaskDao;
 import database.dao.PlayerArtisanTaskBreakdownDao;
 import database.dao.PlayerArtisanTaskDao;
 import database.dao.PlayerBaseAnimationsDao;
@@ -246,6 +247,9 @@ public class Server {
 		
 		System.out.println("caching artisan enhanceable items");
 		ArtisanEnhanceableItemsDao.setupCaches();
+		
+		System.out.println("caching artisan blocked tasks");
+		PlayerArtisanBlockedTaskDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

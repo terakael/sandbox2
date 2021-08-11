@@ -25,7 +25,7 @@ public class CheckResponse extends Response {
 			} else {
 				responseMaps.addClientOnlyResponse(player, 
 						MessageResponse.newMessageResponse("the sack contains " + sackContents.values().stream()
-							.map(e -> String.format("%dx %s", e.getCount(), ItemDao.getNameFromId(e.getItemId())))
+							.map(e -> String.format("%dx %s", e.getCount(), ItemDao.getNameFromId(e.getItemId(), e.getCount() != 1)))
 							.collect(Collectors.joining(", ")), 
 						"white"));
 				

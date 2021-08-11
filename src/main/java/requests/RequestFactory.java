@@ -74,6 +74,9 @@ public class RequestFactory {
 		map.put("switch_artisan_shop_tab", SwitchArtisanShopTabRequest.class);
 		map.put("buy_artisan_stock", BuyArtisanStockRequest.class);
 		map.put("enhance_item", EnhanceItemRequest.class);
+		map.put("block_artisan_task", BlockArtisanTaskRequest.class);
+		map.put("unblock_artisan_task", UnblockArtisanTaskRequest.class);
+		map.put("skip_artisan_task", SkipArtisanTaskRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

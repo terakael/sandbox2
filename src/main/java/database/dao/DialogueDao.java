@@ -210,7 +210,7 @@ public class DialogueDao {
 			addSpecialHandling(capeGiverNpcId, 1, dialogueId, (player, responseMaps) -> {
 				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, capeId, 1, ItemDao.getMaxCharges(capeId));
 				InventoryUpdateResponse.sendUpdate(player, responseMaps);
-				responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(String.format("%s hands you a %s.", NPCDao.getNpcNameById(capeGiverNpcId), ItemDao.getNameFromId(capeId)), "white"));
+				responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(String.format("%s hands you a %s.", NPCDao.getNpcNameById(capeGiverNpcId), ItemDao.getNameFromId(capeId, false)), "white"));
 			});
 		});
 		
