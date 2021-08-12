@@ -1,12 +1,7 @@
 package processing.attackable;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 import database.dao.DoorDao;
 import lombok.Getter;
@@ -19,8 +14,6 @@ import types.Stats;
 import utils.RandomUtil;
 
 public abstract class Attackable {
-	private static Random rand = new Random();
-	
 	@Setter protected Stack<Integer> path = new Stack<>();// stack of tile_ids
 	@Setter @Getter protected HashMap<Stats, Integer> stats = new HashMap<>();
 	@Setter @Getter protected HashMap<Stats, Integer> bonuses = new HashMap<>();

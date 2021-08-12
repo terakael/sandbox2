@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import database.dao.ArtisanMasterDao;
+import database.dao.ArtisanTaskItemReplacementDao;
 import database.dao.BrewableDao;
 import database.dao.ChoppableDao;
 import database.dao.ConstructableDao;
@@ -224,6 +225,17 @@ public class ArtisanManager {
 				itemExp.put(constructable.getFlatpackItemId(), constructable.getExp());
 			}
 		});
+		
+		// once everything has been added, remove the replacements from the materials list
+		// replacements are, for example, flasks (you cannot be assigned flasks because they take points to buy, meaning you could get stuck with no points).
+		// however, if you get assigned a brew task, making the equivalent flask counts towards the task.
+		// TODO man these lists need to be grouped into some kinda object
+		final Set<Integer> replacementItems = ArtisanTaskItemReplacementDao.getReplacementMap().keySet();
+		itemMaterials.entrySet().removeIf(e -> replacementItems.contains(e.getKey()));
+		itemActions.entrySet().removeIf(e -> replacementItems.contains(e.getKey()));
+		itemLevels.entrySet().removeIf(e -> replacementItems.contains(e.getKey()));
+		itemAmounts.entrySet().removeIf(e -> replacementItems.contains(e.getKey()));
+		itemExp.entrySet().removeIf(e -> replacementItems.contains(e.getKey()));
 	}
 	
 	public static Map<Integer, Integer> getStepsFromItemId(int itemId, int requiredItems) {
@@ -338,6 +350,14 @@ public class ArtisanManager {
 	}
 	
 	public static void check(Player player, int itemId, ResponseMaps responseMaps) {
+		// if, for example, it's a flask, then switch the item to the equivalent vial brew
+		if (ArtisanTaskItemReplacementDao.getReplacementMap().containsKey(itemId))
+			itemId = ArtisanTaskItemReplacementDao.getReplacementMap().get(itemId);
+		
+		checkInternal(player, itemId, responseMaps);
+	}
+	
+	private static void checkInternal(Player player, int itemId, ResponseMaps responseMaps) {		
 		if (!PlayerArtisanTaskBreakdownDao.taskIsValid(player.getId(), itemId))
 			return;
 		
