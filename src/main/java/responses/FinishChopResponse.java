@@ -49,11 +49,11 @@ public class FinishChopResponse extends Response {
 		}
 		
 		List<Integer> inventoryItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-		if (!inventoryItemIds.contains(hatchetId) && !inventoryItemIds.contains(goldenHatchetId)) {
-			setRecoAndResponseText(0, "you need a hatchet in order to chop the tree.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (!inventoryItemIds.contains(hatchetId) && !inventoryItemIds.contains(goldenHatchetId)) {
+//			setRecoAndResponseText(0, "you need a hatchet in order to chop the tree.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		if (choppable.getSceneryId() == SceneryDao.getIdByName("magic tree") && !inventoryItemIds.contains(goldenHatchetId)) {
 			setRecoAndResponseText(0, "this hatchet doesn't seem powerful enough to chop this tree.");

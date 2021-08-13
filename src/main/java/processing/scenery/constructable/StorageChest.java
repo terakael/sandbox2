@@ -15,8 +15,8 @@ import system.GroundItemManager;
 public abstract class StorageChest extends Constructable {
 	private Map<Integer, Map<Integer, InventoryItemDto>> storage = new HashMap<>(); // playerId, <slot, item>
 
-	public StorageChest(int floor, int tileId, ConstructableDto dto) {
-		super(floor, tileId, dto);
+	public StorageChest(int floor, int tileId, int lifetimeTicks, ConstructableDto dto) {
+		super(floor, tileId, lifetimeTicks, dto);
 	}
 	
 	@Override

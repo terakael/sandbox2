@@ -7,9 +7,8 @@ import responses.ResponseMaps;
 public class BleedingTotemPole extends Constructable {
 	private static final int PROC_TIMER = 6;
 
-	public BleedingTotemPole(int floor, int tileId, ConstructableDto dto) {
-		super(floor, tileId, dto);
-		// TODO Auto-generated constructor stub
+	public BleedingTotemPole(int floor, int tileId, int lifetimeTicks, ConstructableDto dto) {
+		super(floor, tileId, lifetimeTicks, dto);
 	}
 	
 	public void processConstructable(int tickId, ResponseMaps responseMaps) {

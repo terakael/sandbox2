@@ -2,6 +2,7 @@ package responses;
 
 import java.util.List;
 
+import database.dao.ArtisanToolEquivalentDao;
 import database.dao.ChoppableDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
@@ -64,7 +65,9 @@ public class ChopResponse extends Response {
 			}
 				
 			List<Integer> inventoryItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-			if (!inventoryItemIds.contains(hatchetId) && !inventoryItemIds.contains(goldenHatchetId)) {
+			if (!inventoryItemIds.contains(hatchetId) 
+					&& !inventoryItemIds.contains(goldenHatchetId)
+					&& !inventoryItemIds.stream().anyMatch(ArtisanToolEquivalentDao.getArtisanEquivalents(hatchetId)::contains)) {
 				setRecoAndResponseText(0, "you need a hatchet in order to chop the tree.");
 				responseMaps.addClientOnlyResponse(player, this);
 				player.setState(PlayerState.idle);
@@ -107,12 +110,18 @@ public class ChopResponse extends Response {
 				player.setSavedRequest(req);
 			}
 			
-			int usedHatchetId = hatchetId;
+			
+			// if you have both a regular hatchet and an artisan equivalent, show the artisan equivalent
+			int usedHatchetId = inventoryItemIds.stream()
+					.filter(e -> ArtisanToolEquivalentDao.getArtisanEquivalents(hatchetId).contains(e))
+					.findFirst()
+					.orElse(hatchetId);
+			
+			// golden hatchet takes priority
 			if (inventoryItemIds.contains(goldenHatchetId))
 				usedHatchetId = goldenHatchetId;
 			
-			int tickCounter = usedHatchetId == hatchetId ? 5 : 3;
-			player.setTickCounter(tickCounter);
+			player.setTickCounter(usedHatchetId == goldenHatchetId ? 3 : 5);
 			
 			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
 					new ActionBubbleResponse(player, ItemDao.getItem(usedHatchetId)));

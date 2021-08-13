@@ -9,6 +9,7 @@ import database.dao.ArtisanEnhanceableItemsDao;
 import database.dao.ArtisanMasterDao;
 import database.dao.ArtisanShopStockDao;
 import database.dao.ArtisanTaskItemReplacementDao;
+import database.dao.ArtisanToolEquivalentDao;
 import database.dao.BaseAnimationsDao;
 import database.dao.BrewableDao;
 import database.dao.BuryableDao;
@@ -250,6 +251,9 @@ public class Server {
 		
 		System.out.println("caching artisan task replacements");
 		ArtisanTaskItemReplacementDao.setupCaches();
+		
+		System.out.println("caching artisan tool equivalents");
+		ArtisanToolEquivalentDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

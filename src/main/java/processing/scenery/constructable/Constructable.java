@@ -10,8 +10,8 @@ public class Constructable {
 	protected int floor;
 	protected int tileId;
 	
-	public Constructable(int floor, int tileId, ConstructableDto dto) {
-		remainingTicks = dto.getLifetimeTicks();
+	public Constructable(int floor, int tileId, int lifetimeTicks, ConstructableDto dto) {
+		remainingTicks = lifetimeTicks;
 		this.dto = dto;
 		this.floor = floor;
 		this.tileId = tileId;

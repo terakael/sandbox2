@@ -1,5 +1,8 @@
 package responses;
 
+import java.util.List;
+
+import database.dao.ArtisanToolEquivalentDao;
 import database.dao.FishableDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
@@ -7,12 +10,13 @@ import database.dao.SceneryDao;
 import database.dao.StatsDao;
 import database.dto.FishableDto;
 import processing.PathFinder;
-import processing.managers.FightManager;
 import processing.WorldProcessor;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
+import processing.managers.FightManager;
 import requests.FishRequest;
 import requests.Request;
+import types.Items;
 import types.SceneryAttributes;
 import types.Stats;
 import types.StorageTypes;
@@ -59,14 +63,23 @@ public class FishResponse extends Response {
 				return;
 			}
 			
-			if (PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), fishable.getToolId(), StorageTypes.INVENTORY) == 0) {
+			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+			
+			final Integer usedToolId = (fishable.getBaitId() != 0 && !invItemIds.contains(fishable.getBaitId()) && invItemIds.contains(Items.ENHANCED_FISHING_ROD.getValue()))
+					? Items.ENHANCED_FISHING_ROD.getValue()
+					: invItemIds.stream()
+						.filter(ArtisanToolEquivalentDao.getArtisanEquivalents(fishable.getToolId())::contains)
+						.findFirst()
+						.orElse(fishable.getToolId());
+			
+			if (!invItemIds.contains(usedToolId)) {
 				setRecoAndResponseText(0, String.format("you need a %s to fish here.", ItemDao.getNameFromId(fishable.getToolId(), false)));
 				responseMaps.addClientOnlyResponse(player, this);
 				player.setState(PlayerState.idle);
 				return;
 			}
-			
-			if (fishable.getBaitId() != 0 && PlayerStorageDao.getStorageItemCountByPlayerIdItemIdStorageTypeId(player.getId(), fishable.getBaitId(), StorageTypes.INVENTORY) == 0) {
+
+			if (fishable.getBaitId() != 0 && !invItemIds.contains(fishable.getBaitId()) && !invItemIds.contains(Items.ENHANCED_FISHING_ROD.getValue())) {
 				final String baitName = ItemDao.getNameFromId(fishable.getBaitId(), true);
 				final String message = player.getState() == PlayerState.fishing
 						? String.format("you have run out of %s.", baitName)
@@ -96,7 +109,7 @@ public class FishResponse extends Response {
 			
 			// the action bubble will be the fish you're trying to catch
 			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
-					new ActionBubbleResponse(player, ItemDao.getItem(fishable.getToolId())));
+					new ActionBubbleResponse(player, ItemDao.getItem(usedToolId)));
 		}
 	}
 

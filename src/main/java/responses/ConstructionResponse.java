@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import database.dao.ArtisanToolEquivalentDao;
 import database.dao.ConstructableDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
@@ -18,6 +19,7 @@ import processing.attackable.Player.PlayerState;
 import requests.ConstructionRequest;
 import requests.Request;
 import types.ItemAttributes;
+import types.Items;
 import types.Stats;
 import types.StorageTypes;
 
@@ -42,7 +44,7 @@ public class ConstructionResponse extends Response {
 		}
 
 		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-		if (!invItemIds.contains(constructable.getToolId())) {
+		if (!invItemIds.contains(constructable.getToolId()) && !invItemIds.stream().anyMatch(ArtisanToolEquivalentDao.getArtisanEquivalents(constructable.getToolId())::contains)) {
 			setRecoAndResponseText(0, String.format("you need a %s to build that.", ItemDao.getNameFromId(constructable.getToolId(), false)));
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
@@ -96,9 +98,15 @@ public class ConstructionResponse extends Response {
 		player.setState(PlayerState.construction);
 		player.setSavedRequest(req);
 		player.setTickCounter(3);
+		
+		// if the player has both a regular tool and an artisan tool, show the artisan tool
+		final int usedToolId = invItemIds.stream()
+				.filter(e -> ArtisanToolEquivalentDao.getArtisanEquivalents(constructable.getToolId()).contains(e))
+				.findFirst()
+				.orElse(constructable.getToolId());
 
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
-				new ActionBubbleResponse(player, ItemDao.getItem(constructable.getToolId())));
+				new ActionBubbleResponse(player, ItemDao.getItem(usedToolId)));
 	}
 
 	public static int findDestinationTileId(int floor, int tileId) {

@@ -98,8 +98,9 @@ public class PlayerArtisanTaskDao {
 			return null;
 		
 		final PlayerArtisanTaskDto task = playerTaskItem.get(playerId);
-		task.setTotalTasks(task.getTotalTasks() + 1);
-		task.setTotalPoints(task.getTotalPoints() + ArtisanMasterDao.getCompletionPointsByArtisanMasterId(task.getAssignedMasterId()));
+		final int newTotalTasks = task.getTotalTasks() + 1;
+		task.setTotalTasks(newTotalTasks);
+		task.setTotalPoints(task.getTotalPoints() + ArtisanMasterDao.getCompletionPointsByArtisanMasterId(task.getAssignedMasterId(), newTotalTasks));
 		
 		DatabaseUpdater.enqueue(UpdateArtisanTaskEntity.builder()
 				.playerId(playerId)

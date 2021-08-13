@@ -2,10 +2,12 @@ package responses;
 
 import java.util.List;
 
+import database.dao.CookableDao;
 import database.dao.FishableDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
 import database.dao.SceneryDao;
+import database.dto.CookableDto;
 import database.dto.FishableDto;
 import processing.WorldProcessor;
 import processing.attackable.Player;
@@ -17,6 +19,7 @@ import requests.AddExpRequest;
 import requests.FishRequest;
 import requests.Request;
 import requests.RequestFactory;
+import types.Items;
 import types.SceneryAttributes;
 import types.Stats;
 import types.StorageTypes;
@@ -48,17 +51,43 @@ public class FinishFishingResponse extends Response {
 		if ((WorldProcessor.isDaytime() && !isDiurnal) || (!WorldProcessor.isDaytime() && !isNocturnal))
 			return;
 		
-		if (fishable.getBaitId() != 0) {
-			List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-			int baitSlot = invItemIds.indexOf(fishable.getBaitId());
-			if (baitSlot == -1)
-				return; // shouldn't happen as it's been checked in the FishResponse
-			
-			int remainingBait = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, baitSlot).getCount();
-			PlayerStorageDao.setCountOnSlot(player.getId(), StorageTypes.INVENTORY, baitSlot, remainingBait - 1);
+		final List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
+		
+		if (fishable.getBaitId() != 0) {			
+			final int baitSlot = invItemIds.indexOf(fishable.getBaitId());
+			if (baitSlot == -1) {
+				// enhanced fishing rod is a charged item that requires no bait; it uses a charge instead.
+				// however, if bait is supplied, use it first without consuming a charge.
+				final int enhancedFishingRodSlot = invItemIds.indexOf(Items.ENHANCED_FISHING_ROD.getValue());
+				if (enhancedFishingRodSlot != -1) {
+					PlayerStorageDao.reduceCharge(player.getId(), Items.ENHANCED_FISHING_ROD.getValue(), enhancedFishingRodSlot, 1);
+				} else {
+					return; // no bait, no enhanced fishing rod, no fish bitch
+				}
+			} else {
+				int remainingBait = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, baitSlot).getCount();
+				PlayerStorageDao.setCountOnSlot(player.getId(), StorageTypes.INVENTORY, baitSlot, remainingBait - 1);
+			}
 		}
 		
-		PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, fishable.getItemId(), 1, ItemDao.getMaxCharges(fishable.getItemId()));
+		final boolean usingScorchTippedSpear = fishable.getToolId() == Items.FISHING_SPEAR.getValue() && invItemIds.contains(Items.SCORCH_TIPPED_FISHING_SPEAR.getValue());
+		if (usingScorchTippedSpear) // a charge is used for every fish caught, regardless of if we proc or not.
+			PlayerStorageDao.reduceCharge(player.getId(), Items.SCORCH_TIPPED_FISHING_SPEAR.getValue(), invItemIds.indexOf(Items.SCORCH_TIPPED_FISHING_SPEAR.getValue()), 1);
+		
+		if (usingScorchTippedSpear && RandomUtil.chance(20)) {
+			// if we have a scorch-tipped fishing spear, then use it
+			CookableDto cookable = CookableDao.getCookable(fishable.getItemId());
+			if (cookable != null) {
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, cookable.getCookedItemId(), 1, ItemDao.getMaxCharges(cookable.getCookedItemId()));
+				
+				AddExpRequest cookExpReq = new AddExpRequest();
+				cookExpReq.setStatId(Stats.COOKING.getValue());
+				cookExpReq.setExp(cookable.getExp());
+				new AddExpResponse().process(cookExpReq, player, responseMaps);
+			}
+		} else {
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, fishable.getItemId(), 1, ItemDao.getMaxCharges(fishable.getItemId()));
+		}
 		
 		// 20% chance to catch a double fish if near a fishing totem pole
 		if (ConstructableManager.constructableIsInRadius(player.getFloor(), player.getTileId(), 137, 3) && RandomUtil.chance(20)) {

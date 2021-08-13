@@ -2,6 +2,7 @@ package responses;
 
 import java.util.List;
 
+import database.dao.ArtisanToolEquivalentDao;
 import database.dao.ItemDao;
 import database.dao.MineableDao;
 import database.dao.PlayerStorageDao;
@@ -58,7 +59,8 @@ public class MineResponse extends Response {
 			if (!inventoryItemIds.contains(Items.PICKAXE.getValue()) 
 				&& !inventoryItemIds.contains(Items.GOLDEN_PICKAXE.getValue())
 				&& !inventoryItemIds.contains(Items.MAGIC_PICKAXE.getValue())
-				&& !inventoryItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue())) {
+				&& !inventoryItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue())
+				&& !inventoryItemIds.stream().anyMatch(ArtisanToolEquivalentDao.getArtisanEquivalents(Items.PICKAXE.getValue())::contains)) {
 				setRecoAndResponseText(0, "you need a pickaxe in order to mine the rock.");
 				responseMaps.addClientOnlyResponse(player, this);
 				player.setState(PlayerState.idle);
@@ -103,23 +105,27 @@ public class MineResponse extends Response {
 			// we check like this because if, for example, the player had both a magic pickaxe and golden pickaxe
 			// in their inventory, they would be using charges from the magic pickaxe but getting the speed
 			// of the golden pickaxe.  Therefore we check each tier using else ifs.
-			Items usedPickaxe;
+			int usedPickaxe;
 			if (inventoryItemIds.contains(Items.MAGIC_GOLDEN_PICKAXE.getValue())) {
-				usedPickaxe = Items.MAGIC_GOLDEN_PICKAXE;
+				usedPickaxe = Items.MAGIC_GOLDEN_PICKAXE.getValue();
 				player.setTickCounter(3);
 			} else if (inventoryItemIds.contains(Items.MAGIC_PICKAXE.getValue())) {
-				usedPickaxe = Items.MAGIC_PICKAXE;
+				usedPickaxe = Items.MAGIC_PICKAXE.getValue();
 				player.setTickCounter(5);
 			} else if (inventoryItemIds.contains(Items.GOLDEN_PICKAXE.getValue())) {
-				usedPickaxe = Items.GOLDEN_PICKAXE;
+				usedPickaxe = Items.GOLDEN_PICKAXE.getValue();
 				player.setTickCounter(3);
 			} else {
-				usedPickaxe = Items.PICKAXE;
+				// if the player has both a regular pickaxe and an artisan equivalent, show the artisan one
+				usedPickaxe = inventoryItemIds.stream()
+						.filter(e -> ArtisanToolEquivalentDao.getArtisanEquivalents(Items.PICKAXE.getValue()).contains(e))
+						.findFirst()
+						.orElse(Items.PICKAXE.getValue());
 				player.setTickCounter(5);
 			}
 			
 			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
-					new ActionBubbleResponse(player, ItemDao.getItem(usedPickaxe.getValue())));
+					new ActionBubbleResponse(player, ItemDao.getItem(usedPickaxe)));
 		}
 	}
 

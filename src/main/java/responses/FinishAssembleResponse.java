@@ -35,7 +35,7 @@ public class FinishAssembleResponse extends Response {
 		if (constructable == null)
 			return;
 		
-		ConstructableManager.add(player.getFloor(), req.getTileId(), constructable);
+		ConstructableManager.add(player.getFloor(), req.getTileId(), constructable, constructable.getLifetimeTicks());
 		ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
 //		TybaltsTaskManager.check(player, new ConstructTaskUpdate(constructable.getResultingSceneryId()), responseMaps);
 		

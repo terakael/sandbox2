@@ -56,7 +56,7 @@ public class ConstructableManager {
 		return constructableInstances.get(floor).get(tileId).getDto().getResultingSceneryId();
 	}
 	
-	public static void add(int floor, int tileId, ConstructableDto constructable) {
+	public static void add(int floor, int tileId, ConstructableDto constructable, int lifetimeTicks) {
 		// if something already exists here then bail
 		if (!PathFinder.tileIsValid(floor, tileId) || SceneryDao.getSceneryIdByTileId(floor, tileId) != -1 || getConstructableIdByTileId(floor, tileId) != -1)
 			return;
@@ -66,14 +66,14 @@ public class ConstructableManager {
 		if (constructables.containsKey(constructable.getResultingSceneryId())) {
 			try {
 				newConstructableInstance = constructables.get(constructable.getResultingSceneryId())
-						.getDeclaredConstructor(int.class, int.class, ConstructableDto.class)
-						.newInstance(floor, tileId, constructable);
+						.getDeclaredConstructor(int.class, int.class, int.class, ConstructableDto.class)
+						.newInstance(floor, tileId, lifetimeTicks, constructable);
 			} catch (Exception e) {
 				e.printStackTrace();
 				return;
 			}
 		} else {
-			newConstructableInstance = new Constructable(floor, tileId, constructable); // generic constructable, represents constructables that don't have special process logic
+			newConstructableInstance = new Constructable(floor, tileId, lifetimeTicks, constructable); // generic constructable, represents constructables that don't have special process logic
 		}
 
 		constructableInstances.get(floor).put(tileId, newConstructableInstance);

@@ -3,6 +3,7 @@ package responses;
 import java.util.Collections;
 import java.util.List;
 
+import database.dao.ArtisanToolEquivalentDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
 import database.dao.SmithableDao;
@@ -13,6 +14,7 @@ import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
 import requests.Request;
 import requests.SmithRequest;
+import types.Items;
 import types.Stats;
 import types.StorageTypes;
 
@@ -53,7 +55,7 @@ public class SmithResponse extends Response {
 		}
 		
 		List<Integer> playerInvIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-		if (!playerInvIds.contains(ItemDao.getIdFromName("hammer"))) {
+		if (!playerInvIds.contains(Items.HAMMER.getValue()) && !playerInvIds.stream().anyMatch(ArtisanToolEquivalentDao.getArtisanEquivalents(Items.HAMMER.getValue())::contains)) {
 			setRecoAndResponseText(0, "you need a hammer to smith with.");
 			responseMaps.addClientOnlyResponse(player, this);
 			player.setState(PlayerState.idle);

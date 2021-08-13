@@ -1,5 +1,6 @@
 package responses;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -497,7 +498,16 @@ public class UseResponse extends Response {
 		int toolId = ConstructableDao.itemIsConstructionTool(src) ? src : dest;
 		int materialId = toolId == src ? dest : src;
 		
-		Set<ConstructableDto> constructables = ConstructableDao.getAllConstructablesWithMaterials(toolId, materialId);
+		final Set<Integer> allPotentialTools = new HashSet<>();
+		allPotentialTools.add(toolId); // if it's an original, non-artisan tool
+		allPotentialTools.addAll(ConstructableDao.getOriginalToolsFromArtisanTool(toolId)); // if it's an artisan tool
+		
+		// we could have the situation in the future where the tool we're using on the item functions as multiple tools.
+		// for example, a tinderhammer that functions as both a tinderbox and a hammer.
+		// we want to pull all possible constructables which use either tinderbox or hammer in this case, 
+		// so we run through all matching tools and all matching constructables that use said tools and material
+		final Set<ConstructableDto> constructables = new HashSet<>();
+		allPotentialTools.forEach(e -> constructables.addAll(ConstructableDao.getAllConstructablesWithMaterials(e, materialId)));
 		if (constructables.isEmpty()) {
 			return false; // no matches; nothing interesting happens (e.g. use tinderbox on helmet or whatevs)
 		}

@@ -24,6 +24,7 @@ import requests.AddExpRequest;
 import requests.ConstructionRequest;
 import requests.Request;
 import types.ItemAttributes;
+import types.Items;
 import types.Stats;
 import types.StorageTypes;
 
@@ -69,7 +70,14 @@ public class FinishConstructionResponse extends Response {
 				return;
 			}
 			
-			ConstructableManager.add(player.getFloor(), request.getTileId(), constructable);
+			int lifetimeTicks = constructable.getLifetimeTicks();
+			int goldenHammerIndex = invItemIds.indexOf(Items.GOLDEN_HAMMER.getValue());
+			if (goldenHammerIndex != -1) {
+				lifetimeTicks *= 2;
+				PlayerStorageDao.reduceCharge(player.getId(), Items.GOLDEN_HAMMER.getValue(), goldenHammerIndex, 1);
+			}
+			
+			ConstructableManager.add(player.getFloor(), request.getTileId(), constructable, lifetimeTicks);
 			ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
 			TybaltsTaskManager.check(player, new ConstructTaskUpdate(constructable.getResultingSceneryId()), responseMaps);
 			

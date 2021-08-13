@@ -69,6 +69,8 @@ public class ArtisanManager {
 	private static final Map<Integer, String> itemActions = new HashMap<>(); // just used to say "mine" x coal, "smelt" x bars etc
 	private static final Map<Integer, Map<Stats, Integer>> itemLevels = new HashMap<>(); // itemId, <stat, level> - so we can filter out the tasks the player can't do
 	private static final Map<Integer, Integer> itemExp = new HashMap<>();
+	private static final Map<Integer, Integer> itemPoints = new HashMap<>(); // itemId, points
+	
 	
 	@Getter
 	@RequiredArgsConstructor
@@ -236,6 +238,15 @@ public class ArtisanManager {
 		itemLevels.entrySet().removeIf(e -> replacementItems.contains(e.getKey()));
 		itemAmounts.entrySet().removeIf(e -> replacementItems.contains(e.getKey()));
 		itemExp.entrySet().removeIf(e -> replacementItems.contains(e.getKey()));
+		
+		itemMaterials.keySet().forEach(itemId -> {
+			// the number of points an item gives is the sum of all the actions it takes:
+			// copper ore: 1 point for mining it
+			// rune ore: 1 point for mining it
+			// iron platebody: 1 point for smithing it; 5 points for smelting 5 bars; 5 points for mining 5 ores: 11 points
+			// rune platebody: 1 point for smithing it, 5 points for smelting 5 bars, 5+(5*8) points for mining all rune and coal: 51 points
+			itemPoints.put(itemId, getStepsFromItemId(itemId, 1).values().stream().mapToInt(Integer::intValue).sum());
+		});
 	}
 	
 	public static Map<Integer, Integer> getStepsFromItemId(int itemId, int requiredItems) {
@@ -384,9 +395,12 @@ public class ArtisanManager {
 		final int playerMainTaskItemId = PlayerArtisanTaskDao.getTaskItemId(player.getId());
 		if (!PlayerArtisanTaskBreakdownDao.taskIsValid(player.getId(), playerMainTaskItemId)) {
 			PlayerArtisanTaskDto updatedTask = PlayerArtisanTaskDao.finishTask(player.getId());
+			
+			final int grantedPoints = ArtisanMasterDao.getCompletionPointsByArtisanMasterId(updatedTask.getAssignedMasterId(), updatedTask.getTotalTasks());
+			
 			final String message = String.format("you have completed %d artisan tasks, and receive %d points for a total of %d points.", 
 									updatedTask.getTotalTasks(),
-									ArtisanMasterDao.getCompletionPointsByArtisanMasterId(updatedTask.getAssignedMasterId()),
+									grantedPoints,
 									updatedTask.getTotalPoints());
 			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(message, "#23f5b4"));
 			
@@ -425,19 +439,23 @@ public class ArtisanManager {
 		PlayerArtisanTaskDto task = PlayerArtisanTaskDao.getTask(player.getId());
 		if (task == null)
 			return false;
+		
+		int replacementItemId = itemId;
+		if (ArtisanTaskItemReplacementDao.getReplacementMap().containsKey(itemId))
+			replacementItemId = ArtisanTaskItemReplacementDao.getReplacementMap().get(itemId);
 	
-		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-		if (task.getItemId() != itemId)
+		if (task.getItemId() != replacementItemId)
 			return false;	
 			
 		final int maxAmountMasterWillAccept = task.getAssignedAmount() - task.getHandedInAmount();
 		
-		final int remainingTaskCount = PlayerArtisanTaskBreakdownDao.getRemainingTaskCount(player.getId(), itemId);
+		final int remainingTaskCount = PlayerArtisanTaskBreakdownDao.getRemainingTaskCount(player.getId(), replacementItemId);
 		
 		// you can't hand in items that you haven't made yourself
 		final int totalItemsDoneAndNotHandedIn = maxAmountMasterWillAccept - remainingTaskCount;
 		
 		// start off with total amount in inventory
+		final List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		int numTaskItemsToHandIn = Collections.frequency(invItemIds, itemId);
 		
 		// what's smaller, the amount in the inventory or the number you've actually made
@@ -448,7 +466,7 @@ public class ArtisanManager {
 		
 		final int numItemsHandedIn = PlayerArtisanTaskDao.handInItems(player.getId(), numTaskItemsToHandIn);
 		
-		final String message = String.format("you have completed %d/%d %s, and handed in %d.", task.getAssignedAmount() - remainingTaskCount, task.getAssignedAmount(), ItemDao.getNameFromId(itemId, true), task.getHandedInAmount());
+		final String message = String.format("you have completed %d/%d %s, and handed in %d.", task.getAssignedAmount() - remainingTaskCount, task.getAssignedAmount(), ItemDao.getNameFromId(replacementItemId, true), task.getHandedInAmount());
 		responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(message, "white"));
 		
 		if (numItemsHandedIn > 0) {
@@ -458,7 +476,11 @@ public class ArtisanManager {
 				invItemIds.set(idx, 0);
 			}
 			InventoryUpdateResponse.sendUpdate(player, responseMaps);
-			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(String.format("%s grants you some points.", NPCDao.getNpcNameById(master.getNpcId())), "white"));
+			
+			final int points = itemPoints.get(replacementItemId) * numItemsHandedIn;
+			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse(String.format("%s grants you %d point%s.", NPCDao.getNpcNameById(master.getNpcId()), points, points == 1 ? "" : "s"), "white"));
+			
+			PlayerArtisanTaskDao.spendPoints(player.getId(), -points);
 		}
 	
 		return true;
@@ -479,5 +501,11 @@ public class ArtisanManager {
 		return LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 5, WorldProcessor.isDaytime()).stream()
 				.map(npc -> npc.getDto().getId())
 				.anyMatch(ArtisanMasterDao.getAllArtisanMasterNpcIds()::contains);
+	}
+	
+	public static int getPointsForItemId(int itemId) {
+		if (!itemPoints.containsKey(itemId))
+			return 0;
+		return itemPoints.get(itemId);
 	}
 }

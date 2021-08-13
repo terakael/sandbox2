@@ -3,6 +3,7 @@ package database.dao;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,23 @@ public class ConstructableDao {
 	}
 	
 	public static boolean itemIsConstructionTool(int itemId) {
-		return constructionToolIds.contains(itemId);
+		if (constructionToolIds.contains(itemId))
+			return true;
+		
+		// the item could also be an artisan tool, so check for that as well
+		// e.g. tinderbox -> tinderpole, tinderaxe
+		// hammer -> hamaxe, construction hammer
+		Set<Integer> originalTools = getOriginalToolsFromArtisanTool(itemId);
+		return constructionToolIds.stream().anyMatch(originalTools::contains);
+	}
+	
+	public static Set<Integer> getOriginalToolsFromArtisanTool(int artisanToolId) {
+		// original tool"s" because in the future we could potentially have, for example
+		// some kind of tinderhammer, functioning as both a tinderbox and a hammer.
+		return ArtisanToolEquivalentDao.getToolEquivalents().entrySet().stream()
+			.filter(e -> constructionToolIds.contains(e.getKey()) && e.getValue().contains(artisanToolId))
+			.map(Map.Entry::getKey)
+			.collect(Collectors.toSet());
 	}
 	
 	public static Set<ConstructableDto> getAllConstructablesWithMaterials(int toolId, int materialId) {
