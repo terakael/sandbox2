@@ -228,6 +228,12 @@ public class ResponseFactory {
 		case "skip_artisan_task":
 			response = new SkipArtisanTaskResponse();
 			break;
+		case "show_smithing_skill_window":
+			response = new ShowSmithingSkillWindowResponse();
+			break;
+		case "show_construction_skill_window":
+			response = new ShowConstructionSkillWindowResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();

@@ -6,11 +6,11 @@ import lombok.Setter;
 
 @Setter @Getter @AllArgsConstructor
 public class FishableDto {
-	private int sceneryId;
+	private transient int sceneryId;
 	private int level;
-	private int exp;
+	private transient int exp;
 	private int itemId;
-	private int respawnTicks;
+	private transient int respawnTicks;
 	private int toolId;
 	private int baitId;
 }

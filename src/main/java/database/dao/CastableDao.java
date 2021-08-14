@@ -1,6 +1,8 @@
 package database.dao;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import database.DbConnection;
 import database.dto.CastableDto;
@@ -24,5 +26,9 @@ public class CastableDao {
 	
 	public static CastableDto getCastableByItemId(int itemId) {
 		return castables.get(itemId);
+	}
+	
+	public static Set<CastableDto> getAllCastables() {
+		return new HashSet<>(castables.values());
 	}
 }

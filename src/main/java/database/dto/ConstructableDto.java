@@ -1,21 +1,21 @@
 package database.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ConstructableDto {
-	private int resultingSceneryId;
-	private int level;
-	private transient int exp;
-	private transient int toolId;
-	private int plankId;
-	private int plankAmount;
-	private int barId;
-	private int barAmount;
-	private int tertiaryId;
-	private int tertiaryAmount;
-	private transient int lifetimeTicks;
-	private int flatpackItemId;
+	private final int resultingSceneryId;
+	private final int level;
+	private final transient int exp;
+	private final transient int toolId;
+	private final int plankId;
+	private final int plankAmount;
+	private final int barId;
+	private final int barAmount;
+	private final int tertiaryId;
+	private final int tertiaryAmount;
+	private final transient int lifetimeTicks;
+	private final int flatpackItemId;
 }

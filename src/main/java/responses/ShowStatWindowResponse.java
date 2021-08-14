@@ -13,9 +13,10 @@ import processing.managers.ArtisanManager;
 import processing.managers.ClientResourceManager;
 import requests.Request;
 import requests.ShowStatWindowRequest;
+import types.ConstructionSkillWindowTabs;
+import types.SmithingSkillWindowTabs;
 import types.Stats;
 
-@SuppressWarnings("unused")
 public class ShowStatWindowResponse extends Response {
 	public ShowStatWindowResponse() {
 		setAction("show_stat_window");
@@ -31,25 +32,73 @@ public class ShowStatWindowResponse extends Response {
 			return;
 		
 		ShowStatWindowRequest request = (ShowStatWindowRequest)req;
-		Stats stat = Stats.withValue(request.getStatId());
+		
+		statId = StatsDao.getStatIdByName(request.getStat());
+		if (statId == -1)
+			return;
+		
+		Stats stat = Stats.withValue(statId);
 		if (stat == null)
 			return;
 		
-		statId = stat.getValue();
-		
-		if (stat == Stats.ARTISAN) {
-			// artisan has a dynamic task check so it's handled differently
-			
+		switch (stat) {
+		case ARTISAN:
 			artisanData = ArtisanManager.getTaskList(player.getId());
 			ClientResourceManager.addItems(player, artisanData.stream()
 					.flatMap(ArtisanMaterialChainDto::flattened)
 					.map(ArtisanMaterialChainDto::getItemId)
 					.collect(Collectors.toSet()));
+			break;
 			
-		} else {
-			// potentially null; expected behaviour (handled on the client side)
+		case SMITHING:
+			new ShowSmithingSkillWindowResponse(SmithingSkillWindowTabs.copper).process(null, player, responseMaps);
+			return;
+			
+		case MINING:
+			new ShowMiningSkillWindowResponse().process(null, player, responseMaps);
+			return;
+			
+		case WOODCUTTING:
+			new ShowWoodcuttingSkillWindowResponse().process(null, player, responseMaps);
+			return;
+			
+		case FISHING:
+			new ShowFishingSkillWindowResponse().process(null, player, responseMaps);
+			return;
+			
+		case COOKING:
+			new ShowCookingSkillWindowResponse().process(null, player, responseMaps);
+			return;
+			
+		case MAGIC:
+			new ShowMagicSkillWindowResponse().process(null, player, responseMaps);
+			return;
+			
+		case CONSTRUCTION:
+			new ShowConstructionSkillWindowResponse(ConstructionSkillWindowTabs.fires).process(null, player, responseMaps);
+			return;
+			
+		default:
 			rows = StatsDao.getStatWindowRows().get(stat);
+			break;
 		}
+		
+//		if (stat == Stats.ARTISAN) {
+//			// artisan has a dynamic task check so it's handled differently
+//			
+//			artisanData = ArtisanManager.getTaskList(player.getId());
+//			ClientResourceManager.addItems(player, artisanData.stream()
+//					.flatMap(ArtisanMaterialChainDto::flattened)
+//					.map(ArtisanMaterialChainDto::getItemId)
+//					.collect(Collectors.toSet()));
+//			
+//		} else if (stat == Stats.SMITHING) {
+//			new ShowSmithingSkillWindowResponse(SmithingSkillWindowTabs.copper).process(null, player, responseMaps);
+//			return;
+//		} else {
+//			// potentially null; expected behaviour (handled on the client side)
+//			rows = StatsDao.getStatWindowRows().get(stat);
+//		}
 		
 		if (rows != null) {
 			// if the client hasn't been sent the appropriate resources to show this window, send them now.

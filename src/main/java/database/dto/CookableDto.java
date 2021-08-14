@@ -1,14 +1,14 @@
 package database.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
 @Getter
+@RequiredArgsConstructor
 public class CookableDto {
-	int rawItemId;
-	int cookedItemId;
-	int level;
-	int exp;
-	int burntItemId;
+	private final transient int rawItemId;
+	private final int cookedItemId;
+	private final int level;
+	private final transient int exp;
+	private final transient int burntItemId;
 }

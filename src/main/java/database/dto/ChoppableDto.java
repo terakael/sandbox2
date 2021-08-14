@@ -8,7 +8,7 @@ import lombok.Getter;
 public class ChoppableDto {
 	private int sceneryId;
 	private int level;
-	private int exp;
-	private int logId;
-	private int respawnTicks;
+	private transient int exp;
+	private transient int logId;
+	private transient int respawnTicks;
 }

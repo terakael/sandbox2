@@ -1,14 +1,14 @@
 package database.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CastableDto {
-	private int itemId;
-	private int level;
-	private int exp;
-	private int maxHit;
-	private int spriteFrameId;
+	private final int itemId;
+	private final int level;
+	private final transient int exp;
+	private final transient int maxHit;
+	private final transient int spriteFrameId;
 }

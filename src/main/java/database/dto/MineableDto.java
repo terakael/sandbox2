@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 public class MineableDto {
 	private final int sceneryId;
 	private final int level;
-	private final int exp;
-	private final int itemId;
-	private final int respawnTicks;
-	private final int goldChance;
+	private transient final int exp;
+	private transient final int itemId;
+	private transient final int respawnTicks;
+	private transient final int goldChance;
 }
