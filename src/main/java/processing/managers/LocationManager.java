@@ -20,6 +20,7 @@ public class LocationManager {
 	private static Map<Integer, Map<Integer, Set<NPC>>> nocturnalNpcs = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<NPC>>> diurnalNpcs = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<NPC>>> undergroundNpcs = new HashMap<>();
+	private static Map<Integer, Map<Integer, Set<NPC>>> pets = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<Player>>> players = new HashMap<>();
 	
 	public static Set<NPC> getLocalNpcs(int floor, int tileId, int radius, boolean isDaytime) {
@@ -30,16 +31,23 @@ public class LocationManager {
 						? diurnalNpcs
 						: nocturnalNpcs;
 		
-		Set<NPC> localNpcs = new HashSet<>();
-		if (!sourceMap.containsKey(floor))
-			return localNpcs;
-		
 		final int playerTileIdX = tileId % PathFinder.LENGTH;
 		final int playerTileIdY = tileId / PathFinder.LENGTH;
 		
-		Set<Integer> segments =getLocalSegments(tileId, radius); 
-		segments.forEach(segment -> {
-			if (sourceMap.get(floor).containsKey(segment)) {
+		Set<NPC> localNpcs = new HashSet<>();
+		getLocalSegments(tileId, radius).forEach(segment -> {
+			if (pets.containsKey(floor) && pets.get(floor).containsKey(segment)) {
+				localNpcs.addAll(pets.get(floor).get(segment).stream()
+					.filter(npc -> {
+						final int npcTileIdX = npc.getTileId() % PathFinder.LENGTH;
+						final int npcTileIdY = npc.getTileId() / PathFinder.LENGTH;
+						
+						return Math.abs(playerTileIdX - npcTileIdX) <= radius && 
+							   Math.abs(playerTileIdY - npcTileIdY) <= radius;
+					}).collect(Collectors.toSet()));
+			}
+			
+			if (sourceMap.containsKey(floor) && sourceMap.get(floor).containsKey(segment)) {
 				localNpcs.addAll(sourceMap.get(floor).get(segment).stream()
 					.filter(npc -> {
 						final int npcTileIdX = npc.getTileId() % PathFinder.LENGTH;
@@ -73,6 +81,12 @@ public class LocationManager {
 					}
 				});
 			}
+		});
+		
+		// by definition all pets are near players, so return them all		
+		pets.forEach((floor, petMap) -> {
+			npcsToReturn.putIfAbsent(floor, new HashSet<>());
+			npcsToReturn.get(floor).addAll(petMap.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
 		});
 		
 		return npcsToReturn;
@@ -117,19 +131,13 @@ public class LocationManager {
 				undergroundNpcs.get(npc.getFloor()).get(segment).remove(npc);
 			} else {
 				if ((npc.getDto().getAttributes() & NpcAttributes.NOCTURNAL.getValue()) > 0) {
-					if (!nocturnalNpcs.containsKey(npc.getFloor()))
-						return;
-					
-					if (!nocturnalNpcs.get(npc.getFloor()).containsKey(segment))
-						return;
+					if (nocturnalNpcs.containsKey(npc.getFloor()) && nocturnalNpcs.get(npc.getFloor()).containsKey(segment))
+						nocturnalNpcs.get(npc.getFloor()).get(segment).remove(npc);
 				}
 				
 				if ((npc.getDto().getAttributes() & NpcAttributes.DIURNAL.getValue()) > 0) {
-					if (!diurnalNpcs.containsKey(npc.getFloor()))
-						return;
-					
-					if (!diurnalNpcs.get(npc.getFloor()).containsKey(segment))
-						return;
+					if (diurnalNpcs.containsKey(npc.getFloor()) && diurnalNpcs.get(npc.getFloor()).containsKey(segment))
+						diurnalNpcs.get(npc.getFloor()).get(segment).remove(npc);
 				}
 			}
 		});
@@ -227,6 +235,53 @@ public class LocationManager {
 			segmentMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 		});
 		players.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+	}
+	
+	public static void addPet(NPC pet) {
+		// first check if the pet already exists in its current segments
+		final Set<Integer> currentSegments = getLocalSegments(pet.getTileId(), 12);
+		if (pets.containsKey(pet.getFloor())) {
+			boolean containsCurrentSegments = true;
+			for (int segment : currentSegments) {
+				if (!pets.get(pet.getFloor()).containsKey(segment) || !pets.get(pet.getFloor()).get(segment).contains(pet)) {
+					containsCurrentSegments = false;
+					break;
+				}
+			}
+
+			// the pet's current segments are the same, so we don't need to do anything.
+			if (containsCurrentSegments)
+				return;
+		}
+		
+		// the pet's segments have changed, so remove and reset them.
+		removePetIfExists(pet);
+		currentSegments.forEach(currentSegment -> {
+			pets.putIfAbsent(pet.getFloor(), new HashMap<>());
+			pets.get(pet.getFloor()).putIfAbsent(currentSegment, new HashSet<>());
+			pets.get(pet.getFloor()).get(currentSegment).add(pet);
+		});
+	}
+	
+	public static void removePetIfExists(NPC pet) {
+		pets.forEach((floor, segmentMap) -> {
+			segmentMap.forEach((segment, playerList) -> playerList.removeIf(e -> e.equals(pet)));
+			segmentMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+		});
+		pets.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+	}
+	
+	public static NPC getPetByFloorAndInstanceId(int floor, int instanceId) {
+		if (!pets.containsKey(floor))
+			return null;
+		
+		for (Map.Entry<Integer, Set<NPC>> entry : pets.get(floor).entrySet()) {
+			final NPC pet = entry.getValue().stream().filter(e -> e.getInstanceId() == instanceId).findFirst().orElse(null);
+			if (pet != null)
+				return pet;
+		}
+		
+		return null;
 	}
 	
 	private static Set<Integer> getCornerTileIds(int centreTileId, int radius) {

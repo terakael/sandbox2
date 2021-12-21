@@ -29,10 +29,11 @@ public class Door implements Scenery {
 		
 		// move the player to the other side
 		int newPlayerTileId = LockedDoorManager.calculatePlayerNewTileId(player.getTileId(), lockedDoor.getTileId(), DoorDao.getDoorImpassableByTileId(player.getFloor(), lockedDoor.getTileId()));
+		player.setTileId(newPlayerTileId);
+		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 		playerUpdate.setId(player.getId());
 		playerUpdate.setTileId(newPlayerTileId);
-		player.setTileId(newPlayerTileId);
 		responseMaps.addLocalResponse(player.getFloor(), lockedDoor.getTileId(), playerUpdate);
 		
 		return true;

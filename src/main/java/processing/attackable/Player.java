@@ -13,6 +13,7 @@ import database.dao.CastableDao;
 import database.dao.EquipmentDao;
 import database.dao.ItemDao;
 import database.dao.NPCDao;
+import database.dao.PetDao;
 import database.dao.PlayerStorageDao;
 import database.dao.PrayerDao;
 import database.dao.ReinforcementBonusesDao;
@@ -21,6 +22,7 @@ import database.dao.TeleportableDao;
 import database.dto.CastableDto;
 import database.dto.EquipmentBonusDto;
 import database.dto.InventoryItemDto;
+import database.dto.NPCDto;
 import database.dto.NpcDialogueDto;
 import database.dto.PlayerDto;
 import database.dto.ReinforcementBonusesDto;
@@ -35,6 +37,7 @@ import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
 import processing.managers.TybaltsTaskManager;
+import processing.managers.WanderingPetManager;
 import processing.tybaltstasks.updates.KillNpcTaskUpdate;
 import requests.ConstructionRequest;
 import requests.FishRequest;
@@ -130,6 +133,8 @@ public class Player extends Attackable {
 	@Setter private int range = 0; // if we're chasing with range (i.e. chasing to cast a spell or something), this is the range we want to be in
 	private boolean slowburnBlockedStatDrain = false;
 	private int tybaltsCapeTimer = 0; // tybalts cape gives 1hp per minute of wearing it (essentially doubling hp regen)
+	
+	@Getter private Pet pet = null;
 	
 	// these two are used while the player is doing their death animation.
 	// technically they are at the respawn point, and if they disconnect during the death animation
@@ -694,6 +699,12 @@ public class Player extends Attackable {
 			// unequip and drop all the items in inventory
 			EquipmentDao.clearAllEquppedItems(getId());
 			
+			// if player has a pet following, then disassociate it
+			if (pet != null) {
+				PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(getId(), StorageTypes.PET);
+				setPet(null);
+			}
+			
 			int itemsToProtect = 3; // TODO 0 if skulled
 			if (prayerIsActive(Prayers.PROTECT_SLOT))
 				itemsToProtect += 1;
@@ -705,7 +716,8 @@ public class Player extends Attackable {
 				if (dto.getSlot() < itemsToProtect)
 					continue;// you always protect your items in the first three slots (0, 1, 2)
 				
-				if (dto.getItemId() != 0) {
+				// if the item is a pet, set it free instead of dropping as an item
+				if (dto.getItemId() != 0 && PetDao.getNpcIdFromItemId(dto.getItemId()) == -1) {
 					int stack = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.STACKABLE) ? dto.getCount() : 1;
 					int charges = ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.CHARGED) ? dto.getCharges() : 1;
 					
@@ -1233,5 +1245,31 @@ public class Player extends Attackable {
 			playerUpdateResponse.setFaceDirection(direction);
 			responseMaps.addLocalResponse(floor, tileId, playerUpdateResponse);
 		}
+	}
+	
+	public void setPet(Integer petItemId) {
+		if (petItemId == null) {
+			// This can happen when the player dies or shoos away their pet.
+			// We disassociate the pet from the player.
+			// It still exists for a bit of time in the LocationManager, and is able to wander around for a minute or so,
+			// before ultimately disappearing.
+			if (pet != null)
+				pet.setMaster(null);
+			pet = null;
+			return;
+		}
+		
+		final int npcId = PetDao.getNpcIdFromItemId(petItemId);
+		if (npcId == -1)
+			return;
+		
+		NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(npcId));
+		deepCopy.setFloor(floor);
+		deepCopy.setTileId(getId()); // for the instanceId - instance matches playerId
+		deepCopy.setAttributes(deepCopy.getAttributes() & ~NpcAttributes.ATTACKABLE.getValue()); // pets cannot be attacked
+		deepCopy.setAttributes(deepCopy.getAttributes() | NpcAttributes.DIURNAL.getValue() | NpcAttributes.NOCTURNAL.getValue()); // should show at all times of the day
+		pet = new Pet(deepCopy);
+		pet.setMaster(this);
+		pet.setTileId(getTileId()); // sets the correct tileId, and adds it to the locationManager
 	}
 }

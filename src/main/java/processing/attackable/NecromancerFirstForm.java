@@ -122,12 +122,9 @@ public class NecromancerFirstForm extends UndeadArmyNpc {
 		if (healTarget != null)
 			return;
 		
-		int destTile = PathFinder.chooseRandomTileIdInRadius(getDto().getTileId(), getDto().getRoamRadius());
-		while (!PathFinder.tileIsValid(0, destTile))
-			destTile = PathFinder.chooseRandomTileIdInRadius(getDto().getTileId(), getDto().getRoamRadius());
-		
+		final int destTile = chooseRandomWalkableTile();
 		if (Utils.areTileIdsWithinRadius(getTileId(), destTile, 6) || teleportCooldownTicks > 0) {
-			path = PathFinder.findPath(floor, tileId, destTile, true, getDto().getTileId(), getDto().getRoamRadius());
+			path = PathFinder.findPath(floor, tileId, destTile, true);
 		} else {
 			teleportToPosition(getTileId(), destTile, responseMaps);
 		}

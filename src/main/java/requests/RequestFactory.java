@@ -79,6 +79,7 @@ public class RequestFactory {
 		map.put("skip_artisan_task", SkipArtisanTaskRequest.class);
 		map.put("show_smithing_skill_window", ShowSmithingSkillWindowRequest.class);
 		map.put("show_construction_skill_window", ShowConstructionSkillWindowRequest.class);
+		map.put("pick up", PickUpRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

@@ -34,6 +34,7 @@ import processing.managers.LockedDoorManager;
 import processing.managers.NPCManager;
 import processing.managers.ShopManager;
 import processing.managers.UndeadArmyManager;
+import processing.managers.WanderingPetManager;
 import processing.stores.Store;
 import requests.Request;
 import responses.AddGroundTextureInstancesResponse;
@@ -121,49 +122,24 @@ public class WorldProcessor implements Runnable {
 			setDaytime(!daytime);
 		}
 
-		Stopwatch.start("request map");
-		// pull requestmap contents from Endpoint and clear it so it can collect for the next tick
-		Map<Session, List<Request>> requestMap = new HashMap<>();
-		for (Map.Entry<Session, Request> entry : Endpoint.requestMap.entrySet()) {
-			requestMap.putIfAbsent(entry.getKey(), new ArrayList<>());
-			requestMap.get(entry.getKey()).add(entry.getValue());
-		}
-		Endpoint.requestMap.clear();
-		
-		for (Map.Entry<Session, List<Request>> entry : Endpoint.multiRequestMap.entrySet()) {
-			requestMap.putIfAbsent(entry.getKey(), new ArrayList<>());
-			requestMap.get(entry.getKey()).addAll(entry.getValue());
-		}
-		Endpoint.multiRequestMap.clear();
-		
-		Stopwatch.end("request map");
-		
-		
 		// process all requests and add all responses to this object which will be compiled into the response list for each player
 		ResponseMaps responseMaps = new ResponseMaps();
 		UndeadArmyManager.process(responseMaps);
 
 		Stopwatch.start("player requests");
 		// process player requests for this tick
-		for (Map.Entry<Session, List<Request>> entry : requestMap.entrySet()) {
-			for (Request request : entry.getValue()) {// most cases there's only one request, but MultiRequest types exist (equipping etc)
-				if (request.getAction() == null)
-					continue;
-				
-				Response response = ResponseFactory.create(request.getAction());
-				
-				if (request.getAction().equals("logon")) {
+		Endpoint.takeRequests().forEach((session, requests) -> {
+			for (Request request : requests) {// most cases there's only one request, but MultiRequest types exist (equipping etc)
+				final Response response = ResponseFactory.create(request.getAction());
+				if ("logon".equals(request.getAction())) {
 					// player isn't created at this point; it's created within this function
 					LogonResponse logonResponse = (LogonResponse)response;
-					logonResponse.processLogon(request, entry.getKey(), responseMaps);
+					logonResponse.processLogon(request, session, responseMaps);
 				} else {
-					// if the player logs out before its requests are processed then don't process
-					Player player = playerSessions.get(entry.getKey());
-					if (player != null)
-						response.processSuper(request, player, responseMaps);
+					response.processSuper(request, playerSessions.get(session), responseMaps);
 				}
 			}
-		}
+		});
 		Stopwatch.end("player requests");
 		
 		Stopwatch.start("process players");
@@ -525,6 +501,7 @@ public class WorldProcessor implements Runnable {
 					final boolean isNocturnal = SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.NOCTURNAL);
 					
 					if (((daytime && !isDiurnal) || (!daytime && !isNocturnal))) {
+						// dynamic impassability is used for necromancer's ents
 //						PathFinder.setImpassabilityOnTileId(0, tileId, 0);
 						SceneryDespawnResponse despawnResponse = new SceneryDespawnResponse(tileId);
 						responseMaps.addClientOnlyResponse(player, despawnResponse);
@@ -539,14 +516,18 @@ public class WorldProcessor implements Runnable {
 			});
 		}
 		
-		Set<Integer> removedTileIds = currentLocalTiles.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !newLocalTiles.contains(e)).collect(Collectors.toSet());
+		final Set<Integer> removedTileIds = currentLocalTiles.stream()
+				.filter(e -> player.getLoadedFloor() != player.getFloor() || !newLocalTiles.contains(e))
+				.collect(Collectors.toSet());
 		if (!removedTileIds.isEmpty()) {
 			RemoveGroundTextureInstancesResponse removeResponse = new RemoveGroundTextureInstancesResponse();
 			removeResponse.setTileIds(removedTileIds);
 			responseMaps.addClientOnlyResponse(player, removeResponse);
 		}
 		
-		Set<Integer> addedTileIds = newLocalTiles.stream().filter(e -> player.getLoadedFloor() != player.getFloor() || !currentLocalTiles.contains(e)).collect(Collectors.toSet());
+		final Set<Integer> addedTileIds = newLocalTiles.stream()
+				.filter(e -> player.getLoadedFloor() != player.getFloor() || !currentLocalTiles.contains(e))
+				.collect(Collectors.toSet());
 		if (!addedTileIds.isEmpty()) {
 			Map<Integer, Set<Integer>> tileIdsByGroundTextureId = new HashMap<>();
 			
@@ -631,8 +612,6 @@ public class WorldProcessor implements Runnable {
 											    .filter(e -> !e.isDeadWithDelay())	// the delay of two ticks gives the client time for the death animation
 											    .collect(Collectors.toSet());
 		
-		
-		
 		Set<Integer> newInRangeNpcInstanceIds = newInRangeNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
 		
 		Set<Integer> removedNpcs = currentInRangeNpcs.stream().filter(e -> !newInRangeNpcInstanceIds.contains(e)).collect(Collectors.toSet());
@@ -675,6 +654,7 @@ public class WorldProcessor implements Runnable {
 		if (daytime != newDaytime) {
 			daytimeChanged = true;
 			DepletionManager.removeDaylightFlowers(newDaytime);
+			WanderingPetManager.get().rotateWanderingPets();
 		}
 		
 		daytime = newDaytime;

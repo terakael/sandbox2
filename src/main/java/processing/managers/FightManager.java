@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 import processing.PathFinder;
+import processing.WorldProcessor;
 import processing.attackable.Attackable;
 import processing.attackable.NPC;
 import processing.attackable.Player;
@@ -48,6 +49,19 @@ public class FightManager {
 		}
 		
 		public void process(ResponseMaps responseMaps) {
+			// if one of the (player) fighters disconnects, cancel the fight
+			if (WorldProcessor.getPlayerById(((Player)fighter1).getId()) == null) {
+				cancelFight(fighter1, responseMaps);
+				if (fighter2 instanceof NPC) {
+					// clear the player target so the NPC doesn't try to go after them again
+					fighter2.setTarget(null);
+				}
+				return;
+			} else if (fighter2 instanceof Player && WorldProcessor.getPlayerById(((Player)fighter2).getId()) == null) {
+				cancelFight(fighter2, responseMaps);
+				return;
+			}
+			
 			// if the players aren't on the same tile then they are still closing in on eachother
 			if (!PathFinder.isNextTo(fighter1.getFloor(), fighter1.getTileId(), fighter2.getTileId())) {
 				return;
@@ -103,6 +117,10 @@ public class FightManager {
 			}
 			
 			return other.getCurrentHp() == 0;
+		}
+		
+		public Attackable getOtherFighter(Attackable attackable) {
+			return fighter1 == attackable ? fighter2 : fighter1;
 		}
 	}
 	
@@ -162,27 +180,29 @@ public class FightManager {
 				
 				
 				// fighter1 is always a player, fighter2 can be a player or npc
-				if (responseMaps != null) {// todo figure out endpoint onclose cancel fight
-					if (fight.getFighter2() instanceof NPC) {
-						PvmEndResponse resp = new PvmEndResponse();
-						resp.setPlayerId(((Player)fight.getFighter1()).getId());
-						resp.setMonsterId(((NPC)fight.getFighter2()).getInstanceId());
-						resp.setPlayerTileId(fight.getFighter1().getTileId());
-						resp.setMonsterTileId(fight.getFighter2().getTileId());
-						responseMaps.addLocalResponse(((Player)fight.getFighter1()).getFloor(), ((Player)fight.getFighter1()).getTileId(), resp);
-					} else {
-						PvpEndResponse resp = new PvpEndResponse();
-						resp.setPlayer1Id(((Player)fight.getFighter1()).getId());
-						resp.setPlayer2Id(((Player)fight.getFighter2()).getId());
-						resp.setPlayer1TileId(fight.getFighter1().getTileId());
-						resp.setPlayer2TileId(fight.getFighter2().getTileId());
-						responseMaps.addClientOnlyResponse((Player)fight.getFighter1(), resp);
-						responseMaps.addLocalResponse(((Player)fight.getFighter2()).getFloor(), ((Player)fight.getFighter2()).getTileId(), resp);
-					}
+				if (fight.getFighter2() instanceof NPC) {
+					final PvmEndResponse resp = new PvmEndResponse();
+					resp.setPlayerId(((Player)fight.getFighter1()).getId());
+					resp.setMonsterId(((NPC)fight.getFighter2()).getInstanceId());
+					resp.setPlayerTileId(fight.getFighter1().getTileId());
+					resp.setMonsterTileId(fight.getFighter2().getTileId());
+					responseMaps.addLocalResponse(((Player)fight.getFighter1()).getFloor(), ((Player)fight.getFighter1()).getTileId(), resp);
 					
-					fight.getFighter1().setTarget(null);
-					fight.getFighter2().setTarget(null);
+					((NPC)fight.getFighter2()).setPostCombatCooldown(5);
+				} else {
+					final PvpEndResponse resp = new PvpEndResponse();
+					resp.setPlayer1Id(((Player)fight.getFighter1()).getId());
+					resp.setPlayer2Id(((Player)fight.getFighter2()).getId());
+					resp.setPlayer1TileId(fight.getFighter1().getTileId());
+					resp.setPlayer2TileId(fight.getFighter2().getTileId());
+					responseMaps.addClientOnlyResponse((Player)fight.getFighter1(), resp);
+					responseMaps.addLocalResponse(((Player)fight.getFighter2()).getFloor(), ((Player)fight.getFighter2()).getTileId(), resp);
+					
+					fight.getFighter2().setTarget(null); // only unset the target if it's a player.  NPCs will go after the retreating player again.
 				}
+				
+				fight.getFighter1().setTarget(null);
+				
 				fights.remove(fight);
 				return;
 			}

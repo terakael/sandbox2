@@ -87,6 +87,10 @@ public class LogonResponse extends Response {
 		WorldProcessor.playerSessions.put(client, player);
 		responseMaps.addClientOnlyResponse(player, this);
 		
+		final int petId = PlayerStorageDao.getItemIdInSlot(player.getId(), StorageTypes.PET, 0);
+		if (petId != 0)
+			player.setPet(petId);
+		
 		ClientResourceManager.addAnimations(player, Collections.singleton(player.getId()));
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		new LoadPrayersResponse().process(null, player, responseMaps);

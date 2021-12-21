@@ -365,6 +365,8 @@ public enum Items {
 	
 	
 	BONES(318),
+	GIANT_BONES(319),
+	WOLF_BONES(320),
 	WHIRLWIND_WAND(323),
 	
 	HOLY_SYMBOL(324),
@@ -484,6 +486,9 @@ public enum Items {
 	SCORCH_TIPPED_FISHING_SPEAR(487),
 	
 	GOLDEN_HAMMER(488),
+	
+	BREAD_LOAF(497),
+	HALF_BREAD_LOAF(498)
 	
 	;
 

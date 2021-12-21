@@ -1,12 +1,12 @@
 package processing.attackable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
-import lombok.Setter;
 import database.dao.BuryableDao;
 import database.dao.ItemDao;
 import database.dao.NPCDao;
@@ -14,6 +14,8 @@ import database.dao.PlayerStorageDao;
 import database.dao.StatsDao;
 import database.dto.NPCDto;
 import database.dto.NpcDropDto;
+import lombok.Getter;
+import lombok.Setter;
 import processing.PathFinder;
 import processing.WorldProcessor;
 import processing.attackable.Player.PlayerState;
@@ -34,9 +36,10 @@ import types.NpcAttributes;
 import types.Prayers;
 import types.Stats;
 import utils.RandomUtil;
+import utils.Utils;
 
 public class NPC extends Attackable {
-	@Getter private NPCDto dto;
+	@Getter protected NPCDto dto;
 	
 	private final transient int maxTickCount = 15;
 	private final transient int minTickCount = 5;
@@ -44,9 +47,10 @@ public class NPC extends Attackable {
 	protected int deathTimer = 0;
 	private final transient int MAX_HUNT_TIMER = 5;
 	private transient int huntTimer = 0;
+	@Setter private transient int postCombatCooldown = 0;
 	@Setter @Getter private transient int instanceId = 0;
-	@Getter private boolean moving = false;
-		
+//	@Getter private boolean moving = false;
+	private transient List<Integer> walkableTiles = null;
 	private int combatLevel = 0;
 	
 	protected int lastProcessedTick = 0;
@@ -57,6 +61,10 @@ public class NPC extends Attackable {
 		floor = dto.getFloor();
 		instanceId = dto.getTileId(); // legacy dto does it this way
 		
+		init();
+	}
+	
+	protected void init() {		
 		HashMap<Stats, Integer> stats = new HashMap<>();
 		stats.put(Stats.STRENGTH, dto.getStr());
 		stats.put(Stats.ACCURACY, dto.getAcc());
@@ -86,6 +94,10 @@ public class NPC extends Attackable {
 		setCurrentHp(dto.getHp());
 		setMaxCooldown(dto.getAttackSpeed());
 		
+		// pre-calculate all the walkable tiles on server startup to save processing time over the long run
+		// (i.e. instead of checking if a tile can be walked to every time we move, we already guaranteed it)
+		walkableTiles = calculateWalkableTiles(floor, tileId, dto.getRoamRadius());
+		
 		huntTimer = RandomUtil.getRandom(0, MAX_HUNT_TIMER);// just so all the NPCs aren't hunting on the same tick
 	}
 	
@@ -97,6 +109,11 @@ public class NPC extends Attackable {
 		final int deltaTicks = currentTick - lastProcessedTick;
 		lastProcessedTick = currentTick;
 		
+		if (postCombatCooldown > 0) {
+			postCombatCooldown -= deltaTicks;
+			if (postCombatCooldown < 0)
+				postCombatCooldown = 0;
+		}
 		if (currentHp == 0) {
 			handleRespawn(responseMaps, deltaTicks);			
 			return;
@@ -147,8 +164,7 @@ public class NPC extends Attackable {
 			}
 		}
 		
-		moving = popPath();
-		if (moving) {
+		if (popPath()) {
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 			updateResponse.setInstanceId(getInstanceId());
 			updateResponse.setTileId(tileId);
@@ -162,10 +178,10 @@ public class NPC extends Attackable {
 				
 				setPathToRandomTileInRadius(responseMaps);
 			}
-		} else {
+		} else if (postCombatCooldown <= 0) {
 			// chase the target if not next to it
 			if (!PathFinder.isNextTo(floor, tileId, target.getTileId())) {
-				if (PathFinder.tileWithinRadius(target.getTileId(), dto.getTileId(), dto.getRoamRadius() + 2)) {
+				if (target.getFloor() == floor && PathFinder.tileWithinRadius(target.getTileId(), dto.getTileId(), dto.getRoamRadius() + 2)) {
 					path = PathFinder.findPath(floor, tileId, target.getTileId(), true);
 				} else {
 					int retreatTileId = PathFinder.findRetreatTile(target.getTileId(), tileId, dto.getTileId(), dto.getRoamRadius());
@@ -200,8 +216,18 @@ public class NPC extends Attackable {
 	}
 	
 	protected void setPathToRandomTileInRadius(ResponseMaps responseMaps) {
-		int destTile = PathFinder.chooseRandomTileIdInRadius(dto.getTileId(), dto.getRoamRadius());
-		path = PathFinder.findPath(floor, tileId, destTile, true, dto.getTileId(), dto.getRoamRadius());
+		// responseMaps can be used by overriding npcs (such as necromancer who teleports around)
+		path = PathFinder.findPath(floor, tileId, chooseRandomWalkableTile(), true);
+	}
+	
+	protected int chooseRandomWalkableTile() {
+		if (walkableTiles == null || walkableTiles.isEmpty()) {
+			// if walkableTiles weren't initialized (i.e. pets)
+			// then just choose a random tile near current tile.
+			// pets can wander as far as they need to; they'll despawn after a little while anyway
+			return PathFinder.chooseRandomTileIdInRadius(tileId, dto.getRoamRadius());
+		}
+		return walkableTiles.get(RandomUtil.getRandom(0, walkableTiles.size()));
 	}
 	
 	public int getId() {
@@ -226,30 +252,28 @@ public class NPC extends Attackable {
 	}
 	
 	protected void handleLootDrop(Player killer, ResponseMaps responseMaps) {
-		List<NpcDropDto> potentialDrops = NPCDao.getDropsByNpcId(dto.getId())
+		final List<NpcDropDto> potentialDrops = NPCDao.getDropsByNpcId(dto.getId())
 				.stream()
 				.filter(dto -> {
 					if (ItemDao.itemHasAttribute(dto.getItemId(), ItemAttributes.UNIQUE)) {
-						int playerId = killer.getId();
-						if (PlayerStorageDao.itemExistsInPlayerStorage(playerId, dto.getItemId()))
+						if (PlayerStorageDao.itemExistsInPlayerStorage(killer.getId(), dto.getItemId()))
 							return false;
 						
-						if (GroundItemManager.itemIsOnGround(floor, playerId, dto.getItemId()))
+						if (GroundItemManager.itemIsOnGround(floor, killer.getId(), dto.getItemId()))
 							return false;
 					}
 					return true;
 				})
 				.collect(Collectors.toList());
 		
-		final Player player = killer;
 		for (NpcDropDto drop : potentialDrops) {
 			if (RandomUtil.getRandom(0, drop.getRate()) == 0) {
-				if (ConstructableManager.constructableIsInRadius(floor, tileId, 129, 3) &&  BuryableDao.isBuryable(drop.getItemId())) {
+				if (ConstructableManager.constructableIsInRadius(floor, tileId, 129, 3) && BuryableDao.isBuryable(drop.getItemId())) {
 					// give the player the corresponding prayer exp instead of dropping it
-					BuryResponse.handleBury(player, drop.getItemId(), responseMaps);
+					BuryResponse.handleBury(killer, drop.getItemId(), responseMaps);
 				} else {
-					GroundItemManager.add(floor, player.getId(), drop.getItemId(), tileId, drop.getCount(), ItemDao.getMaxCharges(drop.getItemId()));
-					TybaltsTaskManager.check(player, new ItemDropFromNpcUpdate(drop.getItemId(), drop.getCount()), responseMaps);
+					GroundItemManager.add(floor, killer.getId(), drop.getItemId(), tileId, drop.getCount(), ItemDao.getMaxCharges(drop.getItemId()));
+					TybaltsTaskManager.check(killer, new ItemDropFromNpcUpdate(drop.getItemId(), drop.getCount()), responseMaps);
 				}
 			}
 		}
@@ -315,6 +339,40 @@ public class NPC extends Attackable {
 			updateResponse.setSnapToTile(true);
 			responseMaps.addLocalResponse(floor, tileId, updateResponse);
 		}
+	}
+	
+	private List<Integer> calculateWalkableTiles(int floor, int tileId, int radius) {
+		// things to consider
+		// if there's a wall/lake going through the tiles within the radius, 
+		//     we don't want to walk outside of our walkable tiles, around the wall/lake,
+		//     to get to the walkable tiles on the other side.
+		
+		final List<Integer> walkableTiles = new ArrayList<>();
+		
+		final List<Integer> localTiles = Utils.getLocalTiles(tileId, radius).stream().collect(Collectors.toList());
+		for (int localTileId : localTiles) {
+			if (!PathFinder.tileIsValid(floor, localTileId))
+				continue;
+			
+			if ((PathFinder.getImpassableByTileId(floor, localTileId) & 15) == 15) // there's something impassable on it
+				continue;
+			
+			final Stack<Integer> path = PathFinder.findPath(floor, tileId, localTileId, true);
+			while (!path.isEmpty()) {
+				final int currentTileId = path.pop();
+				if (!localTiles.contains(currentTileId)) {
+					// we need to walk outside our radius to get to this tile discount it.
+					break;
+				}
+			}
+			
+			if (!path.isEmpty()) // we broke early, meaning we walked outside of the local tiles
+				continue;
+			
+			walkableTiles.add(localTileId);
+		}
+		
+		return walkableTiles;
 	}
 	
 	public void clearPath() {

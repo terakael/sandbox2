@@ -30,6 +30,7 @@ import database.dao.ItemDao;
 import database.dao.MineableDao;
 import database.dao.MinimapSegmentDao;
 import database.dao.NpcMessageDao;
+import database.dao.PetDao;
 import database.dao.PickableDao;
 import database.dao.PlayerArtisanBlockedTaskDao;
 import database.dao.PlayerArtisanTaskBreakdownDao;
@@ -56,6 +57,7 @@ import processing.managers.ArtisanManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.NPCManager;
 import processing.managers.ShopManager;
+import processing.managers.WanderingPetManager;
 import responses.CachedResourcesResponse;
 import responses.ExamineResponse;
 
@@ -254,6 +256,12 @@ public class Server {
 		
 		System.out.println("caching artisan tool equivalents");
 		ArtisanToolEquivalentDao.setupCaches();
+		
+		System.out.println("caching pets");
+		PetDao.setupCaches();
+		
+		System.out.println("caching wandering pets");
+		WanderingPetManager.get().loadWanderingPets();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

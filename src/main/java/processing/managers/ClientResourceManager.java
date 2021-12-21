@@ -146,9 +146,12 @@ public class ClientResourceManager {
 	
 	public static void addLocalScenery(Player player, Set<Integer> sceneryIds) {
 		// used for constructables
-		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
-		for (Player localPlayer : localPlayers)
-			addScenery(localPlayer, sceneryIds);
+//		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
+//		for (Player localPlayer : localPlayers)
+//			addScenery(localPlayer, sceneryIds);
+		
+		LocationManager.getLocalPlayers(player.getFloor(), player.getTileId(), 15)
+			.forEach(localPlayer -> addScenery(localPlayer, sceneryIds));
 	}
 	
 	public static void addNpcs(Player player, Set<Integer> npcIds) {
@@ -160,8 +163,7 @@ public class ClientResourceManager {
 				.filter(e -> selectedNpcIds.contains(e.getId()))
 				.collect(Collectors.toSet());
 		
-		if (!npcs.containsKey(player))
-			npcs.put(player, new HashSet<>());
+		npcs.putIfAbsent(player, new HashSet<>());
 		addLoadedNpcIds(player, selectedNpcs.stream().map(NPCDto::getId).collect(Collectors.toSet()));
 		npcs.get(player).addAll(selectedNpcs);
 		
@@ -184,8 +186,7 @@ public class ClientResourceManager {
 				.filter(e -> selectedItemIds.contains(e.getId()))
 				.collect(Collectors.toSet());
 		
-		if (!items.containsKey(player))
-			items.put(player, new HashSet<>());
+		items.putIfAbsent(player, new HashSet<>());
 		addLoadedItemIds(player, selectedItems.stream().map(ItemDto::getId).collect(Collectors.toSet()));
 		items.get(player).addAll(selectedItems);
 		
@@ -195,9 +196,11 @@ public class ClientResourceManager {
 	}
 	
 	public static void addLocalItems(Player player, Set<Integer> itemIds) {
-		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
-		for (Player localPlayer : localPlayers)
-			addItems(localPlayer, itemIds);
+//		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
+		LocationManager.getLocalPlayers(player.getFloor(), player.getTileId(), 15)
+			.forEach(localPlayer -> addItems(localPlayer, itemIds));
+//		for (Player localPlayer : localPlayers)
+//			addItems(localPlayer, itemIds);
 	}
 	
 	public static void addAnimationDtos(Player player, Set<PlayerAnimationDto> animations) {
@@ -231,19 +234,25 @@ public class ClientResourceManager {
 		// sometimes we want to make sure all the local players receive the resources.
 		// for example, when a player equips a certain item, all the players around who haven't
 		// yet loaded that item should get the resources sent.
-		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
-		for (Player localPlayer : localPlayers)
-			addAnimations(localPlayer, playerIds);
+//		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
+//		for (Player localPlayer : localPlayers)
+//			addAnimations(localPlayer, playerIds);
+		
+		LocationManager.getLocalPlayers(player.getFloor(), player.getTileId(), 15)
+			.forEach(localPlayer -> addAnimations(localPlayer, playerIds));
 	}
 	
 	public static void addSpell(Player player, int itemId) {
 		final CastableDto castable = CastableDao.getCastableByItemId(itemId);
 		
-		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
-		for (Player localPlayer : localPlayers) {
-			// the spell should be viewable by all local players, so provide them the sprite frames/sprite maps as well
-			addSpriteFramesAndSpriteMaps(localPlayer, Collections.singleton(castable.getSpriteFrameId()));	
-		}
+//		List<Player> localPlayers = WorldProcessor.getPlayersNearTile(player.getFloor(), player.getTileId(), 15);
+//		for (Player localPlayer : localPlayers) {
+//			 the spell should be viewable by all local players, so provide them the sprite frames/sprite maps as well
+//			addSpriteFramesAndSpriteMaps(localPlayer, Collections.singleton(castable.getSpriteFrameId()));	
+//		}
+		
+		LocationManager.getLocalPlayers(player.getFloor(), player.getTileId(), 15)
+			.forEach(localPlayer -> addSpriteFramesAndSpriteMaps(localPlayer, Collections.singleton(castable.getSpriteFrameId())));
 	}
 
 	

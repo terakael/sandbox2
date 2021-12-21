@@ -60,9 +60,7 @@ public class NecromancerSecondForm extends UndeadArmyNpc {
 				}
 			});
 
-			currentHp += stolenDamage;
-			if (currentHp > getDto().getHp())
-				currentHp = getDto().getHp();
+			currentHp = Math.min(currentHp + stolenDamage, getDto().getHp());
 			
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 			updateResponse.setInstanceId(getInstanceId());

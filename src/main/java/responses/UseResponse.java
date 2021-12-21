@@ -19,6 +19,7 @@ import database.dao.SceneryDao;
 import database.dao.StatsDao;
 import database.dao.TeleportableDao;
 import database.dao.UseItemOnItemDao;
+import database.dao.WanderingPetDao;
 import database.dto.CastableDto;
 import database.dto.ConstructableDto;
 import database.dto.InventoryItemDto;
@@ -32,6 +33,7 @@ import processing.managers.ArtisanManager;
 import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
 import processing.managers.NPCManager;
+import processing.managers.WanderingPetManager;
 import processing.scenery.Scenery;
 import processing.scenery.SceneryManager;
 import requests.AttackRequest;
@@ -254,6 +256,10 @@ public class UseResponse extends Response {
 			int slot = request.getSrcSlot();
 			if (slot >= invItemIds.size() || invItemIds.get(slot) != request.getSrc())
 				slot = invItemIds.indexOf(request.getSrc());
+			
+			if (WanderingPetManager.get().npcIsWanderingPet(targetNpc)) {
+				return WanderingPetManager.get().handleUseItemOnPet(player, targetNpc, request.getSrc(), responseMaps);
+			}
 			
 			switch (item) {
 			case POISON_FLASK_1:

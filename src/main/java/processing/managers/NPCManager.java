@@ -50,6 +50,15 @@ public class NPCManager {
 				return npc;
 		}
 		
+		// check if the npc is a pet (which isn't part of the standard npc list)
+		final NPC pet = LocationManager.getPetByFloorAndInstanceId(floor, id);
+		if (pet != null)
+			return pet;
+		
+		final NPC wanderingPet = WanderingPetManager.get().getActiveWanderingPetByFloorAndInstanceId(floor, id);
+		if (wanderingPet != null)
+			return wanderingPet;
+		
 		// also check the undead army as these are handled differently
 		return UndeadArmyManager.getNpcByInstanceId(floor, id);
 	}

@@ -1,9 +1,11 @@
 package processing;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -258,26 +260,45 @@ public class PathFinder {
 	}
 	
 	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile) {
-		return findPathInternal(floor, from, to, includeToTile, 0, 0, false, 0);
+		return findPathInternal(floor, from, to, includeToTile, false, 0);
 	}
 	
+	// Used for things such as casting spells (over walls etc)
 	public static Stack<Integer> findPathInRange(int floor, int from, int to, int range) {
-		return findPathInternal(floor, from, to, true, 0, 0, false, range);
+		return findPathInternal(floor, from, to, true, false, range);
 	}
 	
 	public static Stack<Integer> findPathToDoor(int floor, int from, int to) {
-		return findPathInternal(floor, from, to, true, 0, 0, true, 0);
+		return findPathInternal(floor, from, to, true, true, 0);
 	}
 	
-	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius) {
-		return findPathInternal(floor, from, to, includeToTile, spawnTileId, maxRadius, false, 0);
-	}
+//	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius) {
+//		return findPathInternal(floor, from, to, includeToTile, spawnTileId, maxRadius, false, 0);
+//	}
 	
-	private static Stack<Integer> findPathInternal(int floor, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius, boolean toDoor, int withinRange) {
+	private static Stack<Integer> findPathInternal(int floor, int from, int to, boolean includeToTile, boolean toDoor, int withinRange) {
 		Stopwatch.start("find path");
 		Stack<Integer> output = new Stack<>();
-		if (from == to)
-			return output;
+		if (from == to) {
+			if (includeToTile) {
+				return output;
+			} else {
+				List<Integer> nonDiagonalTiles = Arrays.asList(
+							to - LENGTH,
+							to - 1,
+							to + 1,
+							to + LENGTH
+						);
+				Collections.shuffle(nonDiagonalTiles);
+				
+				for (Integer tileId : nonDiagonalTiles) {
+					if (tileIsValid(floor, tileId) && isNextTo(floor, tileId, to)) {
+						output.push(tileId);
+						return output;
+					}
+				}
+			}
+		}
 
 		Map<Integer, PathNode> nodes = nodesByFloor.get(floor);
 		
@@ -363,21 +384,6 @@ public class PathFinder {
 				// but if there is some passable way and we're not actually next to it then continue.
 				if (successor == nodes.get(to) && (successor.impassableTypes & 15) != 15 && !isNextTo(floor, q.id, successor.id, !toDoor, true))
 					continue;
-				
-				// for NPCs so they don't wander outside their range.
-				if (spawnTileId > 0 && maxRadius > 0) {
-					int tileX = successor.getId() % LENGTH;
-					int tileY = successor.getId() / LENGTH;
-					
-					int spawnTileX = spawnTileId % LENGTH;
-					int spawnTileY = spawnTileId / LENGTH;
-					
-					if (tileX < spawnTileX - maxRadius || tileX > spawnTileX + maxRadius)
-						continue;
-					
-					if (tileY < spawnTileY - maxRadius || tileY > spawnTileY + maxRadius)
-						continue;
-				}
 				
 				if (closed.contains(successor))
 					continue;

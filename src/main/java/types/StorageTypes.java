@@ -6,7 +6,8 @@ public enum StorageTypes {
 	INVENTORY(1),
 	BANK(2),
 	FLOWER_SACK(3),
-	TRADE(4);
+	TRADE(4),
+	PET(5);
 	
 	@Getter private int value;
 	StorageTypes(int value) {

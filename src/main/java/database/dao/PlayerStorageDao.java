@@ -140,11 +140,15 @@ public class PlayerStorageDao {
 	}
 	
 	public static int getFreeSlotByPlayerId(int playerId) {
-		if (!validatePlayerStorageElement(playerId, StorageTypes.INVENTORY))
+		return getSlotOfItemId(playerId, StorageTypes.INVENTORY, 0);
+	}
+	
+	public static int getSlotOfItemId(int playerId, StorageTypes storageType, int itemId) {
+		if (!validatePlayerStorageElement(playerId, storageType))
 			return -1;
 		
-		Optional<PlayerStorageDto> dto = playerStorage.get(playerId).get(StorageTypes.INVENTORY).values().stream()
-				.filter(e -> e.getItemId() == 0)
+		final Optional<PlayerStorageDto> dto = playerStorage.get(playerId).get(storageType).values().stream()
+				.filter(e -> e.getItemId() == itemId)
 				.findFirst();
 		
 		return dto.isPresent() ? dto.get().getSlot() : -1;
@@ -292,6 +296,7 @@ public class PlayerStorageDao {
 		createStorageForNewPlayer(playerId, StorageTypes.INVENTORY, 20);
 		createStorageForNewPlayer(playerId, StorageTypes.BANK, 35);
 		createStorageForNewPlayer(playerId, StorageTypes.FLOWER_SACK, 10);
+		createStorageForNewPlayer(playerId, StorageTypes.PET, 1);
 		cachePlayerStorage(playerId);
 	}
 	

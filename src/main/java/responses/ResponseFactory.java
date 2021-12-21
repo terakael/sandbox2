@@ -234,6 +234,9 @@ public class ResponseFactory {
 		case "show_construction_skill_window":
 			response = new ShowConstructionSkillWindowResponse();
 			break;
+		case "pick up":
+			response = new PickUpResponse();
+			break;
 			
 		default:
 			response = new UnknownResponse();
