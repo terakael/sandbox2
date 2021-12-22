@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Setter;
 import processing.attackable.NPC;
 import processing.attackable.Player;
-import processing.managers.NPCManager;
 import requests.Request;
 
 @Setter
@@ -26,14 +25,9 @@ public class NpcInRangeResponse extends Response {
 	public NpcInRangeResponse() {
 		setAction("npc_in_range");
 	}
-
-	public void addInstances(int floor, Set<Integer> instanceIds) {
-		for (int instanceId : instanceIds) {
-			NPC npc = NPCManager.get().getNpcByInstanceId(floor, instanceId);
-			
-			if (npc != null)
-				npcs.add(new NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId(), npc.getCurrentHp()));
-		}
+	
+	public void addInstances(Set<NPC> instances) {
+		instances.forEach(npc -> npcs.add(new NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId(), npc.getCurrentHp())));
 	}
 	
 	@Override

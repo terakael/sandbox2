@@ -31,7 +31,6 @@ import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
 import processing.managers.LockedDoorManager;
-import processing.managers.NPCManager;
 import processing.managers.ShopManager;
 import processing.managers.UndeadArmyManager;
 import processing.managers.WanderingPetManager;
@@ -161,7 +160,10 @@ public class WorldProcessor implements Runnable {
 			UndeadArmyManager.onDaytimeChange(daytime, responseMaps);
 		
 		Stopwatch.start("process npcs");
-		NPCManager.get().process(responseMaps, tickId);
+//		NPCManager.get().process(responseMaps, tickId);
+		LocationManager.getAllNpcsNearPlayers(WorldProcessor.isDaytime()).forEach((floor, npcSet) -> {
+			npcSet.forEach(npc -> npc.process(tickId, responseMaps));
+		});
 		Stopwatch.end("process npcs");
 		
 		Stopwatch.start("process constructables");
@@ -606,30 +608,33 @@ public class WorldProcessor implements Runnable {
 	private void updateLocalNpcLocations(Player player, ResponseMaps responseMaps) {
 		Stopwatch.start("refresh npc locations");
 
-		Set<Integer> currentInRangeNpcs = player.getInRangeNpcs();
-		Set<NPC> newInRangeNpcs = LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 12, daytime)
+		final Set<Integer> currentInRangeNpcs = player.getInRangeNpcs();
+		final Set<NPC> newInRangeNpcs = LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 12, daytime)
 											    .stream()
 											    .filter(e -> !e.isDeadWithDelay())	// the delay of two ticks gives the client time for the death animation
 											    .collect(Collectors.toSet());
 		
-		Set<Integer> newInRangeNpcInstanceIds = newInRangeNpcs.stream().map(NPC::getInstanceId).collect(Collectors.toSet());
+		final Set<Integer> newInRangeNpcInstanceIds = newInRangeNpcs.stream()
+				.map(NPC::getInstanceId)
+				.collect(Collectors.toSet());
 		
-		Set<Integer> removedNpcs = currentInRangeNpcs.stream().filter(e -> !newInRangeNpcInstanceIds.contains(e)).collect(Collectors.toSet());
+		final Set<Integer> removedNpcs = currentInRangeNpcs.stream()
+				.filter(e -> !newInRangeNpcInstanceIds.contains(e))
+				.collect(Collectors.toSet());
 		if (!removedNpcs.isEmpty()) {
-			removedNpcs.forEach(instanceId -> {
-				NPC fightNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), instanceId);
-				if (FightManager.fightWithFighterExists(fightNpc))
-					FightManager.cancelFight(fightNpc, responseMaps);
-			});
 			NpcOutOfRangeResponse npcOutOfRangeResponse = new NpcOutOfRangeResponse();
 			npcOutOfRangeResponse.setInstances(removedNpcs);
 			responseMaps.addClientOnlyResponse(player, npcOutOfRangeResponse);
 		}
 		
-		Set<Integer> addedNpcs = newInRangeNpcInstanceIds.stream().filter(e -> !currentInRangeNpcs.contains(e)).collect(Collectors.toSet());
+		final Set<Integer> addedNpcs = newInRangeNpcInstanceIds.stream()
+				.filter(e -> !currentInRangeNpcs.contains(e))
+				.collect(Collectors.toSet());
 		if (!addedNpcs.isEmpty()) {
 			NpcInRangeResponse npcInRangeResponse = new NpcInRangeResponse();
-			npcInRangeResponse.addInstances(player.getFloor(), addedNpcs);
+			npcInRangeResponse.addInstances(newInRangeNpcs.stream()
+					.filter(e -> addedNpcs.contains(e.getInstanceId()))
+					.collect(Collectors.toSet()));
 			responseMaps.addClientOnlyResponse(player, npcInRangeResponse);
 			
 			ClientResourceManager.addNpcs(player, newInRangeNpcs.stream().map(NPC::getId).collect(Collectors.toSet()));

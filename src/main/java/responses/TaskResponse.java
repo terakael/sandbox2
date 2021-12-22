@@ -9,7 +9,7 @@ import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.managers.ArtisanManager;
 import processing.managers.FightManager;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import requests.Request;
 import requests.TaskRequest;
 import types.Stats;
@@ -29,7 +29,7 @@ public class TaskResponse extends Response {
 			return;
 		}
 		
-		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());
+		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
 		if (npc == null)
 			return;
 		

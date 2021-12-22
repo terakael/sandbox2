@@ -8,7 +8,7 @@ import database.dao.SceneryDao;
 import database.dto.InventoryItemDto;
 import processing.PathFinder;
 import processing.attackable.Player;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import processing.managers.UndeadArmyManager;
 import requests.Request;
 import types.Items;
@@ -57,7 +57,7 @@ public class FinishThrowResponse extends Response {
 		if (SceneryDao.getSceneryIdByTileId(player.getFloor(), checkTileId) != -1)
 			return false;
 		
-		if (NPCManager.get().getNpcByInstanceId(player.getFloor(), checkTileId) != null)
+		if (LocationManager.getNpcNearPlayerByInstanceId(player, checkTileId) != null)
 			return false;
 		
 		if (!PathFinder.lineOfSightIsClear(player.getFloor(), player.getTileId(), checkTileId, throwRange * 2))

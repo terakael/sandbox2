@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import processing.PathFinder;
+import processing.WorldProcessor;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import types.NpcAttributes;
@@ -22,6 +23,17 @@ public class LocationManager {
 	private static Map<Integer, Map<Integer, Set<NPC>>> undergroundNpcs = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<NPC>>> pets = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<Player>>> players = new HashMap<>();
+	
+	public static NPC getNpcNearPlayerByInstanceId(Player player, int instanceId) {
+		return LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 12).stream()
+				.filter(e -> e.getInstanceId() == instanceId)
+				.findFirst()
+				.orElse(null);
+	}
+	
+	public static Set<NPC> getLocalNpcs(int floor, int tileId, int radius) {
+		return getLocalNpcs(floor, tileId, radius, WorldProcessor.isDaytime());
+	}
 	
 	public static Set<NPC> getLocalNpcs(int floor, int tileId, int radius, boolean isDaytime) {
 		final Map<Integer, Map<Integer, Set<NPC>>> sourceMap = 

@@ -7,7 +7,7 @@ import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import requests.AttackRequest;
 import requests.Request;
 import types.NpcAttributes;
@@ -26,7 +26,7 @@ public class AttackResponse extends Response {
 		}
 		
 		AttackRequest request = (AttackRequest)req;
-		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());// request tileid is the instnace id
+		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
 		if (npc == null || !NPCDao.npcHasAttribute(npc.getId(), NpcAttributes.ATTACKABLE)) {
 			setRecoAndResponseText(0, "you can't attack that.");
 			responseMaps.addClientOnlyResponse(player, this);

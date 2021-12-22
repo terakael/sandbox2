@@ -4,7 +4,7 @@ import processing.PathFinder;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.managers.FightManager;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import requests.MakeoverRequest;
 import requests.Request;
 
@@ -23,7 +23,7 @@ public class MakeoverResponse extends Response {
 		}
 		
 		// need to be near the makeover girl to trigger it
-		NPC makeoverNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), ((MakeoverRequest)req).getObjectId());
+		final NPC makeoverNpc = LocationManager.getNpcNearPlayerByInstanceId(player, ((MakeoverRequest)req).getObjectId());
 		if (makeoverNpc == null)
 			return;
 		

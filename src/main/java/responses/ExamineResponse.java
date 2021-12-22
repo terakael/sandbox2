@@ -3,16 +3,14 @@ package responses;
 import java.util.HashMap;
 import java.util.Map;
 
-import database.dao.ConstructableDao;
 import database.dao.ItemDao;
 import database.dao.NPCDao;
 import database.dao.PlayerStorageDao;
 import database.dao.SceneryDao;
-import database.dto.ConstructableDto;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.managers.ConstructableManager;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import requests.ExamineRequest;
 import requests.Request;
 import types.ItemAttributes;
@@ -79,11 +77,9 @@ public class ExamineResponse extends Response {
 			break;
 		}
 		case "npc": {
-			NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());
-			if (npc != null) {
-//				int npcId = NPCDao.getNpcIdFromInstanceId(player.getFloor(), request.getObjectId());
+			final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
+			if (npc != null)
 				examineText = npcExamineMap.get(npc.getId());
-			}
 			break;
 		}
 		default:

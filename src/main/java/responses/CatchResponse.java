@@ -9,7 +9,7 @@ import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import requests.CatchRequest;
 import requests.Request;
 import types.StorageTypes;
@@ -31,7 +31,7 @@ public class CatchResponse extends Response {
 		FightManager.cancelFight(player, responseMaps);
 		
 		CatchRequest request = (CatchRequest)req;
-		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());
+		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
 		if (npc == null) {
 			setRecoAndResponseText(0, "you can't catch that.");
 			responseMaps.addClientOnlyResponse(player, this);

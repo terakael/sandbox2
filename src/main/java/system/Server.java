@@ -1,6 +1,8 @@
 package system;
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import javax.websocket.DeploymentException;
 
@@ -29,6 +31,7 @@ import database.dao.GroundTextureDao;
 import database.dao.ItemDao;
 import database.dao.MineableDao;
 import database.dao.MinimapSegmentDao;
+import database.dao.NPCDao;
 import database.dao.NpcMessageDao;
 import database.dao.PetDao;
 import database.dao.PickableDao;
@@ -53,9 +56,10 @@ import database.dao.UndeadArmyWavesDao;
 import database.dao.UseItemOnItemDao;
 import processing.PathFinder;
 import processing.WorldProcessor;
+import processing.attackable.NPC;
 import processing.managers.ArtisanManager;
 import processing.managers.DatabaseUpdater;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import processing.managers.ShopManager;
 import processing.managers.WanderingPetManager;
 import responses.CachedResourcesResponse;
@@ -144,7 +148,12 @@ public class Server {
 		PlayerDao.setupCaches();
 		
 		System.out.println("caching npcs");
-		NPCManager.get().loadNpcs();
+		NPCDao.setupCaches();
+		LocationManager.addNpcs(NPCDao.getNpcInstanceList().values().stream()
+				.flatMap(List::stream)
+				.map(NPC::new)
+				.collect(Collectors.toList()));
+//		NPCManager.get().loadNpcs();
 		
 		System.out.println("caching npc messages");
 		NpcMessageDao.setupCaches();

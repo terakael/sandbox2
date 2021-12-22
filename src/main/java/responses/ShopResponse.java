@@ -6,16 +6,13 @@ import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import processing.managers.ShopManager;
 import requests.Request;
 import requests.ShopRequest;
 import types.ArtisanShopTabs;
 
 public class ShopResponse extends Response {
-//	@Setter private HashMap<Integer, ShopItemDto> shopStock = new HashMap<>();
-//	@Setter private String shopName;
-	
 	public ShopResponse() {
 		setAction("shop");
 	}
@@ -26,7 +23,7 @@ public class ShopResponse extends Response {
 				return;
 		
 		ShopRequest request = (ShopRequest)req;
-		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());// request tileid is the instnace id
+		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
 		if (npc == null) {
 			return;
 		}

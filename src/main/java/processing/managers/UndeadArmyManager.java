@@ -7,11 +7,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import database.dao.NPCDao;
 import database.dao.SceneryDao;
 import database.dao.UndeadArmyWavesDao;
 import database.dto.NPCDto;
+import lombok.Getter;
 import processing.PathFinder;
 import processing.attackable.NPC;
 import processing.attackable.NecromancerFirstForm;
@@ -182,7 +182,7 @@ public class UndeadArmyManager {
 				// the client needs to recognize the npc before the pvm start message appears.
 				necromancer.setTileId(tileId); // for the actual location of the npc
 				NpcInRangeResponse npcInRangeResponse = new NpcInRangeResponse();
-				npcInRangeResponse.addInstances(0, Collections.singleton(necromancer.getInstanceId()));
+				npcInRangeResponse.addInstances(Collections.singleton(necromancer));
 				responseMaps.addLocalResponse(0, tileId, npcInRangeResponse);
 				
 				PvmStartResponse pvmStart = new PvmStartResponse();

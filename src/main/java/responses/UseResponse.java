@@ -19,7 +19,6 @@ import database.dao.SceneryDao;
 import database.dao.StatsDao;
 import database.dao.TeleportableDao;
 import database.dao.UseItemOnItemDao;
-import database.dao.WanderingPetDao;
 import database.dto.CastableDto;
 import database.dto.ConstructableDto;
 import database.dto.InventoryItemDto;
@@ -32,7 +31,7 @@ import processing.attackable.Player.PlayerState;
 import processing.managers.ArtisanManager;
 import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import processing.managers.WanderingPetManager;
 import processing.scenery.Scenery;
 import processing.scenery.SceneryManager;
@@ -223,7 +222,8 @@ public class UseResponse extends Response {
 		// only exception to this is if the npc doesn't exist, because then we wouldn't know where to walk in the first place.
 		// also if the item is supposed to be used from range, i.e. magic scrolls!
 		
-		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getDest());
+//		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getDest());
+		final NPC targetNpc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getDest());
 		if (targetNpc == null)
 			return false;
 		
@@ -307,7 +307,8 @@ public class UseResponse extends Response {
 	}
 	
 	private boolean handleCastableOnNpc(UseRequest request, Player player, ResponseMaps responseMaps) {
-		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getDest());
+//		NPC targetNpc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getDest());
+		final NPC targetNpc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getDest());
 		if (targetNpc == null)
 			return false;
 		

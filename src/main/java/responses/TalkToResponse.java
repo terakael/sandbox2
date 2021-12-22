@@ -3,7 +3,6 @@ package responses;
 import java.util.List;
 
 import database.dao.DialogueDao;
-import database.dao.NPCDao;
 import database.dao.NpcMessageDao;
 import database.dto.NpcDialogueDto;
 import processing.PathFinder;
@@ -11,7 +10,7 @@ import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.managers.DialogueManager;
 import processing.managers.FightManager;
-import processing.managers.NPCManager;
+import processing.managers.LocationManager;
 import requests.Request;
 import requests.TalkToRequest;
 import utils.RandomUtil;
@@ -43,7 +42,7 @@ public class TalkToResponse extends Response {
 		}
 		
 		TalkToRequest request = (TalkToRequest)req;
-		NPC npc = NPCManager.get().getNpcByInstanceId(player.getFloor(), request.getObjectId());// request tileid is the instnace id
+		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
 		if (npc == null) {
 			setRecoAndResponseText(0, "you can't talk to that.");
 			return;
