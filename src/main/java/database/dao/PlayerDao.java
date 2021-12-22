@@ -15,12 +15,12 @@ import processing.WorldProcessor;
 import processing.attackable.Player;
 
 public class PlayerDao {
-	@Getter private static Map<Integer, String> attackStyles = new HashMap<>();
+//	@Getter private static Map<Integer, String> attackStyles = new HashMap<>();
 	
 	private PlayerDao() {}
 	
 	public static void setupCaches() {
-		cacheAttackStyles();
+//		cacheAttackStyles();
 	}
 		
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
@@ -80,8 +80,8 @@ public class PlayerDao {
 		return player.isPresent() ? player.get().getId() : -1;
 	}
 	
-	public static void cacheAttackStyles() {
-		DbConnection.load("select id, name from attack_styles", 
-				rs -> attackStyles.put(rs.getInt("id"), rs.getString("name")));
-	}
+//	public static void cacheAttackStyles() {
+//		DbConnection.load("select id, name from attack_styles", 
+//				rs -> attackStyles.put(rs.getInt("id"), rs.getString("name")));
+//	}
 }

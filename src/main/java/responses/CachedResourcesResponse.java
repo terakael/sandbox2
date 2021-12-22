@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import database.DbConnection;
 import database.dao.ContextOptionsDao;
 import database.dao.SpriteFrameDao;
 import database.dao.SpriteMapDao;
@@ -25,6 +26,7 @@ public class CachedResourcesResponse extends Response {
 	private Map<String, List<ContextOptionsDto>> contextOptions = new HashMap<>();
 	private Map<Integer, String> statMap = null;
 	private Map<Integer, Integer> expMap = null;
+	private Map<Integer, String> attackStyles = new HashMap<>();
 
 	private CachedResourcesResponse() {
 		setAction("cached_resources");
@@ -57,6 +59,8 @@ public class CachedResourcesResponse extends Response {
 		contextOptions.put("scenery", ContextOptionsDao.getSceneryContextOptions());
 		statMap = StatsDao.getCachedStats();
 		expMap = StatsDao.getExpMap();
+		DbConnection.load("select id, name from attack_styles", 
+				rs -> attackStyles.put(rs.getInt("id"), rs.getString("name")));
 	}
 
 }

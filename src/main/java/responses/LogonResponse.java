@@ -27,7 +27,7 @@ public class LogonResponse extends Response {
 	
 	private Map<Integer, Integer> stats;
 	private Map<Integer, Integer> boosts;
-	private Map<Integer, String> attackStyles;
+//	private Map<Integer, String> attackStyles;
 	private EquipmentBonusDto bonuses;
 
 	public LogonResponse() {
@@ -72,7 +72,7 @@ public class LogonResponse extends Response {
 				.stream()
 				.collect(Collectors.toMap(e -> e.getKey().getValue(), Map.Entry::getValue));
 		
-		attackStyles = PlayerDao.getAttackStyles();
+//		attackStyles = PlayerDao.getAttackStyles();
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(playerDto.getId());
 		player.refreshBonuses(bonuses);
 		player.recacheEquippedItems();
