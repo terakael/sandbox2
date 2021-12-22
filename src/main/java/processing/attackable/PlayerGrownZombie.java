@@ -6,6 +6,7 @@ import lombok.Setter;
 import database.dao.ItemDao;
 import database.dto.NPCDto;
 import processing.managers.ConstructableManager;
+import processing.managers.LocationManager;
 import processing.managers.UndeadArmyManager;
 import responses.BuryResponse;
 import responses.NpcOutOfRangeResponse;
@@ -56,7 +57,7 @@ public class PlayerGrownZombie extends NPC {
 			outOfRangeResponse.setInstances(Collections.singleton(getInstanceId()));
 			responseMaps.addLocalResponse(getFloor(), getTileId(), outOfRangeResponse);
 			
-			UndeadArmyManager.removePlayerGrownZombie(this);
+			LocationManager.removeNpc(this);
 		}
 	}
 	

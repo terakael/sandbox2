@@ -13,7 +13,6 @@ import database.dao.UndeadArmyWavesDao;
 import database.dto.NPCDto;
 import lombok.Getter;
 import processing.PathFinder;
-import processing.attackable.NPC;
 import processing.attackable.NecromancerFirstForm;
 import processing.attackable.NecromancerSecondForm;
 import processing.attackable.Player;
@@ -36,7 +35,6 @@ public class UndeadArmyManager {
 	private static boolean alreadyInitialized = false;
 	private static int currentWave = 0;
 	@Getter private static Map<Integer, UndeadArmyNpc> currentWaveNpcs = new HashMap<>();
-	private static Map<Integer, Map<Integer, PlayerGrownZombie>> playerGrownZombies = new HashMap<>();
 	
 	private static int entWave = 32;
 	private static NPCDto entDto = NPCDao.getNpcById(57); // ent
@@ -238,16 +236,7 @@ public class UndeadArmyManager {
 			}
 		});
 	}
-	
-	public static NPC getNpcByInstanceId(int floor, int instanceId) {
-		if (currentWaveNpcs.containsKey(instanceId))
-			return currentWaveNpcs.get(instanceId);
-		
-		if (!playerGrownZombies.containsKey(floor))
-			return null;
-		return playerGrownZombies.get(floor).get(instanceId);
-	}
-	
+
 	public static int getSceneryIdByTileId(int floor, int tileId) {
 		if (floor != 0)
 			return -1;
@@ -288,7 +277,6 @@ public class UndeadArmyManager {
 			npcId = 39;
 		}
 		
-		
 		NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(npcId));
 		deepCopy.setFloor(floor);
 		deepCopy.setTileId(tileId); // for the instanceId
@@ -298,14 +286,7 @@ public class UndeadArmyManager {
 		deepCopy.setRespawnTicks(5); // onRespawn is where the zombie is removed from the game (onDeath is too early as we wanna see the death animation)
 		PlayerGrownZombie zombie = new PlayerGrownZombie(deepCopy);
 		zombie.setPlanter(planter);
-		playerGrownZombies.putIfAbsent(floor, new HashMap<>());
-		playerGrownZombies.get(floor).put(tileId, zombie);
 		
 		LocationManager.addNpcs(Collections.singletonList(zombie));
-	}
-	
-	public static void removePlayerGrownZombie(PlayerGrownZombie zombie) {
-		playerGrownZombies.get(zombie.getFloor()).remove(zombie.getInstanceId());
-		LocationManager.removeNpc(zombie);
 	}
 }
