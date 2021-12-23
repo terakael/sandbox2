@@ -1,13 +1,16 @@
 package processing.scenery;
 
 import database.dao.DoorDao;
+import database.dao.PlayerStorageDao;
 import database.dto.LockedDoorDto;
 import processing.attackable.Player;
 import processing.managers.LockedDoorManager;
 import requests.UseRequest;
+import responses.InventoryUpdateResponse;
 import responses.OpenCloseResponse;
 import responses.PlayerUpdateResponse;
 import responses.ResponseMaps;
+import types.StorageTypes;
 
 public class Door implements Scenery {
 
@@ -18,6 +21,18 @@ public class Door implements Scenery {
 			// not a locked door, or doesn't require an item to unlock, or it does require an item but not the item the user tried
 			// return "nothing interesting happens".
 			return false;
+		}
+		
+		// destroy use-item if necessary
+		if (lockedDoor.isDestroyOnUse()) {
+			int slotId = PlayerStorageDao.getSlotOfItemId(player.getId(), StorageTypes.INVENTORY, lockedDoor.getUnlockItemId());
+			if (slotId == -1) {
+				// they don't have the item?
+				return false;
+			}
+			
+			PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY, slotId, -1);
+			InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		}
 		
 		// the user used the correct item on teh door.
