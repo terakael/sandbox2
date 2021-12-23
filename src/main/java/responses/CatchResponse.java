@@ -4,12 +4,12 @@ import database.dao.CatchableDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
 import processing.PathFinder;
-import processing.WorldProcessor;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
 import processing.managers.LocationManager;
+import processing.managers.TimeManager;
 import requests.CatchRequest;
 import requests.Request;
 import types.StorageTypes;
@@ -38,7 +38,7 @@ public class CatchResponse extends Response {
 			return;
 		}
 		
-		if (npc.isDead() || (WorldProcessor.isDaytime() && !npc.isDiurnal()) || (!WorldProcessor.isDaytime() && !npc.isNocturnal()))
+		if (npc.isDead() || (TimeManager.isDaytime() && !npc.isDiurnal()) || (!TimeManager.isDaytime() && !npc.isNocturnal()))
 			return;
 		
 		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), npc.getTileId())) {

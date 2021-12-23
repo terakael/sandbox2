@@ -53,9 +53,9 @@ public class PlayerGrownZombie extends NPC {
 		if (deathTimer <= 0) {
 			deathTimer = 0;
 			
-			NpcOutOfRangeResponse outOfRangeResponse = new NpcOutOfRangeResponse();
-			outOfRangeResponse.setInstances(Collections.singleton(getInstanceId()));
-			responseMaps.addLocalResponse(getFloor(), getTileId(), outOfRangeResponse);
+//			NpcOutOfRangeResponse outOfRangeResponse = new NpcOutOfRangeResponse();
+//			outOfRangeResponse.setInstances(Collections.singleton(getInstanceId()));
+//			responseMaps.addLocalResponse(getFloor(), getTileId(), outOfRangeResponse);
 			
 			LocationManager.removeNpc(this);
 		}

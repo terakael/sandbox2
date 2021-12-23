@@ -17,6 +17,7 @@ import processing.WorldProcessor;
 import processing.attackable.Player;
 import processing.managers.ClientResourceManager;
 import processing.managers.LocationManager;
+import processing.managers.TimeManager;
 import requests.LogonRequest;
 import requests.Request;
 import types.StorageTypes;
@@ -96,8 +97,9 @@ public class LogonResponse extends Response {
 		new LoadPrayersResponse().process(null, player, responseMaps);
 		new PlayerEnterResponse().process(null, player, responseMaps);
 		
+		responseMaps.addClientOnlyResponse(player, new UpdateGameTimeResponse(TimeManager.getInGameTime()));
 		// if the player is underground or it's currently night time, then let the client know to set the night filter.
-		if (player.getFloor() < 0 || !WorldProcessor.isDaytime()) {
+		if (player.getFloor() < 0 || !TimeManager.isDaytime()) {
 			responseMaps.addClientOnlyResponse(player, new DaylightResponse(false, true));
 		}
 	}

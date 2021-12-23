@@ -7,9 +7,10 @@ import java.util.Set;
 
 import database.DbConnection;
 import database.dto.UndeadArmyWavesDto;
+import lombok.Getter;
 
 public class UndeadArmyWavesDao {
-	private static Map<Integer, Set<UndeadArmyWavesDto>> waves = new HashMap<>();
+	@Getter private static Map<Integer, Set<UndeadArmyWavesDto>> waves = new HashMap<>();
 	
 	public static void setupCaches() {
 		setupWaves();

@@ -9,10 +9,10 @@ import database.dao.PlayerStorageDao;
 import database.dao.SceneryDao;
 import database.dto.CookableDto;
 import database.dto.FishableDto;
-import processing.WorldProcessor;
 import processing.attackable.Player;
 import processing.managers.ArtisanManager;
 import processing.managers.ConstructableManager;
+import processing.managers.TimeManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.FishTaskUpdate;
 import requests.AddExpRequest;
@@ -48,7 +48,7 @@ public class FinishFishingResponse extends Response {
 		// sometimes scenery only appears at night or day
 		final boolean isDiurnal = SceneryDao.sceneryContainsAttribute(fishable.getSceneryId(), SceneryAttributes.DIURNAL);
 		final boolean isNocturnal = SceneryDao.sceneryContainsAttribute(fishable.getSceneryId(), SceneryAttributes.NOCTURNAL);
-		if ((WorldProcessor.isDaytime() && !isDiurnal) || (!WorldProcessor.isDaytime() && !isNocturnal))
+		if ((TimeManager.isDaytime() && !isDiurnal) || (!TimeManager.isDaytime() && !isNocturnal))
 			return;
 		
 		final List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);

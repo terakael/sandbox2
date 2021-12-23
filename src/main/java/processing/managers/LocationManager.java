@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import processing.PathFinder;
-import processing.WorldProcessor;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import types.NpcAttributes;
@@ -32,7 +31,7 @@ public class LocationManager {
 	}
 	
 	public static Set<NPC> getLocalNpcs(int floor, int tileId, int radius) {
-		return getLocalNpcs(floor, tileId, radius, WorldProcessor.isDaytime());
+		return getLocalNpcs(floor, tileId, radius, TimeManager.isDaytime());
 	}
 	
 	public static Set<NPC> getLocalNpcs(int floor, int tileId, int radius, boolean isDaytime) {

@@ -61,6 +61,7 @@ import processing.managers.ArtisanManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.LocationManager;
 import processing.managers.ShopManager;
+import processing.managers.UndeadArmyManager;
 import processing.managers.WanderingPetManager;
 import responses.CachedResourcesResponse;
 import responses.ExamineResponse;
@@ -238,6 +239,7 @@ public class Server {
 		
 		System.out.println("caching undead army waves");
 		UndeadArmyWavesDao.setupCaches();
+		UndeadArmyManager.initNpcs();
 		
 		System.out.println("caching artisan items");
 		ArtisanManager.setupCaches();

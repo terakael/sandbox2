@@ -36,8 +36,8 @@ import processing.managers.DatabaseUpdater;
 import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
+import processing.managers.TimeManager;
 import processing.managers.TybaltsTaskManager;
-import processing.managers.WanderingPetManager;
 import processing.tybaltstasks.updates.KillNpcTaskUpdate;
 import requests.ConstructionRequest;
 import requests.FishRequest;
@@ -644,7 +644,7 @@ public class Player extends Attackable {
 	public void setFloor(int floor, ResponseMaps responseMaps) {
 		// if we go underground, or come up from underground, reset the brightness accordingly.
 		// if it's nighttime then nothing changes if we go above or below ground
-		if (WorldProcessor.isDaytime()) {
+		if (TimeManager.isDaytime()) {
 			if (this.floor >= 0 && floor < 0) {
 				// we were above ground, now below ground
 				responseMaps.addClientOnlyResponse(this, new DaylightResponse(false, true));

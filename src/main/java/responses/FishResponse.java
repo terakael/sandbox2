@@ -10,10 +10,10 @@ import database.dao.SceneryDao;
 import database.dao.StatsDao;
 import database.dto.FishableDto;
 import processing.PathFinder;
-import processing.WorldProcessor;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
+import processing.managers.TimeManager;
 import requests.FishRequest;
 import requests.Request;
 import types.Items;
@@ -52,7 +52,7 @@ public class FishResponse extends Response {
 			// sometimes scenery only appears at night or day
 			final boolean isDiurnal = SceneryDao.sceneryContainsAttribute(fishable.getSceneryId(), SceneryAttributes.DIURNAL);
 			final boolean isNocturnal = SceneryDao.sceneryContainsAttribute(fishable.getSceneryId(), SceneryAttributes.NOCTURNAL);
-			if ((WorldProcessor.isDaytime() && !isDiurnal) || (!WorldProcessor.isDaytime() && !isNocturnal))
+			if ((TimeManager.isDaytime() && !isDiurnal) || (!TimeManager.isDaytime() && !isNocturnal))
 				return;
 			
 			// does the player have the level to fish this?

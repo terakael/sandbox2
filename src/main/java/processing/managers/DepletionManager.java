@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import database.dao.PickableDao;
 import database.dto.PickableDto;
-import processing.WorldProcessor;
 import responses.ResponseMaps;
 import responses.SceneryDepleteResponse;
 import responses.SceneryRespawnResponse;
@@ -66,7 +65,7 @@ public class DepletionManager {
 		if (type == DepletionType.flower) {
 			// some flowers only come out during the day or night.
 			PickableDto dto = PickableDao.getPickableByTileId(floor, tileId);
-			if (dto == null || (WorldProcessor.isDaytime() && !dto.isDiurnal()) || (!WorldProcessor.isDaytime() && !dto.isNocturnal()))
+			if (dto == null || (TimeManager.isDaytime() && !dto.isDiurnal()) || (!TimeManager.isDaytime() && !dto.isNocturnal()))
 				return true;
 		}
 		
@@ -102,7 +101,7 @@ public class DepletionManager {
 		
 		PickableDao.getPickablesByFloor(floor).forEach((sceneryId, tileIds) -> {
 			PickableDto dto = PickableDao.getPickableBySceneryId(sceneryId);
-			if (dto != null && ((WorldProcessor.isDaytime() && !dto.isDiurnal()) || (!WorldProcessor.isDaytime() && !dto.isNocturnal())))
+			if (dto != null && ((TimeManager.isDaytime() && !dto.isDiurnal()) || (!TimeManager.isDaytime() && !dto.isNocturnal())))
 				depletedIds.addAll(tileIds);
 		});
 		

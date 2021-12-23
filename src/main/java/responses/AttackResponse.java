@@ -2,12 +2,12 @@ package responses;
 
 import database.dao.NPCDao;
 import processing.PathFinder;
-import processing.WorldProcessor;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
 import processing.managers.LocationManager;
+import processing.managers.TimeManager;
 import requests.AttackRequest;
 import requests.Request;
 import types.NpcAttributes;
@@ -33,7 +33,7 @@ public class AttackResponse extends Response {
 			return;
 		}
 		
-		if (npc.isDead() || (WorldProcessor.isDaytime() && !npc.isDiurnal()) || (!WorldProcessor.isDaytime() && !npc.isNocturnal()))
+		if (npc.isDead() || (TimeManager.isDaytime() && !npc.isDiurnal()) || (!TimeManager.isDaytime() && !npc.isNocturnal()))
 			return;
 		
 		if (FightManager.fightWithFighterExists(npc)) {

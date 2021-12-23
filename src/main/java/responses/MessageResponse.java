@@ -15,6 +15,7 @@ import processing.PathFinder;
 import processing.WorldProcessor;
 import processing.attackable.Player;
 import processing.managers.FightManager;
+import processing.managers.TimeManager;
 import processing.managers.UndeadArmyManager;
 import requests.MessageRequest;
 import requests.Request;
@@ -105,12 +106,12 @@ public class MessageResponse extends Response {
 		}
 		
 		if (msgParts[0].equals("day")) {
-			WorldProcessor.setDaytime(true);
+			TimeManager.forceDaytimeChange(true);
 			return;
 		}
 		
 		if (msgParts[0].equals("night")) {
-			WorldProcessor.setDaytime(false);
+			TimeManager.forceDaytimeChange(false);
 			return;
 		}
 		
@@ -137,7 +138,7 @@ public class MessageResponse extends Response {
 				return;
 			}
 			
-			if (WorldProcessor.isDaytime()) {
+			if (TimeManager.isDaytime()) {
 				setRecoAndResponseText(0, "this command only works at ::night.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;

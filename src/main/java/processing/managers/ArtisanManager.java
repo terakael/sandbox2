@@ -36,7 +36,6 @@ import database.dto.PlayerArtisanTaskBreakdownDto;
 import database.dto.PlayerArtisanTaskDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import processing.WorldProcessor;
 import processing.attackable.Player;
 import processing.tybaltstasks.updates.CompleteArtisanTaskUpdate;
 import requests.AddExpRequest;
@@ -498,7 +497,7 @@ public class ArtisanManager {
 	}
 	
 	public static boolean playerIsNearMaster(Player player) {
-		return LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 5, WorldProcessor.isDaytime()).stream()
+		return LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 5, TimeManager.isDaytime()).stream()
 				.map(npc -> npc.getDto().getId())
 				.anyMatch(ArtisanMasterDao.getAllArtisanMasterNpcIds()::contains);
 	}

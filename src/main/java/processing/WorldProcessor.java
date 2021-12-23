@@ -32,6 +32,7 @@ import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
 import processing.managers.LockedDoorManager;
 import processing.managers.ShopManager;
+import processing.managers.TimeManager;
 import processing.managers.UndeadArmyManager;
 import processing.managers.WanderingPetManager;
 import processing.stores.Store;
@@ -69,11 +70,11 @@ public class WorldProcessor implements Runnable {
 	private static final int TICK_DURATION_MS = 600;
 	private static Gson gson = new Gson();
 	
-	@Getter private static boolean daytime = true;
-	private static boolean daytimeChanged = false;
-	private static final int DAYTIME_TICKS = 6000;
-	private static final int NIGHTTIME_TICKS = 4500;
-	private static int dayNightCountdown = DAYTIME_TICKS;
+//	@Getter private static boolean daytime = true;
+//	private static boolean daytimeChanged = false;
+//	private static final int DAYTIME_TICKS = 6000;
+//	private static final int NIGHTTIME_TICKS = 4500;
+//	private static int dayNightCountdown = DAYTIME_TICKS;
 	
 	public static Map<Session, Player> playerSessions = new HashMap<>();
 	
@@ -116,13 +117,11 @@ public class WorldProcessor implements Runnable {
 		
 		if (tickId % 100 == 0)
 			DatabaseUpdater.keepAlive();
-		
-		if (--dayNightCountdown <= 0) {
-			setDaytime(!daytime);
-		}
 
 		// process all requests and add all responses to this object which will be compiled into the response list for each player
 		ResponseMaps responseMaps = new ResponseMaps();
+		TimeManager.process(tickId, responseMaps);
+		
 		UndeadArmyManager.process(responseMaps);
 
 		Stopwatch.start("player requests");
@@ -147,21 +146,21 @@ public class WorldProcessor implements Runnable {
 			final Player player = entry.getValue();
 			
 			player.process(tickId, responseMaps);
-			if (daytimeChanged && player.getFloor() >= 0) {
+			if (TimeManager.daytimeChanged() && player.getFloor() >= 0) {
 				// set brightness to day or night
-				responseMaps.addClientOnlyResponse(player, new DaylightResponse(daytime, false));
+				responseMaps.addClientOnlyResponse(player, new DaylightResponse(TimeManager.isDaytime(), false));
 			}
 		}
 		Stopwatch.end("process players");
 		
 		updateInRangePlayers(responseMaps);
 		
-		if (daytimeChanged)
-			UndeadArmyManager.onDaytimeChange(daytime, responseMaps);
+		if (TimeManager.daytimeChanged())
+			UndeadArmyManager.onDaytimeChange(TimeManager.isDaytime(), responseMaps);
 		
 		Stopwatch.start("process npcs");
 //		NPCManager.get().process(responseMaps, tickId);
-		LocationManager.getAllNpcsNearPlayers(WorldProcessor.isDaytime()).forEach((floor, npcSet) -> {
+		LocationManager.getAllNpcsNearPlayers(TimeManager.isDaytime()).forEach((floor, npcSet) -> {
 			npcSet.forEach(npc -> npc.process(tickId, responseMaps));
 		});
 		Stopwatch.end("process npcs");
@@ -248,8 +247,6 @@ public class WorldProcessor implements Runnable {
 			}
 		}
 		Stopwatch.end("kill sessions");
-		
-		daytimeChanged = false;
 		Stopwatch.end("total");
 	}
 	
@@ -479,18 +476,18 @@ public class WorldProcessor implements Runnable {
 		Set<Integer> newLocalTiles = Utils.getLocalTiles(player.getTileId(), 12);
 		Map<Integer, Set<Integer>> addedTileIdsBySceneryId = new HashMap<>();
 		
-		if (daytimeChanged) {
+		if (TimeManager.daytimeChanged()) {
 			// TODO iterating through every local tile is slow and unnecessary.
 			// move the pickables to the LocationManager.
 			currentLocalTiles.forEach(tileId -> {
 				PickableDto pickable = PickableDao.getPickableByTileId(player.getFloor(), tileId);
-				if (pickable != null && ((daytime && !pickable.isDiurnal()) || (!daytime && !pickable.isNocturnal()))) {
+				if (pickable != null && ((TimeManager.isDaytime() && !pickable.isDiurnal()) || (!TimeManager.isDaytime() && !pickable.isNocturnal()))) {
 					SceneryDepleteResponse depleteResponse = new SceneryDepleteResponse();
 					depleteResponse.setTileId(tileId);
 					responseMaps.addLocalResponse(player.getFloor(), tileId, depleteResponse);
 				}
 				
-				if (pickable != null && ((daytime && !pickable.isNocturnal() && pickable.isDiurnal()) || (!daytime && !pickable.isDiurnal() && pickable.isNocturnal()))) {
+				if (pickable != null && ((TimeManager.isDaytime() && !pickable.isNocturnal() && pickable.isDiurnal()) || (!TimeManager.isDaytime() && !pickable.isDiurnal() && pickable.isNocturnal()))) {
 					SceneryRespawnResponse respawnResponse = new SceneryRespawnResponse();
 					respawnResponse.setTileId(tileId);
 					responseMaps.addLocalResponse(player.getFloor(), tileId, respawnResponse);
@@ -502,14 +499,14 @@ public class WorldProcessor implements Runnable {
 					final boolean isDiurnal = SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.DIURNAL);
 					final boolean isNocturnal = SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.NOCTURNAL);
 					
-					if (((daytime && !isDiurnal) || (!daytime && !isNocturnal))) {
+					if (((TimeManager.isDaytime() && !isDiurnal) || (!TimeManager.isDaytime() && !isNocturnal))) {
 						// dynamic impassability is used for necromancer's ents
 //						PathFinder.setImpassabilityOnTileId(0, tileId, 0);
 						SceneryDespawnResponse despawnResponse = new SceneryDespawnResponse(tileId);
 						responseMaps.addClientOnlyResponse(player, despawnResponse);
 					}
 					
-					if ((daytime && !isNocturnal && isDiurnal) || (!daytime && !isDiurnal && isNocturnal)) {
+					if ((TimeManager.isDaytime() && !isNocturnal && isDiurnal) || (!TimeManager.isDaytime() && !isDiurnal && isNocturnal)) {
 //						PathFinder.setImpassabilityOnTileId(0, tileId, );
 						addedTileIdsBySceneryId.putIfAbsent(sceneryId, new HashSet<>());
 						addedTileIdsBySceneryId.get(sceneryId).add(tileId);
@@ -542,8 +539,8 @@ public class WorldProcessor implements Runnable {
 				int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), tileId);
 				if (sceneryId != -1 && 
 						!SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.INVISIBLE) && 
-						((daytime && SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.DIURNAL)) ||
-						  (!daytime && SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.NOCTURNAL)))) {
+						((TimeManager.isDaytime() && SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.DIURNAL)) ||
+						  (!TimeManager.isDaytime() && SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.NOCTURNAL)))) {
 					addedTileIdsBySceneryId.putIfAbsent(sceneryId, new HashSet<>());
 					addedTileIdsBySceneryId.get(sceneryId).add(tileId);
 				}
@@ -609,7 +606,7 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("refresh npc locations");
 
 		final Set<Integer> currentInRangeNpcs = player.getInRangeNpcs();
-		final Set<NPC> newInRangeNpcs = LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 12, daytime)
+		final Set<NPC> newInRangeNpcs = LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 12, TimeManager.isDaytime())
 											    .stream()
 											    .filter(e -> !e.isDeadWithDelay())	// the delay of two ticks gives the client time for the death animation
 											    .collect(Collectors.toSet());
@@ -655,14 +652,18 @@ public class WorldProcessor implements Runnable {
 		return playerSessions.values().stream().anyMatch(e -> e.getId() == playerId);
 	}
 	
-	public static void setDaytime(boolean newDaytime) {
-		if (daytime != newDaytime) {
-			daytimeChanged = true;
-			DepletionManager.removeDaylightFlowers(newDaytime);
-			WanderingPetManager.get().rotateWanderingPets();
-		}
-		
-		daytime = newDaytime;
-		dayNightCountdown = daytime ? DAYTIME_TICKS : NIGHTTIME_TICKS;
-	}
+//	public static void setDaytime(boolean newDaytime) {
+//		if (daytime != newDaytime) {
+//			daytimeChanged = true;
+//			DepletionManager.removeDaylightFlowers(newDaytime);
+//			WanderingPetManager.get().rotateWanderingPets();
+//		}
+//		
+//		daytime = newDaytime;
+//		dayNightCountdown = daytime ? DAYTIME_TICKS : NIGHTTIME_TICKS;
+//	}
+//	
+//	public static int getDayCycleLengthInTicks() {
+//		return DAYTIME_TICKS + NIGHTTIME_TICKS;
+//	}
 }
