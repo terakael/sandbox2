@@ -235,20 +235,28 @@ public class UndeadArmyManager {
 	
 	private static void resetEnts(ResponseMaps responseMaps) {
 		undeadEntLocations.forEach(tileId -> {
-			PathFinder.setImpassabilityOnTileId(0, tileId, 15); // completely impassable
-			
-			// there might be some players that have not loaded a dead tree that arrived as the trees were ents
-			LocationManager.getLocalPlayers(0, tileId, 12).forEach(player -> {
-				ClientResourceManager.addLocalScenery(player, Collections.singleton(9));
-				
-				AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
-				inRangeResponse.setInstances(Map.<Integer, Set<Integer>>of(9, Collections.singleton(tileId)));
-				
-				// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
-				inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
-				inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
-				responseMaps.addClientOnlyResponse(player, inRangeResponse);
-			});
+			// once day breaks, there are two scenarios:
+			// 1. the ents were awoken during the night, and therefore their impassability was changed to 0.
+			//    in this situation, we reset the impassability to 15. We also add the scenery back for players
+			//    that are near the trees, as scenery is only sent to the client when they come into range
+			//    (i.e. they won't update until the player leaves the area and then comes back into range otherwise).
+			// 2. the ents are not awoken, and the trees remain as they are.
+			//    in this case, the impassability will already be 15, meaning we don't need to do anything.
+			if (PathFinder.getImpassableByTileId(0, tileId) == 0) {
+				PathFinder.setImpassabilityOnTileId(0, tileId, 15); // completely impassable
+				// there might be some players that have not loaded a dead tree that arrived as the trees were ents
+				LocationManager.getLocalPlayers(0, tileId, 12).forEach(player -> {
+					ClientResourceManager.addLocalScenery(player, Collections.singleton(9));
+					
+					AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
+					inRangeResponse.setInstances(Map.<Integer, Set<Integer>>of(9, Collections.singleton(tileId)));
+					
+					// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
+					inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
+					inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
+					responseMaps.addClientOnlyResponse(player, inRangeResponse);
+				});
+			}
 		});
 	}
 
@@ -256,6 +264,7 @@ public class UndeadArmyManager {
 		if (floor != 0)
 			return -1;
 		
+		// as soon as daybreak arrives, the currentWave is reset to 0 so the trees will show.
 		if (undeadEntLocations.contains(tileId) && currentWave < entWave) {
 			return entSceneryId; // dead tree
 		}
