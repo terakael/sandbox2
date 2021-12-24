@@ -1,12 +1,12 @@
 package database.entity.update;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import database.entity.UpdateableEntity;
 import database.entity.annotations.Column;
 import database.entity.annotations.Id;
 import database.entity.annotations.Operation;
 import database.entity.annotations.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 @Builder
 @AllArgsConstructor
@@ -24,4 +24,7 @@ public class UpdatePlayerEntity extends UpdateableEntity {
 	
 	@Column("floor")
 	private Integer floor;
+	
+	@Column("last_logged_in")
+	private String lastLoggedIn;
 }

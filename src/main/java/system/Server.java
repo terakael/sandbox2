@@ -145,9 +145,6 @@ public class Server {
 		System.out.println("caching ground textures");
 		GroundTextureDao.cacheTextures();
 		
-		System.out.println("caching player stuff");
-		PlayerDao.setupCaches();
-		
 		System.out.println("caching npcs");
 		NPCDao.setupCaches();
 		LocationManager.addNpcs(NPCDao.getNpcInstanceList().values().stream()

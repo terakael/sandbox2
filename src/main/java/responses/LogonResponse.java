@@ -1,6 +1,8 @@
 package responses;
 
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -13,9 +15,11 @@ import database.dao.StatsDao;
 import database.dto.EquipmentBonusDto;
 import database.dto.InventoryItemDto;
 import database.dto.PlayerDto;
+import database.entity.update.UpdatePlayerEntity;
 import processing.WorldProcessor;
 import processing.attackable.Player;
 import processing.managers.ClientResourceManager;
+import processing.managers.DatabaseUpdater;
 import processing.managers.LocationManager;
 import processing.managers.TimeManager;
 import requests.LogonRequest;
@@ -28,7 +32,6 @@ public class LogonResponse extends Response {
 	
 	private Map<Integer, Integer> stats;
 	private Map<Integer, Integer> boosts;
-//	private Map<Integer, String> attackStyles;
 	private EquipmentBonusDto bonuses;
 
 	public LogonResponse() {
@@ -58,9 +61,13 @@ public class LogonResponse extends Response {
 			return;
 		}
 		
-		PlayerDao.updateLastLoggedIn(playerDto.getId());
+		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder()
+				.id(player.getId())
+				.lastLoggedIn(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()))
+				.build());
 		LocationManager.addPlayer(player);
 		
+		// TODO this should be done when we create the player, but the creation process doesn't exist yet
 		PlayerStorageDao.initStorageForNewPlayer(playerDto.getId());
 		
 		stats = StatsDao.getAllStatExpByPlayerId(playerDto.getId())
@@ -73,7 +80,6 @@ public class LogonResponse extends Response {
 				.stream()
 				.collect(Collectors.toMap(e -> e.getKey().getValue(), Map.Entry::getValue));
 		
-//		attackStyles = PlayerDao.getAttackStyles();
 		bonuses = EquipmentDao.getEquipmentBonusesByPlayerId(playerDto.getId());
 		player.refreshBonuses(bonuses);
 		player.recacheEquippedItems();

@@ -15,14 +15,8 @@ import processing.WorldProcessor;
 import processing.attackable.Player;
 
 public class PlayerDao {
-//	@Getter private static Map<Integer, String> attackStyles = new HashMap<>();
-	
 	private PlayerDao() {}
 	
-	public static void setupCaches() {
-//		cacheAttackStyles();
-	}
-		
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
 		final String query = "select id, name, password, tile_id, floor, attack_style_id from player where name = ? and password = ?";
 		try (
@@ -57,19 +51,6 @@ public class PlayerDao {
 		return null;
 	}
 	
-	public static void updateLastLoggedIn(int id) {
-		final String query = "update player set last_logged_in=now() where id=?";
-		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query)
-		) {
-			ps.setInt(1, id);
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			System.out.println(e.getMessage());
-		}
-	}
-	
 	public static String getNameFromId(int id) {
 		Optional<Player> player = WorldProcessor.playerSessions.values().stream().filter(e -> e.getId() == id).findFirst();
 		return player.isPresent() ? player.get().getDto().getName() : "";
@@ -79,9 +60,4 @@ public class PlayerDao {
 		Optional<Player> player = WorldProcessor.playerSessions.values().stream().filter(e -> e.getDto().getName().equals(name)).findFirst();
 		return player.isPresent() ? player.get().getId() : -1;
 	}
-	
-//	public static void cacheAttackStyles() {
-//		DbConnection.load("select id, name from attack_styles", 
-//				rs -> attackStyles.put(rs.getInt("id"), rs.getString("name")));
-//	}
 }
