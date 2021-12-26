@@ -253,8 +253,8 @@ public class UseResponse extends Response {
 			
 			// if there's some mismatch with the slot + item then use the first 
 			// slot in the inventory with said item instead (we know it exists in inventory now)
-			int slot = request.getSrcSlot();
-			if (slot >= invItemIds.size() || invItemIds.get(slot) != request.getSrc())
+			int slot = request.getSlot();
+			if (slot < 0 || slot >= invItemIds.size() || invItemIds.get(slot) != request.getSrc())
 				slot = invItemIds.indexOf(request.getSrc());
 			
 			if (WanderingPetManager.get().npcIsWanderingPet(targetNpc)) {
@@ -293,11 +293,29 @@ public class UseResponse extends Response {
 				if (FightManager.fightingWith(player, targetNpc)) {
 					setRecoAndResponseText(1, "you throw poison in your opponents face!");
 					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, becomesItemId, 1, ItemDao.getMaxCharges(becomesItemId));
+					responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
+							new ActionBubbleResponse(player, ItemDao.getItem(item.getValue())));
 					InventoryUpdateResponse.sendUpdate(player, responseMaps);
 					targetNpc.inflictPoison(6);
 				}
 				responseMaps.addClientOnlyResponse(player, this);
 				return true;
+			}
+			
+			case EMPTY_BUCKET: {
+				if (targetNpc.getId() == 7) { // cow
+					// turn the bucket into a bucket of milk
+					PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, Items.BUCKET_OF_MILK.getValue(), 1, 0);
+					responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
+							new ActionBubbleResponse(player, ItemDao.getItem(Items.BUCKET_OF_MILK.getValue())));
+					InventoryUpdateResponse.sendUpdate(player, responseMaps);
+					
+					setRecoAndResponseText(1, "you milk the cow.");
+					responseMaps.addClientOnlyResponse(player, this);
+					return true;
+				}
+				
+				return false;
 			}
 			
 			default:

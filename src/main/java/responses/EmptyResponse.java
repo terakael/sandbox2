@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import database.dao.EmptyableDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
 import database.dto.InventoryItemDto;
@@ -23,6 +24,31 @@ public class EmptyResponse extends Response {
 		if (!(req instanceof EmptyRequest))
 			return;
 		
+		final EmptyRequest request = (EmptyRequest)req;
+		if (request.getObjectId() == Items.FLOWER_SACK.getValue()) {
+			emptyFlowerSack(player, responseMaps);
+		} else {
+			final Integer emptyId = EmptyableDao.getEmptyFromFull(request.getObjectId());
+			if (emptyId == null)
+				return;
+			
+			int slot = request.getSlot();
+			final int itemInSlot = PlayerStorageDao.getItemIdInSlot(player.getId(), StorageTypes.INVENTORY, slot);
+			if (itemInSlot != request.getObjectId()) {
+				slot = PlayerStorageDao.getSlotOfItemId(player.getId(), StorageTypes.INVENTORY, request.getObjectId());
+				if (slot == -1) {
+					// player fuckery?  item doesn't match
+					return;
+				}
+			}
+			
+			setRecoAndResponseText(1, "you pour the contents to the ground.");
+			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, emptyId, 1, ItemDao.getMaxCharges(emptyId));
+			InventoryUpdateResponse.sendUpdate(player, responseMaps);
+		}
+	}
+	
+	private void emptyFlowerSack(Player player, ResponseMaps responseMaps) {
 		List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (!invItemIds.contains(Items.FLOWER_SACK.getValue()))
 			return;

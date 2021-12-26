@@ -488,8 +488,11 @@ public enum Items {
 	GOLDEN_HAMMER(488),
 	
 	BREAD_LOAF(497),
-	HALF_BREAD_LOAF(498)
+	HALF_BREAD_LOAF(498),
 	
+	EMPTY_BUCKET(499),
+	BUCKET_OF_MILK(500),
+	BUCKET_OF_WATER(501)
 	;
 
 	@Getter private int value;

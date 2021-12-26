@@ -25,6 +25,7 @@ import database.dao.ContextOptionsDao;
 import database.dao.CookableDao;
 import database.dao.DialogueDao;
 import database.dao.DoorDao;
+import database.dao.EmptyableDao;
 import database.dao.EquipmentDao;
 import database.dao.FishableDao;
 import database.dao.GroundTextureDao;
@@ -39,7 +40,6 @@ import database.dao.PlayerArtisanBlockedTaskDao;
 import database.dao.PlayerArtisanTaskBreakdownDao;
 import database.dao.PlayerArtisanTaskDao;
 import database.dao.PlayerBaseAnimationsDao;
-import database.dao.PlayerDao;
 import database.dao.PlayerTybaltsTaskDao;
 import database.dao.PrayerDao;
 import database.dao.ReinforcementBonusesDao;
@@ -270,6 +270,9 @@ public class Server {
 		
 		System.out.println("caching wandering pets");
 		WanderingPetManager.get().loadWanderingPets();
+		
+		System.out.println("caching emptyables");
+		EmptyableDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up
