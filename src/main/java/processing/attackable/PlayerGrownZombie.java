@@ -1,15 +1,11 @@
 package processing.attackable;
 
-import java.util.Collections;
-
-import lombok.Setter;
 import database.dao.ItemDao;
 import database.dto.NPCDto;
+import lombok.Setter;
 import processing.managers.ConstructableManager;
 import processing.managers.LocationManager;
-import processing.managers.UndeadArmyManager;
 import responses.BuryResponse;
-import responses.NpcOutOfRangeResponse;
 import responses.NpcUpdateResponse;
 import responses.ResponseMaps;
 import system.GroundItemManager;
@@ -21,8 +17,8 @@ public class PlayerGrownZombie extends NPC {
 	private int remainingTicks;
 	@Setter private Player planter;
 
-	public PlayerGrownZombie(NPCDto dto) {
-		super(dto);
+	public PlayerGrownZombie(NPCDto dto, int floor, int instanceId) {
+		super(dto, floor, instanceId);
 		remainingTicks = maxLifetimeTicks;
 	}
 	
@@ -38,7 +34,7 @@ public class PlayerGrownZombie extends NPC {
 			remainingTicks -= deltaTicks;
 			if (remainingTicks <= 0) {				
 				NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-				updateResponse.setInstanceId(getInstanceId());
+				updateResponse.setInstanceId(instanceId);
 				updateResponse.setHp(0);
 				responseMaps.addLocalResponse(floor, tileId, updateResponse);
 				

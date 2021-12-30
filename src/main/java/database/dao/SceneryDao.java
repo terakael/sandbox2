@@ -1,24 +1,27 @@
 package database.dao;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import lombok.Getter;
 import database.DbConnection;
 import database.dto.SceneryDto;
+import database.entity.delete.DeleteRoomSceneryEntity;
+import database.entity.insert.InsertRoomSceneryEntity;
+import lombok.Getter;
 import processing.managers.ConstructableManager;
+import processing.managers.DatabaseUpdater;
 import processing.managers.UndeadArmyManager;
 import types.SceneryAttributes;
 
 public class SceneryDao {
 	private SceneryDao() {};
 	
-	@Getter private static List<SceneryDto> allScenery = new ArrayList<>();
-	private static HashMap<Integer, List<SceneryDto>> allSceneryByFloor;
+	private static Map<Integer, SceneryDto> allScenery = new LinkedHashMap<>();
+	private static HashMap<Integer, Set<SceneryDto>> allSceneryByFloor;
 	private static Map<Integer, Map<Integer, Set<Integer>>> sceneryInstancesByFloor; // floor, <sceneryId, tileids>
 	@Getter private static HashMap<Integer, HashMap<Integer, Integer>> impassableTileIds = new HashMap<>();// floor, <tile_id, impassable_type>
 	
@@ -36,7 +39,7 @@ public class SceneryDao {
 	
 	private static void loadAllScenery() {
 		final String query = 
-				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes, lightsource_radius from scenery " +
+				"select id, name, sprite_frame_id, leftclick_option, other_options, impassable, attributes, lightsource_radius from scenery " +
 						" where attributes != 2 ";
 		
 		DbConnection.load(query, rs -> {
@@ -46,29 +49,24 @@ public class SceneryDao {
 			dto.setSpriteFrameId(rs.getInt("sprite_frame_id"));
 			dto.setLeftclickOption(rs.getInt("leftclick_option"));
 			dto.setOtherOptions(rs.getInt("other_options"));
+			dto.setImpassable(rs.getInt("impassable"));
 			dto.setAttributes(rs.getInt("attributes"));
 			dto.setLightsourceRadius(rs.getInt("lightsource_radius"));
-			allScenery.add(dto);
+			allScenery.put(rs.getInt("id"), dto);
 		});
 	}
 
-	private static List<SceneryDto> loadAllSceneryByFloor(int floor) {
+	private static Set<SceneryDto> loadAllSceneryByFloor(int floor) {
 		final String query = 
-				"select id, name, sprite_frame_id, leftclick_option, other_options, attributes, lightsource_radius from scenery " +
+				"select id from scenery" +
 				" where id in (select distinct scenery_id from room_scenery where floor=?) and attributes != 2";
 		
-		List<SceneryDto> sceneryList = new ArrayList<>();
+		Set<SceneryDto> sceneryList = new HashSet<>();
 		
 		DbConnection.load(query, rs -> {
-			SceneryDto dto = new SceneryDto();
-			dto.setId(rs.getInt("id"));
-			dto.setName(rs.getString("name"));
-			dto.setSpriteFrameId(rs.getInt("sprite_frame_id"));
-			dto.setLeftclickOption(rs.getInt("leftclick_option"));
-			dto.setOtherOptions(rs.getInt("other_options"));
-			dto.setAttributes(rs.getInt("attributes"));
-			dto.setLightsourceRadius(rs.getInt("lightsource_radius"));
-			sceneryList.add(dto);
+			final SceneryDto dto = allScenery.get(rs.getInt("id"));
+			if (dto != null)
+				sceneryList.add(dto);
 		}, floor);
 		
 		return sceneryList;
@@ -116,6 +114,10 @@ public class SceneryDao {
 		return examineMap;
 	}
 	
+	public static Set<SceneryDto> getAllScenery() {
+		return new LinkedHashSet<>(allScenery.values());
+	}
+	
 	public static int getSceneryIdByTileId(int floor, int tileId) {
 		if (!allSceneryByFloor.containsKey(floor))
 			return -1;
@@ -158,7 +160,7 @@ public class SceneryDao {
 	}
 	
 	public static int getIdByName(String name) {
-		return allScenery.stream()
+		return allScenery.values().stream()
 				.filter(e -> name.equals(e.getName()))
 				.findFirst()
 				.map(SceneryDto::getId)
@@ -166,18 +168,63 @@ public class SceneryDao {
 	}
 	
 	public static String getNameById(int id) {
-		return allScenery.stream()
-				.filter(e -> e.getId() == id)
-				.findFirst()
-				.map(SceneryDto::getName)
-				.orElse("");
+		if (allScenery.containsKey(id))
+			return allScenery.get(id).getName();
+		return "";
 	}
 	
 	public static boolean sceneryContainsAttribute(int sceneryId, SceneryAttributes attribute) {
-		SceneryDto dto = allScenery.stream().filter(scenery -> scenery.getId() == sceneryId).findFirst().orElse(null);
+		final SceneryDto dto = allScenery.get(sceneryId);
 		if (dto == null)
 			return false;
 		
 		return (dto.getAttributes() & attribute.getValue()) > 0;
+	}
+	
+	public static void upsertRoomScenery(int floor, int tileId, int sceneryId) {
+//		private static HashMap<Integer, List<SceneryDto>> allSceneryByFloor;
+//		private static Map<Integer, Map<Integer, Set<Integer>>> sceneryInstancesByFloor; // floor, <sceneryId, tileids>
+//		@Getter private static HashMap<Integer, HashMap<Integer, Integer>> impassableTileIds = new HashMap<>();// floor, <tile_id, impassable_type>
+		
+		
+		final SceneryDto dto = allScenery.get(sceneryId);
+		if (dto == null) {
+			// invalid scenery
+			return;
+		}
+		
+		// if some scenery already exists at this location then get rid of it
+		deleteRoomScenery(floor, tileId);
+		
+		allSceneryByFloor.putIfAbsent(floor, new HashSet<>());
+		allSceneryByFloor.get(floor).add(dto);
+		
+		sceneryInstancesByFloor.putIfAbsent(floor, new HashMap<>());
+		sceneryInstancesByFloor.get(floor).putIfAbsent(sceneryId, new HashSet<>());
+		sceneryInstancesByFloor.get(floor).get(sceneryId).add(tileId);
+		
+		// TODO this is used in path finder
+		impassableTileIds.putIfAbsent(floor, new HashMap<>());
+		impassableTileIds.get(floor).put(tileId, dto.getImpassable());
+		
+		DatabaseUpdater.enqueue(new InsertRoomSceneryEntity(floor, tileId, sceneryId));
+	}
+	
+	public static boolean deleteRoomScenery(int floor, int tileId) {
+		if (!sceneryInstancesByFloor.containsKey(floor))
+			return false;
+		
+		final Set<Integer> containedScenery = sceneryInstancesByFloor.get(floor).values().stream()
+				.filter(e -> e.contains(tileId))
+				.findFirst()
+				.orElse(null);
+		
+		if (containedScenery != null) {
+			if (containedScenery.remove(tileId)) {
+				DatabaseUpdater.enqueue(new DeleteRoomSceneryEntity(floor, tileId, null));
+				return true;
+			}
+		}
+		return false;
 	}
 }

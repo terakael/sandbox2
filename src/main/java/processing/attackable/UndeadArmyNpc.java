@@ -6,8 +6,8 @@ import responses.ResponseMaps;
 
 public class UndeadArmyNpc extends NPC {
 
-	public UndeadArmyNpc(NPCDto dto) {
-		super(dto);
+	public UndeadArmyNpc(NPCDto dto, int floor, int instanceId) {
+		super(dto, floor, instanceId);
 	}
 	
 	@Override

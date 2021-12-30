@@ -14,8 +14,8 @@ public class Pet extends NPC {
 	@Setter private Player master = null;
 	private int disassociatedTick = 0; // the tick we were disassociated on - when the player dies with a pet (or shoos away), we become disassociated
 	
-	public Pet(NPCDto dto) {
-		super(dto);
+	public Pet(NPCDto dto, int floor, int instanceId) {
+		super(dto, floor, instanceId);
 	}
 	
 	@Override
@@ -70,7 +70,7 @@ public class Pet extends NPC {
 			
 			if (popPath()) {
 				NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-				updateResponse.setInstanceId(getInstanceId());
+				updateResponse.setInstanceId(instanceId);
 				updateResponse.setTileId(tileId);
 				responseMaps.addLocalResponse(floor, tileId, updateResponse);
 			}
@@ -82,7 +82,7 @@ public class Pet extends NPC {
 		setTileId(master.getTileId());
 		
 		NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-		updateResponse.setInstanceId(getInstanceId());
+		updateResponse.setInstanceId(instanceId);
 		updateResponse.setTileId(tileId);
 		responseMaps.addLocalResponse(floor, tileId, updateResponse);
 	}

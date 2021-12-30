@@ -72,10 +72,12 @@ public class Server {
 	public static void main(String[] args) {
 		org.glassfish.tyrus.server.Server server = new org.glassfish.tyrus.server.Server("localhost", 45555, "/ws", null, Endpoint.class);
 		org.glassfish.tyrus.server.Server resourceServer = new org.glassfish.tyrus.server.Server("localhost", 45556, "/ws", null, ResourceEndpoint.class);
+		org.glassfish.tyrus.server.Server builderServer = new org.glassfish.tyrus.server.Server("localhost", 45557, "/ws", null, builder.system.Endpoint.class);
 		
 		try {
 			resourceServer.start();
 			server.start();
+			builderServer.start();
 			
 			setupCaches();
 			
@@ -147,10 +149,11 @@ public class Server {
 		
 		System.out.println("caching npcs");
 		NPCDao.setupCaches();
-		LocationManager.addNpcs(NPCDao.getNpcInstanceList().values().stream()
-				.flatMap(List::stream)
-				.map(NPC::new)
-				.collect(Collectors.toList()));
+		
+//		LocationManager.addNpcs(NPCDao.getNpcInstanceList().values().stream()
+//				.flatMap(List::stream)
+//				.map(NPC::new)
+//				.collect(Collectors.toList()));
 //		NPCManager.get().loadNpcs();
 		
 		System.out.println("caching npc messages");

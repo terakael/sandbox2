@@ -44,18 +44,10 @@ public class WanderingPetManager {
 	public void loadWanderingPets() {
 		WanderingPetDao.setupCaches();
 		
-		// Iterator<String> it = Stream.generate(() -> strings).flatMap(List::stream).iterator();
-
-		
 		wanderingPetIterators = WanderingPetDao.getWanderingPets().entrySet().stream()
 			.map(e -> {
 				final Set<NPC> npcs = new HashSet<>();
-				e.getValue().forEach(loc -> {
-					final NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(e.getKey()));
-					deepCopy.setFloor(loc.getKey());
-					deepCopy.setTileId(loc.getValue()); // for the instanceId
-					npcs.add(new NPC(deepCopy));
-				});
+				e.getValue().forEach(loc -> npcs.add(new NPC(NPCDao.getNpcById(e.getKey()), loc.getKey(), loc.getValue())));
 				return new SimpleImmutableEntry<>(e.getKey(), npcs);
 			})
 			.collect(Collectors.toMap(e -> e.getKey(), e -> Stream.generate(() -> e.getValue()).flatMap(Set::stream).iterator()));

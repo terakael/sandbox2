@@ -13,6 +13,7 @@ public class SceneryDto {
 	@Getter private int spriteFrameId;
 	private int leftclickOption;
 	private int otherOptions;
+	@Getter private int impassable;
 	@Getter private int attributes;
 	private int lightsourceRadius;
 }

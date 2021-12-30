@@ -17,12 +17,12 @@ public class NPCDto {
 		this.attackId = that.attackId;
 		this.scaleX = that.scaleX;
 		this.scaleY = that.scaleY;
-		this.tileId = that.tileId;
+//		this.tileId = that.tileId;
 		this.hp = that.hp;
 		this.cmb = that.cmb;
 		this.leftclickOption = that.leftclickOption;
 		this.otherOptions = that.otherOptions;
-		this.floor = that.floor;
+//		this.floor = that.floor;
 		this.acc = that.acc;
 		this.str = that.str;
 		this.def = that.def;
@@ -47,12 +47,12 @@ public class NPCDto {
 	private int attackId;
 	private float scaleX;
 	private float scaleY;
-	@Setter private int tileId;
+//	@Setter private int tileId;
 	private int hp;
 	private int cmb;
 	private int leftclickOption;
 	private int otherOptions;
-	@Setter private int floor;
+//	@Setter private int floor;
 	
 	// below are data that doesn't get sent to client as the client doesn't need to see these
 	private transient int acc;

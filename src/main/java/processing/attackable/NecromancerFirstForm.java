@@ -20,8 +20,8 @@ public class NecromancerFirstForm extends UndeadArmyNpc {
 	private UndeadArmyNpc healTarget = null;
 	private int teleportCooldownTicks = 0;
 
-	public NecromancerFirstForm(NPCDto dto) {
-		super(dto);
+	public NecromancerFirstForm(NPCDto dto, int floor, int tileId) {
+		super(dto, floor, tileId);
 	}
 	
 	@Override
@@ -102,7 +102,7 @@ public class NecromancerFirstForm extends UndeadArmyNpc {
 		} else {
 			currentHp -= damage;
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-			updateResponse.setInstanceId(getDto().getTileId());
+			updateResponse.setInstanceId(instanceId);
 			updateResponse.setDamage(damage, type);
 			updateResponse.setHp(currentHp);
 			responseMaps.addLocalResponse(floor, tileId, updateResponse);
@@ -138,7 +138,7 @@ public class NecromancerFirstForm extends UndeadArmyNpc {
 		responseMaps.addLocalResponse(0, toTileId, new TeleportExplosionResponse(toTileId));
 		
 		NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-		updateResponse.setInstanceId(getInstanceId());
+		updateResponse.setInstanceId(instanceId);
 		updateResponse.setTileId(toTileId);
 		updateResponse.setSnapToTile(true);
 		responseMaps.addLocalResponse(0, toTileId, updateResponse);

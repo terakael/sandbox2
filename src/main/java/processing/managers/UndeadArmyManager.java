@@ -64,7 +64,7 @@ public class UndeadArmyManager {
 	public static void initNpcs() {
 		UndeadArmyWavesDao.getWaves().forEach((wave, dtos) -> {
 			final List<UndeadArmyNpc> npcs = dtos.stream()
-				.map(dto -> new UndeadArmyNpc(getDeepCopy(dto.getNpcId(), dto.getTileId())))
+				.map(dto -> new UndeadArmyNpc(NPCDao.getNpcById(dto.getNpcId()), 0, dto.getTileId()))
 				.collect(Collectors.toList());
 			allWaveNpcs.put(wave, npcs);
 		});
@@ -72,24 +72,17 @@ public class UndeadArmyManager {
 		// special waves
 		// this is the wave the first-form necromancer spawns.
 		allWaveNpcs.putIfAbsent(entWave - 1, new ArrayList<>());
-		allWaveNpcs.get(entWave - 1).add(new NecromancerFirstForm(getDeepCopy(firstFormNecromancerNpcId, graveyardCentreTileId)));
+		allWaveNpcs.get(entWave - 1).add(new NecromancerFirstForm(NPCDao.getNpcById(firstFormNecromancerNpcId), 0, graveyardCentreTileId));
 		
 		// ents
 		allWaveNpcs.putIfAbsent(entWave, new ArrayList<>());
 		allWaveNpcs.get(entWave).addAll(undeadEntLocations.stream()
-			.map(tileId -> new UndeadArmyNpc(getDeepCopy(entId, tileId)))
+			.map(tileId -> new UndeadArmyNpc(NPCDao.getNpcById(entId), 0, tileId))
 			.collect(Collectors.toList()));
 		
 		// necromancer second form
 		allWaveNpcs.putIfAbsent(entWave + 1, new ArrayList<>());
-		allWaveNpcs.get(entWave + 1).add(new NecromancerSecondForm(getDeepCopy(secondFormNecromancerNpcId, graveyardCentreTileId)));
-	}
-	
-	private static NPCDto getDeepCopy(int npcId, int tileId) {
-		final NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(npcId));
-		deepCopy.setFloor(0);
-		deepCopy.setTileId(tileId); // instanceId
-		return deepCopy;
+		allWaveNpcs.get(entWave + 1).add(new NecromancerSecondForm(NPCDao.getNpcById(secondFormNecromancerNpcId), 0, graveyardCentreTileId));
 	}
 	
 	public static void setWave(int wave, ResponseMaps responseMaps) {
@@ -302,13 +295,11 @@ public class UndeadArmyManager {
 		}
 		
 		NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(npcId));
-		deepCopy.setFloor(floor);
-		deepCopy.setTileId(tileId); // for the instanceId
 		deepCopy.setAttributes(deepCopy.getAttributes() & ~NpcAttributes.AGGRESSIVE.getValue()); // they should be unaggressive otherwise mad griefing ensues
 		deepCopy.setAttributes(deepCopy.getAttributes() | NpcAttributes.DIURNAL.getValue()); // should show at all times of the day
 		deepCopy.setAttributes(deepCopy.getAttributes() | NpcAttributes.NOCTURNAL.getValue());
 		deepCopy.setRespawnTicks(5); // onRespawn is where the zombie is removed from the game (onDeath is too early as we wanna see the death animation)
-		PlayerGrownZombie zombie = new PlayerGrownZombie(deepCopy);
+		PlayerGrownZombie zombie = new PlayerGrownZombie(deepCopy, floor, tileId);
 		zombie.setPlanter(planter);
 		
 		LocationManager.addNpcs(Collections.singletonList(zombie));

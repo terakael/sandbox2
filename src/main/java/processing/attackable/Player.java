@@ -1264,11 +1264,9 @@ public class Player extends Attackable {
 			return;
 		
 		NPCDto deepCopy = new NPCDto(NPCDao.getNpcById(npcId));
-		deepCopy.setFloor(floor);
-		deepCopy.setTileId(getId()); // for the instanceId - instance matches playerId
 		deepCopy.setAttributes(deepCopy.getAttributes() & ~NpcAttributes.ATTACKABLE.getValue()); // pets cannot be attacked
 		deepCopy.setAttributes(deepCopy.getAttributes() | NpcAttributes.DIURNAL.getValue() | NpcAttributes.NOCTURNAL.getValue()); // should show at all times of the day
-		pet = new Pet(deepCopy);
+		pet = new Pet(deepCopy, floor, getId());
 		pet.setMaster(this);
 		pet.setTileId(getTileId()); // sets the correct tileId, and adds it to the locationManager
 	}

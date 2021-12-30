@@ -25,8 +25,8 @@ public class NecromancerSecondForm extends UndeadArmyNpc {
 	private static final int spellSpriteFrameLeft = 650;
 	private static final int spellSpriteFrameRight = 651;
 
-	public NecromancerSecondForm(NPCDto dto) {
-		super(dto);
+	public NecromancerSecondForm(NPCDto dto, int floor, int tileId) {
+		super(dto, floor, tileId);
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class NecromancerSecondForm extends UndeadArmyNpc {
 			// second form gets health from all players within five tiles
 			players.forEach(player -> {
 				final int spriteFrameId = getGhostSpriteFrameFromPlayerPosition(getTileId(), player.getTileId());
-				responseMaps.addLocalResponse(0, getTileId(), new CastSpellResponse(player.getId(), getInstanceId(), "npc", spriteFrameId)); // ghost spriteframe id
+				responseMaps.addLocalResponse(0, getTileId(), new CastSpellResponse(player.getId(), instanceId, "npc", spriteFrameId)); // ghost spriteframe id
 				
 				// if a player was to log in while players are mid-fight with the necromancer, they need to load the ghost sprite frames.
 				ClientResourceManager.addSpriteFramesAndSpriteMaps(player, Collections.singleton(spriteFrameId));
@@ -63,7 +63,7 @@ public class NecromancerSecondForm extends UndeadArmyNpc {
 			currentHp = Math.min(currentHp + stolenDamage, getDto().getHp());
 			
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-			updateResponse.setInstanceId(getInstanceId());
+			updateResponse.setInstanceId(instanceId);
 			updateResponse.setDamage(stolenDamage, DamageTypes.MAGIC);
 			updateResponse.setHp(currentHp);
 			responseMaps.addLocalResponse(floor, tileId, updateResponse);

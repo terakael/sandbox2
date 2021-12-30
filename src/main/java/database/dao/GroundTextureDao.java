@@ -7,9 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import lombok.Getter;
 import database.DbConnection;
 import database.dto.GroundTextureDto;
+import database.entity.delete.DeleteRoomGroundTextureEntity;
+import database.entity.insert.InsertRoomGroundTextureEntity;
+import lombok.Getter;
+import processing.managers.DatabaseUpdater;
 
 public class GroundTextureDao {
 	@Getter private static List<GroundTextureDto> groundTextures = new ArrayList<>();
@@ -63,5 +66,28 @@ public class GroundTextureDao {
 				floor);
 		
 		return allTileIdsByFloor;
+	}
+	
+	public static void upsertGroundTexture(int floor, int tileId, int groundTextureId) {
+		distinctFloors.add(floor);
+		tileIdsByGroundTextureId.putIfAbsent(floor, new HashMap<>());
+		
+		deleteGroundTexture(floor, tileId);
+		DatabaseUpdater.enqueue(new InsertRoomGroundTextureEntity(floor, tileId, groundTextureId));
+		
+		tileIdsByGroundTextureId.get(floor).putIfAbsent(groundTextureId, new HashSet<>());
+		tileIdsByGroundTextureId.get(floor).get(groundTextureId).add(tileId);
+	}
+	
+	public static boolean deleteGroundTexture(int floor, int tileId) {
+		final Set<Integer> containedTexture = tileIdsByGroundTextureId.get(floor).values().stream()
+				.filter(e -> e.contains(tileId))
+				.findFirst()
+				.orElse(null);
+		if (containedTexture.remove(tileId)) {
+			DatabaseUpdater.enqueue(new DeleteRoomGroundTextureEntity(floor, tileId, null));
+			return true;
+		}
+		return false;
 	}
 }

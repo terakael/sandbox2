@@ -48,18 +48,17 @@ public class NPC extends Attackable {
 	private final transient int MAX_HUNT_TIMER = 5;
 	private transient int huntTimer = 0;
 	@Setter private transient int postCombatCooldown = 0;
-	@Setter @Getter private transient int instanceId = 0;
-//	@Getter private boolean moving = false;
+	@Getter protected transient int instanceId = 0;
 	private transient List<Integer> walkableTiles = null;
 	private int combatLevel = 0;
 	
 	protected int lastProcessedTick = 0;
 	
-	public NPC(NPCDto dto) {
+	public NPC(NPCDto dto, int floor, int instanceId) {
 		this.dto = dto;
-		tileId = dto.getTileId();
-		floor = dto.getFloor();
-		instanceId = dto.getTileId(); // legacy dto does it this way
+		this.instanceId = instanceId;
+		this.tileId = instanceId;
+		this.floor = floor;
 		
 		init();
 	}
@@ -166,7 +165,7 @@ public class NPC extends Attackable {
 		
 		if (popPath()) {
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-			updateResponse.setInstanceId(getInstanceId());
+			updateResponse.setInstanceId(instanceId);
 			updateResponse.setTileId(tileId);
 			responseMaps.addLocalResponse(floor, tileId, updateResponse);
 		}
@@ -181,11 +180,11 @@ public class NPC extends Attackable {
 		} else if (postCombatCooldown <= 0) {
 			// chase the target if not next to it
 			if (!PathFinder.isNextTo(floor, tileId, target.getTileId())) {
-				if (target.getFloor() == floor && PathFinder.tileWithinRadius(target.getTileId(), dto.getTileId(), dto.getRoamRadius() + 2)) {
+				if (target.getFloor() == floor && PathFinder.tileWithinRadius(target.getTileId(), instanceId, dto.getRoamRadius() + 2)) {
 					path = PathFinder.findPath(floor, tileId, target.getTileId(), true);
 				} else {
-					int retreatTileId = PathFinder.findRetreatTile(target.getTileId(), tileId, dto.getTileId(), dto.getRoamRadius());
-					System.out.println("retreating to tile " + retreatTileId + "(retreating from " + target.getTileId() + ", currently at " + tileId + ", anchor=" + dto.getTileId() + ", radius = " + dto.getRoamRadius() + ")");
+					int retreatTileId = PathFinder.findRetreatTile(target.getTileId(), tileId, instanceId, dto.getRoamRadius());
+					System.out.println("retreating to tile " + retreatTileId + "(retreating from " + target.getTileId() + ", currently at " + tileId + ", anchor=" + instanceId + ", radius = " + dto.getRoamRadius() + ")");
 					
 					path = PathFinder.findPath(floor, tileId, retreatTileId, true);
 					target = null;
@@ -193,7 +192,7 @@ public class NPC extends Attackable {
 			} else {
 				if (target.isInCombat()) {
 					if (!FightManager.fightingWith(this, target)) {
-						int retreatTileId = PathFinder.findRetreatTile(target.getTileId(), tileId, dto.getTileId(), dto.getRoamRadius());						
+						int retreatTileId = PathFinder.findRetreatTile(target.getTileId(), tileId, instanceId, dto.getRoamRadius());						
 						path = PathFinder.findPath(floor, tileId, retreatTileId, true);
 						target = null;
 					}
@@ -207,7 +206,7 @@ public class NPC extends Attackable {
 					
 					PvmStartResponse pvmStart = new PvmStartResponse();
 					pvmStart.setPlayerId(p.getId());
-					pvmStart.setMonsterId(getInstanceId());
+					pvmStart.setMonsterId(instanceId);
 					pvmStart.setTileId(getTileId());
 					responseMaps.addLocalResponse(p.getFloor(), getTileId(), pvmStart);
 				}
@@ -291,7 +290,7 @@ public class NPC extends Attackable {
 			currentHp = 0;
 		
 		NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-		updateResponse.setInstanceId(dto.getTileId());
+		updateResponse.setInstanceId(instanceId);
 		updateResponse.setDamage(damage, type);
 		updateResponse.setHp(currentHp);
 		responseMaps.addLocalResponse(floor, tileId, updateResponse);
@@ -300,7 +299,7 @@ public class NPC extends Attackable {
 	@Override
 	public void onAttack(int damage, DamageTypes type, ResponseMaps responseMaps) {
 		NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-		updateResponse.setInstanceId(dto.getTileId());
+		updateResponse.setInstanceId(instanceId);
 		updateResponse.setDoAttack(true);
 		responseMaps.addLocalResponse(floor, tileId, updateResponse);
 	}
@@ -330,10 +329,10 @@ public class NPC extends Attackable {
 		if (deathTimer <= 0) {
 			deathTimer = 0;
 			currentHp = dto.getHp();
-			tileId = dto.getTileId();
+			tileId = instanceId;
 			
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-			updateResponse.setInstanceId(getInstanceId());
+			updateResponse.setInstanceId(instanceId);
 			updateResponse.setHp(currentHp);
 			updateResponse.setTileId(tileId);
 			updateResponse.setSnapToTile(true);

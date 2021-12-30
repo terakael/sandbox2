@@ -7,7 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class GroundTextureDto {
 	private int id;
-//	private int floor;
 	private int spriteMapId;
 	private int x;
 	private int y;
