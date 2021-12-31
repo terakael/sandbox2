@@ -84,9 +84,12 @@ public class GroundTextureDao {
 				.filter(e -> e.contains(tileId))
 				.findFirst()
 				.orElse(null);
-		if (containedTexture.remove(tileId)) {
-			DatabaseUpdater.enqueue(new DeleteRoomGroundTextureEntity(floor, tileId, null));
-			return true;
+		
+		if (containedTexture != null) {
+			if (containedTexture.remove(tileId)) {
+				DatabaseUpdater.enqueue(new DeleteRoomGroundTextureEntity(floor, tileId, null));
+				return true;
+			}
 		}
 		return false;
 	}

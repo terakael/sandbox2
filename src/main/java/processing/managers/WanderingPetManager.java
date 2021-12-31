@@ -31,8 +31,9 @@ public class WanderingPetManager {
 	private Map<Integer, Set<Integer>> petItems = new HashMap<>(); // npcId, itemId TODO move to db
 	
 	private WanderingPetManager() {
-		petItems.put(6, Set.<Integer>of(Items.BONES.getValue(), Items.GIANT_BONES.getValue(), Items.WOLF_BONES.getValue())); // puppy likes bones
 		petItems.put(5, Set.<Integer>of(Items.BREAD_LOAF.getValue(), Items.HALF_BREAD_LOAF.getValue())); // chick likes bread
+		petItems.put(6, Set.<Integer>of(Items.BONES.getValue(), Items.GIANT_BONES.getValue(), Items.WOLF_BONES.getValue())); // puppy likes bones
+		petItems.put(60, Collections.singleton(Items.BUCKET_OF_MILK.getValue())); // cat likes milk
 	}
 	
 	public static WanderingPetManager get() {

@@ -43,6 +43,7 @@ public class EmptyResponse extends Response {
 			}
 			
 			setRecoAndResponseText(1, "you pour the contents to the ground.");
+			responseMaps.addClientOnlyResponse(player, this);
 			PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, emptyId, 1, ItemDao.getMaxCharges(emptyId));
 			InventoryUpdateResponse.sendUpdate(player, responseMaps);
 		}
