@@ -118,7 +118,7 @@ public class Server {
 		PlayerBaseAnimationsDao.setupCaches();
 		
 		System.out.println("caching distinct roomIds");
-		GroundTextureDao.cacheDistinctFloors(); // what constitutes a room is having at least one ground texture: no ground textures, the room doesnt exist.
+		GroundTextureDao.cacheDistinctFloors(); // what constitutes a room is having at least one ground texture: no ground textures, the floor doesn't exist.
 		
 		System.out.println("caching ground texture instances");
 		GroundTextureDao.cacheTileIdsByGroundTextureId();
@@ -149,12 +149,6 @@ public class Server {
 		
 		System.out.println("caching npcs");
 		NPCDao.setupCaches();
-		
-//		LocationManager.addNpcs(NPCDao.getNpcInstanceList().values().stream()
-//				.flatMap(List::stream)
-//				.map(NPC::new)
-//				.collect(Collectors.toList()));
-//		NPCManager.get().loadNpcs();
 		
 		System.out.println("caching npc messages");
 		NpcMessageDao.setupCaches();

@@ -42,6 +42,7 @@ public class SceneryManager {
 		sceneryMap.put(128, new Sawmill());
 		sceneryMap.put(144, new Furnace());
 		sceneryMap.put(151, new Workbench());
+		sceneryMap.put(170, new Well());
 	}
 	public static Scenery getScenery(int sceneryId) {
 		if (sceneryMap.containsKey(sceneryId))
