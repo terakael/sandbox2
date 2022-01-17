@@ -71,10 +71,12 @@ public class FinishConstructionResponse extends Response {
 			}
 			
 			int lifetimeTicks = constructable.getLifetimeTicks();
-			int goldenHammerIndex = invItemIds.indexOf(Items.GOLDEN_HAMMER.getValue());
-			if (goldenHammerIndex != -1) {
-				lifetimeTicks *= 2;
-				PlayerStorageDao.reduceCharge(player.getId(), Items.GOLDEN_HAMMER.getValue(), goldenHammerIndex, 1);
+			if (constructable.getToolId() == Items.HAMMER.getValue()) {
+				int goldenHammerIndex = invItemIds.indexOf(Items.GOLDEN_HAMMER.getValue());
+				if (goldenHammerIndex != -1) {
+					lifetimeTicks *= 2;
+					PlayerStorageDao.reduceCharge(player.getId(), Items.GOLDEN_HAMMER.getValue(), goldenHammerIndex, 1);
+				}
 			}
 			
 			ConstructableManager.add(player.getFloor(), request.getTileId(), constructable, lifetimeTicks);

@@ -27,7 +27,7 @@ public class LoadResourcesResponse extends Response {
 	private List<ItemDto> items = null; // for respawnables
 	
 	private final int startingFloor = 0;
-	private final int startingTileId = 945281960;
+	private final int startingTileId = 929160881;
 	
 	@Override
 	public void process(Request req, List<Response> responses) {

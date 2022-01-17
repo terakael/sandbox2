@@ -77,15 +77,7 @@ public class Endpoint {
 		final Player playerToRemove = WorldProcessor.playerSessions.get(session);
 		if (playerToRemove == null)
 			return;
-		
-//		FightManager.cancelFight(playerToRemove, null);
-//		final Fight fight = FightManager.getFightWithFighter(playerToRemove);
-//		if (fight != null) {
-//			Attackable opponent = fight.getOtherFighter(playerToRemove);
-//			if (opponent instanceof Player) {
-//				requestMap.put(((Player)opponent).getSession(), new CancelFightRequest());
-//			}
-//		}
+		LocationManager.removePlayerIfExists(playerToRemove);
 		
 		final Trade trade = TradeManager.getTradeWithPlayer(playerToRemove);
 		if (trade != null) {
@@ -103,9 +95,5 @@ public class Endpoint {
 		WorldProcessor.playerSessions.remove(session);
 		
 		ClientResourceManager.decachePlayer(playerToRemove);
-		
-//		if (playerToRemove.getDto() != null) {
-//			requestMap.put(session, new PlayerLeaveRequest(playerToRemove.getDto().getName()));
-//		}
 	}
 }

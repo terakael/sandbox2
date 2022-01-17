@@ -240,7 +240,7 @@ public class LocationManager {
 		});
 	}
 
-	private static void removePlayerIfExists(Player player) {
+	public static void removePlayerIfExists(Player player) {
 		players.forEach((floor, segmentMap) -> {
 			segmentMap.forEach((segment, playerList) -> playerList.removeIf(e -> e.equals(player)));
 			segmentMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
