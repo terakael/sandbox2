@@ -34,6 +34,8 @@ public class BankDepositResponse extends Response {
 		DepositRequest request = (DepositRequest)req;
 		
 		if (EquipmentDao.isSlotEquipped(player.getId(), request.getSlot())) {
+			// TODO unequip and bank
+//			EquipmentDao.clearEquippedItem(player.getId(), request.getSlot());
 			setRecoAndResponseText(0, "you need to unequip it first.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;

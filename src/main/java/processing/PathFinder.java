@@ -301,6 +301,8 @@ public class PathFinder {
 		}
 
 		Map<Integer, PathNode> nodes = nodesByFloor.get(floor);
+		if (!nodes.containsKey(from)) // TODO remove, this is for debugging ground texture migration
+			return output;
 		
 		if (!nodes.containsKey(to)) {
 			// find the closest walkable tile from the "to" tile closest to the "from"

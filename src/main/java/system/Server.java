@@ -117,11 +117,8 @@ public class Server {
 		BaseAnimationsDao.setupCaches();
 		PlayerBaseAnimationsDao.setupCaches();
 		
-		System.out.println("caching distinct roomIds");
-		GroundTextureDao.cacheDistinctFloors(); // what constitutes a room is having at least one ground texture: no ground textures, the floor doesn't exist.
-		
-		System.out.println("caching ground texture instances");
-		GroundTextureDao.cacheTileIdsByGroundTextureId();
+		System.out.println("caching ground textures");
+		GroundTextureDao.setupCaches();
 		
 		System.out.println("caching scenery");
 		SceneryDao.setupCaches();
@@ -143,9 +140,6 @@ public class Server {
 		
 		System.out.println("caching items");
 		ItemDao.setupCaches();
-		
-		System.out.println("caching ground textures");
-		GroundTextureDao.cacheTextures();
 		
 		System.out.println("caching npcs");
 		NPCDao.setupCaches();

@@ -71,7 +71,7 @@ public class MessageResponse extends Response {
 	
 	private void handleDebugCommand(Player player, String msg, ResponseMaps responseMaps) {
 		String[] msgParts = msg.split(" (?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");// the :: prefix should already be removed here
-		if (msgParts[0].equals("tele") || msgParts[0].equals("home")) {
+		if (msgParts[0].equals("tele")) {
 			handleDebugTele(player, msgParts, responseMaps);
 			return;
 		}
@@ -157,32 +157,50 @@ public class MessageResponse extends Response {
 	}
 	
 	private void handleDebugTele(Player player, String[] msgParts, ResponseMaps responseMaps) {		
-		// syntax: ::tele (destPlayerName|tileId)[ srcPlayerName]
 		if (msgParts.length == 1) {
-			if (msgParts[0].equals("home")) {
-				// don't let the player escape from a fight mid-combat, thats cheating
-				if (FightManager.fightWithFighterExists(player)) {
-					setRecoAndResponseText(0, "you can't do that while you're in combat.");
-					responseMaps.addClientOnlyResponse(player, this);
-					return;
-				}
-				
-				TeleportableDto tyrotownTele = TeleportableDao.getTeleportableByItemId(Items.TYROTOWN_TELEPORT_RUNE.getValue());
-				
-				PlayerUpdateResponse playerUpdate = (PlayerUpdateResponse)ResponseFactory.create("player_update");
-				playerUpdate.setId(player.getId());
-				playerUpdate.setTileId(tyrotownTele.getTileId());
-				playerUpdate.setSnapToTile(true);
-				player.setTileId(tyrotownTele.getTileId());
-				player.setFloor(tyrotownTele.getFloor(), responseMaps);
-				player.clearPath();
-				responseMaps.addBroadcastResponse(playerUpdate);
-				return;
-			}
-			// invalid syntax
-			setRecoAndResponseText(0, "syntax: ::tele (destPlayerName|tileId)[ srcPlayerName]");
+			setRecoAndResponseText(0, "syntax: ::tele (destPlayerName|tileId|[tyrotown|dawnacre])[ srcPlayerName]");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
+		}
+		
+		// syntax: ::tele (destPlayerName|tileId)[ srcPlayerName]
+		int tileId = -1;
+		int floor = 0;
+		
+		switch (msgParts[1]) {
+		case "tyrotown": {
+			TeleportableDto tyrotownTele = TeleportableDao.getTeleportableByItemId(Items.TYROTOWN_TELEPORT_RUNE.getValue());
+			tileId = tyrotownTele.getTileId();
+			floor = tyrotownTele.getFloor();
+			break;
+		}
+		case "dawnacre": {
+			tileId = 928095439;
+			break;
+		}
+		default:
+			break;
+		}
+		
+		if (tileId != -1) {
+			// don't let the player escape from a fight mid-combat, thats cheating
+			if (FightManager.fightWithFighterExists(player)) {
+				setRecoAndResponseText(0, "you can't do that while you're in combat.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return;
+			}
+			
+			responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), new TeleportExplosionResponse(player.getTileId()));
+			responseMaps.addLocalResponse(floor, tileId, new TeleportExplosionResponse(tileId));
+			
+			PlayerUpdateResponse playerUpdate = (PlayerUpdateResponse)ResponseFactory.create("player_update");
+			playerUpdate.setId(player.getId());
+			playerUpdate.setTileId(tileId);
+			playerUpdate.setSnapToTile(true);
+			player.setTileId(tileId);
+			player.setFloor(floor, responseMaps);
+			player.clearPath();
+			responseMaps.addBroadcastResponse(playerUpdate);
 		}
 		
 		// regular players can't tele willy nilly (only to home)

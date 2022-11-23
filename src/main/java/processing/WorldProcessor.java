@@ -67,7 +67,7 @@ import utils.Utils;
 
 public class WorldProcessor implements Runnable {
 	private Thread thread;
-	private static final int TICK_DURATION_MS = 600;
+	private static final int TICK_DURATION_MS = 500;
 	private static Gson gson = new Gson();
 	
 //	@Getter private static boolean daytime = true;

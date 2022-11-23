@@ -41,7 +41,7 @@ public class ClientResourceManager {
 	
 	// loaded each tick, sent to the appropriate players, then cleared
 	private static Map<Player, Set<SpriteMapDto>> spriteMaps = new HashMap<>();
-	private static Map<Player, Set<Integer>> groundTextureSpriteMapIds = new HashMap<>();
+//	private static Map<Player, Set<Integer>> groundTextureSpriteMapIds = new HashMap<>();
 	private static Map<Player, Set<ItemDto>> items = new HashMap<>();
 	private static Map<Player, Set<SpriteFrameDto>> spriteFrames = new HashMap<>();
 	private static Map<Player, Set<SceneryDto>> scenery = new HashMap<>();
@@ -56,39 +56,38 @@ public class ClientResourceManager {
 			.filter(e -> groundTextureIds.contains(e.getId()))
 			.collect(Collectors.toSet());
 		
-		final Set<Integer> spriteMapIds = selectedGroundTextures.stream().map(GroundTextureDto::getSpriteMapId).collect(Collectors.toSet());
+//		final Set<Integer> spriteMapIds = selectedGroundTextures.stream().map(GroundTextureDto::getSpriteMapId).collect(Collectors.toSet());
 		
 		// pull all the other ground textures that use these sprite maps and add them to our selected list
 		// e.g. if the client loads one part of the water texture map, pull the rest of the textures in the water map and send them too.
-		selectedGroundTextures.addAll(GroundTextureDao.getGroundTextures().stream()
-				.filter(e -> spriteMapIds.contains(e.getSpriteMapId()))
-				.collect(Collectors.toSet()));
+//		selectedGroundTextures.addAll(GroundTextureDao.getGroundTextures().stream()
+//				.filter(e -> spriteMapIds.contains(e.getSpriteMapId()))
+//				.collect(Collectors.toSet()));
 		
 		Set<Integer> selectedGroundTextureIds = extractUnloadedGroundTextureIds(player, selectedGroundTextures.stream().map(GroundTextureDto::getId).collect(Collectors.toSet()));
 		if (selectedGroundTextureIds.isEmpty())
 			return;
 		
-		if (!groundTextures.containsKey(player))
-			groundTextures.put(player, new HashSet<>());		
+		groundTextures.putIfAbsent(player, new HashSet<>());		
 		groundTextures.get(player).addAll(selectedGroundTextures);
 		addLoadedGroundTextureIds(player, selectedGroundTextureIds);
 		
-		Set<Integer> selectedSpriteMapIds = extractUnloadedSpriteMapIds(player, spriteMapIds);
-		if (selectedSpriteMapIds.isEmpty())
-			return;
+//		Set<Integer> selectedSpriteMapIds = extractUnloadedSpriteMapIds(player, spriteMapIds);
+//		if (selectedSpriteMapIds.isEmpty())
+//			return;
 		
-		addLoadedSpriteMapIds(player, selectedSpriteMapIds);
+//		addLoadedSpriteMapIds(player, selectedSpriteMapIds);
 		
-		if (!spriteMaps.containsKey(player))
-			spriteMaps.put(player, new HashSet<>());
+//		if (!spriteMaps.containsKey(player))
+//			spriteMaps.put(player, new HashSet<>());
 		
-		if (!groundTextureSpriteMapIds.containsKey(player))
-			groundTextureSpriteMapIds.put(player, new HashSet<>());
+//		if (!groundTextureSpriteMapIds.containsKey(player))
+//			groundTextureSpriteMapIds.put(player, new HashSet<>());
 		
-		for (Integer spriteMapId : selectedSpriteMapIds) {
-			spriteMaps.get(player).add(SpriteMapDao.getSpriteMap(spriteMapId));
-			groundTextureSpriteMapIds.get(player).add(spriteMapId);
-		}
+//		for (Integer spriteMapId : selectedSpriteMapIds) {
+//			spriteMaps.get(player).add(SpriteMapDao.getSpriteMap(spriteMapId));
+//			groundTextureSpriteMapIds.get(player).add(spriteMapId);
+//		}
 	}
 	
 	public static void addSpriteFramesAndSpriteMaps(Player player, Set<Integer> spriteFrameIds) {
@@ -258,7 +257,7 @@ public class ClientResourceManager {
 	
 	public static void clear() {
 		spriteMaps.clear();
-		groundTextureSpriteMapIds.clear();
+//		groundTextureSpriteMapIds.clear();
 		items.clear();
 		spriteFrames.clear();
 		scenery.clear();
@@ -269,7 +268,7 @@ public class ClientResourceManager {
 	public static void compileToResponseMaps(ResponseMaps responseMap) {
 		Set<Player> players = new HashSet<>();
 		players.addAll(spriteMaps.keySet());
-		players.addAll(groundTextureSpriteMapIds.keySet());
+//		players.addAll(groundTextureSpriteMapIds.keySet());
 		players.addAll(items.keySet());
 		players.addAll(spriteFrames.keySet());
 		players.addAll(scenery.keySet());
@@ -285,8 +284,8 @@ public class ClientResourceManager {
 			if (spriteFrames.containsKey(player))
 				response.setSpriteFrames(spriteFrames.get(player));
 			
-			if (groundTextureSpriteMapIds.containsKey(player))
-				response.setGroundTextureSpriteMaps(groundTextureSpriteMapIds.get(player));
+//			if (groundTextureSpriteMapIds.containsKey(player))
+//				response.setGroundTextureSpriteMaps(groundTextureSpriteMapIds.get(player));
 			
 			if (items.containsKey(player))
 				response.setItems(items.get(player));
