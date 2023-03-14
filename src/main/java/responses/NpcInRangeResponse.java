@@ -19,6 +19,7 @@ public class NpcInRangeResponse extends Response {
 		private int instanceId;
 		private int tileId;
 		private int currentHp;
+		private int ownerId; // for pets
 	}
 	private List<NpcLocation> npcs = new ArrayList<>();
 	
@@ -27,7 +28,7 @@ public class NpcInRangeResponse extends Response {
 	}
 	
 	public void addInstances(Set<NPC> instances) {
-		instances.forEach(npc -> npcs.add(new NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId(), npc.getCurrentHp())));
+		instances.forEach(npc -> npcs.add(new NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId(), npc.getCurrentHp(), npc.getOwnerId())));
 	}
 	
 	@Override

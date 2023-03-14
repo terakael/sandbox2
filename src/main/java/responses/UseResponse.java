@@ -29,6 +29,7 @@ import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.ArtisanManager;
+import processing.managers.ConstructableManager;
 import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
@@ -105,13 +106,14 @@ public class UseResponse extends Response {
 		
 		int sceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getDest());
 		Scenery scenery = SceneryManager.getScenery(sceneryId);
-		if (scenery == null)
-			return false;
+		if (scenery != null && scenery.use(request, player, responseMaps))
+			return true;
 		
-		if (!scenery.use(request, player, responseMaps))
-			return false;
+		scenery = ConstructableManager.getConstructableInstanceByTileId(player.getFloor(), request.getDest());
+		if (scenery != null && scenery.use(request, player, responseMaps))
+			return true;
 		
-		return true;
+		return false;
 	}
 	
 	private boolean handleUseOnItem(UseRequest request, Player player, ResponseMaps responseMaps) {

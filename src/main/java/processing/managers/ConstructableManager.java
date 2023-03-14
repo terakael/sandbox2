@@ -6,8 +6,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import database.DbConnection;
+import database.dao.ConstructableDao;
+import database.dao.HousingTilesDao;
 import database.dao.SceneryDao;
 import database.dto.ConstructableDto;
+import database.entity.delete.DeleteHousingConstructableEntity;
+import database.entity.delete.DeleteHousingConstructableStorageEntity;
+import database.entity.insert.InsertHousingConstructableEntity;
+import database.entity.insert.InsertHousingConstructableStorageEntity;
 import processing.PathFinder;
 import processing.scenery.constructable.BleedingTotemPole;
 import processing.scenery.constructable.Constructable;
@@ -15,6 +22,7 @@ import processing.scenery.constructable.HolyTotemPole;
 import processing.scenery.constructable.LargeStorageChest;
 import processing.scenery.constructable.NaturesShrine;
 import processing.scenery.constructable.SmallStorageChest;
+import processing.scenery.constructable.StorageChest;
 import responses.ResponseMaps;
 import responses.SceneryDespawnResponse;
 import utils.Utils;
@@ -22,6 +30,7 @@ import utils.Utils;
 public class ConstructableManager {
 	private static Map<Integer, Class<? extends Constructable>> constructables = new HashMap<>(); // sceneryId, constructable class
 	private static Map<Integer, Map<Integer, Constructable>> constructableInstances = new HashMap<>(); // floor, <tileId, constructable>
+	private static Map<Integer, Set<Integer>> housingConstructableInstances = new HashMap<>(); // floor, <tile_ids>
 	
 	static {
 		constructables.put(138, BleedingTotemPole.class);
@@ -31,12 +40,42 @@ public class ConstructableManager {
 		constructables.put(147, LargeStorageChest.class);
 	}
 	
+	public static void setupCaches() {
+		housingConstructableInstances = new HashMap<>();
+		
+		DbConnection.load("select floor, tile_id, constructable_id from housing_constructables", rs -> {
+			final int floor = rs.getInt("floor");
+			final int tileId = rs.getInt("tile_id");
+			final int constructableId = rs.getInt("constructable_id");
+			
+			housingConstructableInstances.putIfAbsent(floor, new HashSet<>());			
+			housingConstructableInstances.get(floor).add(tileId);
+			
+			final Constructable constructableInstance = newConstructableInstance(
+					floor, 
+					tileId, 
+					ConstructableDao.getConstructableBySceneryId(constructableId), 
+					Integer.MAX_VALUE,
+					true);
+			
+			if (constructableInstance != null) {
+				constructableInstances.putIfAbsent(floor, new HashMap<>());
+				constructableInstances.get(floor).put(tileId, constructableInstance);
+			}
+		});
+	}
+	
 	public static void process(int tickId, ResponseMaps responseMaps) {
 		constructableInstances.forEach((floor, tileIdMap) -> {
+			final boolean housingConstructablesExist = housingConstructableInstances.containsKey(floor); 
+			
 			Set<Integer> tileIdsToRemove = new HashSet<>();
 			tileIdMap.forEach((tileId, constructable) -> {
 				constructable.process(tickId, responseMaps);
-				if (constructable.getRemainingTicks() <= 0) {
+				if (housingConstructablesExist && housingConstructableInstances.get(floor).contains(tileId)) {
+					constructable.repair(); // housing constructables should never lose ticks
+				}
+				else if (constructable.getRemainingTicks() <= 0) {
 					tileIdsToRemove.add(tileId);
 					responseMaps.addLocalResponse(floor, tileId, new SceneryDespawnResponse(tileId));
 				}
@@ -61,22 +100,42 @@ public class ConstructableManager {
 		if (!PathFinder.tileIsValid(floor, tileId) || SceneryDao.getSceneryIdByTileId(floor, tileId) != -1 || getConstructableIdByTileId(floor, tileId) != -1)
 			return;
 		
+		final boolean onHousingTile = HousingTilesDao.getHouseIdFromFloorAndTileId(floor, tileId) > 0;
+		
+		final Constructable constructableInstance = newConstructableInstance(floor, tileId, constructable, lifetimeTicks, onHousingTile);
+		if (constructableInstance == null)
+			return;
+		
 		constructableInstances.putIfAbsent(floor, new HashMap<>());
+		constructableInstances.get(floor).put(tileId, constructableInstance);
+	
+		// if it is built on player's housing land, then add the entry to the housing_constructables table.
+		// does it matter whether the player that owns the house is the one to build it?
+		// probably not; any constructable built on housing land should be permanent.
+		if (onHousingTile) {
+			housingConstructableInstances.putIfAbsent(floor, new HashSet<>());			
+			housingConstructableInstances.get(floor).add(tileId);
+			
+			DatabaseUpdater.enqueue(new InsertHousingConstructableEntity(floor, tileId, constructable.getResultingSceneryId()));
+		}
+	}
+	
+	private static Constructable newConstructableInstance(int floor, int tileId, ConstructableDto constructable, int lifetimeTicks, boolean onHousingTile) {
 		Constructable newConstructableInstance = null;
 		if (constructables.containsKey(constructable.getResultingSceneryId())) {
 			try {
 				newConstructableInstance = constructables.get(constructable.getResultingSceneryId())
-						.getDeclaredConstructor(int.class, int.class, int.class, ConstructableDto.class)
-						.newInstance(floor, tileId, lifetimeTicks, constructable);
+						.getDeclaredConstructor(int.class, int.class, int.class, ConstructableDto.class, boolean.class)
+						.newInstance(floor, tileId, lifetimeTicks, constructable, onHousingTile);
 			} catch (Exception e) {
 				e.printStackTrace();
-				return;
+				return null;
 			}
 		} else {
-			newConstructableInstance = new Constructable(floor, tileId, lifetimeTicks, constructable); // generic constructable, represents constructables that don't have special process logic
+			newConstructableInstance = new Constructable(floor, tileId, lifetimeTicks, constructable, onHousingTile); // generic constructable, represents constructables that don't have special process logic
 		}
-
-		constructableInstances.get(floor).put(tileId, newConstructableInstance);
+		
+		return newConstructableInstance;
 	}
 	
 	public static boolean constructableIsInRadius(int floor, int tileId, int constructableId, int radius) {
@@ -114,5 +173,21 @@ public class ConstructableManager {
 			return null;
 		
 		return constructableInstances.get(floor).get(tileId);
+	}
+	
+	public static void destroyConstructableInstanceByTileId(int floor, int tileId, ResponseMaps responseMaps) {
+		Constructable instance = getConstructableInstanceByTileId(floor, tileId);
+		if (instance == null)
+			return;
+		
+		responseMaps.addLocalResponse(floor, tileId, new SceneryDespawnResponse(tileId));
+		constructableInstances.get(floor).remove(tileId);
+		
+		if (housingConstructableInstances.get(floor).contains(tileId)) {
+			housingConstructableInstances.get(floor).remove(tileId);
+			DatabaseUpdater.enqueue(DeleteHousingConstructableEntity.builder().floor(floor).tileId(tileId).build());
+		}
+		
+		instance.onDestroy(responseMaps);
 	}
 }

@@ -32,6 +32,7 @@ import lombok.Getter;
 import lombok.Setter;
 import processing.PathFinder;
 import processing.WorldProcessor;
+import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
@@ -45,6 +46,7 @@ import requests.MineRequest;
 import requests.Request;
 import requests.RequestFactory;
 import requests.SmithRequest;
+import requests.UseRequest;
 import responses.AddExpResponse;
 import responses.ChopResponse;
 import responses.ConstructionResponse;
@@ -102,6 +104,7 @@ public class Player extends Attackable {
 		sawmill_knife,
 		construction,
 		assembling,
+		disassembling, // hammer on house constructions
 		fighting,
 		using,
 		climbing, // ladders etc, give a tick or so duration (like for climbing animation in the future)
@@ -457,6 +460,16 @@ public class Player extends Attackable {
 			}
 			break;
 			
+		case disassembling:
+			if (--tickCounter <= 0) {
+				UseRequest req = (UseRequest)savedRequest;
+				ConstructableManager.destroyConstructableInstanceByTileId(getFloor(), req.getDest(), responseMaps);
+				responseMaps.addClientOnlyResponse(this, MessageResponse.newMessageResponse("...it shatters to pieces.", "white"));
+				savedRequest = null;
+				setState(PlayerState.idle);
+			}
+			break;
+			
 		case using:
 			if (--tickCounter <= 0) {
 				new FinishUseResponse().process(savedRequest, this, responseMaps);
@@ -673,6 +686,10 @@ public class Player extends Attackable {
 	
 	public int getId() {
 		return dto.getId();
+	}
+	
+	public int getHouseId() {
+		return dto.getHouseId();
 	}
 	
 	@Override

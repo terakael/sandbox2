@@ -206,6 +206,7 @@ public class StatsDao {
 				"inner join items srcItem on srcItem.id = src_id " + 
 				"inner join items destItem on destItem.id = dest_id " + 
 				"inner join items resultItem on resultItem.id = potion_id " + 
+				"where resultItem.name not like '%flask%' " + // flasks are the same reqs as regular potions, so exclude
 				"order by level";
 		
 		ArrayList<StatWindowRowDto> dtos = new ArrayList<>();

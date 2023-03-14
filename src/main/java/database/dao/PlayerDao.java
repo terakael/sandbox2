@@ -18,7 +18,7 @@ public class PlayerDao {
 	private PlayerDao() {}
 	
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
-		final String query = "select id, name, password, tile_id, floor, attack_style_id from player where name = ? and password = ?";
+		final String query = "select id, name, password, tile_id, floor, house_id, attack_style_id from player where name = ? and password = ?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -34,6 +34,7 @@ public class PlayerDao {
 							rs.getString("password"), 
 							rs.getInt("tile_id"),
 							rs.getInt("floor"),
+							rs.getInt("house_id"),
 							StatsDao.getCurrentHpByPlayerId(rs.getInt("id")), 
 							StatsDao.getMaxHpByPlayerId(rs.getInt("id")), 
 							StatsDao.getCurrentPrayerByPlayerId(rs.getInt("id")),

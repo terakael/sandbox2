@@ -59,7 +59,7 @@ public class PlayerGrownZombie extends NPC {
 	
 	@Override
 	protected void handleLootDrop(Player killer, ResponseMaps responseMaps) {
-		// player grown zombies should only drop bones.
+		// player grown zombies should only drop bones. // TODO future me disagrees, drop all drops
 		if (ConstructableManager.constructableIsInRadius(floor, tileId, 129, 3)) {
 			// give the player the corresponding prayer exp instead of dropping it
 			BuryResponse.handleBury(killer, Items.BONES.getValue(), responseMaps);

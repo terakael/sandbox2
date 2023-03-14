@@ -63,6 +63,7 @@ public class FinishConstructionResponse extends Response {
 		
 		if (!request.isFlatpack()) {
 			// not a flatpack so build the actual scenery
+			// TODO when building on your own housing land, the scenery should be permanent until removed by player
 			final int existingSceneryId = SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId());
 			if (existingSceneryId != -1) {
 				setRecoAndResponseText(0, "you can't build that here.");

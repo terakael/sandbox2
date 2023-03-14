@@ -24,8 +24,8 @@ public class Fire implements Scenery {
 		
 		CookableDto cookable = CookableDao.getCookable(srcItemId);
 		if (cookable == null) {
-			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("you can't cook that.", null));
-			return true;
+//			responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("you can't cook that.", null));
+			return false;
 		}
 		
 		int cookingLevel = player.getStats().get(Stats.COOKING);

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import database.dao.DoorDao;
 import database.dao.GroundTextureDao;
@@ -18,6 +19,7 @@ import lombok.Getter;
 import lombok.Setter;
 import types.ImpassableTypes;
 import utils.Stopwatch;
+import utils.Utils;
 
 public class PathFinder {
 	private static PathFinder instance;
@@ -675,5 +677,39 @@ public class PathFinder {
 			return;
 		
 		nodesByFloor.get(floor).get(tileId).setImpassableTypes(impassability);
+	}
+	
+	public static List<Integer> calculateWalkableTiles(int floor, int tileId, int radius) {
+		// things to consider
+		// if there's a wall/lake going through the tiles within the radius, 
+		//     we don't want to walk outside of our walkable tiles, around the wall/lake,
+		//     to get to the walkable tiles on the other side.
+		
+		final List<Integer> walkableTiles = new ArrayList<>();
+		
+		final List<Integer> localTiles = Utils.getLocalTiles(tileId, radius).stream().collect(Collectors.toList());
+		for (int localTileId : localTiles) {
+			if (!PathFinder.tileIsValid(floor, localTileId))
+				continue;
+			
+			if ((PathFinder.getImpassableByTileId(floor, localTileId) & 15) == 15) // there's something impassable on it
+				continue;
+			
+			final Stack<Integer> path = PathFinder.findPath(floor, tileId, localTileId, true);
+			while (!path.isEmpty()) {
+				final int currentTileId = path.pop();
+				if (!localTiles.contains(currentTileId)) {
+					// we need to walk outside our radius to get to this tile discount it.
+					break;
+				}
+			}
+			
+			if (!path.isEmpty()) // we broke early, meaning we walked outside of the local tiles
+				continue;
+			
+			walkableTiles.add(localTileId);
+		}
+		
+		return walkableTiles;
 	}
 }

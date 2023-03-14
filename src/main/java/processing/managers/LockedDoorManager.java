@@ -7,10 +7,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import lombok.Setter;
+import database.dao.HousingTilesDao;
 import database.dao.PlayerStorageDao;
 import database.dao.StatsDao;
 import database.dto.LockedDoorDto;
+import lombok.Setter;
 import processing.PathFinder;
 import processing.attackable.Player;
 import responses.OpenCloseResponse;
@@ -92,6 +93,11 @@ public class LockedDoorManager {
 		List<Integer> invIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (lockedDoor.getUnlockItemId() != 0 && invIds.contains(lockedDoor.getUnlockItemId()))
 			return "";
+		
+		// player house locked doors, check if player is owner of current house
+		if (player.getHouseId() == HousingTilesDao.getHouseIdFromFloorAndTileId(lockedDoor.getFloor(), lockedDoor.getTileId())) {
+			return "";
+		}
 		
 		// tybalt's house
 		if (lockedDoor.getFloor() == 0 && lockedDoor.getTileId() == 873569404) {

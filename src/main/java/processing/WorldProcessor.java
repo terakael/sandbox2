@@ -96,8 +96,8 @@ public class WorldProcessor implements Runnable {
 			process(tick++); // will take something like 40 years to get to max int so don't bother handling the wrapping
 			
 			try {
-				// run for 0.6 seconds, minus the processing time so the ticks are always 0.6s.
-				// if the processing time is more than 0.6 seconds then don't sleep at all (this happens when breakpoints are hit)
+				// run for 0.5 seconds, minus the processing time so the ticks are always 0.5s.
+				// if the processing time is more than 0.5 seconds then don't sleep at all (this happens when breakpoints are hit)
 				long processTimeMs = (System.nanoTime() - prevTime) / 1000000;
 				if (processTimeMs >= TICK_DURATION_MS / 2) {
 					System.out.println(String.format("WARNING: process time took %dms (%d%% of total allowed processing time)", processTimeMs, (int)(((float)processTimeMs / TICK_DURATION_MS) * 100)));
@@ -159,7 +159,6 @@ public class WorldProcessor implements Runnable {
 			UndeadArmyManager.onDaytimeChange(TimeManager.isDaytime(), responseMaps);
 		
 		Stopwatch.start("process npcs");
-//		NPCManager.get().process(responseMaps, tickId);
 		LocationManager.getAllNpcsNearPlayers(TimeManager.isDaytime()).forEach((floor, npcSet) -> {
 			npcSet.forEach(npc -> npc.process(tickId, responseMaps));
 		});

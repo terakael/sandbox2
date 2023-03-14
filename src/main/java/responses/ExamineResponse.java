@@ -3,6 +3,8 @@ package responses;
 import java.util.HashMap;
 import java.util.Map;
 
+import database.dao.ClockDao;
+import database.dao.HousingTilesDao;
 import database.dao.ItemDao;
 import database.dao.NPCDao;
 import database.dao.PlayerStorageDao;
@@ -11,6 +13,7 @@ import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.managers.ConstructableManager;
 import processing.managers.LocationManager;
+import processing.managers.TimeManager;
 import requests.ExamineRequest;
 import requests.Request;
 import types.ItemAttributes;
@@ -46,17 +49,22 @@ public class ExamineResponse extends Response {
 		case "scenery": { 
 			examineText = sceneryExamineMap.get(request.getObjectId());
 			
-			// constructables show their timer as well
+			// constructables show their timer as well (if they aren't in a player's house; house constructables don't have a timer)
 			final int remainingTicks = ConstructableManager.getRemainingTicks(player.getFloor(), request.getTileId());
-			if (remainingTicks > 0) {
-				if (remainingTicks > 100) {
-					final int remainingMinutes = remainingTicks / 100;
+			if (remainingTicks > 0 && HousingTilesDao.getHouseIdFromFloorAndTileId(player.getFloor(), request.getTileId()) <= 0) {
+				if (remainingTicks > 120) {
+					final int remainingMinutes = remainingTicks / 120;
 					examineText += String.format(" (%d minute%s remain%s)", remainingMinutes, remainingMinutes == 1 ? "" : "s", remainingMinutes == 1 ? "s" : "");
 				} else {
-					final int remainingSeconds = (int)(remainingTicks * 0.6);
+					final int remainingSeconds = (int)(remainingTicks * 0.5);
 					examineText += String.format(" (%d second%s remain%s)", remainingSeconds, remainingSeconds == 1 ? "" : "s", remainingSeconds == 1 ? "s" : "");
 				}
 			}
+			
+			if (ClockDao.isClock(request.getObjectId())) {
+				examineText += String.format(" (%s)", TimeManager.getInGameTime());
+			}
+			
 			break;
 		}
 		case "item": {

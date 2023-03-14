@@ -49,7 +49,7 @@ public class NPC extends Attackable {
 	private transient int huntTimer = 0;
 	@Setter private transient int postCombatCooldown = 0;
 	@Getter protected transient int instanceId = 0;
-	private transient List<Integer> walkableTiles = null;
+	protected transient List<Integer> walkableTiles = null;
 	private int combatLevel = 0;
 	
 	protected int lastProcessedTick = 0;
@@ -95,7 +95,7 @@ public class NPC extends Attackable {
 		
 		// pre-calculate all the walkable tiles on server startup to save processing time over the long run
 		// (i.e. instead of checking if a tile can be walked to every time we move, we already guaranteed it)
-		walkableTiles = calculateWalkableTiles(floor, tileId, dto.getRoamRadius());
+		walkableTiles = PathFinder.calculateWalkableTiles(floor, tileId, dto.getRoamRadius());
 		
 		huntTimer = RandomUtil.getRandom(0, MAX_HUNT_TIMER);// just so all the NPCs aren't hunting on the same tick
 	}
@@ -340,40 +340,6 @@ public class NPC extends Attackable {
 		}
 	}
 	
-	private List<Integer> calculateWalkableTiles(int floor, int tileId, int radius) {
-		// things to consider
-		// if there's a wall/lake going through the tiles within the radius, 
-		//     we don't want to walk outside of our walkable tiles, around the wall/lake,
-		//     to get to the walkable tiles on the other side.
-		
-		final List<Integer> walkableTiles = new ArrayList<>();
-		
-		final List<Integer> localTiles = Utils.getLocalTiles(tileId, radius).stream().collect(Collectors.toList());
-		for (int localTileId : localTiles) {
-			if (!PathFinder.tileIsValid(floor, localTileId))
-				continue;
-			
-			if ((PathFinder.getImpassableByTileId(floor, localTileId) & 15) == 15) // there's something impassable on it
-				continue;
-			
-			final Stack<Integer> path = PathFinder.findPath(floor, tileId, localTileId, true);
-			while (!path.isEmpty()) {
-				final int currentTileId = path.pop();
-				if (!localTiles.contains(currentTileId)) {
-					// we need to walk outside our radius to get to this tile discount it.
-					break;
-				}
-			}
-			
-			if (!path.isEmpty()) // we broke early, meaning we walked outside of the local tiles
-				continue;
-			
-			walkableTiles.add(localTileId);
-		}
-		
-		return walkableTiles;
-	}
-	
 	public void clearPath() {
 		path.clear();
 	}
@@ -384,5 +350,9 @@ public class NPC extends Attackable {
 	
 	public boolean isNocturnal() {
 		return (dto.getAttributes() & NpcAttributes.NOCTURNAL.getValue()) > 0;
+	}
+	
+	public int getOwnerId() {
+		return -1; // pets override this to return the id of the player which owns it
 	}
 }

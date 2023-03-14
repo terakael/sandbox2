@@ -4,12 +4,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
 import database.DbConnection;
 import database.dto.DoorDto;
 import database.dto.LockedDoorDto;
+import processing.PathFinder;
 import processing.managers.LockedDoorManager;
 
 public class DoorDao {
@@ -123,6 +125,38 @@ public class DoorDao {
 				lockedDoorInstances.put(rs.getInt("floor"), new HashMap<>());
 			lockedDoorInstances.get(rs.getInt("floor")).put(rs.getInt("tile_id"), new LockedDoorDto(rs.getInt("floor"), rs.getInt("tile_id"), rs.getInt("unlock_item_id"), rs.getBoolean("destroy_on_use")));
 		});
+		
+		// all doors on the edge of player house land are locked to all players except the owner; add all the doors to this list
+		final Map<Integer, Set<Integer>> housingTiles = new HashMap<>();
+		DbConnection.load("select floor, tile_id from housing_tiles", rs -> {
+			housingTiles.putIfAbsent(rs.getInt("floor"), new HashSet<>());
+			housingTiles.get(rs.getInt("floor")).add(rs.getInt("tile_id"));
+		});
+		
+		doorInstances.forEach((floor, instances) -> {
+			if (housingTiles.containsKey(floor)) {
+				Set<Integer> edgeTiles = housingTiles.get(floor).stream()
+						.filter(x -> {
+							// if the tile is surrounded by other housing tiles, filter it out.
+							// technically this checks for any housing tile, and not just the current house.
+							// seems like an impossiblity to have a door from one house into another house though.
+							return !housingTiles.get(floor).contains(x - 1) || 
+									!housingTiles.get(floor).contains(x + 1) ||
+									!housingTiles.get(floor).contains(x - PathFinder.LENGTH) ||
+									!housingTiles.get(floor).contains(x + PathFinder.LENGTH);
+						})
+						.collect(Collectors.toSet());
+				
+				Set<Integer> doorTileIds = instances.values().stream()
+					.flatMap(Set::stream)
+					.collect(Collectors.toSet());
+				doorTileIds.retainAll(edgeTiles); // retain only the door tileIds that are on a housing edge tileId
+				
+				lockedDoorInstances.get(floor).putAll(doorTileIds.stream()
+						.collect(Collectors.toMap(Function.identity(), tileId -> new LockedDoorDto(floor, tileId, 0, false))));
+			}
+		});
+		
 		LockedDoorManager.setLockedDoorInstances(lockedDoorInstances);
 	}
 }

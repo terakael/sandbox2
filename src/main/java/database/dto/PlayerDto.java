@@ -17,6 +17,7 @@ public class PlayerDto {
 	private transient String password;
 	private int tileId;
 	private int floor;
+	private Integer houseId;
 	private int currentHp;
 	private int maxHp;
 	private int currentPrayer;

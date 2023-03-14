@@ -1,5 +1,6 @@
 package responses;
 
+import database.dao.HousingTilesDao;
 import database.dao.PetDao;
 import database.dao.PlayerStorageDao;
 import processing.PathFinder;
@@ -7,6 +8,7 @@ import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
+import processing.managers.HousePetsManager;
 import processing.managers.LocationManager;
 import requests.PickUpRequest;
 import requests.Request;
@@ -38,7 +40,10 @@ public class PickUpResponse extends Response {
 			// we're next to the pet
 			player.faceDirection(pet.getTileId(), responseMaps);
 			
-			if (request.getObjectId() != player.getId()) {
+			// following pets have the player's id, whereas house pets have the tileId as the instanceId
+			int petHouseId = HousingTilesDao.getHouseIdFromFloorAndTileId(player.getFloor(), pet.getInstanceId());
+			
+			if (!(request.getObjectId() == player.getId() || petHouseId == player.getHouseId())) {
 				setRecoAndResponseText(0, "that doesn't belong to you.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
@@ -51,9 +56,14 @@ public class PickUpResponse extends Response {
 			}
 			
 			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, PetDao.getItemIdFromNpcId(pet.getDto().getId()), 1, 0);
-			PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.PET);
 			
-			player.setPet(null);
+			if (petHouseId > 0) {
+				HousePetsManager.removePet(pet);
+			} else {
+				PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.PET);
+				player.setPet(null);
+			}
+			
 			LocationManager.removePetIfExists(pet);
 			
 			InventoryUpdateResponse.sendUpdate(player, responseMaps);

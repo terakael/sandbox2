@@ -19,8 +19,8 @@ public class NaturesShrine extends Constructable {
 	private final static int GROW_TIMER = 5;
 	private int growOffset;
 	
-	public NaturesShrine(int floor, int tileId, int lifetimeTicks, ConstructableDto dto) {
-		super(floor, tileId, lifetimeTicks, dto);
+	public NaturesShrine(int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile) {
+		super(floor, tileId, lifetimeTicks, dto, onHousingTile);
 		
 		growOffset = RandomUtil.getRandom(0, GROW_TIMER); // used so flowers grow on different ticks when there's multiple Natures Shrines around.  Looks weird otherwise.
 		

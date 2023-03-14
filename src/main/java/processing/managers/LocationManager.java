@@ -94,7 +94,10 @@ public class LocationManager {
 			}
 		});
 		
-		// by definition all pets are near players, so return them all		
+		// pets are either following the player or wandering around a house.
+		// pets wandering around a house far away from players don't need processing.
+		// TODO filter this for pets that are following players plus pets in houses near players
+		// check getLocalNpcs
 		pets.forEach((floor, petMap) -> {
 			npcsToReturn.putIfAbsent(floor, new HashSet<>());
 			npcsToReturn.get(floor).addAll(petMap.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));
