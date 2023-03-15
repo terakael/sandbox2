@@ -6,9 +6,7 @@ import java.util.Map;
 import java.util.Random;
 
 import database.dao.CastableDao;
-import database.dao.DoorDao;
 import database.dao.EquipmentDao;
-import database.dao.HousingTilesDao;
 import database.dao.NPCDao;
 import database.dao.PlayerStorageDao;
 import database.dao.StatsDao;
@@ -24,6 +22,7 @@ import processing.managers.ClientResourceManager;
 import processing.managers.ConstructableManager;
 import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
+import processing.managers.HousingManager;
 import requests.Request;
 import requests.UseRequest;
 import types.DamageTypes;
@@ -228,13 +227,13 @@ public class CastSpellResponse extends Response {
 		
 		if (castable.getItemId() == Items.HOUSE_TELEPORT_RUNE.getValue()) {
 			// house teleport is a special case, because everyone's location is different.
-			final int houseId = HousingTilesDao.getHouseIdByPlayerId(player.getId());
+			final int houseId = HousingManager.getHouseIdByPlayerId(player.getId());
 			if (houseId == -1) {
 				responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("you don't have a house to teleport to.", "white"));
 				return true;
 			}
 			
-			int[] floorAndTileId = HousingTilesDao.getRandomWalkableTileByPlayerId(player.getId());
+			int[] floorAndTileId = HousingManager.getRandomWalkableTileByPlayerId(player.getId());
 			if (floorAndTileId == null)
 				return false;
 			

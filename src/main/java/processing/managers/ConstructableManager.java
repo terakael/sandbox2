@@ -8,13 +8,10 @@ import java.util.stream.Collectors;
 
 import database.DbConnection;
 import database.dao.ConstructableDao;
-import database.dao.HousingTilesDao;
 import database.dao.SceneryDao;
 import database.dto.ConstructableDto;
 import database.entity.delete.DeleteHousingConstructableEntity;
-import database.entity.delete.DeleteHousingConstructableStorageEntity;
 import database.entity.insert.InsertHousingConstructableEntity;
-import database.entity.insert.InsertHousingConstructableStorageEntity;
 import processing.PathFinder;
 import processing.scenery.constructable.BleedingTotemPole;
 import processing.scenery.constructable.Constructable;
@@ -22,7 +19,6 @@ import processing.scenery.constructable.HolyTotemPole;
 import processing.scenery.constructable.LargeStorageChest;
 import processing.scenery.constructable.NaturesShrine;
 import processing.scenery.constructable.SmallStorageChest;
-import processing.scenery.constructable.StorageChest;
 import responses.ResponseMaps;
 import responses.SceneryDespawnResponse;
 import utils.Utils;
@@ -100,7 +96,7 @@ public class ConstructableManager {
 		if (!PathFinder.tileIsValid(floor, tileId) || SceneryDao.getSceneryIdByTileId(floor, tileId) != -1 || getConstructableIdByTileId(floor, tileId) != -1)
 			return;
 		
-		final boolean onHousingTile = HousingTilesDao.getHouseIdFromFloorAndTileId(floor, tileId) > 0;
+		final boolean onHousingTile = HousingManager.getHouseIdFromFloorAndTileId(floor, tileId) > 0;
 		
 		final Constructable constructableInstance = newConstructableInstance(floor, tileId, constructable, lifetimeTicks, onHousingTile);
 		if (constructableInstance == null)

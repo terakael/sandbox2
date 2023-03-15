@@ -1,6 +1,5 @@
 package responses;
 
-import database.dao.HousingTilesDao;
 import database.dao.PetDao;
 import database.dao.PlayerStorageDao;
 import processing.PathFinder;
@@ -9,6 +8,7 @@ import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
 import processing.managers.HousePetsManager;
+import processing.managers.HousingManager;
 import processing.managers.LocationManager;
 import requests.PickUpRequest;
 import requests.Request;
@@ -41,7 +41,7 @@ public class PickUpResponse extends Response {
 			player.faceDirection(pet.getTileId(), responseMaps);
 			
 			// following pets have the player's id, whereas house pets have the tileId as the instanceId
-			int petHouseId = HousingTilesDao.getHouseIdFromFloorAndTileId(player.getFloor(), pet.getInstanceId());
+			int petHouseId = HousingManager.getHouseIdFromFloorAndTileId(player.getFloor(), pet.getInstanceId());
 			
 			if (!(request.getObjectId() == player.getId() || petHouseId == player.getHouseId())) {
 				setRecoAndResponseText(0, "that doesn't belong to you.");

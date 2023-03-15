@@ -3,11 +3,10 @@ package processing.attackable;
 import java.util.ArrayList;
 import java.util.Stack;
 
-import database.dao.HousingTilesDao;
-import database.dao.PlayerDao;
 import database.dto.NPCDto;
 import lombok.Setter;
 import processing.PathFinder;
+import processing.managers.HousingManager;
 import processing.managers.LocationManager;
 import responses.NpcUpdateResponse;
 import responses.ResponseMaps;
@@ -27,9 +26,9 @@ public class Pet extends NPC {
 		setCurrentHp(1); // so we don't hit the respawn checks (when hp is 0)
 		
 		// our instanceId is either the playerId if dropped normally, or a house tileId if dropped in a house.
-		int houseId = HousingTilesDao.getHouseIdFromFloorAndTileId(floor, instanceId);
+		int houseId = HousingManager.getHouseIdFromFloorAndTileId(floor, instanceId);
 		if (houseId > 0) {
-			walkableTiles = new ArrayList<>(HousingTilesDao.getWalkableTilesByHouseId(houseId, floor));
+			walkableTiles = new ArrayList<>(HousingManager.getWalkableTilesByHouseId(houseId, floor));
 		}
 	}
 	
@@ -97,7 +96,7 @@ public class Pet extends NPC {
 			return master.getId();
 		
 		if (walkableTiles != null) {
-			return HousingTilesDao.getOwningPlayerId(floor, instanceId);
+			return HousingManager.getOwningPlayerId(floor, instanceId);
 		}
 		
 		return super.getOwnerId();

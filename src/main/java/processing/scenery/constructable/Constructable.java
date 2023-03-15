@@ -1,6 +1,5 @@
 package processing.scenery.constructable;
 
-import database.dao.HousingTilesDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
 import database.dao.SceneryDao;
@@ -8,6 +7,7 @@ import database.dto.ConstructableDto;
 import lombok.Getter;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
+import processing.managers.HousingManager;
 import processing.scenery.Scenery;
 import requests.UseRequest;
 import responses.ActionBubbleResponse;
@@ -57,7 +57,7 @@ public class Constructable implements Scenery {
 	@Override
 	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {
 		// if we're in a house and the player is using a hammer, then destroy.
-		if (HousingTilesDao.getHouseIdFromFloorAndTileId(floor, tileId) != player.getHouseId())
+		if (HousingManager.getHouseIdFromFloorAndTileId(floor, tileId) != player.getHouseId())
 			return false; // currently can't use anything on general constructables
 		
 		if (request.getSrc() != Items.HAMMER.getValue())

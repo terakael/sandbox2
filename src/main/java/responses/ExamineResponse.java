@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import database.dao.ClockDao;
-import database.dao.HouseNamesDao;
-import database.dao.HousingTilesDao;
 import database.dao.ItemDao;
 import database.dao.NPCDao;
 import database.dao.PlayerDao;
@@ -14,6 +12,7 @@ import database.dao.SceneryDao;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.managers.ConstructableManager;
+import processing.managers.HousingManager;
 import processing.managers.LocationManager;
 import processing.managers.LockedDoorManager;
 import processing.managers.TimeManager;
@@ -54,7 +53,7 @@ public class ExamineResponse extends Response {
 			
 			// constructables show their timer as well (if they aren't in a player's house; house constructables don't have a timer)
 			final int remainingTicks = ConstructableManager.getRemainingTicks(player.getFloor(), request.getTileId());
-			if (remainingTicks > 0 && HousingTilesDao.getHouseIdFromFloorAndTileId(player.getFloor(), request.getTileId()) <= 0) {
+			if (remainingTicks > 0 && HousingManager.getHouseIdFromFloorAndTileId(player.getFloor(), request.getTileId()) <= 0) {
 				if (remainingTicks > 120) {
 					final int remainingMinutes = remainingTicks / 120;
 					examineText += String.format(" (%d minute%s remain%s)", remainingMinutes, remainingMinutes == 1 ? "" : "s", remainingMinutes == 1 ? "s" : "");
@@ -70,13 +69,13 @@ public class ExamineResponse extends Response {
 			
 			// player house front doors show the house name and who owns it
 			if (LockedDoorManager.isLockedDoor(player.getFloor(), request.getTileId())) {
-				final int houseId = HousingTilesDao.getHouseIdFromFloorAndTileId(player.getFloor(), request.getTileId());
+				final int houseId = HousingManager.getHouseIdFromFloorAndTileId(player.getFloor(), request.getTileId());
 				if (houseId > 0) {
-					final int owningPlayerId = HousingTilesDao.getOwningPlayerId(player.getFloor(), request.getTileId());
+					final int owningPlayerId = HousingManager.getOwningPlayerId(player.getFloor(), request.getTileId());
 					final String ownershipMessage = owningPlayerId != -1
 							? String.format("owned by %s", PlayerDao.getNameFromId(owningPlayerId))
 							: "up for sale";
-					examineText = String.format("a sign reads: %s - %s.", HouseNamesDao.getHouseNameById(houseId), ownershipMessage);
+					examineText = String.format("a sign reads: %s - %s.", HousingManager.getHouseNameById(houseId), ownershipMessage);
 				}
 			}
 			

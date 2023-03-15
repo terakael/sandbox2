@@ -27,4 +27,7 @@ public class UpdatePlayerEntity extends UpdateableEntity {
 	
 	@Column("last_logged_in")
 	private String lastLoggedIn;
+	
+	@Column("house_id")
+	private Integer houseId;
 }

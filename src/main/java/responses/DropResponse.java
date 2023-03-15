@@ -3,27 +3,19 @@ package responses;
 import java.util.Set;
 
 import database.dao.EquipmentDao;
-import database.dao.HousingTilesDao;
 import database.dao.ItemDao;
-import database.dao.NPCDao;
-import database.dao.PetDao;
 import database.dao.PlayerStorageDao;
 import database.dto.InventoryItemDto;
-import database.dto.NPCDto;
-import database.entity.insert.InsertHousePetsEntity;
-import processing.attackable.Pet;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
-import processing.managers.DatabaseUpdater;
 import processing.managers.FightManager;
 import processing.managers.HousePetsManager;
-import processing.managers.LocationManager;
+import processing.managers.HousingManager;
 import requests.DropRequest;
 import requests.Request;
 import requests.RequestFactory;
 import system.GroundItemManager;
 import types.ItemAttributes;
-import types.NpcAttributes;
 import types.StorageTypes;
 
 public class DropResponse extends Response {	
@@ -61,7 +53,7 @@ public class DropResponse extends Response {
 		}
 		
 		if (ItemDao.itemHasAttribute(itemToDrop.getItemId(), ItemAttributes.PET)) {
-			if (HousingTilesDao.getHouseIdFromFloorAndTileId(player.getFloor(), player.getTileId()) == player.getHouseId()) {
+			if (HousingManager.getHouseIdFromFloorAndTileId(player.getFloor(), player.getTileId()) == player.getHouseId()) {
 				if (!HousePetsManager.addPetByPetItemId(player, itemToDrop.getItemId())) {
 					setRecoAndResponseText(0, "it's a bit crowded in here, think of the poor animal...");
 					responseMaps.addClientOnlyResponse(player, this);

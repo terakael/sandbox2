@@ -28,8 +28,6 @@ import database.dao.EmptyableDao;
 import database.dao.EquipmentDao;
 import database.dao.FishableDao;
 import database.dao.GroundTextureDao;
-import database.dao.HouseNamesDao;
-import database.dao.HousingTilesDao;
 import database.dao.ItemDao;
 import database.dao.MineableDao;
 import database.dao.MinimapSegmentDao;
@@ -62,6 +60,7 @@ import processing.managers.ArtisanManager;
 import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.HousePetsManager;
+import processing.managers.HousingManager;
 import processing.managers.ShopManager;
 import processing.managers.UndeadArmyManager;
 import processing.managers.WanderingPetManager;
@@ -273,17 +272,14 @@ public class Server {
 		System.out.println("caching clocks");
 		ClockDao.setupCaches();
 		
-		System.out.println("caching housing tiles");
-		HousingTilesDao.setupCaches();
+		System.out.println("caching housing");
+		HousingManager.setupCaches();
 		
 		System.out.println("caching housing constructables");
 		ConstructableManager.setupCaches();
 		
 		System.out.println("caching house pets");
 		HousePetsManager.setupCaches();
-		
-		System.out.println("caching house names");
-		HouseNamesDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

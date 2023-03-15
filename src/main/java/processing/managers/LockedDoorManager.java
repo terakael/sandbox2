@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import database.dao.HousingTilesDao;
 import database.dao.PlayerStorageDao;
 import database.dao.StatsDao;
 import database.dto.LockedDoorDto;
@@ -95,7 +94,7 @@ public class LockedDoorManager {
 			return "";
 		
 		// player house locked doors, check if player is owner of current house
-		if (player.getHouseId() == HousingTilesDao.getHouseIdFromFloorAndTileId(lockedDoor.getFloor(), lockedDoor.getTileId())) {
+		if (player.getHouseId() == HousingManager.getHouseIdFromFloorAndTileId(lockedDoor.getFloor(), lockedDoor.getTileId())) {
 			return "";
 		}
 		

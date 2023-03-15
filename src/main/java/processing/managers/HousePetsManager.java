@@ -7,7 +7,6 @@ import java.util.Random;
 import java.util.Set;
 
 import database.DbConnection;
-import database.dao.HousingTilesDao;
 import database.dao.NPCDao;
 import database.dao.PetDao;
 import database.dto.NPCDto;
@@ -41,7 +40,7 @@ public class HousePetsManager {
 	}
 	
 	public static void removePet(NPC pet) {		
-		final int houseId = HousingTilesDao.getHouseIdFromFloorAndTileId(pet.getFloor(), pet.getInstanceId());
+		final int houseId = HousingManager.getHouseIdFromFloorAndTileId(pet.getFloor(), pet.getInstanceId());
 		
 		if (housePetInstances.containsKey(pet.getFloor()) && housePetInstances.get(pet.getFloor()).containsKey(houseId)) {
 			housePetInstances.get(pet.getFloor()).get(houseId).remove(pet.getInstanceId());
@@ -64,7 +63,7 @@ public class HousePetsManager {
 	
 	private static boolean addPet(int houseId, int petId, int floor, Integer spawnTileId) {
 		// given the list of house tiles on this floor, remove any tiles already taken by pets.  Scenery is already filtered out.
-		final Set<Integer> availableHouseTiles = HousingTilesDao.getWalkableTilesByHouseId(houseId, floor);
+		final Set<Integer> availableHouseTiles = HousingManager.getWalkableTilesByHouseId(houseId, floor);
 		availableHouseTiles.removeAll(getOccupiedTileIdsByHouseId(houseId, floor));
 		if (availableHouseTiles.isEmpty())
 			return false; // no free tiles to accomodate pet
