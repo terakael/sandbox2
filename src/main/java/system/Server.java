@@ -1,8 +1,6 @@
 package system;
 import java.io.IOException;
-import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 import javax.websocket.DeploymentException;
 
@@ -30,6 +28,7 @@ import database.dao.EmptyableDao;
 import database.dao.EquipmentDao;
 import database.dao.FishableDao;
 import database.dao.GroundTextureDao;
+import database.dao.HouseNamesDao;
 import database.dao.HousingTilesDao;
 import database.dao.ItemDao;
 import database.dao.MineableDao;
@@ -42,6 +41,7 @@ import database.dao.PlayerArtisanBlockedTaskDao;
 import database.dao.PlayerArtisanTaskBreakdownDao;
 import database.dao.PlayerArtisanTaskDao;
 import database.dao.PlayerBaseAnimationsDao;
+import database.dao.PlayerDao;
 import database.dao.PlayerTybaltsTaskDao;
 import database.dao.PrayerDao;
 import database.dao.ReinforcementBonusesDao;
@@ -58,12 +58,10 @@ import database.dao.UndeadArmyWavesDao;
 import database.dao.UseItemOnItemDao;
 import processing.PathFinder;
 import processing.WorldProcessor;
-import processing.attackable.NPC;
 import processing.managers.ArtisanManager;
 import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.HousePetsManager;
-import processing.managers.LocationManager;
 import processing.managers.ShopManager;
 import processing.managers.UndeadArmyManager;
 import processing.managers.WanderingPetManager;
@@ -105,6 +103,9 @@ public class Server {
 	}
 	
 	private static void setupCaches() throws IOException {
+		System.out.println("caching player names");
+		PlayerDao.setupCaches();
+		
 		System.out.println("caching sprite frames");
 		SpriteFrameDao.setupCaches();
 		
@@ -280,6 +281,9 @@ public class Server {
 		
 		System.out.println("caching house pets");
 		HousePetsManager.setupCaches();
+		
+		System.out.println("caching house names");
+		HouseNamesDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

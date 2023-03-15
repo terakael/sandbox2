@@ -338,4 +338,10 @@ public class RoomGroundItemManager {
 				
 		return null;
 	}
+	
+	public int getGlobalItemCountAtTileId(int tileId) {
+		if (globalGroundItems.containsKey(tileId))
+			return globalGroundItems.get(tileId).size();
+		return 0;
+	}
 }

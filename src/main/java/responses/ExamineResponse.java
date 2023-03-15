@@ -4,15 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import database.dao.ClockDao;
+import database.dao.HouseNamesDao;
 import database.dao.HousingTilesDao;
 import database.dao.ItemDao;
 import database.dao.NPCDao;
+import database.dao.PlayerDao;
 import database.dao.PlayerStorageDao;
 import database.dao.SceneryDao;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.managers.ConstructableManager;
 import processing.managers.LocationManager;
+import processing.managers.LockedDoorManager;
 import processing.managers.TimeManager;
 import requests.ExamineRequest;
 import requests.Request;
@@ -63,6 +66,18 @@ public class ExamineResponse extends Response {
 			
 			if (ClockDao.isClock(request.getObjectId())) {
 				examineText += String.format(" (%s)", TimeManager.getInGameTime());
+			}
+			
+			// player house front doors show the house name and who owns it
+			if (LockedDoorManager.isLockedDoor(player.getFloor(), request.getTileId())) {
+				final int houseId = HousingTilesDao.getHouseIdFromFloorAndTileId(player.getFloor(), request.getTileId());
+				if (houseId > 0) {
+					final int owningPlayerId = HousingTilesDao.getOwningPlayerId(player.getFloor(), request.getTileId());
+					final String ownershipMessage = owningPlayerId != -1
+							? String.format("owned by %s", PlayerDao.getNameFromId(owningPlayerId))
+							: "up for sale";
+					examineText = String.format("a sign reads: %s - %s.", HouseNamesDao.getHouseNameById(houseId), ownershipMessage);
+				}
 			}
 			
 			break;

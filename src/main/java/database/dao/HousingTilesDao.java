@@ -1,15 +1,18 @@
 package database.dao;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import database.DbConnection;
 
 public class HousingTilesDao {
 	private static Map<Integer, Map<Integer, Integer>> housingTileInstances = null; // floor, <tileId, houseId>
-	private static Map<Integer, Map<Integer, Set<Integer>>> walkableTilesByHouseId = null; // floor, <houseId, <tileIds>>
+	private static Map<Integer, Map<Integer, Set<Integer>>> walkableTilesByHouseId = null; // houseId, <floor, <tileIds>>
 	private static Map<Integer, Integer> houseOwnerIds = null; // houseId, playerid
 	
 	public static void setupCaches() {
@@ -21,9 +24,9 @@ public class HousingTilesDao {
 			housingTileInstances.get(rs.getInt("floor")).put(rs.getInt("tile_id"), rs.getInt("house_id"));
 			
 			// quick lookup for tileIds based on floor/houseId.  Note we only want walkable tiles.
-			walkableTilesByHouseId.putIfAbsent(rs.getInt("floor"), new HashMap<>());
-			walkableTilesByHouseId.get(rs.getInt("floor")).putIfAbsent(rs.getInt("house_id"), new HashSet<>());
-			walkableTilesByHouseId.get(rs.getInt("floor")).get(rs.getInt("house_id")).add(rs.getInt("tile_id"));
+			walkableTilesByHouseId.putIfAbsent(rs.getInt("house_id"), new HashMap<>());
+			walkableTilesByHouseId.get(rs.getInt("house_id")).putIfAbsent(rs.getInt("floor"), new HashSet<>());
+			walkableTilesByHouseId.get(rs.getInt("house_id")).get(rs.getInt("floor")).add(rs.getInt("tile_id"));
 		});
 		
 		houseOwnerIds = new HashMap<>();
@@ -46,8 +49,35 @@ public class HousingTilesDao {
 	}
 	
 	public static Set<Integer> getWalkableTilesByHouseId(int houseId, int floor) {
-		if (walkableTilesByHouseId.containsKey(floor) && walkableTilesByHouseId.get(floor).containsKey(houseId))
-			return walkableTilesByHouseId.get(floor).get(houseId);
+		if (walkableTilesByHouseId.containsKey(houseId) && walkableTilesByHouseId.get(houseId).containsKey(floor))
+			return walkableTilesByHouseId.get(houseId).get(floor);
 		return null;
+	}
+	
+	public static int getHouseIdByPlayerId(int playerId) {
+		return houseOwnerIds.entrySet().stream()
+				.filter(entry -> entry.getValue() == playerId)
+				.map(Map.Entry::getKey)
+				.findFirst()
+				.orElse(-1);
+	}
+	
+	public static int[] getRandomWalkableTileByPlayerId(int playerId) {
+		final int houseId = getHouseIdByPlayerId(playerId);
+		if (houseId == -1)
+			return null;
+		
+		// this is a mess, there must be a better way
+		Map<Integer, Set<Integer>> allWalkableTiles = getAllWalkableTilesByHouseId(houseId);
+		List<Integer> floorList = new ArrayList<>(allWalkableTiles.keySet());
+		int randomFloor = floorList.get(new Random().nextInt(floorList.size()));
+		List<Integer> tileList = new ArrayList<>(allWalkableTiles.get(randomFloor));
+		int randomTile = tileList.get(new Random().nextInt(tileList.size()));
+		
+		return new int[] {randomFloor, randomTile};
+	}
+	
+	public static Map<Integer, Set<Integer>> getAllWalkableTilesByHouseId(int houseId) {
+		return walkableTilesByHouseId.get(houseId);
 	}
 }

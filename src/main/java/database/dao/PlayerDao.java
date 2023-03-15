@@ -15,7 +15,16 @@ import processing.WorldProcessor;
 import processing.attackable.Player;
 
 public class PlayerDao {
+	private static Map<Integer, String> playerNamesById;
+	
 	private PlayerDao() {}
+	
+	public static void setupCaches() {
+		playerNamesById = new HashMap<>();
+		DbConnection.load("select id, name from player", rs -> {
+			playerNamesById.put(rs.getInt("id"), rs.getString("name"));
+		});
+	}
 	
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
 		final String query = "select id, name, password, tile_id, floor, house_id, attack_style_id from player where name = ? and password = ?";
@@ -53,12 +62,16 @@ public class PlayerDao {
 	}
 	
 	public static String getNameFromId(int id) {
-		Optional<Player> player = WorldProcessor.playerSessions.values().stream().filter(e -> e.getId() == id).findFirst();
-		return player.isPresent() ? player.get().getDto().getName() : "";
+		if (playerNamesById.containsKey(id))
+			return playerNamesById.get(id);
+		return "";
 	}
 	
 	public static int getIdFromName(String name) {
-		Optional<Player> player = WorldProcessor.playerSessions.values().stream().filter(e -> e.getDto().getName().equals(name)).findFirst();
-		return player.isPresent() ? player.get().getId() : -1;
+		return playerNamesById.entrySet().stream()
+				.filter(entry -> entry.getValue().equals(name))
+				.map(e -> e.getKey())
+				.findFirst()
+				.orElse(-1);
 	}
 }

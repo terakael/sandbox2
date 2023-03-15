@@ -1,61 +1,59 @@
 package processing.scenery.constructable;
 
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import database.dao.ItemDao;
-import database.dao.SceneryDao;
 import database.dto.ConstructableDto;
-import processing.PathFinder;
+import processing.attackable.Player;
 import responses.ResponseMaps;
 import system.GroundItemManager;
+import types.Items;
 import utils.RandomUtil;
-import utils.Utils;
 
-public class NaturesShrine extends Constructable {
-	private List<Integer> spawnableTileIds; // list due to random access
+public class NaturesShrine extends RadialConstructable {
 	private List<Integer> flowerIds; // list due to random access
+	private Set<Integer> recentTileIds = new LinkedHashSet<>();
 	
 	private final static int GROW_TIMER = 5;
 	private int growOffset;
 	
 	public NaturesShrine(int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile) {
-		super(floor, tileId, lifetimeTicks, dto, onHousingTile);
+		super(floor, tileId, lifetimeTicks, dto, onHousingTile, 2);
 		
 		growOffset = RandomUtil.getRandom(0, GROW_TIMER); // used so flowers grow on different ticks when there's multiple Natures Shrines around.  Looks weird otherwise.
 		
-		spawnableTileIds = findSpawnableTileIds();
-		
 		flowerIds = List.<Integer>of(
-					ItemDao.getIdFromName("orange harnia"),
-					ItemDao.getIdFromName("red russine"),
-					ItemDao.getIdFromName("sky flower"),
-					ItemDao.getIdFromName("dark bluebell"),
-					ItemDao.getIdFromName("starflower")
+					Items.ORANGE_HARNIA.getValue(),
+					Items.RED_RUSSINE.getValue(),
+					Items.SKY_FLOWER.getValue(),
+					Items.DARK_BLUEBELL.getValue(),
+					Items.STARFLOWER.getValue()
 				);
 	}
 
 	@Override
 	public void processConstructable(int tickId, ResponseMaps responseMaps) {		
+		recentTileIds.addAll(getPlayersOnAffectingTileIds().stream()
+				.map(Player::getTileId)
+				.filter(t -> t != tileId) // don't spawn flowers on top of the shrine
+				.collect(Collectors.toCollection(LinkedHashSet::new)));
+		
 		if (tickId % GROW_TIMER == growOffset) {
-			if (spawnableTileIds.isEmpty()) {
-				spawnableTileIds = findSpawnableTileIds(); 
+			Integer maxFlowersPerTimer = 2;
+	
+			final Iterator<Integer> iter = recentTileIds.iterator();
+			while (iter.hasNext()) {
+				int nextTileId = iter.next();
+				iter.remove();
+				if (GroundItemManager.getGlobalItemCountAtTileId(floor, nextTileId) == 0) {
+					GroundItemManager.addGlobally(floor, nextTileId, flowerIds.get(RandomUtil.getRandom(0, flowerIds.size())));
+					if (--maxFlowersPerTimer == 0)
+						return;
+				}
 			}
-			
-			final int itemId = flowerIds.get(RandomUtil.getRandom(0, flowerIds.size()));
-			
-			final int tileIndex = RandomUtil.getRandom(0, spawnableTileIds.size());
-			final int tileIdToSpawnOn = spawnableTileIds.get(tileIndex);
-			GroundItemManager.addGlobally(floor, tileIdToSpawnOn, itemId, 1, ItemDao.getMaxCharges(itemId));
-			spawnableTileIds.remove(tileIndex);
 		}
 	}
-	
-	private List<Integer> findSpawnableTileIds() {
-		return Utils.getLocalTiles(tileId, 2).stream()
-				.filter(e -> {
-					return PathFinder.tileIsValid(floor, e) && SceneryDao.getSceneryIdByTileId(floor, e) == -1 && e != tileId;
-				}).collect(Collectors.toList());
-	}
-
 }

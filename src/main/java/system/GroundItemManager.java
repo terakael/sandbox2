@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import database.dao.GroundTextureDao;
+import database.dao.ItemDao;
 import processing.managers.RoomGroundItemManager;
 import processing.managers.RoomGroundItemManager.GroundItem;
 
@@ -34,6 +35,10 @@ public class GroundItemManager {
 			return;
 		
 		groundItemManagers.get(floor).add(playerId, itemId, tileId, count, charges);
+	}
+	
+	public static void addGlobally(int floor, int tileId, int itemId) {
+		addGlobally(floor, tileId, itemId, 1, ItemDao.getMaxCharges(itemId));
 	}
 	
 	public static void addGlobally(int floor, int tileId, int itemId, int count, int charges) {
@@ -74,5 +79,11 @@ public class GroundItemManager {
 			return null;
 		
 		return groundItemManagers.get(floor).getItemAtTileId(playerId, itemId, tileId);
+	}
+	
+	public static int getGlobalItemCountAtTileId(int floor, int tileId) {
+		if (groundItemManagers.containsKey(floor))
+			return groundItemManagers.get(floor).getGlobalItemCountAtTileId(tileId);
+		return 0;
 	}
 }

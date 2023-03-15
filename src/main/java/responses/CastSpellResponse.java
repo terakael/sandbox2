@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.Random;
 
 import database.dao.CastableDao;
+import database.dao.DoorDao;
 import database.dao.EquipmentDao;
+import database.dao.HousingTilesDao;
 import database.dao.NPCDao;
 import database.dao.PlayerStorageDao;
 import database.dao.StatsDao;
@@ -222,6 +224,21 @@ public class CastSpellResponse extends Response {
 		TeleportableDto teleportable = TeleportableDao.getTeleportableByItemId(castable.getItemId());
 		if (teleportable == null) {
 			return false;
+		}
+		
+		if (castable.getItemId() == Items.HOUSE_TELEPORT_RUNE.getValue()) {
+			// house teleport is a special case, because everyone's location is different.
+			final int houseId = HousingTilesDao.getHouseIdByPlayerId(player.getId());
+			if (houseId == -1) {
+				responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("you don't have a house to teleport to.", "white"));
+				return true;
+			}
+			
+			int[] floorAndTileId = HousingTilesDao.getRandomWalkableTileByPlayerId(player.getId());
+			if (floorAndTileId == null)
+				return false;
+			
+			teleportable = new TeleportableDto(castable.getItemId(), floorAndTileId[0], floorAndTileId[1]);
 		}
 		
 		// send teleport explosions to both where the player teleported from, and where they're teleporting to

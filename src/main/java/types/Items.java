@@ -492,7 +492,9 @@ public enum Items {
 	
 	EMPTY_BUCKET(499),
 	BUCKET_OF_MILK(500),
-	BUCKET_OF_WATER(501)
+	BUCKET_OF_WATER(501),
+	
+	HOUSE_TELEPORT_RUNE(505)
 	;
 
 	@Getter private int value;
