@@ -93,6 +93,7 @@ public class UseResponse extends Response {
 		
 		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getDest(), !targetIsDoor, true)) {
 			if (targetIsDoor) {
+				// TODO this logic should be updated to use the closest door tile to the player (see OpenCloseResponse)
 				player.setPath(PathFinder.findPathToDoor(player.getFloor(), player.getTileId(), request.getDest()));
 			} else {
 				player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getDest(), false));

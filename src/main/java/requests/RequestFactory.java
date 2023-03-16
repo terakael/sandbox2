@@ -44,6 +44,7 @@ public class RequestFactory {
 		map.put("drink", DrinkRequest.class);
 		map.put("catch", CatchRequest.class);
 		map.put("climb", ClimbRequest.class);
+		map.put("climb through", ClimbThroughRequest.class);
 		map.put("pick", PickRequest.class);
 		map.put("deposit", DepositRequest.class);
 		map.put("withdraw", WithdrawRequest.class);

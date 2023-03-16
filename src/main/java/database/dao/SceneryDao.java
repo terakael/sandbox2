@@ -16,6 +16,7 @@ import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.UndeadArmyManager;
 import types.SceneryAttributes;
+import types.SceneryContextOptions;
 
 public class SceneryDao {
 	private SceneryDao() {};
@@ -179,6 +180,15 @@ public class SceneryDao {
 			return false;
 		
 		return (dto.getAttributes() & attribute.getValue()) > 0;
+	}
+	
+	public static boolean sceneryContainsContextOption(int sceneryId, SceneryContextOptions option) {
+		final SceneryDto dto = allScenery.get(sceneryId);
+		if (dto == null)
+			return false;
+		
+		return ((dto.getLeftclickOption() & option.getValue()) | 
+				(dto.getOtherOptions() & option.getValue())) > 0;
 	}
 	
 	public static void upsertRoomScenery(int floor, int tileId, int sceneryId) {

@@ -126,6 +126,9 @@ public class ResponseFactory {
 		case "climb":
 			response = new ClimbResponse();
 			break;
+		case "climb through":
+			response = new ClimbThroughResponse();
+			break;
 		case "pick":
 			response = new PickResponse();
 			break;

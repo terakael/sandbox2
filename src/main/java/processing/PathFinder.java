@@ -712,4 +712,35 @@ public class PathFinder {
 		
 		return walkableTiles;
 	}
+	
+	public static int calculateThroughTileId(int tileId, int impassable) {
+		// we assume the impassable is a single side i.e. 1/2/4/8.
+		// if it's multiple sides then who knows what the through tileId is...
+		
+		switch (impassable) {
+		case 0: // no sides, return the input tileId
+			return tileId;
+		
+		case 1:
+			return tileId - PathFinder.LENGTH;
+			
+		case 2:
+			return tileId - 1;
+			
+		case 4:
+			return tileId + 1;
+			
+		case 8:
+			return tileId + PathFinder.LENGTH;
+			
+		default: // if there are multiple sides then fuck it basically
+			return -1;
+		}
+	}
+	
+	public static int getCloserTile(int fromTileId, int firstTileId, int secondTileId) {
+		final double firstTileDist = PathFinder.calculateManhattan(fromTileId, firstTileId);
+		final double secondTileDist = PathFinder.calculateManhattan(fromTileId, secondTileId);
+		return firstTileDist < secondTileDist ? firstTileId : secondTileId;
+	}
 }

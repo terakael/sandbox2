@@ -3,11 +3,12 @@ package responses;
 import java.util.List;
 import java.util.Stack;
 
-import lombok.Setter;
 import database.dao.DoorDao;
 import database.dao.PlayerStorageDao;
+import database.dao.SceneryDao;
 import database.dto.DoorDto;
 import database.dto.LockedDoorDto;
+import lombok.Setter;
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
@@ -27,15 +28,15 @@ public class OpenCloseResponse extends Response {
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		OpenRequest request = (OpenRequest)req;
+		tileId = request.getTileId();
 		
 		// does the tile a door on it?
-		DoorDto door = DoorDao.getDoorDtoByTileId(player.getFloor(), request.getTileId());
+		DoorDto door = DoorDao.getDoorDtoByTileId(player.getFloor(), tileId);
 		if (door == null) {
 			// this can technically happen when the player clicks a ladder, then right-clicks a door
 			// then finally selects "open" after they have switched rooms.  Do not do anything in this case.
 			return;
 		}
-		tileId = request.getTileId();
 		
 		if (FightManager.fightWithFighterIsBattleLocked(player)) {
 			setRecoAndResponseText(0, "you can't do that during combat.");
@@ -44,26 +45,38 @@ public class OpenCloseResponse extends Response {
 		}
 		FightManager.cancelFight(player, responseMaps);
 		
-		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), tileId, false, true)) {
-			Stack<Integer> path = PathFinder.findPathToDoor(player.getFloor(), player.getTileId(), tileId);
-			// empty check because it's not guaranteed that there is a path between the player and the door.
-			if (!path.isEmpty()) {
-				player.setPath(path);
-				player.setState(PlayerState.walking);
-				player.setSavedRequest(req);
-			}
+		final int impassable = DoorDao.getDoorImpassableByTileId(player.getFloor(), tileId);
+		int throughTileId = PathFinder.calculateThroughTileId(tileId, impassable);
+		if (throughTileId == -1)
+			return; // multiple sides means we can't deduce where to walk through
+		
+		// we want to start by walking to the closest tile to us (i.e. the side of the wall we're on)
+		final int closestTileId = PathFinder.getCloserTile(player.getTileId(), tileId, throughTileId);
+		
+		final LockedDoorDto lockedDoor = LockedDoorManager.getLockedDoor(player.getFloor(), tileId);
+		
+		// if it's not a locked door, we want to check "next to", because we need to be able to open/close from either side.
+		// if it is a locked door, then we want to check if we're exactly on the closest tile to prevent speed-walking
+		final boolean closeEnoughToOpen = lockedDoor == null
+				? PathFinder.isNextTo(player.getFloor(), player.getTileId(), closestTileId)
+				: player.getTileId() == closestTileId;
+		
+		if (!closeEnoughToOpen) {
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), closestTileId, true));
+			player.setState(PlayerState.walking);
+			player.setSavedRequest(req);
 			return;
 		} else {			
 			player.faceDirection(request.getTileId(), responseMaps);
-			
-			LockedDoorDto lockedDoor = LockedDoorManager.getLockedDoor(player.getFloor(), tileId);
 			if (lockedDoor != null) {
 				String failedRequirementReason = LockedDoorManager.playerMeetsDoorRequirements(player, lockedDoor);
 				if (failedRequirementReason.isEmpty()) { // empty reason means the player meets the requirements
 					if (LockedDoorManager.openLockedDoor(player.getFloor(), tileId)) // if it's already open then keep it open; just reset the timer
 						responseMaps.addLocalResponse(player.getFloor(), tileId, this);
 					// move the player to the other side
-					int newPlayerTileId = LockedDoorManager.calculatePlayerNewTileId(player.getTileId(), tileId, DoorDao.getDoorImpassableByTileId(player.getFloor(), tileId));
+					// our destination tile is the tile that isn't closest, i.e. the one on the other side of the wall
+					final int newPlayerTileId = throughTileId == closestTileId ? request.getTileId() : throughTileId;
+					
 					PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 					playerUpdate.setId(player.getId());
 					playerUpdate.setTileId(newPlayerTileId);

@@ -64,7 +64,7 @@ public class HousePetsManager {
 	private static boolean addPet(int houseId, int petId, int floor, Integer spawnTileId) {
 		// given the list of house tiles on this floor, remove any tiles already taken by pets.  Scenery is already filtered out.
 		final Set<Integer> availableHouseTiles = HousingManager.getWalkableTilesByHouseId(houseId, floor);
-		availableHouseTiles.removeAll(getOccupiedTileIdsByHouseId(houseId, floor));
+		availableHouseTiles.removeAll(getOccupiedNpcTileIdsByHouseId(houseId, floor));
 		if (availableHouseTiles.isEmpty())
 			return false; // no free tiles to accomodate pet
 		
@@ -88,7 +88,10 @@ public class HousePetsManager {
 		return true;
 	}
 	
-	private static Set<Integer> getOccupiedTileIdsByHouseId(int houseId, int floor) {
+	private static Set<Integer> getOccupiedNpcTileIdsByHouseId(int houseId, int floor) {
+		// TODO not just pets - what if other npcs exist in the house?  player grown zombies, npcs whos spawn point is in the house etc
+		// the point of this function is to find a free tile to set as the pet id
+		
 		if (housePetInstances.containsKey(floor) && housePetInstances.get(floor).containsKey(houseId))
 			return housePetInstances.get(floor).get(houseId);
 		return new HashSet<>();

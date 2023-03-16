@@ -3,6 +3,7 @@ package processing.scenery;
 import database.dao.DoorDao;
 import database.dao.PlayerStorageDao;
 import database.dto.LockedDoorDto;
+import processing.PathFinder;
 import processing.attackable.Player;
 import processing.managers.LockedDoorManager;
 import requests.UseRequest;
@@ -23,13 +24,16 @@ public class Door implements Scenery {
 			return false;
 		}
 		
+		// the tile the player would end up
+		final int newPlayerTileId = PathFinder.calculateThroughTileId(lockedDoor.getTileId(), DoorDao.getDoorImpassableByTileId(player.getFloor(), lockedDoor.getTileId()));
+		if (newPlayerTileId == -1 || newPlayerTileId == lockedDoor.getTileId())
+			return false; // fail early if we don't go through properly to prevent potentially destroying the inventory item 
+		
 		// destroy use-item if necessary
 		if (lockedDoor.isDestroyOnUse()) {
 			int slotId = PlayerStorageDao.getSlotOfItemId(player.getId(), StorageTypes.INVENTORY, lockedDoor.getUnlockItemId());
-			if (slotId == -1) {
-				// they don't have the item?
-				return false;
-			}
+			if (slotId == -1)
+				return false; // they don't have the item?
 			
 			PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY, slotId, -1);
 			InventoryUpdateResponse.sendUpdate(player, responseMaps);
@@ -42,8 +46,6 @@ public class Door implements Scenery {
 			responseMaps.addLocalResponse(player.getFloor(), lockedDoor.getTileId(), openCloseResponse);
 		}
 		
-		// move the player to the other side
-		int newPlayerTileId = LockedDoorManager.calculatePlayerNewTileId(player.getTileId(), lockedDoor.getTileId(), DoorDao.getDoorImpassableByTileId(player.getFloor(), lockedDoor.getTileId()));
 		player.setTileId(newPlayerTileId);
 		
 		PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();

@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import processing.PathFinder;
@@ -21,7 +22,7 @@ public class LocationManager {
 	private static Map<Integer, Map<Integer, Set<NPC>>> diurnalNpcs = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<NPC>>> undergroundNpcs = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<NPC>>> pets = new HashMap<>();
-	private static Map<Integer, Map<Integer, Set<Player>>> players = new HashMap<>();
+	private static Map<Integer, Map<Integer, Set<Player>>> players = new HashMap<>(); // floor, <segmentId, <players>>
 	
 	public static NPC getNpcNearPlayerByInstanceId(Player player, int instanceId) {
 		return LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 12).stream()
@@ -75,7 +76,7 @@ public class LocationManager {
 	
 	public static Map<Integer, Set<NPC>> getAllNpcsNearPlayers(boolean isDaytime) {
 		Map<Integer, Set<NPC>> npcsToReturn = new HashMap<>();
-		
+
 		players.forEach((floor, segmentMap) -> {
 			final Map<Integer, Map<Integer, Set<NPC>>> sourceMap = 
 					floor < 0
@@ -92,12 +93,22 @@ public class LocationManager {
 					}
 				});
 			}
+			
+			// pets are either following the player or wandering around a house.
+			// pets wandering around a house far away from players don't need processing.
+			// TODO filter this for pets that are following players plus pets in houses near player
+			// problem with the following code is that it doesn't account for pets following players
+			// when the player teleports or changes floor - the pet gets left behind.
+//			if (pets.containsKey(floor)) {
+//				segmentMap.keySet().forEach(segment -> {
+//					if (pets.get(floor).containsKey(segment)) {
+//						npcsToReturn.putIfAbsent(floor, new HashSet<>());
+//						npcsToReturn.get(floor).addAll(pets.get(floor).get(segment));
+//					}
+//				});
+//			}
 		});
-		
-		// pets are either following the player or wandering around a house.
-		// pets wandering around a house far away from players don't need processing.
-		// TODO filter this for pets that are following players plus pets in houses near players
-		// check getLocalNpcs
+
 		pets.forEach((floor, petMap) -> {
 			npcsToReturn.putIfAbsent(floor, new HashSet<>());
 			npcsToReturn.get(floor).addAll(petMap.values().stream().flatMap(Set::stream).collect(Collectors.toSet()));

@@ -71,24 +71,9 @@ public class LockedDoorManager {
 		return lockedDoorInstances.get(floor).get(tileId);
 	}
 	
-	public static int calculatePlayerNewTileId(int playerTileId, int doorTileId, int impassable) {
-		if (playerTileId == doorTileId) {
-			if ((impassable & 1) > 0) {
-				return doorTileId - PathFinder.LENGTH;
-			} else if ((impassable & 2) > 0) {
-				return doorTileId - 1;
-			} else if ((impassable & 4) > 0) {
-				return doorTileId + 1;
-			} else if ((impassable & 8) > 0) {
-				return doorTileId + PathFinder.LENGTH;
-			}
-		}
-		
-		return doorTileId;
-	}
-	
 	public static String playerMeetsDoorRequirements(Player player, LockedDoorDto lockedDoor) {
-		// TODO this is where things like guild doors etc are handled
+		// this is where things like guild doors etc are handled
+		
 		List<Integer> invIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (lockedDoor.getUnlockItemId() != 0 && invIds.contains(lockedDoor.getUnlockItemId()))
 			return "";
@@ -99,12 +84,12 @@ public class LockedDoorManager {
 		}
 		
 		// tybalt's house
-		if (lockedDoor.getFloor() == 0 && lockedDoor.getTileId() == 873569404) {
-			if (StatsDao.getCombatLevelByPlayerId(player.getId()) < 100) {
-				return "you need to be 100 combat or higher to enter.";
-			}
-			return "";
-		}
+//		if (lockedDoor.getFloor() == 0 && lockedDoor.getTileId() == 873569404) {
+//			if (StatsDao.getCombatLevelByPlayerId(player.getId()) < 100) {
+//				return "you need to be 100 combat or higher to enter.";
+//			}
+//			return "";
+//		}
 		
 		return "the door is locked.";
 	}
