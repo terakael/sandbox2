@@ -100,7 +100,7 @@ public class PathFinder {
 			return null;
 		}
 		
-		public boolean isSiblingPassable(int elementId, int floor) { // floor is needed for door checks
+		private boolean isSiblingPassable(int elementId, int floor, boolean ignoreDoors) { // floor is needed for door checks
 			PathNode sibling = getSibling(elementId);
 			if (sibling == null)
 				return false;// if it doesn't exist then it's obviously not passable
@@ -108,19 +108,19 @@ public class PathFinder {
 			switch (elementId) {
 			case 0: {
 				// sibling is upper-left
-				int doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id);
+				int doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id);
 				if (ImpassableTypes.isImpassable(ImpassableTypes.TOP, impassableTypes | doorImpassableTypes) ||
 					ImpassableTypes.isImpassable(ImpassableTypes.LEFT, impassableTypes | doorImpassableTypes)) {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, sibling.getId());
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, sibling.getId());
 				if (ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, sibling.impassableTypes | doorImpassableTypes) ||
 					ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, sibling.impassableTypes | doorImpassableTypes)) {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id - LENGTH); // avoid null check for upper; if it doesn't exist in the array then it's 0 (i.e. passable)
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id - LENGTH); // avoid null check for upper; if it doesn't exist in the array then it's 0 (i.e. passable)
 				PathNode upper = getSibling(1);
 				if (upper == null || 
 					ImpassableTypes.isImpassable(ImpassableTypes.LEFT, upper.impassableTypes | doorImpassableTypes) ||
@@ -128,7 +128,7 @@ public class PathFinder {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id - 1); // avoid null check for left; if it doesn't exist in the array then it's 0 (i.e. passable)
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id - 1); // avoid null check for left; if it doesn't exist in the array then it's 0 (i.e. passable)
 				PathNode left = getSibling(3);
 				if (left == null || 
 					ImpassableTypes.isImpassable(ImpassableTypes.TOP, left.impassableTypes | doorImpassableTypes) ||
@@ -140,24 +140,24 @@ public class PathFinder {
 			}
 			case 1: {
 				// sibling is above
-				return !ImpassableTypes.isImpassable(ImpassableTypes.TOP, impassableTypes | DoorDao.getDoorImpassableByTileId(floor, id)) &&
-					   !ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, sibling.impassableTypes | DoorDao.getDoorImpassableByTileId(floor, sibling.getId()));
+				return !ImpassableTypes.isImpassable(ImpassableTypes.TOP, impassableTypes | (ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id))) &&
+					   !ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, sibling.impassableTypes | (ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, sibling.getId())));
 			}
 			case 2: {
 				// sibling is upper-right
-				int doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id);
+				int doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id);
 				if (ImpassableTypes.isImpassable(ImpassableTypes.TOP, impassableTypes | doorImpassableTypes) ||
 					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, impassableTypes | doorImpassableTypes)) {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, sibling.getId());
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, sibling.getId());
 				if (ImpassableTypes.isImpassable(ImpassableTypes.LEFT, sibling.impassableTypes | doorImpassableTypes) ||
 					ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, sibling.impassableTypes | doorImpassableTypes)) {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id - LENGTH);
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id - LENGTH);
 				PathNode upper = getSibling(1);
 				if (upper == null || 
 					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, upper.impassableTypes | doorImpassableTypes) ||
@@ -165,7 +165,7 @@ public class PathFinder {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id + 1);
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id + 1);
 				PathNode right = getSibling(4);
 				if (right == null || 
 					ImpassableTypes.isImpassable(ImpassableTypes.TOP, right.impassableTypes | doorImpassableTypes) ||
@@ -176,29 +176,29 @@ public class PathFinder {
 			}
 			case 3: {
 				// sibling is to the left
-				return !ImpassableTypes.isImpassable(ImpassableTypes.LEFT, impassableTypes | DoorDao.getDoorImpassableByTileId(floor, id)) &&
-					   !ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, sibling.impassableTypes | DoorDao.getDoorImpassableByTileId(floor, sibling.getId()));
+				return !ImpassableTypes.isImpassable(ImpassableTypes.LEFT, impassableTypes | (ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id))) &&
+					   !ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, sibling.impassableTypes | (ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, sibling.getId())));
 			}
 			case 4: {
 				// sibling is to the right
-				return !ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, impassableTypes | DoorDao.getDoorImpassableByTileId(floor, id)) &&
-					   !ImpassableTypes.isImpassable(ImpassableTypes.LEFT, sibling.impassableTypes | DoorDao.getDoorImpassableByTileId(floor, sibling.getId()));
+				return !ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, impassableTypes | (ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id))) &&
+					   !ImpassableTypes.isImpassable(ImpassableTypes.LEFT, sibling.impassableTypes | (ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, sibling.getId())));
 			}
 			case 5: {
 				// sibling is lower-left
-				int doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id);
+				int doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id);
 				if (ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, impassableTypes | doorImpassableTypes) ||
 					ImpassableTypes.isImpassable(ImpassableTypes.LEFT, impassableTypes | doorImpassableTypes)) {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, sibling.getId());
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, sibling.getId());
 				if (ImpassableTypes.isImpassable(ImpassableTypes.TOP, sibling.impassableTypes | doorImpassableTypes) ||
 					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, sibling.impassableTypes | doorImpassableTypes)) {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id + LENGTH);
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id + LENGTH);
 				PathNode lower = getSibling(6);
 				if (lower == null || 
 					ImpassableTypes.isImpassable(ImpassableTypes.LEFT, lower.impassableTypes | doorImpassableTypes) ||
@@ -206,7 +206,7 @@ public class PathFinder {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id - 1);
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id - 1);
 				PathNode left = getSibling(3);
 				if (left == null || 
 					ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, left.impassableTypes | doorImpassableTypes) ||
@@ -217,24 +217,24 @@ public class PathFinder {
 			}
 			case 6: {
 				// siblings is below:
-				return !ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, impassableTypes | DoorDao.getDoorImpassableByTileId(floor, id)) &&
-					   !ImpassableTypes.isImpassable(ImpassableTypes.TOP, sibling.impassableTypes | DoorDao.getDoorImpassableByTileId(floor, sibling.getId()));
+				return !ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, impassableTypes | (ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id))) &&
+					   !ImpassableTypes.isImpassable(ImpassableTypes.TOP, sibling.impassableTypes | (ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, sibling.getId())));
 			}
 			case 7: {
 				// sibling is lower-right
-				int doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id);
+				int doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id);
 				if (ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, impassableTypes | doorImpassableTypes) ||
 					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, impassableTypes | doorImpassableTypes)) {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, sibling.getId());
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, sibling.getId());
 				if (ImpassableTypes.isImpassable(ImpassableTypes.LEFT, sibling.impassableTypes | doorImpassableTypes) ||
 					ImpassableTypes.isImpassable(ImpassableTypes.TOP, sibling.impassableTypes | doorImpassableTypes)) {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id + LENGTH);
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id + LENGTH);
 				PathNode lower = getSibling(6);
 				if (lower == null || 
 					ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, lower.impassableTypes | doorImpassableTypes) ||
@@ -242,7 +242,7 @@ public class PathFinder {
 					return false;
 				}
 				
-				doorImpassableTypes = DoorDao.getDoorImpassableByTileId(floor, id + 1);
+				doorImpassableTypes = ignoreDoors ? 0 : DoorDao.getDoorImpassableByTileId(floor, id + 1);
 				PathNode right = getSibling(4);
 				if (right == null || 
 					ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, right.impassableTypes | doorImpassableTypes) ||
@@ -262,29 +262,41 @@ public class PathFinder {
 	}
 	
 	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile) {
-		return findPathInternal(floor, from, to, includeToTile, false, 0);
+		// first we try to find a path that doesn't go through closed doors.
+		// if that's not possible, find a path that includes closed doors.
+		Stack<Integer> ints = findPathInternal(floor, from, to, includeToTile, false, 0, false);
+		if (ints.isEmpty())
+			ints = findPathInternal(floor, from, to, includeToTile, false, 0, true);
+		return ints;
+	}
+	
+	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile, boolean ignoreDoors) {
+		return findPathInternal(floor, from, to, includeToTile, false, 0, ignoreDoors);
 	}
 	
 	// Used for things such as casting spells (over walls etc)
 	public static Stack<Integer> findPathInRange(int floor, int from, int to, int range) {
-		return findPathInternal(floor, from, to, true, false, range);
+		return findPathInternal(floor, from, to, true, false, range, false);
 	}
 	
 	public static Stack<Integer> findPathToDoor(int floor, int from, int to) {
-		return findPathInternal(floor, from, to, true, true, 0);
+		return findPathInternal(floor, from, to, true, true, 0, false);
 	}
 	
 //	public static Stack<Integer> findPath(int floor, int from, int to, boolean includeToTile, int spawnTileId, int maxRadius) {
 //		return findPathInternal(floor, from, to, includeToTile, spawnTileId, maxRadius, false, 0);
 //	}
 	
-	private static Stack<Integer> findPathInternal(int floor, int from, int to, boolean includeToTile, boolean toDoor, int withinRange) {
+	private static Stack<Integer> findPathInternal(int floor, int from, int to, boolean includeToTile, boolean toDoor, int withinRange, boolean ignoreDoors) {
 		Stopwatch.start("find path");
 		Stack<Integer> output = new Stack<>();
 		if (from == to) {
 			if (includeToTile) {
 				return output;
 			} else {
+				// we start on the final tile, but we don't want to be on the final tile.
+				// example is a pet when dropped.
+				// choose a random non-diagonal tile and move to that.
 				List<Integer> nonDiagonalTiles = Arrays.asList(
 							to - LENGTH,
 							to - 1,
@@ -377,7 +389,7 @@ public class PathFinder {
 			for (int i = 0; i < q.getSiblings().length; ++i) {
 				// sometimes the sibling isn't passable, but the sibling happens to be the destination node.
 				// we obviously want to find the destination node so we cannot "continue" in this case.
-				if (!q.isSiblingPassable(i, floor) && q.getSibling(i) != nodes.get(to))
+				if (!q.isSiblingPassable(i, floor, ignoreDoors) && q.getSibling(i) != nodes.get(to))
 					continue;
 				
 				PathNode successor = q.getSibling(i);
@@ -386,7 +398,7 @@ public class PathFinder {
 				
 				// we're at the final step - if the final step is completely impassable we want to keep processing
 				// but if there is some passable way and we're not actually next to it then continue.
-				if (successor == nodes.get(to) && (successor.impassableTypes & 15) != 15 && !isNextTo(floor, q.id, successor.id, !toDoor, true))
+				if (successor == nodes.get(to) && (successor.impassableTypes & 15) != 15 && !isNextTo(floor, q.id, successor.id, false, true))
 					continue;
 				
 				if (closed.contains(successor))

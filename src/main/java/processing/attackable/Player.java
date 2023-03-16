@@ -22,6 +22,7 @@ import database.dao.TeleportableDao;
 import database.dto.CastableDto;
 import database.dto.EquipmentBonusDto;
 import database.dto.InventoryItemDto;
+import database.dto.LockedDoorDto;
 import database.dto.NPCDto;
 import database.dto.NpcDialogueDto;
 import database.dto.PlayerDto;
@@ -37,12 +38,14 @@ import processing.managers.DatabaseUpdater;
 import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
+import processing.managers.LockedDoorManager;
 import processing.managers.TimeManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.KillNpcTaskUpdate;
 import requests.ConstructionRequest;
 import requests.FishRequest;
 import requests.MineRequest;
+import requests.OpenRequest;
 import requests.Request;
 import requests.RequestFactory;
 import requests.SmithRequest;
@@ -68,6 +71,7 @@ import responses.FishResponse;
 import responses.InventoryUpdateResponse;
 import responses.MessageResponse;
 import responses.MineResponse;
+import responses.OpenCloseResponse;
 import responses.PlayerUpdateResponse;
 import responses.Response;
 import responses.ResponseFactory;
@@ -256,7 +260,7 @@ public class Player extends Attackable {
 		switch (state) {
 		case walking: {
 			// popPath returns true if we've successfully moved to the next tile; false if a door is in the way or the path is empty
-			if (popPath()) {
+			if (popPath(responseMaps)) {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTileId(getTileId());
@@ -278,7 +282,7 @@ public class Player extends Attackable {
 			break;
 		}
 		case following: {
-			if (popPath()) {
+			if (popPath(responseMaps)) {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(getId());
 				playerUpdateResponse.setTileId(getTileId());
@@ -325,7 +329,7 @@ public class Player extends Attackable {
 			}
 			
 			// similar to walking, but need to recalculate path each tick due to moving target
-			if (popPath()) {
+			if (popPath(responseMaps)) {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTileId(getTileId());
@@ -359,7 +363,7 @@ public class Player extends Attackable {
 			}
 			
 			// similar to walking, but need to recalculate path each tick due to moving target
-			if (popPath()) {
+			if (popPath(responseMaps)) {
 				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 				playerUpdateResponse.setId(dto.getId());
 				playerUpdateResponse.setTileId(getTileId());
@@ -690,6 +694,25 @@ public class Player extends Attackable {
 	
 	public int getHouseId() {
 		return dto.getHouseId();
+	}
+	
+	@Override
+	public void handleWalkingThroughClosedDoor(int doorTileId, ResponseMaps responseMaps) {
+		// if a player gets to a closed door, then try to automatically open it
+		Request req = new OpenRequest();
+		req.setTileId(doorTileId);
+		new OpenCloseResponse().process(req, this, responseMaps);
+		
+		// TODO this is kinda shitty because we're repeating some of the OpenCloseResponse logic...
+		final LockedDoorDto lockedDoor = LockedDoorManager.getLockedDoor(getFloor(), doorTileId);
+		final boolean canGoThroughDoor = lockedDoor == null || LockedDoorManager.playerMeetsDoorRequirements(this, lockedDoor).isEmpty();
+		if (!canGoThroughDoor) {
+			path.clear();
+			
+			// in the case of following a player, it tries to walk through over and over every tick.
+			// i guess if we hit a locked door then the player should give up and stop following?
+			setState(PlayerState.idle);
+		}
 	}
 	
 	@Override

@@ -8,6 +8,10 @@ import lombok.Getter;
 import lombok.Setter;
 import processing.PathFinder;
 import processing.managers.FightManager;
+import processing.managers.LockedDoorManager;
+import requests.OpenRequest;
+import requests.Request;
+import responses.OpenCloseResponse;
 import responses.ResponseMaps;
 import types.DamageTypes;
 import types.Stats;
@@ -44,7 +48,7 @@ public abstract class Attackable {
 	public abstract void setStatsAndBonuses();
 	public abstract int getExp();
 	
-	protected boolean popPath() {
+	protected boolean popPath(ResponseMaps responseMaps) {
 		if (path.isEmpty())
 			return false;
 		
@@ -57,7 +61,7 @@ public abstract class Attackable {
 			// one of these tiles is a door; check if we can pass through.
 			// if it's diagonal we won't bother re-checking, I don't think it's possible for a door opening to mess up a diagonal move?
 			if (!PathFinder.isDiagonal(tileId, nextTileId) && !PathFinder.isNextTo(floor, tileId, nextTileId))
-				path.clear();
+				handleWalkingThroughClosedDoor(currentTileDoorStatus > 0 ? tileId : nextTileId, responseMaps);
 		}
 		
 		if (!path.isEmpty()) {
@@ -66,6 +70,10 @@ public abstract class Attackable {
 		}
 		
 		return false;
+	}
+	
+	void handleWalkingThroughClosedDoor(int doorTileId, ResponseMaps responseMaps) {
+		path.clear();
 	}
 	
 	public boolean readyToHit() {

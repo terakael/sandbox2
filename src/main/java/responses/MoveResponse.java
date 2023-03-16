@@ -48,8 +48,7 @@ public class MoveResponse extends Response {
 			
 			int destTile = destX + (destY * PathFinder.LENGTH);
 			
-			Stack<Integer> ints = PathFinder.findPath(player.getFloor(), player.getTileId(), destTile, true);
-			player.setPath(ints);
+			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), destTile, true));
 		}
 	}
 

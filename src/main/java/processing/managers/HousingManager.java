@@ -10,6 +10,7 @@ import java.util.Set;
 
 import database.DbConnection;
 import database.entity.update.UpdatePlayerEntity;
+import processing.PathFinder;
 
 public class HousingManager {
 	private static Map<Integer, Integer> houseOwnership; // houseId, playerId
@@ -26,9 +27,11 @@ public class HousingManager {
 			housingTileInstances.get(rs.getInt("floor")).put(rs.getInt("tile_id"), rs.getInt("house_id"));
 			
 			// quick lookup for tileIds based on floor/houseId.  Note we only want walkable tiles.
-			walkableTilesByHouseId.putIfAbsent(rs.getInt("house_id"), new HashMap<>());
-			walkableTilesByHouseId.get(rs.getInt("house_id")).putIfAbsent(rs.getInt("floor"), new HashSet<>());
-			walkableTilesByHouseId.get(rs.getInt("house_id")).get(rs.getInt("floor")).add(rs.getInt("tile_id"));
+			if ((PathFinder.getImpassableByTileId(rs.getInt("floor"), rs.getInt("tile_id")) & 15) != 15) {
+				walkableTilesByHouseId.putIfAbsent(rs.getInt("house_id"), new HashMap<>());
+				walkableTilesByHouseId.get(rs.getInt("house_id")).putIfAbsent(rs.getInt("floor"), new HashSet<>());
+				walkableTilesByHouseId.get(rs.getInt("house_id")).get(rs.getInt("floor")).add(rs.getInt("tile_id"));
+			}
 		});
 		
 		houseOwnership = new HashMap<>();

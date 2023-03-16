@@ -72,7 +72,7 @@ public class Pet extends NPC {
 			}
 			
 			if (!Utils.areTileIdsWithinRadius(tileId, master.getTileId(), 1) || tileId == master.getTileId()) {
-				Stack<Integer> path = PathFinder.findPath(floor, tileId, master.getTileId(), false); 
+				Stack<Integer> path = PathFinder.findPath(floor, tileId, master.getTileId(), false, false); 
 				if (path.isEmpty()) {
 					// we can't get to master, so teleport
 					teleportToMaster(responseMaps);
@@ -81,7 +81,7 @@ public class Pet extends NPC {
 				setPath(path);
 			}
 			
-			if (popPath()) {
+			if (popPath(responseMaps)) {
 				NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 				updateResponse.setInstanceId(instanceId);
 				updateResponse.setTileId(tileId);

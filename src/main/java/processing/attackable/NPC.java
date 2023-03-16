@@ -163,7 +163,7 @@ public class NPC extends Attackable {
 			}
 		}
 		
-		if (popPath()) {
+		if (popPath(responseMaps)) {
 			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
 			updateResponse.setInstanceId(instanceId);
 			updateResponse.setTileId(tileId);
@@ -216,7 +216,7 @@ public class NPC extends Attackable {
 	
 	protected void setPathToRandomTileInRadius(ResponseMaps responseMaps) {
 		// responseMaps can be used by overriding npcs (such as necromancer who teleports around)
-		path = PathFinder.findPath(floor, tileId, chooseRandomWalkableTile(), true);
+		path = PathFinder.findPath(floor, tileId, chooseRandomWalkableTile(), true, false);
 	}
 	
 	protected int chooseRandomWalkableTile() {

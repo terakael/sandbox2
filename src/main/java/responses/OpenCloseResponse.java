@@ -72,7 +72,7 @@ public class OpenCloseResponse extends Response {
 			player.setSavedRequest(req);
 			return;
 		} else {			
-			player.faceDirection(request.getTileId(), responseMaps);
+			player.faceDirection(tileId, responseMaps);
 			if (lockedDoor != null) {
 				String failedRequirementReason = LockedDoorManager.playerMeetsDoorRequirements(player, lockedDoor);
 				if (failedRequirementReason.isEmpty()) { // empty reason means the player meets the requirements
@@ -80,7 +80,7 @@ public class OpenCloseResponse extends Response {
 						responseMaps.addLocalResponse(player.getFloor(), tileId, this);
 					// move the player to the other side
 					// our destination tile is the tile that isn't closest, i.e. the one on the other side of the wall
-					final int newPlayerTileId = throughTileId == closestTileId ? request.getTileId() : throughTileId;
+					final int newPlayerTileId = throughTileId == closestTileId ? tileId : throughTileId;
 					
 					PlayerUpdateResponse playerUpdate = new PlayerUpdateResponse();
 					playerUpdate.setId(player.getId());
