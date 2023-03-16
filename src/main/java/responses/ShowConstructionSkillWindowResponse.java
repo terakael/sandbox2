@@ -19,11 +19,18 @@ public class ShowConstructionSkillWindowResponse extends Response {
 	
 	public ShowConstructionSkillWindowResponse() {
 		setAction("show_construction_skill_window");
+		setCombatInterrupt(false);
 	}
 	
 	public ShowConstructionSkillWindowResponse(ConstructionSkillWindowTabs tab) {
 		selectedTab = tab;
 		setAction("show_construction_skill_window");
+		setCombatInterrupt(false);
+	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
 	}
 
 	@Override

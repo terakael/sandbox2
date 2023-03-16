@@ -15,6 +15,11 @@ public class ShowWoodcuttingSkillWindowResponse extends Response {
 	public ShowWoodcuttingSkillWindowResponse() {
 		setAction("show_woodcutting_skill_window");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

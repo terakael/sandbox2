@@ -38,6 +38,11 @@ public class LogonResponse extends Response {
 		setAction("logon");
 	}
 	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
+	
 	public void processLogon(Request req, Session client, ResponseMaps responseMaps) {
 		if (!(req instanceof LogonRequest)) {
 			setRecoAndResponseText(0, "funny business");

@@ -22,6 +22,7 @@ public class StorageChestWithdrawResponse extends Response {
 	
 	public StorageChestWithdrawResponse() {
 		setAction("withdraw");
+		setCombatInterrupt(false);
 	}
 
 	@Override

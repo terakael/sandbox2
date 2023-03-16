@@ -24,7 +24,9 @@ public abstract class PlayerResponse extends Response {
 	String opponentName;
 	int accepted;
 
-	protected PlayerResponse() {}
+	protected PlayerResponse() {
+		setCombatInterrupt(false);
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
@@ -33,11 +35,11 @@ public abstract class PlayerResponse extends Response {
 			return;
 		}
 		
-		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (FightManager.fightWithFighterExists(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 
 		PlayerRequest playerReq = (PlayerRequest)req;
 		

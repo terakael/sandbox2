@@ -15,6 +15,11 @@ public class ShowMagicSkillWindowResponse extends Response {
 	public ShowMagicSkillWindowResponse() {
 		setAction("show_magic_skill_window");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

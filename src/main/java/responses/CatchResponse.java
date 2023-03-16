@@ -23,12 +23,12 @@ public class CatchResponse extends Response {
 		if (!(req instanceof CatchRequest))
 			return;
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//		FightManager.cancelFight(player, responseMaps);
 		
 		CatchRequest request = (CatchRequest)req;
 		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());

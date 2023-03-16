@@ -1,7 +1,5 @@
 package responses;
 
-import java.util.Stack;
-
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
@@ -14,6 +12,8 @@ import types.DuelRules;
 public class MoveResponse extends Response {
 	public MoveResponse() {
 		setAction("move");
+		setCombatLockedMessage("you can't retreat yet!");
+		setNoRetreatDuelMessage("you can't retreat in this duel!");
 	}
 
 	@Override
@@ -25,19 +25,19 @@ public class MoveResponse extends Response {
 		
 		MoveRequest moveReq = (MoveRequest)req;
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			Fight fight = FightManager.getFightByPlayerId(player.getId());
-			if (fight.getRules() != null && (fight.getRules() & DuelRules.no_retreat.getValue()) > 0) {
-				setRecoAndResponseText(0, "you can't retreat in this duel!");
-			} else {
-				setRecoAndResponseText(0, "you can't retreat yet!");
-			}
-			
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			Fight fight = FightManager.getFightByPlayerId(player.getId());
+//			if (fight.getRules() != null && (fight.getRules() & DuelRules.no_retreat.getValue()) > 0) {
+//				setRecoAndResponseText(0, "you can't retreat in this duel!");
+//			} else {
+//				setRecoAndResponseText(0, "you can't retreat yet!");
+//			}
+//			
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//
+//		FightManager.cancelFight(player, responseMaps);
 		
 		if (player != null) {
 			player.setState(PlayerState.walking);

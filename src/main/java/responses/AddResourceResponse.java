@@ -24,6 +24,11 @@ public class AddResourceResponse extends Response {
 	public AddResourceResponse() {
 		setAction("add_resources");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

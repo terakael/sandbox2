@@ -15,6 +15,11 @@ public class ShowMiningSkillWindowResponse extends Response {
 	public ShowMiningSkillWindowResponse() {
 		setAction("show_mining_skill_window");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

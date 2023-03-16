@@ -11,6 +11,11 @@ public class PlayerEnterResponse extends Response {
 	public PlayerEnterResponse() {
 		setAction("player_enter");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

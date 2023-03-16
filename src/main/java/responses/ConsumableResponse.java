@@ -18,16 +18,20 @@ import types.Stats;
 import types.StorageTypes;
 
 public abstract class ConsumableResponse extends Response {
+	public ConsumableResponse() {
+		setCombatInterrupt(false); // cannot eat/drink during combat, and it doesn't interrupt
+	}
+	
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof ConsumableRequest))
 			return;
 		
-		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (FightManager.fightWithFighterExists(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		int slot = ((ConsumableRequest)req).getSlot();
 		int itemId = ((ConsumableRequest)req).getObjectId();

@@ -52,12 +52,12 @@ public class EnterPortalResponse extends Response {
 			return; // scenery doesn't exist or isn't a portal, so bail
 		}
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//		FightManager.cancelFight(player, responseMaps);
 		
 		if (player.getTileId() != request.getTileId()) { // must be standing on the portal tile to teleport
 			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getTileId(), true));

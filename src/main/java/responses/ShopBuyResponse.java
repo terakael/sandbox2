@@ -26,6 +26,7 @@ public class ShopBuyResponse extends Response {
 		
 	public ShopBuyResponse() {
 		setAction("buy");
+		setCombatInterrupt(false);
 	}
 	
 	@Override

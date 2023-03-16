@@ -17,6 +17,11 @@ public class StorageMoveResponse extends Response {
 	public StorageMoveResponse() {
 		setAction("storage_move");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

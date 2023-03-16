@@ -4,8 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
+import processing.managers.FightManager;
+import processing.managers.FightManager.Fight;
 import requests.MessageRequest;
 import requests.Request;
+import types.DuelRules;
 
 public abstract class Response {
 	public enum ResponseType {
@@ -21,6 +24,10 @@ public abstract class Response {
 	@Setter private String responseText = "";
 	@Getter @Setter private String action;
 	@Setter private String colour = null;
+	
+	@Setter protected String combatLockedMessage = "you can't do that during combat!";
+	@Setter private String noRetreatDuelMessage = null;
+	@Setter private boolean combatInterrupt = true;
 
 	public void setRecoAndResponseText(int success, String responseText) {
 		this.success = success;
@@ -33,9 +40,30 @@ public abstract class Response {
 			return;
 		
 		// TODO check if in fight
+		if (!handleCombat(req, player, responseMaps))
+			return;
+		
 		// TODO check if next to
 		
 		process(req, player, responseMaps);
+	}
+	
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		final Fight fight = FightManager.getFightByPlayerId(player.getId());
+		if (FightManager.fightWithFighterIsBattleLocked(player) || (!combatInterrupt && fight != null)) {
+			if (fight.getRules() != null && (fight.getRules() & DuelRules.no_retreat.getValue()) > 0) {
+				setRecoAndResponseText(0, noRetreatDuelMessage != null ? noRetreatDuelMessage : combatLockedMessage);
+			} else {
+				setRecoAndResponseText(0, combatLockedMessage);
+			}
+			
+			responseMaps.addClientOnlyResponse(player, this);
+			return false;
+		}
+		
+		if (fight != null)
+			FightManager.cancelFight(player, responseMaps);
+		return true;
 	}
 
 	public abstract void process(Request req, Player player, ResponseMaps responseMaps);

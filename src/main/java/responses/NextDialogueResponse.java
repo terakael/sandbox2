@@ -15,6 +15,11 @@ import requests.Request;
 @Setter
 public class NextDialogueResponse extends Response {
 	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // i think its fine to read dialogue during combat
+	}
+	
+	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		NpcDialogueDto currentDialogue = player.getCurrentDialogue();
 		if (currentDialogue == null) {

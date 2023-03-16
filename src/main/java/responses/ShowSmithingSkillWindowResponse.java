@@ -27,6 +27,11 @@ public class ShowSmithingSkillWindowResponse extends Response {
 		selectedTab = tab;
 		smithables = SmithableDao.getAllItemsByBarId(selectedTab.getBarId());
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

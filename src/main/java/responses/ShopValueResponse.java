@@ -14,6 +14,7 @@ import types.Items;
 public class ShopValueResponse extends Response {
 	public ShopValueResponse() {
 		setAction("value");
+		setCombatInterrupt(false);
 	}
 
 	@Override

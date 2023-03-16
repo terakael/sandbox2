@@ -17,9 +17,15 @@ public class ShowConstructionTableResponse extends Response {
 	
 	public ShowConstructionTableResponse(Set<ConstructableDto> options, boolean flatpack, int tileId) {
 		setAction("show_construction_table");
+		setCombatInterrupt(false);
 		constructableOptions = options;
 		this.flatpack = flatpack;
 		this.tileId = tileId;
+	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
 	}
 
 	@Override

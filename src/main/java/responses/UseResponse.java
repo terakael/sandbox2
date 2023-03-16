@@ -52,6 +52,11 @@ public class UseResponse extends Response {
 	}
 	
 	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // this one depends on what we're using on?
+	}
+	
+	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof UseRequest))
 			return;
@@ -84,7 +89,7 @@ public class UseResponse extends Response {
 	
 	private boolean handleUseOnScenery(UseRequest request, Player player, ResponseMaps responseMaps) {
 		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
+			setRecoAndResponseText(0, combatLockedMessage);
 			responseMaps.addClientOnlyResponse(player, this);
 			return true;
 		}
@@ -289,7 +294,7 @@ public class UseResponse extends Response {
 						&& !FightManager.fightWithFighterExists(targetNpc)) {
 					AttackRequest attackRequest = new AttackRequest();
 					attackRequest.setObjectId(targetNpc.getInstanceId());
-					new AttackResponse().process(attackRequest, player, responseMaps);
+					new AttackResponse().processSuper(attackRequest, player, responseMaps);
 				}
 				
 				// by this point, whether or not we were previously in a fight with the targetNpc, we will be now.

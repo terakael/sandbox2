@@ -35,11 +35,11 @@ public class TalkToResponse extends Response {
 		if (!(req instanceof TalkToRequest))
 			return;
 		
-		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you're too busy fighting!");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (FightManager.fightWithFighterExists(player)) {
+//			setRecoAndResponseText(0, "you're too busy fighting!");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		TalkToRequest request = (TalkToRequest)req;
 		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());

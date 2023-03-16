@@ -14,6 +14,11 @@ public class AddMinimapSegmentsResponse extends Response {
 	public AddMinimapSegmentsResponse() {
 		setAction("add_minimap_segments");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

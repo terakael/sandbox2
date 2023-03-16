@@ -18,6 +18,7 @@ public class TradeUpdateResponse extends Response {
 	
 	public TradeUpdateResponse() {
 		setAction("trade_update");
+		setCombatInterrupt(false);
 	}
 
 	@Override

@@ -12,6 +12,11 @@ public class ShowSmithingTableResponse extends Response {
 	public ShowSmithingTableResponse() {
 		setAction("show_smithing_table");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

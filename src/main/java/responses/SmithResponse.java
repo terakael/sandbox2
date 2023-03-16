@@ -27,12 +27,12 @@ public class SmithResponse extends Response {
 			return;
 		}
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//		FightManager.cancelFight(player, responseMaps);
 		
 		SmithRequest smithRequest = (SmithRequest)req;
 		

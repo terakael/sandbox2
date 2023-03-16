@@ -1,12 +1,9 @@
 package responses;
 
-import java.util.Stack;
-
 import database.dao.SceneryDao;
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
-import processing.managers.FightManager;
 import requests.ClimbThroughRequest;
 import requests.Request;
 import types.SceneryContextOptions;
@@ -28,12 +25,12 @@ public class ClimbThroughResponse extends Response {
 		if (!SceneryDao.sceneryContainsContextOption(sceneryId, SceneryContextOptions.CLIMB_THROUGH))
 			return; // can't climb through this
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//		FightManager.cancelFight(player, responseMaps);
 		
 		// whatever we're climbing through has two tiles - the tileId where the scenery sits, and the tileId on the other side.
 		final int impassable = SceneryDao.getImpassableTypeByFloor(player.getFloor(), request.getTileId());

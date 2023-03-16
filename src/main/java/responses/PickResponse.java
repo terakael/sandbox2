@@ -24,12 +24,12 @@ public class PickResponse extends Response {
 		if (!(req instanceof PickRequest))
 			return;
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//		FightManager.cancelFight(player, responseMaps);
 		
 		PickRequest request = (PickRequest)req;
 		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {

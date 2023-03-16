@@ -10,6 +10,11 @@ import types.ArtisanShopTabs;
 
 public class SkipArtisanTaskResponse extends Response {
 	private final static int SKIP_TASK_COST = 30;
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

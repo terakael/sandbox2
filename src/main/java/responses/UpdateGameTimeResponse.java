@@ -9,6 +9,11 @@ public class UpdateGameTimeResponse extends Response {
 		setAction("update_game_time");
 		this.time = time;
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

@@ -18,6 +18,12 @@ public class ShowBaseAnimationsWindowResponse extends Response {
 	
 	public ShowBaseAnimationsWindowResponse() {
 		setAction("show_base_animations_window");
+		setCombatInterrupt(false);
+	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
 	}
 	
 	@Override

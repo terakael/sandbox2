@@ -22,6 +22,11 @@ public class DropResponse extends Response {
 	public DropResponse() {
 		setAction("drop");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // dropping stuff during combat is fine I guess?
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
@@ -30,11 +35,11 @@ public class DropResponse extends Response {
 			return;
 		}
 		
-		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you can't drop anything during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (FightManager.fightWithFighterExists(player)) {
+//			setRecoAndResponseText(0, "you can't drop anything during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		DropRequest dropReq = (DropRequest)req;
 		InventoryItemDto itemToDrop = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getDto().getId(), StorageTypes.INVENTORY, dropReq.getSlot());

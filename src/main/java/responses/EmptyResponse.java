@@ -20,6 +20,11 @@ import types.StorageTypes;
 public class EmptyResponse extends Response {
 
 	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // seems fine to empty stuff during combat?
+	}
+	
+	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof EmptyRequest))
 			return;

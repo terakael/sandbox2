@@ -28,16 +28,18 @@ public class ShopResponse extends Response {
 			return;
 		}
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//		FightManager.cancelFight(player, responseMaps);
 		
 		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), npc.getTileId())) {
-			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), npc.getTileId(), false));
-			player.setState(PlayerState.walking);
+			player.setTarget(npc);
+			player.setState(PlayerState.chasing);
+//			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), npc.getTileId(), false));
+//			player.setState(PlayerState.walking);
 			player.setSavedRequest(req);
 			return;
 		} else {

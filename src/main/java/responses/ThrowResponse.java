@@ -8,14 +8,17 @@ import requests.Request;
 import types.Items;
 
 public class ThrowResponse extends Response {
+	public ThrowResponse() {
+		setCombatInterrupt(false);
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (FightManager.fightWithFighterExists(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		responseMaps.addClientOnlyResponse(player, MessageResponse.newMessageResponse("you throw the seed on the ground...", "white"));
 		

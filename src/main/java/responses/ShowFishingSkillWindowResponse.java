@@ -15,6 +15,11 @@ public class ShowFishingSkillWindowResponse extends Response {
 	public ShowFishingSkillWindowResponse() {
 		setAction("show_fishing_skill_window");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

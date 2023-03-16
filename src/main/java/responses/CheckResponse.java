@@ -13,6 +13,11 @@ import types.StorageTypes;
 
 public class CheckResponse extends Response {
 	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // checking the sack during combat is fine
+	}
+	
+	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof CheckRequest))
 			return;

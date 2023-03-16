@@ -14,6 +14,11 @@ public class StatBoostResponse extends Response {
 		setAction("stat_boosts");
 	}
 	private Map<Integer, Integer> boosts = new HashMap<>();
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

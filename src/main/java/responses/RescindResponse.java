@@ -18,6 +18,7 @@ import types.StorageTypes;
 public class RescindResponse extends Response {
 	public RescindResponse() {
 		setAction("rescind");
+		setCombatInterrupt(false);
 	}
 
 	@Override

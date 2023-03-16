@@ -38,12 +38,12 @@ public class OpenCloseResponse extends Response {
 			return;
 		}
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//		FightManager.cancelFight(player, responseMaps);
 		
 		final int impassable = DoorDao.getDoorImpassableByTileId(player.getFloor(), tileId);
 		int throughTileId = PathFinder.calculateThroughTileId(tileId, impassable);

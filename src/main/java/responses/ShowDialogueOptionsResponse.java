@@ -12,6 +12,11 @@ public class ShowDialogueOptionsResponse extends Response {
 		setAction("show_dialogue_options");
 		this.options = options;
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

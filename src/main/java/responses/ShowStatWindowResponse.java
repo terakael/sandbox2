@@ -25,6 +25,11 @@ public class ShowStatWindowResponse extends Response {
 	private int statId = 0;
 	private List<StatWindowRowDto> rows = null;
 	private List<ArtisanMaterialChainDto> artisanData = null;
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

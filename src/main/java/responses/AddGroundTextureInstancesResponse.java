@@ -13,6 +13,11 @@ public class AddGroundTextureInstancesResponse extends Response {
 	public AddGroundTextureInstancesResponse() {
 		setAction("add_ground_texture_instances");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

@@ -15,6 +15,11 @@ public class PvpEndResponse extends Response {
 	public PvpEndResponse() {
 		setAction("pvp_end");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

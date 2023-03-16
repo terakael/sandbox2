@@ -10,6 +10,11 @@ public class ToggleAttackStyleResponse extends Response {
 	public ToggleAttackStyleResponse() {
 		setAction("toggle_attack_style");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

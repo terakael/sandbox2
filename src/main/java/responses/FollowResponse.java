@@ -19,9 +19,9 @@ public class FollowResponse extends Response {
 			return;
 		}
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player))
-			return;
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player))
+//			return;
+//		FightManager.cancelFight(player, responseMaps);
 		
 		FollowRequest request = (FollowRequest)req;
 		

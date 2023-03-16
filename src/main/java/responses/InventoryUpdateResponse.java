@@ -28,6 +28,11 @@ public class InventoryUpdateResponse extends Response {
 		setAction("invupdate");
 	}
 	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // you can organize your inventory during combat, sure
+	}
+	
 	public static void sendUpdate(Player player, ResponseMaps responseMaps) {
 		new InventoryUpdateResponse().process(RequestFactory.create("", player.getId()), player, responseMaps);
 	}

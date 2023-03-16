@@ -20,6 +20,11 @@ public class TogglePrayerResponse extends Response {
 	public TogglePrayerResponse() {
 		setAction("toggle_prayer");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

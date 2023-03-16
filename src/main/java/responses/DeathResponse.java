@@ -11,6 +11,11 @@ public class DeathResponse extends Response {
 		this.id = id;
 		setAction("dead");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // imagine if death was stopped by being in combat
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

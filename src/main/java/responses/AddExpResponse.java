@@ -16,6 +16,11 @@ public class AddExpResponse extends Response {
 	public AddExpResponse() {
 		setAction("addexp");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

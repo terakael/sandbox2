@@ -14,6 +14,11 @@ public class GroundItemInRangeResponse extends Response {
 	public GroundItemInRangeResponse() {
 		setAction("ground_item_in_range");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

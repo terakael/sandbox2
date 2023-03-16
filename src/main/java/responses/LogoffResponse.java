@@ -8,6 +8,13 @@ public class LogoffResponse extends Response {
 
 	public LogoffResponse() {
 		setAction("logoff");
+		setCombatInterrupt(false);
+	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		// TODO this needs special handling, like being unable to log out for X seconds after combat
+		return super.handleCombat(req, player, responseMaps);
 	}
 
 	@Override

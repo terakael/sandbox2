@@ -25,6 +25,10 @@ import types.StorageTypes;
 public class ShopSellResponse extends Response {
 	// if the client tries to send a different amount, then fail.  These are the only allowed amounts.
 	private static Set<Integer> allowedRequestAmounts = new HashSet<>(Arrays.asList(1, 5, 10, 50));
+	
+	public ShopSellResponse() {
+		setCombatInterrupt(false);
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

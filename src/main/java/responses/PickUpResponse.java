@@ -15,17 +15,20 @@ import requests.Request;
 import types.StorageTypes;
 
 public class PickUpResponse extends Response {
+	public PickUpResponse() {
+		setCombatInterrupt(false);
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof PickUpRequest))
 			return;
 		
-		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (FightManager.fightWithFighterExists(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		PickUpRequest request = (PickUpRequest)req;
 		final NPC pet = LocationManager.getPetByFloorAndInstanceId(player.getFloor(), request.getObjectId());

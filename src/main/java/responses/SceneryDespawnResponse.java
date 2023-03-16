@@ -10,6 +10,11 @@ public class SceneryDespawnResponse extends Response {
 		setAction("scenery_despawn");
 		this.tileId = tileId;
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

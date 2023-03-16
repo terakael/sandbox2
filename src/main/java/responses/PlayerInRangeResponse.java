@@ -19,6 +19,11 @@ public class PlayerInRangeResponse extends Response {
 	public PlayerInRangeResponse() {
 		setAction("player_in_range");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

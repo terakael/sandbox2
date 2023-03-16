@@ -18,6 +18,11 @@ public class GroundItemRefreshResponse extends Response {
 		
 	}
 	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
+	
 	public void addGroundItem(int tileId, int itemId) {
 		if (!groundItems.containsKey(tileId))
 			groundItems.put(tileId, new ArrayList<>());

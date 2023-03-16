@@ -12,6 +12,11 @@ public class DaylightResponse extends Response {
 		brightness = isDaylight ? 1.0f : 0.4f;
 		this.transitionInstantly = transitionInstantly;
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

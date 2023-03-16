@@ -24,6 +24,7 @@ public class StorageChestDepositResponse extends Response {
 	
 	public StorageChestDepositResponse() {
 		setAction("deposit");
+		setCombatInterrupt(false);
 	}
 
 	@Override

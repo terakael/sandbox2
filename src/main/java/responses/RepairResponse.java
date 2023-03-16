@@ -29,12 +29,12 @@ public class RepairResponse extends Response {
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//		FightManager.cancelFight(player, responseMaps);
 		
 		RepairRequest request = (RepairRequest)req;
 		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {

@@ -23,11 +23,11 @@ public class TaskResponse extends Response {
 		
 		TaskRequest request = (TaskRequest)req;
 		
-		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you're too busy fighting!");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (FightManager.fightWithFighterExists(player)) {
+//			setRecoAndResponseText(0, "you're too busy fighting!");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
 		if (npc == null)

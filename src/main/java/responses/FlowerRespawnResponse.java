@@ -9,6 +9,11 @@ public class FlowerRespawnResponse extends Response {
 	public FlowerRespawnResponse() {
 		setAction("flower_respawn");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

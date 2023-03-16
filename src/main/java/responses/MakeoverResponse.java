@@ -16,11 +16,11 @@ public class MakeoverResponse extends Response {
 		if (!(req instanceof MakeoverRequest))
 			return;
 		
-		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you're too busy fighting!");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (FightManager.fightWithFighterExists(player)) {
+//			setRecoAndResponseText(0, "you're too busy fighting!");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		// need to be near the makeover girl to trigger it
 		final NPC makeoverNpc = LocationManager.getNpcNearPlayerByInstanceId(player, ((MakeoverRequest)req).getObjectId());

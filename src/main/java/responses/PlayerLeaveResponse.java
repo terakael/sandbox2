@@ -11,6 +11,11 @@ public class PlayerLeaveResponse extends Response {
 	public PlayerLeaveResponse() {
 		setAction("player_leave");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {		

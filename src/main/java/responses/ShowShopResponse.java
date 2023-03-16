@@ -17,6 +17,7 @@ public class ShowShopResponse extends Response {
 	
 	public ShowShopResponse(Store shop) {
 		setAction("show_shop");
+		setCombatInterrupt(false);
 		this.shop = shop;
 	}
 

@@ -47,6 +47,11 @@ public class CastSpellResponse extends Response {
 		this.targetType = targetType;
 		this.spriteFrameId = spriteFrameId;
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // spells can be cast during combat or not
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

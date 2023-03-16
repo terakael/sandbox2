@@ -32,6 +32,11 @@ public class CachedResourcesResponse extends Response {
 		setAction("cached_resources");
 	}
 	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
+	
 	public static CachedResourcesResponse get() {
 		if (instance == null) {
 			instance = new CachedResourcesResponse();

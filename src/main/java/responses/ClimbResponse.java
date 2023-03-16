@@ -19,12 +19,12 @@ public class ClimbResponse extends Response {
 		
 		ClimbRequest request = (ClimbRequest)req;
 		
-		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-			setRecoAndResponseText(0, "you can't do that during combat.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
-		FightManager.cancelFight(player, responseMaps);
+//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
+//			setRecoAndResponseText(0, "you can't do that during combat.");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
+//		FightManager.cancelFight(player, responseMaps);
 		
 		if (!PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {
 			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), request.getTileId(), false));

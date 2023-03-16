@@ -21,6 +21,7 @@ import types.StorageTypes;
 public class OfferResponse extends Response {
 	public OfferResponse() {
 		setAction("offer");
+		setCombatInterrupt(false);
 	}
 
 	@Override

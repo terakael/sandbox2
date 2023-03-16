@@ -12,6 +12,11 @@ public class RemoveMinimapSegmentsResponse extends Response {
 	public RemoveMinimapSegmentsResponse() {
 		setAction("remove_minimap_segments");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

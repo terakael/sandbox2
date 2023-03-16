@@ -13,17 +13,22 @@ import requests.Request;
 import types.NpcAttributes;
 
 public class AttackResponse extends Response {
+	
+	public AttackResponse() {
+		setCombatLockedMessage("you're already fighting!");
+		setCombatInterrupt(false); // even after the combat lock expires, don't allow hopping to a new fight
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof AttackRequest))
 			return;
 		
-		if (FightManager.fightWithFighterExists(player)) {
-			setRecoAndResponseText(0, "you're already fighting!");
-			responseMaps.addClientOnlyResponse(player, this);
-			return;
-		}
+//		if (FightManager.fightWithFighterExists(player)) {
+//			setRecoAndResponseText(0, "you're already fighting!");
+//			responseMaps.addClientOnlyResponse(player, this);
+//			return;
+//		}
 		
 		AttackRequest request = (AttackRequest)req;
 		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());

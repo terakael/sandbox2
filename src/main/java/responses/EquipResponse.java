@@ -26,6 +26,11 @@ public class EquipResponse extends Response {
 	public EquipResponse() {
 		setAction("equip");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // all good to equip stuff during combat
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

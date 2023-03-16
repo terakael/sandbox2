@@ -14,6 +14,12 @@ public class ShowCookingSkillWindowResponse extends Response {
 
 	public ShowCookingSkillWindowResponse() {
 		setAction("show_cooking_skill_window");
+		setCombatInterrupt(false);
+	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
 	}
 	
 	@Override

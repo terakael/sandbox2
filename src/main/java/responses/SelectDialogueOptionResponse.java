@@ -12,6 +12,11 @@ public class SelectDialogueOptionResponse extends Response {
 	public SelectDialogueOptionResponse() {
 		setAction("select_dialogue_option");
 	}
+	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true; // dialogue during combat is fine I guess?
+	}
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {

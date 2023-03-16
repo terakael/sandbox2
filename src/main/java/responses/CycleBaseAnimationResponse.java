@@ -17,6 +17,11 @@ public class CycleBaseAnimationResponse extends Response {
 	private PlayerAnimationDto animation = null;
 	
 	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
+	
+	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof CycleBaseAnimationRequest))
 			return;

@@ -27,6 +27,11 @@ public class NpcInRangeResponse extends Response {
 		setAction("npc_in_range");
 	}
 	
+	@Override
+	protected boolean handleCombat(Request req, Player player, ResponseMaps responseMaps) {
+		return true;
+	}
+	
 	public void addInstances(Set<NPC> instances) {
 		instances.forEach(npc -> npcs.add(new NpcLocation(npc.getId(), npc.getInstanceId(), npc.getTileId(), npc.getCurrentHp(), npc.getOwnerId())));
 	}
