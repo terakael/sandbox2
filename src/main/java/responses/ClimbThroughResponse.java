@@ -43,7 +43,11 @@ public class ClimbThroughResponse extends Response {
 			return;
 		
 		// we want to start by walking to the closest tile to us (i.e. the side of the wall we're on)
-		final int closestTileId = PathFinder.getCloserTile(player.getTileId(), request.getTileId(), throughTileId);
+		int closestTileId = PathFinder.getCloserTile(player.getTileId(), request.getTileId(), throughTileId);
+		// if we're around a corner from the wall then the other side could be the closest tile.
+		// we need to check if we can actually move to the tile.
+		if (closestTileId != player.getTileId() && PathFinder.findPath(player.getFloor(), player.getTileId(), closestTileId, true).isEmpty())
+			closestTileId = closestTileId == request.getTileId() ? throughTileId : request.getTileId();
 		
 		if (player.getTileId() != closestTileId) {
 			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), closestTileId, true));

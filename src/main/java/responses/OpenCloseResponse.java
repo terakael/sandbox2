@@ -51,7 +51,12 @@ public class OpenCloseResponse extends Response {
 			return; // multiple sides means we can't deduce where to walk through
 		
 		// we want to start by walking to the closest tile to us (i.e. the side of the wall we're on)
-		final int closestTileId = PathFinder.getCloserTile(player.getTileId(), tileId, throughTileId);
+		int closestTileId = PathFinder.getCloserTile(player.getTileId(), tileId, throughTileId);
+		
+		// if we're around a corner from a door then the inside of a closed door could be the closest tile.
+		// we need to check if we can actually move to the tile.
+		if (closestTileId != player.getTileId() && PathFinder.findPath(player.getFloor(), player.getTileId(), closestTileId, true).isEmpty())
+			closestTileId = closestTileId == tileId ? throughTileId : tileId;
 		
 		final LockedDoorDto lockedDoor = LockedDoorManager.getLockedDoor(player.getFloor(), tileId);
 		
