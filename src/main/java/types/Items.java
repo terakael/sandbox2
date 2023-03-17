@@ -380,6 +380,7 @@ public enum Items {
 	
 	HAMMER(333),
 	HATCHET(340),
+	GOLDEN_HATCHET(341),
 	KNIFE(342),
 	TINDERBOX(344),
 	

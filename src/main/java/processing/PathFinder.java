@@ -398,7 +398,7 @@ public class PathFinder {
 				
 				// we're at the final step - if the final step is completely impassable we want to keep processing
 				// but if there is some passable way and we're not actually next to it then continue.
-				if (successor == nodes.get(to) && (successor.impassableTypes & 15) != 15 && !isNextTo(floor, q.id, successor.id, false, true))
+				if (successor == nodes.get(to) && !isNextTo(floor, q.id, successor.id, false, true))
 					continue;
 				
 				if (closed.contains(successor))
@@ -535,8 +535,18 @@ public class PathFinder {
 		// then they are not technically next to eachother (i.e. there's a wall between the tiles).
 		// the exception to this is if the dest tile is completely impassable i.e. impassableType 15 like a rock etc
 		// in this case we are next to it, as there's no way to get any closer.
+		
+		// early fail if the tiles aren't adjacent
+		if (!isAdjacent(srcTile, destTile) && srcTile != destTile)
+			return false;
+		
+		// ok we're adjacent, are there any impassables between us?
 		int srcImpassableType = SceneryDao.getImpassableTypeByFloor(floor, srcTile);
+		
+		// for the destination, let's ignore any impassable types of 15; could be a rock/tree/ladder etc
 		int destImpassableType = SceneryDao.getImpassableTypeByFloor(floor, destTile);
+		if ((destImpassableType & 15) == 15)
+			destImpassableType -= 15;
 		
 		if (includeDoors) {
 			srcImpassableType |= DoorDao.getDoorImpassableByTileId(floor, srcTile);
@@ -571,28 +581,56 @@ public class PathFinder {
 				destImpassableType &= ~ImpassableTypes.BOTTOM.getValue();
 		}
 		
-		return  
-			// destTile is to the left, destTile doesn't have a right-facing wall, srcTile doesn't have a left-facing wall
-			((destTile == srcTile - 1 || (srcTile % LENGTH == 0 && destTile == srcTile + LENGTH - 1))  && 
-				((!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, destImpassableType) && 
-					!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, srcImpassableType)) || (destImpassableType & 15) == 15)) ||
+		if (destTile == srcTile -1) {
+			if (ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, destImpassableType))
+				return false;
 			
-			// destTile is to the right; destTile doesn't have a left-facing wall, srcTile doesn't have a right-facing wall
-			((destTile == srcTile + 1 || (srcTile % LENGTH == LENGTH - 1 && destTile == srcTile - LENGTH + 1))&& 
-				((!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, destImpassableType) && 
-					!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, srcImpassableType)) || (destImpassableType & 15) == 15)) ||
+			if (ImpassableTypes.isImpassable(ImpassableTypes.LEFT, srcImpassableType))
+				return false;
+		}
+		else if (destTile == srcTile + 1) {
+			if (ImpassableTypes.isImpassable(ImpassableTypes.LEFT, destImpassableType))
+				return false;
 			
-			// destTile is above; destTile doesn't have a bottom-facing wall, srcTile doesn't have a top-facing wall
-			(destTile == srcTile - LENGTH && 
-				((!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, destImpassableType) && 
-					!ImpassableTypes.isImpassable(ImpassableTypes.TOP, srcImpassableType)) || (destImpassableType & 15) == 15)) ||
+			if (ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, srcImpassableType))
+				return false;
+		}
+		else if (destTile == srcTile - LENGTH) {
+			if (ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, destImpassableType))
+				return false;
 			
-			// destTile is below; destTile doesn't have a top-facing wall, srcTile doesn't have a bottom-facing wall
-			(destTile == srcTile + LENGTH &&
-				((!ImpassableTypes.isImpassable(ImpassableTypes.TOP, destImpassableType) && 
-					!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, srcImpassableType)) || (destImpassableType & 15) == 15))
+			if (ImpassableTypes.isImpassable(ImpassableTypes.TOP, srcImpassableType))
+				return false;
+		}
+		else if (destTile == srcTile + LENGTH) {
+			if (ImpassableTypes.isImpassable(ImpassableTypes.TOP, destImpassableType))
+				return false;
 			
-			|| destTile == srcTile;// same tile
+			if (ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, srcImpassableType))
+				return false;
+		}
+		return true;
+		
+//		return  
+//			// destTile is to the left, destTile doesn't have a right-facing wall, srcTile doesn't have a left-facing wall
+//			((destTile == srcTile - 1 || (srcTile % LENGTH == 0 && destTile == srcTile + LENGTH - 1))  && 
+//				(((!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, destImpassableType)/* || (destImpassableType & 15) == 15*/)) && 
+//					!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, srcImpassableType))) ||
+//			
+//			// destTile is to the right; destTile doesn't have a left-facing wall, srcTile doesn't have a right-facing wall
+//			((destTile == srcTile + 1 || (srcTile % LENGTH == LENGTH - 1 && destTile == srcTile - LENGTH + 1))&& 
+//				(((!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, destImpassableType)/* || (destImpassableType & 15) == 15*/) && 
+//					!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, srcImpassableType)))) ||
+//			
+//			// destTile is above; destTile doesn't have a bottom-facing wall, srcTile doesn't have a top-facing wall
+//			(destTile == srcTile - LENGTH && 
+//				(((!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, destImpassableType) || (destImpassableType & 15) == 15) && 
+//					!ImpassableTypes.isImpassable(ImpassableTypes.TOP, srcImpassableType)))) ||
+//			
+//			// destTile is below; destTile doesn't have a top-facing wall, srcTile doesn't have a bottom-facing wall
+//			(destTile == srcTile + LENGTH &&
+//				(((!ImpassableTypes.isImpassable(ImpassableTypes.TOP, destImpassableType) || (destImpassableType & 15) == 15) && 
+//					!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, srcImpassableType))));
 	}
 	
 	public static int chooseRandomTileIdInRadius(int tileId, int radius) {
@@ -678,6 +716,13 @@ public class PathFinder {
 				|| src == (dest - LENGTH + 1)  // top-right
 				|| src == (dest + LENGTH - 1)  // bottom-left
 				|| src == (dest + LENGTH + 1); // bottom-right
+	}
+	
+	public static boolean isAdjacent(int src, int dest) {
+		return src == dest - 1 || 
+				src == dest + 1 || 
+				src == dest - LENGTH || 
+				src == dest + LENGTH;
 	}
 	
 	public static void setImpassabilityOnTileId(int floor, int tileId, int impassability) {

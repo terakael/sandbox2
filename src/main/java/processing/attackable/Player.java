@@ -57,7 +57,6 @@ import responses.DaylightResponse;
 import responses.DeathResponse;
 import responses.EquipResponse;
 import responses.FinishAssembleResponse;
-import responses.FinishChopResponse;
 import responses.FinishConstructionResponse;
 import responses.FinishCookingResponse;
 import responses.FinishFishingResponse;
@@ -471,8 +470,10 @@ public class Player extends Attackable {
 			
 		case woodcutting:
 			if (--tickCounter <= 0) {
-				new FinishChopResponse().process(savedRequest, this, responseMaps);
+//				new FinishChopResponse().process(savedRequest, this, responseMaps);
 				new ChopResponse().process(savedRequest, this, responseMaps);
+				setState(PlayerState.idle);
+				new ChopResponse(true).process(savedRequest, this, responseMaps);
 			}
 			break;
 			
@@ -677,11 +678,15 @@ public class Player extends Attackable {
 		// if a player gets to a closed door, then try to automatically open it
 		Request req = new OpenRequest();
 		req.setTileId(doorTileId);
-		new OpenCloseResponse().process(req, this, responseMaps);
 		
 		// TODO this is kinda shitty because we're repeating some of the OpenCloseResponse logic...
 		final LockedDoorDto lockedDoor = LockedDoorManager.getLockedDoor(getFloor(), doorTileId);
+		
+		// order here is important - OpenCloseResponse can destroy an item which is used in the requirements check
 		final boolean canGoThroughDoor = lockedDoor == null || LockedDoorManager.playerMeetsDoorRequirements(this, lockedDoor).isEmpty();
+
+		new OpenCloseResponse().process(req, this, responseMaps);
+		
 		if (!canGoThroughDoor) {
 			path.clear();
 			

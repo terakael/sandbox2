@@ -76,7 +76,7 @@ public class FinishConstructionResponse extends Response {
 				int goldenHammerIndex = invItemIds.indexOf(Items.GOLDEN_HAMMER.getValue());
 				if (goldenHammerIndex != -1) {
 					lifetimeTicks *= 2;
-					PlayerStorageDao.reduceCharge(player.getId(), Items.GOLDEN_HAMMER.getValue(), goldenHammerIndex, 1);
+					PlayerStorageDao.reduceCharge(player.getId(), goldenHammerIndex, 1);
 				}
 			}
 			

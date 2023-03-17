@@ -213,11 +213,11 @@ public class WorldProcessor implements Runnable {
 		compileClientOnlyResponses(clientResponses, responseMaps);
 		Stopwatch.end("compile response maps");
 		
-		ArrayList<Session> sessionsToKill = new ArrayList<>();
+		List<Session> sessionsToKill = new ArrayList<>();
 		
 		// go through the clientResponses and send the response array to each player
 		Stopwatch.start("send responses");
-		for (Map.Entry<Player, List<Response>> responses : clientResponses.entrySet()) {
+		for (var responses : clientResponses.entrySet()) {
 			try {
 				if (responses.getKey().getSession().isOpen())
 					responses.getKey().getSession().getBasicRemote().sendText(gson.toJson(responses.getValue()));
@@ -250,7 +250,7 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	private void compileBroadcastResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
-		for (Map.Entry<Session, Player> playerSession : playerSessions.entrySet()) {
+		for (var playerSession : playerSessions.entrySet()) {
 			// every player gets the broadcast responses
 			for (Response broadcastResponse : responseMaps.getBroadcastResponses()) {
 				if (!clientResponses.containsKey(playerSession.getValue()))
@@ -261,8 +261,8 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	private void compileBroadcastExcludeResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
-		for (Map.Entry<Player, List<Response>> broadcastResponseMap : responseMaps.getBroadcastExcludeClientResponses().entrySet()) {
-			for (Map.Entry<Session, Player> playerSession : playerSessions.entrySet()) {
+		for (var broadcastResponseMap : responseMaps.getBroadcastExcludeClientResponses().entrySet()) {
+			for (var playerSession : playerSessions.entrySet()) {
 				if (playerSession.getValue().equals(broadcastResponseMap.getKey()))
 					continue;// don't send to client
 				
@@ -276,8 +276,8 @@ public class WorldProcessor implements Runnable {
 	}
 	
 	private void compileLocalResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
-		for (Entry<Integer, Map<Integer, List<Response>>> localResponseMapByFloor : responseMaps.getLocalResponses().entrySet()) {
-			for (Entry<Integer, List<Response>> localResponseMap : localResponseMapByFloor.getValue().entrySet()) {
+		for (var localResponseMapByFloor : responseMaps.getLocalResponses().entrySet()) {
+			for (var localResponseMap : localResponseMapByFloor.getValue().entrySet()) {
 				List<Player> localPlayers = getPlayersNearTile(localResponseMapByFloor.getKey(), localResponseMap.getKey(), 15);
 				for (Player localPlayer : localPlayers) {
 					if (!clientResponses.containsKey(localPlayer))
@@ -291,7 +291,7 @@ public class WorldProcessor implements Runnable {
 	}
 
 	private void compileClientOnlyResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
-		for (Map.Entry<Player, List<Response>> privateResponseMap : responseMaps.getClientOnlyResponses().entrySet()) {
+		for (var privateResponseMap : responseMaps.getClientOnlyResponses().entrySet()) {
 			// only individual players get these responses
 			for (Response privateResponse : privateResponseMap.getValue()) {
 				if (!clientResponses.containsKey(privateResponseMap.getKey()))
@@ -329,7 +329,7 @@ public class WorldProcessor implements Runnable {
 	
 	private void updateInRangePlayers(ResponseMaps responseMaps) {
 		Stopwatch.start("updating in-range players");
-		for (Map.Entry<Session, Player> entry : playerSessions.entrySet()) {
+		for (var entry : playerSessions.entrySet()) {
 			Set<Integer> currentInRangePlayers = entry.getValue().getInRangePlayers();
 			Set<Integer> newInRangePlayers = WorldProcessor.getPlayersNearTile(entry.getValue().getFloor(), entry.getValue().getTileId(), 15)
 														   .stream()
@@ -393,7 +393,7 @@ public class WorldProcessor implements Runnable {
 		Map<Integer, List<Integer>> newInRangeGroundItems = GroundItemManager.getItemIdsNearTile(player.getFloor(), player.getId(), player.getTileId(), 15);
 		
 		Map<Integer, List<Integer>> removedGroundItems = new HashMap<>();
-		for (Map.Entry<Integer, List<Integer>> currentEntry : currentInRangeGroundItems.entrySet()) {
+		for (var currentEntry : currentInRangeGroundItems.entrySet()) {
 			if (!newInRangeGroundItems.containsKey(currentEntry.getKey())) {
 				removedGroundItems.put(currentEntry.getKey(), currentEntry.getValue());
 				continue;
@@ -417,7 +417,7 @@ public class WorldProcessor implements Runnable {
 		}
 		
 		Map<Integer, List<Integer>> addedGroundItems = new HashMap<>();
-		for (Map.Entry<Integer, List<Integer>> newEntry : newInRangeGroundItems.entrySet()) {
+		for (var newEntry : newInRangeGroundItems.entrySet()) {
 			if (!currentInRangeGroundItems.containsKey(newEntry.getKey())) {
 				addedGroundItems.put(newEntry.getKey(), newEntry.getValue());
 				continue;
@@ -650,19 +650,4 @@ public class WorldProcessor implements Runnable {
 	public static boolean sessionExistsByPlayerId(int playerId) {
 		return playerSessions.values().stream().anyMatch(e -> e.getId() == playerId);
 	}
-	
-//	public static void setDaytime(boolean newDaytime) {
-//		if (daytime != newDaytime) {
-//			daytimeChanged = true;
-//			DepletionManager.removeDaylightFlowers(newDaytime);
-//			WanderingPetManager.get().rotateWanderingPets();
-//		}
-//		
-//		daytime = newDaytime;
-//		dayNightCountdown = daytime ? DAYTIME_TICKS : NIGHTTIME_TICKS;
-//	}
-//	
-//	public static int getDayCycleLengthInTicks() {
-//		return DAYTIME_TICKS + NIGHTTIME_TICKS;
-//	}
 }

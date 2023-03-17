@@ -60,7 +60,7 @@ public class FinishFishingResponse extends Response {
 				// however, if bait is supplied, use it first without consuming a charge.
 				final int enhancedFishingRodSlot = invItemIds.indexOf(Items.ENHANCED_FISHING_ROD.getValue());
 				if (enhancedFishingRodSlot != -1) {
-					PlayerStorageDao.reduceCharge(player.getId(), Items.ENHANCED_FISHING_ROD.getValue(), enhancedFishingRodSlot, 1);
+					PlayerStorageDao.reduceCharge(player.getId(), enhancedFishingRodSlot, 1);
 				} else {
 					return; // no bait, no enhanced fishing rod, no fish bitch
 				}
@@ -70,11 +70,11 @@ public class FinishFishingResponse extends Response {
 			}
 		}
 		
-		final boolean usingScorchTippedSpear = fishable.getToolId() == Items.FISHING_SPEAR.getValue() && invItemIds.contains(Items.SCORCH_TIPPED_FISHING_SPEAR.getValue());
-		if (usingScorchTippedSpear) // a charge is used for every fish caught, regardless of if we proc or not.
-			PlayerStorageDao.reduceCharge(player.getId(), Items.SCORCH_TIPPED_FISHING_SPEAR.getValue(), invItemIds.indexOf(Items.SCORCH_TIPPED_FISHING_SPEAR.getValue()), 1);
+		final int scorchTippedSpearIndex = invItemIds.indexOf(Items.SCORCH_TIPPED_FISHING_SPEAR.getValue());
+		if (scorchTippedSpearIndex != -1) // a charge is used for every fish caught, regardless of if we proc or not.
+			PlayerStorageDao.reduceCharge(player.getId(), scorchTippedSpearIndex, 1);
 		
-		if (usingScorchTippedSpear && RandomUtil.chance(20)) {
+		if (scorchTippedSpearIndex != 0 && RandomUtil.chance(20)) {
 			// if we have a scorch-tipped fishing spear, then use it
 			CookableDto cookable = CookableDao.getCookable(fishable.getItemId());
 			if (cookable != null) {

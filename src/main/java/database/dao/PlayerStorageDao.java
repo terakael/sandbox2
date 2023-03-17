@@ -363,12 +363,12 @@ public class PlayerStorageDao {
 		return true;
 	}
 	
-	public static void reduceCharge(int playerId, int itemId, int slot, int chargesToReduceBy) {
+	public static void reduceCharge(int playerId, int slot, int chargesToReduceBy) {
 		final InventoryItemDto chargedItem = getStorageItemFromPlayerIdAndSlot(playerId, StorageTypes.INVENTORY, slot);
 		
 		if (chargedItem.getCharges() <= chargesToReduceBy) {
-			// revert to regular fishing rod
-			final int degradedItemId = ItemDao.getDegradedItemId(itemId);
+			// revert to degraded item
+			final int degradedItemId = ItemDao.getDegradedItemId(chargedItem.getItemId());
 			setItemFromPlayerIdAndSlot(playerId, StorageTypes.INVENTORY, slot, degradedItemId, 1, ItemDao.getMaxCharges(degradedItemId));
 		} else {
 			setItemFromPlayerIdAndSlot(playerId, StorageTypes.INVENTORY, slot, chargedItem.getItemId(), 1, chargedItem.getCharges() - chargesToReduceBy);
