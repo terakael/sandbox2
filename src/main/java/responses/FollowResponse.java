@@ -15,18 +15,8 @@ public class FollowResponse extends Response {
 
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (!(req instanceof FollowRequest)) {
-			return;
-		}
-		
-//		if (FightManager.fightWithFighterIsBattleLocked(player))
-//			return;
-//		FightManager.cancelFight(player, responseMaps);
-		
-		FollowRequest request = (FollowRequest)req;
-		
-		player.setTarget(WorldProcessor.getPlayerById(request.getObjectId()));
-		player.setState(PlayerState.following);
+		player.setTarget(WorldProcessor.getPlayerById(((FollowRequest)req).getObjectId()));
+		player.setState(PlayerState.chasing);
 	}
 
 }

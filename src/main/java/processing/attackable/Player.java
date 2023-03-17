@@ -99,7 +99,6 @@ public class Player extends Attackable {
 		walking,
 		chasing,// used for walking to a moving target (following, moving to attack something etc)
 		chasing_with_range, // if the player is behind a wall and they cast a spell, they'll run around in preparation of casting from range
-		following,
 		mining,
 		smithing,
 		smelting,
@@ -281,28 +280,6 @@ public class Player extends Attackable {
 			
 			break;
 		}
-		case following: {
-			if (popPath(responseMaps)) {
-				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
-				playerUpdateResponse.setId(getId());
-				playerUpdateResponse.setTileId(getTileId());
-				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
-			}
-			
-			if (floor != target.getFloor())// if the target goes down a ladder or something then stop following
-				target = null;
-
-			// maybe the target player logged out
-			if (target == null) {
-				state = PlayerState.idle;
-				break;
-			}
-			
-			if (!PathFinder.isNextTo(floor, tileId, target.getTileId())) {
-				path = PathFinder.findPath(floor, tileId, target.getTileId(), false);
-			}
-			break;
-		}
 		case chasing: {
 			if (target != null && floor != target.getFloor())// if the target goes down a ladder or something then stop following
 				target = null;
@@ -313,10 +290,17 @@ public class Player extends Attackable {
 				break;
 			}
 			
+			// similar to walking, but need to recalculate path each tick due to moving target
+			if (popPath(responseMaps)) {
+				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+				playerUpdateResponse.setId(dto.getId());
+				playerUpdateResponse.setTileId(getTileId());
+				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
+			}
+			
 			if (!PathFinder.isNextTo(floor, tileId, target.getTileId())) {
 				path = PathFinder.findPath(floor, tileId, target.getTileId(), false);
 			} else {
-				// start the fight
 				if (savedRequest != null) {
 					Request req = savedRequest;
 					savedRequest = null;
@@ -324,16 +308,8 @@ public class Player extends Attackable {
 					Response response = ResponseFactory.create(req.getAction());
 					response.process(req, this, responseMaps);
 				}
-				state = PlayerState.fighting;
+//				state = PlayerState.fighting;
 				path.clear();
-			}
-			
-			// similar to walking, but need to recalculate path each tick due to moving target
-			if (popPath(responseMaps)) {
-				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
-				playerUpdateResponse.setId(dto.getId());
-				playerUpdateResponse.setTileId(getTileId());
-				responseMaps.addLocalResponse(getFloor(), getTileId(), playerUpdateResponse);
 			}
 
 			break;

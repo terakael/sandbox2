@@ -12,7 +12,7 @@ import requests.AttackRequest;
 import requests.Request;
 import types.NpcAttributes;
 
-public class AttackResponse extends Response {
+public class AttackResponse extends WalkAndDoResponse {
 	
 	public AttackResponse() {
 		setCombatLockedMessage("you're already fighting!");
@@ -20,26 +20,20 @@ public class AttackResponse extends Response {
 	}
 
 	@Override
-	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (!(req instanceof AttackRequest))
-			return;
-		
-//		if (FightManager.fightWithFighterExists(player)) {
-//			setRecoAndResponseText(0, "you're already fighting!");
-//			responseMaps.addClientOnlyResponse(player, this);
-//			return;
-//		}
-		
-		AttackRequest request = (AttackRequest)req;
-		final NPC npc = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
-		if (npc == null || !NPCDao.npcHasAttribute(npc.getId(), NpcAttributes.ATTACKABLE)) {
+	protected boolean setTarget(Request request, Player player, ResponseMaps responseMaps) {
+		target = LocationManager.getNpcNearPlayerByInstanceId(player, ((AttackRequest)request).getObjectId());
+		if (target == null || !NPCDao.npcHasAttribute(((NPC)target).getId(), NpcAttributes.ATTACKABLE)) {
 			setRecoAndResponseText(0, "you can't attack that.");
 			responseMaps.addClientOnlyResponse(player, this);
-			return;
+			return false;
 		}
 		
-		if (npc.isDead() || (TimeManager.isDaytime() && !npc.isDiurnal()) || (!TimeManager.isDaytime() && !npc.isNocturnal()))
-			return;
+		return true;
+	}
+
+	@Override
+	protected void doAction(Request request, Player player, ResponseMaps responseMaps) {
+		NPC npc = (NPC)target;
 		
 		if (FightManager.fightWithFighterExists(npc)) {
 			setRecoAndResponseText(0, "someone is already fighting that.");
@@ -47,25 +41,17 @@ public class AttackResponse extends Response {
 			return;
 		}
 		
-		if (!PathFinder.isNextTo(player.getFloor(), npc.getTileId(), player.getTileId())) {
-			player.setTarget(npc);	
-			player.setSavedRequest(request);
-		} else {
-			// start the fight
-			player.setState(PlayerState.fighting);
-			player.setTileId(npc.getTileId());
-			npc.clearPath();
-			player.clearPath();
-			FightManager.addFight(player, npc, true);
-			
-			PvmStartResponse pvmStart = new PvmStartResponse();
-			pvmStart.setPlayerId(player.getId());
-			pvmStart.setMonsterId(npc.getInstanceId());
-			pvmStart.setTileId(npc.getTileId());
-			responseMaps.addBroadcastResponse(pvmStart);
-		}
+		player.setState(PlayerState.fighting);
+		player.setTileId(npc.getTileId());
+		npc.clearPath();
+		player.clearPath();
+		FightManager.addFight(player, npc, true);
 		
-		
+		PvmStartResponse pvmStart = new PvmStartResponse();
+		pvmStart.setPlayerId(player.getId());
+		pvmStart.setMonsterId(npc.getInstanceId());
+		pvmStart.setTileId(npc.getTileId());
+		responseMaps.addBroadcastResponse(pvmStart);
 	}
 
 }

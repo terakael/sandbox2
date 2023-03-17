@@ -17,46 +17,35 @@ import system.GroundItemManager;
 import types.ItemAttributes;
 import types.StorageTypes;
 
-public class TakeResponse extends Response {
-	//@Setter private List<GroundItemManager.GroundItem> groundItems;
+public class TakeResponse extends WalkAndDoResponse {
+	private transient RoomGroundItemManager.GroundItem groundItem = null;
 
-	public TakeResponse() {
-		setAction("take");
+	@Override
+	protected boolean setTarget(Request request, Player player, ResponseMaps responseMaps) {
+		TakeRequest takeReq = (TakeRequest)request;
+		groundItem = GroundItemManager.getItemAtTileId(player.getFloor(), player.getId(), takeReq.getItemId(), takeReq.getTileId());
+		if (groundItem == null)
+			return false;
+		
+		walkingTargetTileId = takeReq.getTileId();
+		return true;
+	}
+	
+	@Override
+	protected boolean nextToTarget(Request request, Player player, ResponseMaps responseMaps) {
+		return walkingTargetTileId == player.getTileId();
+	}
+	
+	@Override
+	protected void walkToTarget(Request request, Player player, ResponseMaps responseMaps) {
+		player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), walkingTargetTileId, true));
 	}
 
 	@Override
-	public void process(Request req, Player player, ResponseMaps responseMaps) {
-		if (!(req instanceof TakeRequest)) {
-			setRecoAndResponseText(0, "funny business");
-			return;
-		}
-		
-//		if (FightManager.fightWithFighterExists(player)) {
-//			setRecoAndResponseText(0, "you can't do that during combat.");
-//			responseMaps.addClientOnlyResponse(player, this);
-//			return;
-//		}
-		
-		TakeRequest takeReq = (TakeRequest)req;
-		
-		RoomGroundItemManager.GroundItem groundItem = GroundItemManager.getItemAtTileId(player.getFloor(), player.getId(), takeReq.getItemId(), takeReq.getTileId());
-		if (groundItem == null) {
-			return;
-		}
-		
-		if (takeReq.getTileId() != player.getTileId()) {
-			// walk over to the item before picking it up
-			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), takeReq.getTileId(), true));
-			player.setState(PlayerState.walking);
-			
-			// save the request so the player reprocesses it when they arrive at their destination
-			player.setSavedRequest(req);
-			return;
-		}
-		
+	protected void doAction(Request request, Player player, ResponseMaps responseMaps) {
 		List<Integer> invItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		if (ItemDao.itemHasAttribute(groundItem.getId(), ItemAttributes.STACKABLE)) {
-			if (!invItems.contains(0) && !invItems.contains(takeReq.getItemId())) {
+			if (!invItems.contains(0) && !invItems.contains(groundItem.getId())) {
 				setRecoAndResponseText(0, "you don't have enough space to take that.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
@@ -66,7 +55,7 @@ public class TakeResponse extends Response {
 			if (invItemIndex >= 0) {
 				PlayerStorageDao.addCountToStorageItemSlot(player.getId(), StorageTypes.INVENTORY, invItemIndex, groundItem.getCount());
 			} else {
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, takeReq.getItemId(), groundItem.getCount(), 0);
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, groundItem.getId(), groundItem.getCount(), 0);
 			}
 		} else {
 			if (!invItems.contains(0)) {
@@ -74,15 +63,15 @@ public class TakeResponse extends Response {
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
 			}
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, takeReq.getItemId(), 1, groundItem.getCharges());
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, groundItem.getId(), 1, groundItem.getCharges());
 		}
 		
-		GroundItemManager.remove(player.getFloor(), player.getId(), takeReq.getTileId(), takeReq.getItemId(), groundItem.getCount(), groundItem.getCharges());
-		TybaltsTaskManager.check(player, new TakeTaskUpdate(takeReq.getItemId(), groundItem.getCount()), responseMaps);
+		GroundItemManager.remove(player.getFloor(), player.getId(), request.getTileId(), groundItem.getId(), groundItem.getCount(), groundItem.getCharges());
+		TybaltsTaskManager.check(player, new TakeTaskUpdate(groundItem.getId(), groundItem.getCount()), responseMaps);
 		
 		// update the player inventory/equipped items and only send it to the player
 		Response resp = ResponseFactory.create("invupdate");
-		resp.process(takeReq, player, responseMaps);// adds itself to the appropriate responseMap
+		resp.process(request, player, responseMaps);// adds itself to the appropriate responseMap
 		player.setState(PlayerState.idle);
 	}
 

@@ -18,13 +18,6 @@ public class OpenResponse extends Response {
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		OpenRequest request = (OpenRequest)req;
 		
-//		if (FightManager.fightWithFighterIsBattleLocked(player)) {
-//			setRecoAndResponseText(0, "you can't do that during combat.");
-//			responseMaps.addClientOnlyResponse(player, this);
-//			return;
-//		}
-//		FightManager.cancelFight(player, responseMaps);
-		
 		DoorDto door = DoorDao.getDoorDtoByTileId(player.getFloor(), request.getTileId());
 		if (door != null) {
 			new OpenCloseResponse().process(req, player, responseMaps);
