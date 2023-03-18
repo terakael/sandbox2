@@ -63,6 +63,7 @@ import processing.managers.HousePetsManager;
 import processing.managers.HousingManager;
 import processing.managers.ShopManager;
 import processing.managers.UndeadArmyManager;
+import processing.managers.WallManager;
 import processing.managers.WanderingPetManager;
 import responses.CachedResourcesResponse;
 import responses.ExamineResponse;
@@ -132,6 +133,9 @@ public class Server {
 		
 		System.out.println("caching doors");
 		DoorDao.setupCaches();
+		
+		System.out.println("caching walls");
+		WallManager.setupCaches();
 		
 		System.out.println("initializing pathfinder");
 		PathFinder.get();// init the path nodes and relationships

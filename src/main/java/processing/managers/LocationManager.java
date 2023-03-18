@@ -24,6 +24,8 @@ public class LocationManager {
 	private static Map<Integer, Map<Integer, Set<NPC>>> pets = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<Player>>> players = new HashMap<>(); // floor, <segmentId, <players>>
 	
+	// TODO scenery, pickables etc should be here too
+	
 	public static NPC getNpcNearPlayerByInstanceId(Player player, int instanceId) {
 		return LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 12).stream()
 				.filter(e -> e.getInstanceId() == instanceId)

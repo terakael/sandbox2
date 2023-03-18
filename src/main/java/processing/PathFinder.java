@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import database.dao.DoorDao;
@@ -17,6 +18,7 @@ import database.dao.GroundTextureDao;
 import database.dao.SceneryDao;
 import lombok.Getter;
 import lombok.Setter;
+import processing.managers.WallManager;
 import types.ImpassableTypes;
 import utils.Stopwatch;
 import utils.Utils;
@@ -36,7 +38,20 @@ public class PathFinder {
 				continue;
 			
 			nodesByFloor.put(floor, new HashMap<>());
-			HashMap<Integer, Integer> tileIdImpassability = SceneryDao.getImpassableTileIdsByFloor(floor);
+//			HashMap<Integer, Integer> tileIdImpassability = SceneryDao.getImpassableTileIdsByFloor(floor);
+			
+			// we want any tileId that has scenery and/or wall on it.
+			// if it has both, we want the combined impassable of the two.
+			final Set<Integer> sceneryTileIds = SceneryDao.getAllSceneryInstancesByFloor(floor).values().stream()
+				.flatMap(Set::stream)
+				.collect(Collectors.toSet());
+			sceneryTileIds.addAll(WallManager.getWallTileIdsByFloor(floor));
+			
+			final Map<Integer, Integer> tileIdImpassability = sceneryTileIds.stream()
+					.collect(Collectors.toMap(Function.identity(), tileId -> {
+						return SceneryDao.getImpassableTypeByFloorAndTileId(floor, tileId) | 
+								WallManager.getImpassableTypeByFloorAndTileId(floor, tileId);
+					}));
 			
 			for (int tileId : tileIds) {
 				PathNode node = new PathNode();
@@ -541,10 +556,10 @@ public class PathFinder {
 			return false;
 		
 		// ok we're adjacent, are there any impassables between us?
-		int srcImpassableType = SceneryDao.getImpassableTypeByFloor(floor, srcTile);
+		int srcImpassableType = getImpassableByTileId(floor, srcTile);
 		
 		// for the destination, let's ignore any impassable types of 15; could be a rock/tree/ladder etc
-		int destImpassableType = SceneryDao.getImpassableTypeByFloor(floor, destTile);
+		int destImpassableType = getImpassableByTileId(floor, destTile);
 		if ((destImpassableType & 15) == 15)
 			destImpassableType -= 15;
 		
@@ -610,27 +625,6 @@ public class PathFinder {
 				return false;
 		}
 		return true;
-		
-//		return  
-//			// destTile is to the left, destTile doesn't have a right-facing wall, srcTile doesn't have a left-facing wall
-//			((destTile == srcTile - 1 || (srcTile % LENGTH == 0 && destTile == srcTile + LENGTH - 1))  && 
-//				(((!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, destImpassableType)/* || (destImpassableType & 15) == 15*/)) && 
-//					!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, srcImpassableType))) ||
-//			
-//			// destTile is to the right; destTile doesn't have a left-facing wall, srcTile doesn't have a right-facing wall
-//			((destTile == srcTile + 1 || (srcTile % LENGTH == LENGTH - 1 && destTile == srcTile - LENGTH + 1))&& 
-//				(((!ImpassableTypes.isImpassable(ImpassableTypes.LEFT, destImpassableType)/* || (destImpassableType & 15) == 15*/) && 
-//					!ImpassableTypes.isImpassable(ImpassableTypes.RIGHT, srcImpassableType)))) ||
-//			
-//			// destTile is above; destTile doesn't have a bottom-facing wall, srcTile doesn't have a top-facing wall
-//			(destTile == srcTile - LENGTH && 
-//				(((!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, destImpassableType) || (destImpassableType & 15) == 15) && 
-//					!ImpassableTypes.isImpassable(ImpassableTypes.TOP, srcImpassableType)))) ||
-//			
-//			// destTile is below; destTile doesn't have a top-facing wall, srcTile doesn't have a bottom-facing wall
-//			(destTile == srcTile + LENGTH &&
-//				(((!ImpassableTypes.isImpassable(ImpassableTypes.TOP, destImpassableType) || (destImpassableType & 15) == 15) && 
-//					!ImpassableTypes.isImpassable(ImpassableTypes.BOTTOM, srcImpassableType))));
 	}
 	
 	public static int chooseRandomTileIdInRadius(int tileId, int radius) {

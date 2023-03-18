@@ -34,12 +34,6 @@ public abstract class PlayerResponse extends Response {
 			setRecoAndResponseText(0, "funny business");
 			return;
 		}
-		
-//		if (FightManager.fightWithFighterExists(player)) {
-//			setRecoAndResponseText(0, "you can't do that during combat.");
-//			responseMaps.addClientOnlyResponse(player, this);
-//			return;
-//		}
 
 		PlayerRequest playerReq = (PlayerRequest)req;
 		
@@ -60,6 +54,9 @@ public abstract class PlayerResponse extends Response {
 			player.setTarget(otherPlayer);
 			return;
 		}
+		
+		// we're next to the player so stop chasing
+		player.setState(PlayerState.idle);
 		
 		player.faceDirection(otherPlayer.getTileId(), responseMaps);
 		

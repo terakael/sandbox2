@@ -159,7 +159,7 @@ public class UndeadArmyManager {
 			// the locations of the trees are no longer non-walkable
 			undeadEntLocations.forEach(tileId -> {
 				PathFinder.setImpassabilityOnTileId(0, tileId, 0); // when the trees aren't scenery, players can walk on the tile.
-				responseMaps.addLocalResponse(0, tileId, new SceneryDespawnResponse(tileId));
+				responseMaps.addLocalResponse(0, tileId, new SceneryDespawnResponse(entSceneryId, tileId));
 			});
 		} else if (currentWave == entWave + 1) {
 			// second form necromancer.
@@ -239,10 +239,10 @@ public class UndeadArmyManager {
 				PathFinder.setImpassabilityOnTileId(0, tileId, 15); // completely impassable
 				// there might be some players that have not loaded a dead tree that arrived as the trees were ents
 				LocationManager.getLocalPlayers(0, tileId, 12).forEach(player -> {
-					ClientResourceManager.addLocalScenery(player, Collections.singleton(9));
+					ClientResourceManager.addLocalScenery(player, Collections.singleton(entSceneryId));
 					
 					AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
-					inRangeResponse.setInstances(Map.<Integer, Set<Integer>>of(9, Collections.singleton(tileId)));
+					inRangeResponse.setInstances(Map.<Integer, Set<Integer>>of(entSceneryId, Collections.singleton(tileId)));
 					
 					// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
 					inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());

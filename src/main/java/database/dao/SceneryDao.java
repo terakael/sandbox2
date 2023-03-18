@@ -11,7 +11,6 @@ import database.DbConnection;
 import database.dto.SceneryDto;
 import database.entity.delete.DeleteRoomSceneryEntity;
 import database.entity.insert.InsertRoomSceneryEntity;
-import lombok.Getter;
 import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.UndeadArmyManager;
@@ -24,7 +23,6 @@ public class SceneryDao {
 	private static Map<Integer, SceneryDto> allScenery = new LinkedHashMap<>();
 	private static HashMap<Integer, Set<SceneryDto>> allSceneryByFloor;
 	private static Map<Integer, Map<Integer, Set<Integer>>> sceneryInstancesByFloor; // floor, <sceneryId, tileids>
-	@Getter private static HashMap<Integer, HashMap<Integer, Integer>> impassableTileIds = new HashMap<>();// floor, <tile_id, impassable_type>
 	
 	public static void setupCaches() {
 		loadAllScenery();
@@ -33,8 +31,6 @@ public class SceneryDao {
 		for (int floor : GroundTextureDao.getDistinctFloors()) {
 			allSceneryByFloor.put(floor, loadAllSceneryByFloor(floor));
 			sceneryInstancesByFloor.put(floor, loadSceneryInstancesByFloor(floor));
-			
-			cacheImpassableTileIdsByFloor(floor);
 		}
 	}
 	
@@ -97,17 +93,6 @@ public class SceneryDao {
 		return instanceList;
 	}
 	
-	public static void cacheImpassableTileIdsByFloor(int floor) {
-		String query = "select tile_id, impassable from room_scenery ";
-		query += " inner join scenery on room_scenery.scenery_id=scenery.id and impassable > 0";
-		query += " where floor=?";
-		
-		impassableTileIds.put(floor, new HashMap<>());
-		DbConnection.load(query, rs -> {
-			impassableTileIds.get(floor).put(rs.getInt("tile_id"), rs.getInt("impassable"));
-		}, floor);
-	}
-	
 	public static HashMap<Integer, String> getExamineMap() {
 		HashMap<Integer, String> examineMap = new HashMap<>();
 		DbConnection.load("select id, examine from scenery", 
@@ -146,18 +131,16 @@ public class SceneryDao {
 		return -1;
 	}
 	
-	public static int getImpassableTypeByFloor(int floor, int tileId) {
-		if (!impassableTileIds.containsKey(floor))
+	public static int getImpassableTypeByFloorAndTileId(int floor, int tileId) {
+		if (!sceneryInstancesByFloor.containsKey(floor))
 			return 0;
 		
-		if (impassableTileIds.get(floor).containsKey(tileId))
-			return impassableTileIds.get(floor).get(tileId);
+		for (var entry : sceneryInstancesByFloor.get(floor).entrySet()) {
+			if (entry.getValue().contains(tileId))
+				return allScenery.get(entry.getKey()).getImpassable();
+		}
 		
 		return 0;
-	}
-	
-	public static HashMap<Integer, Integer> getImpassableTileIdsByFloor(int floor) {
-		return impassableTileIds.get(floor);
 	}
 	
 	public static int getIdByName(String name) {
@@ -192,11 +175,6 @@ public class SceneryDao {
 	}
 	
 	public static void upsertRoomScenery(int floor, int tileId, int sceneryId) {
-//		private static HashMap<Integer, List<SceneryDto>> allSceneryByFloor;
-//		private static Map<Integer, Map<Integer, Set<Integer>>> sceneryInstancesByFloor; // floor, <sceneryId, tileids>
-//		@Getter private static HashMap<Integer, HashMap<Integer, Integer>> impassableTileIds = new HashMap<>();// floor, <tile_id, impassable_type>
-		
-		
 		final SceneryDto dto = allScenery.get(sceneryId);
 		if (dto == null) {
 			// invalid scenery
@@ -212,10 +190,6 @@ public class SceneryDao {
 		sceneryInstancesByFloor.putIfAbsent(floor, new HashMap<>());
 		sceneryInstancesByFloor.get(floor).putIfAbsent(sceneryId, new HashSet<>());
 		sceneryInstancesByFloor.get(floor).get(sceneryId).add(tileId);
-		
-		// TODO this is used in path finder
-		impassableTileIds.putIfAbsent(floor, new HashMap<>());
-		impassableTileIds.get(floor).put(tileId, dto.getImpassable());
 		
 		DatabaseUpdater.enqueue(new InsertRoomSceneryEntity(floor, tileId, sceneryId));
 	}
@@ -236,5 +210,9 @@ public class SceneryDao {
 			}
 		}
 		return false;
+	}
+	
+	public static SceneryDto getSceneryById(int sceneryId) {
+		return allScenery.get(sceneryId);
 	}
 }

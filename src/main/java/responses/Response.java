@@ -25,9 +25,9 @@ public abstract class Response {
 	@Getter @Setter private String action;
 	@Setter private String colour = null;
 	
-	@Setter protected String combatLockedMessage = "you can't do that during combat!";
-	@Setter private String noRetreatDuelMessage = null;
-	@Setter private boolean combatInterrupt = true;
+	@Setter protected transient String combatLockedMessage = "you can't do that during combat!";
+	@Setter private transient String noRetreatDuelMessage = null;
+	@Setter private transient boolean combatInterrupt = true;
 
 	public void setRecoAndResponseText(int success, String responseText) {
 		this.success = success;

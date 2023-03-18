@@ -20,6 +20,7 @@ public class PlayerUpdateResponse extends Response {
 	@Setter private Integer currentHp = null;
 	@Setter private Integer currentPrayer = null;
 	@Setter private Integer maxHp = null;
+	@Setter private Integer relativeFloor = null;
 	@Setter private Boolean loggedIn = null;
 	@Setter private Boolean snapToTile = null;
 	@Setter private Boolean respawn = null;

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,7 +18,6 @@ import database.dao.MinimapSegmentDao;
 import database.dao.PickableDao;
 import database.dao.SceneryDao;
 import database.dto.PickableDto;
-import lombok.Getter;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
@@ -34,7 +32,7 @@ import processing.managers.LockedDoorManager;
 import processing.managers.ShopManager;
 import processing.managers.TimeManager;
 import processing.managers.UndeadArmyManager;
-import processing.managers.WanderingPetManager;
+import processing.managers.WallManager;
 import processing.stores.Store;
 import requests.Request;
 import responses.AddGroundTextureInstancesResponse;
@@ -499,18 +497,17 @@ public class WorldProcessor implements Runnable {
 					final boolean isNocturnal = SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.NOCTURNAL);
 					
 					if (((TimeManager.isDaytime() && !isDiurnal) || (!TimeManager.isDaytime() && !isNocturnal))) {
-						// dynamic impassability is used for necromancer's ents
-//						PathFinder.setImpassabilityOnTileId(0, tileId, 0);
-						SceneryDespawnResponse despawnResponse = new SceneryDespawnResponse(tileId);
+						SceneryDespawnResponse despawnResponse = new SceneryDespawnResponse(sceneryId, tileId);
 						responseMaps.addClientOnlyResponse(player, despawnResponse);
 					}
 					
 					if ((TimeManager.isDaytime() && !isNocturnal && isDiurnal) || (!TimeManager.isDaytime() && !isDiurnal && isNocturnal)) {
-//						PathFinder.setImpassabilityOnTileId(0, tileId, );
 						addedTileIdsBySceneryId.putIfAbsent(sceneryId, new HashSet<>());
 						addedTileIdsBySceneryId.get(sceneryId).add(tileId);
 					}
 				}
+				
+				// TODO walls that only appear during day or night would be interesting
 			});
 		}
 		
@@ -542,6 +539,15 @@ public class WorldProcessor implements Runnable {
 						  (!TimeManager.isDaytime() && SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.NOCTURNAL)))) {
 					addedTileIdsBySceneryId.putIfAbsent(sceneryId, new HashSet<>());
 					addedTileIdsBySceneryId.get(sceneryId).add(tileId);
+				}
+				
+				int wallSceneryId = WallManager.getWallSceneryIdByFloorAndTileId(player.getFloor(), tileId);
+				if (wallSceneryId != -1 && 
+						!SceneryDao.sceneryContainsAttribute(sceneryId, SceneryAttributes.INVISIBLE) && 
+						((TimeManager.isDaytime() && SceneryDao.sceneryContainsAttribute(wallSceneryId, SceneryAttributes.DIURNAL)) ||
+						  (!TimeManager.isDaytime() && SceneryDao.sceneryContainsAttribute(wallSceneryId, SceneryAttributes.NOCTURNAL)))) {
+					addedTileIdsBySceneryId.putIfAbsent(wallSceneryId, new HashSet<>());
+					addedTileIdsBySceneryId.get(wallSceneryId).add(tileId);
 				}
 			}
 			

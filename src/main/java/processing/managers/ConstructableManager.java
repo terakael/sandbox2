@@ -73,7 +73,7 @@ public class ConstructableManager {
 				}
 				else if (constructable.getRemainingTicks() <= 0) {
 					tileIdsToRemove.add(tileId);
-					responseMaps.addLocalResponse(floor, tileId, new SceneryDespawnResponse(tileId));
+					responseMaps.addLocalResponse(floor, tileId, new SceneryDespawnResponse(constructable.getDto().getResultingSceneryId(), tileId));
 				}
 			});
 			
@@ -176,7 +176,7 @@ public class ConstructableManager {
 		if (instance == null)
 			return;
 		
-		responseMaps.addLocalResponse(floor, tileId, new SceneryDespawnResponse(tileId));
+		responseMaps.addLocalResponse(floor, tileId, new SceneryDespawnResponse(instance.getDto().getResultingSceneryId(), tileId));
 		constructableInstances.get(floor).remove(tileId);
 		
 		if (housingConstructableInstances.get(floor).contains(tileId)) {
