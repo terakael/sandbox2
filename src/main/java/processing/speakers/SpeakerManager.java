@@ -14,6 +14,7 @@ public class SpeakerManager {
 		speakers.put(26, new Tybalt());
 		speakers.put(58, new Alaina());
 		speakers.put(59, new Clothilda());
+		speakers.put(62, new Realtor());
 	}
 	
 	public static void preShowDialogue(NpcDialogueDto dto, Player player, ResponseMaps responseMaps) {

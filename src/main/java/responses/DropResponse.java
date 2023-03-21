@@ -58,7 +58,7 @@ public class DropResponse extends Response {
 		}
 		
 		if (ItemDao.itemHasAttribute(itemToDrop.getItemId(), ItemAttributes.PET)) {
-			if (HousingManager.getHouseIdFromFloorAndTileId(player.getFloor(), player.getTileId()) == player.getHouseId()) {
+			if (HousingManager.getOwningPlayerId(player.getFloor(), player.getTileId()) == player.getId()) {
 				if (!HousePetsManager.addPetByPetItemId(player, itemToDrop.getItemId())) {
 					setRecoAndResponseText(0, "it's a bit crowded in here, think of the poor animal...");
 					responseMaps.addClientOnlyResponse(player, this);

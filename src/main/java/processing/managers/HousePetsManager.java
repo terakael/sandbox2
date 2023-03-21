@@ -32,10 +32,14 @@ public class HousePetsManager {
 		if (npcId == -1)
 			return false;
 		
-		if (!addPet(player.getHouseId(), npcId, player.getFloor(), player.getTileId()))
+		final int houseId = HousingManager.getHouseIdByPlayerId(player.getId());
+		if (houseId == -1)
 			return false;
 		
-		DatabaseUpdater.enqueue(new InsertHousePetsEntity(player.getHouseId(), npcId, player.getFloor()));
+		if (!addPet(houseId, npcId, player.getFloor(), player.getTileId()))
+			return false;
+		
+		DatabaseUpdater.enqueue(new InsertHousePetsEntity(houseId, npcId, player.getFloor()));
 		return true;
 	}
 	

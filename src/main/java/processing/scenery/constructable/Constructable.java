@@ -57,7 +57,7 @@ public class Constructable implements Scenery {
 	@Override
 	public boolean use(UseRequest request, Player player, ResponseMaps responseMaps) {
 		// if we're in a house and the player is using a hammer, then destroy.
-		if (HousingManager.getHouseIdFromFloorAndTileId(floor, tileId) != player.getHouseId())
+		if (HousingManager.getOwningPlayerId(floor, tileId) != player.getId())
 			return false; // currently can't use anything on general constructables
 		
 		if (request.getSrc() != Items.HAMMER.getValue())

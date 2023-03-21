@@ -241,6 +241,18 @@ public class ResponseFactory {
 			response = new PickUpResponse();
 			break;
 			
+		case "buy_house":
+			response = new BuyHouseResponse();
+			break;
+			
+		case "sell_house":
+			response = new SellHouseResponse();
+			break;
+			
+		case "get_house_info":
+			response = new GetHouseInfoResponse();
+			break;
+			
 		default:
 			response = new UnknownResponse();
 			break;

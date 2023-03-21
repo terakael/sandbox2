@@ -81,6 +81,9 @@ public class RequestFactory {
 		map.put("show_smithing_skill_window", ShowSmithingSkillWindowRequest.class);
 		map.put("show_construction_skill_window", ShowConstructionSkillWindowRequest.class);
 		map.put("pick up", PickUpRequest.class);
+		map.put("buy_house", BuyHouseRequest.class);
+		map.put("sell_house", SellHouseRequest.class);
+		map.put("get_house_info", GetHouseInfoRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

@@ -79,7 +79,7 @@ public class LockedDoorManager {
 			return "";
 		
 		// player house locked doors, check if player is owner of current house
-		if (player.getHouseId() == HousingManager.getHouseIdFromFloorAndTileId(lockedDoor.getFloor(), lockedDoor.getTileId())) {
+		if (HousingManager.getOwningPlayerId(lockedDoor.getFloor(), lockedDoor.getTileId()) == player.getId()) {
 			return "";
 		}
 		

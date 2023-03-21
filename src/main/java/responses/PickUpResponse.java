@@ -44,9 +44,9 @@ public class PickUpResponse extends Response {
 			player.faceDirection(pet.getTileId(), responseMaps);
 			
 			// following pets have the player's id, whereas house pets have the tileId as the instanceId
-			int petHouseId = HousingManager.getHouseIdFromFloorAndTileId(player.getFloor(), pet.getInstanceId());
+			int houseOwnerId = HousingManager.getOwningPlayerId(player.getFloor(), pet.getInstanceId());
 			
-			if (!(request.getObjectId() == player.getId() || petHouseId == player.getHouseId())) {
+			if (!(request.getObjectId() == player.getId() || houseOwnerId == player.getId())) {
 				setRecoAndResponseText(0, "that doesn't belong to you.");
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
@@ -60,7 +60,7 @@ public class PickUpResponse extends Response {
 			
 			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, PetDao.getItemIdFromNpcId(pet.getDto().getId()), 1, 0);
 			
-			if (petHouseId > 0) {
+			if (houseOwnerId > 0) {
 				HousePetsManager.removePet(pet);
 			} else {
 				PlayerStorageDao.clearStorageByPlayerIdStorageTypeId(player.getId(), StorageTypes.PET);

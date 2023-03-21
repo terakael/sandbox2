@@ -669,9 +669,9 @@ public class Player extends Attackable {
 		return dto.getId();
 	}
 	
-	public int getHouseId() {
-		return dto.getHouseId();
-	}
+//	public int getHouseId() {
+//		return dto.getHouseId();
+//	}
 	
 	@Override
 	public void handleWalkingThroughClosedDoor(int doorTileId, ResponseMaps responseMaps) {

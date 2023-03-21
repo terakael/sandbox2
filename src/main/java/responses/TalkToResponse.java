@@ -8,6 +8,7 @@ import database.dto.NpcDialogueDto;
 import processing.PathFinder;
 import processing.attackable.NPC;
 import processing.attackable.Player;
+import processing.attackable.Player.PlayerState;
 import processing.managers.DialogueManager;
 import processing.managers.FightManager;
 import processing.managers.LocationManager;
@@ -55,6 +56,7 @@ public class TalkToResponse extends Response {
 			// talk to it
 			player.faceDirection(npc.getTileId(), responseMaps);
 			handleTalkTo(npc, player, responseMaps);
+			player.setState(PlayerState.idle);
 		}
 		
 	}
