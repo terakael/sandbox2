@@ -194,10 +194,18 @@ public class GroundTextureDao {
 //	}
 	
 	public static Set<Integer> getAllWalkableTileIdsByFloor(int floor) {
+		return getAllTileIdsByFloorAndWalkable(floor, true);
+	}
+	
+	public static Set<Integer> getAllSailableTileIdsByFloor(int floor) {
+		return getAllTileIdsByFloorAndWalkable(floor, false);
+	}
+	
+	private static Set<Integer> getAllTileIdsByFloorAndWalkable(int floor, boolean walkable) {
 		Set<Integer> allTileIdsByFloor = new HashSet<>();
 		
 		Set<Integer> walkableTextureIds = groundTextures.stream()
-			.filter(e -> e.isWalkable())
+			.filter(e -> e.isWalkable() == walkable)
 			.map(GroundTextureDto::getId)
 			.collect(Collectors.toSet());
 		

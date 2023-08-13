@@ -130,6 +130,7 @@ public class Player extends Attackable {
 	@Getter @Setter private Set<Integer> inRangePlayers = new HashSet<>();
 	@Getter @Setter private Set<Integer> inRangeConstructables = new HashSet<>();
 	@Getter @Setter private Map<Integer, List<Integer>> inRangeGroundItems = new HashMap<>();
+	@Getter @Setter private Set<Integer> inRangeShips = new HashSet<>();
 	@Getter @Setter private Set<Integer> localTiles = new HashSet<>();
 	@Getter @Setter private int loadedFloor = 0;
 	@Getter @Setter private Set<Integer> loadedMinimapSegments = new HashSet<>();

@@ -20,8 +20,8 @@ import system.GroundItemManager;
 public abstract class StorageChest extends Constructable {
 	private Map<Integer, Map<Integer, InventoryItemDto>> storage = new HashMap<>(); // playerId, <slot, item>
 
-	public StorageChest(int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile) {
-		super(floor, tileId, lifetimeTicks, dto, onHousingTile);
+	public StorageChest(int playerId, int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile, ResponseMaps responseMaps) {
+		super(playerId, floor, tileId, lifetimeTicks, dto, onHousingTile, responseMaps);
 		
 		if (onHousingTile) {
 			// TODO this won't scale well, need to pre-cache all persisted storage chest items

@@ -51,7 +51,7 @@ public class FinishThrowResponse extends Response {
 	}
 	
 	private boolean tileIsValid(Player player, int checkTileId) {
-		if (!PathFinder.tileIsValid(player.getFloor(), checkTileId)) // water, blank tiles etc
+		if (!PathFinder.tileIsWalkable(player.getFloor(), checkTileId)) // water, blank tiles etc
 			return false;
 		
 		if (SceneryDao.getSceneryIdByTileId(player.getFloor(), checkTileId) != -1)

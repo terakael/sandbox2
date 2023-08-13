@@ -19,12 +19,14 @@ import types.StorageTypes;
 public class Constructable implements Scenery {
 	@Getter protected ConstructableDto dto;
 	@Getter protected int remainingTicks;
+	protected int playerId;
 	protected int floor;
 	protected int tileId;
 	protected boolean onHousingTile;
 	
-	public Constructable(int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile) {
+	public Constructable(int playerId, int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile, ResponseMaps responseMaps) {
 		remainingTicks = lifetimeTicks;
+		this.playerId = playerId;
 		this.dto = dto;
 		this.floor = floor;
 		this.tileId = tileId;

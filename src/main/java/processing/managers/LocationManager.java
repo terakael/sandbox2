@@ -5,12 +5,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import processing.PathFinder;
 import processing.attackable.NPC;
 import processing.attackable.Player;
+import processing.attackable.Ship;
 import types.NpcAttributes;
 import utils.Utils;
 
@@ -23,6 +23,7 @@ public class LocationManager {
 	private static Map<Integer, Map<Integer, Set<NPC>>> undergroundNpcs = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<NPC>>> pets = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<Player>>> players = new HashMap<>(); // floor, <segmentId, <players>>
+	private static Map<Integer, Map<Integer, Set<Ship>>> ships = new HashMap<>(); // floor, <segmentId, <players>>
 	
 	// TODO scenery, pickables etc should be here too
 	
@@ -74,6 +75,64 @@ public class LocationManager {
 		});
 		
 		return localNpcs;
+	}
+	
+	public static Set<Ship> getLocalShips(int floor, int tileId, int radius) {
+		Set<Ship> localShips = new HashSet<>();
+		if (!ships.containsKey(floor))
+			return localShips;
+		
+		final int centreTileX = tileId % PathFinder.LENGTH;
+		final int centreTileY = tileId / PathFinder.LENGTH;
+		
+		getLocalSegments(tileId, radius).forEach(segment -> {
+			if (ships.get(floor).containsKey(segment)) {
+				localShips.addAll(ships.get(floor).get(segment).stream()
+					.filter(ship -> {
+						final int shipTileX = ship.getTileId() % PathFinder.LENGTH;
+						final int shipTileY = ship.getTileId() / PathFinder.LENGTH;
+						
+						return Math.abs(centreTileX - shipTileX) <= radius && 
+							Math.abs(centreTileY - shipTileY) <= radius;
+					}).collect(Collectors.toSet()));
+			}
+		});
+		
+		return localShips;
+	}
+	
+	public static void addShip(Ship ship) {
+		// first check if the ship already exists in its current segments
+		final Set<Integer> currentSegments = getLocalSegments(ship.getTileId(), 12);
+		if (ships.containsKey(ship.getFloor())) {
+			boolean containsCurrentSegments = true;
+			for (int segment : currentSegments) {
+				if (!ships.get(ship.getFloor()).containsKey(segment) || !ships.get(ship.getFloor()).get(segment).contains(ship)) {
+					containsCurrentSegments = false;
+					break;
+				}
+			}
+
+			// the ship current segments are the same, so we don't need to do anything.
+			if (containsCurrentSegments)
+				return;
+		}
+		
+		// the ship segments have changed, so remove and reset them.
+		removeShipIfExists(ship);
+		currentSegments.forEach(currentSegment -> {
+			ships.putIfAbsent(ship.getFloor(), new HashMap<>());
+			ships.get(ship.getFloor()).putIfAbsent(currentSegment, new HashSet<>());
+			ships.get(ship.getFloor()).get(currentSegment).add(ship);
+		});
+	}
+	
+	public static void removeShipIfExists(Ship ship) {
+		ships.forEach((floor, segmentMap) -> {
+			segmentMap.forEach((segment, shipList) -> shipList.removeIf(e -> e.equals(ship)));
+			segmentMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+		});
+		ships.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 	}
 	
 	public static Map<Integer, Set<NPC>> getAllNpcsNearPlayers(boolean isDaytime) {

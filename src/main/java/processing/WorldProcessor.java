@@ -18,9 +18,11 @@ import database.dao.MinimapSegmentDao;
 import database.dao.PickableDao;
 import database.dao.SceneryDao;
 import database.dto.PickableDto;
+import database.dto.ShipDto;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
+import processing.attackable.Ship;
 import processing.managers.ClientResourceManager;
 import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
@@ -56,6 +58,8 @@ import responses.ResponseMaps;
 import responses.SceneryDepleteResponse;
 import responses.SceneryDespawnResponse;
 import responses.SceneryRespawnResponse;
+import responses.ShipInRangeResponse;
+import responses.ShipOutOfRangeResponse;
 import responses.ShowShopResponse;
 import system.Endpoint;
 import system.GroundItemManager;
@@ -174,9 +178,9 @@ public class WorldProcessor implements Runnable {
 		ShopManager.process(responseMaps);
 		Stopwatch.end("shops");
 
-		Stopwatch.start("deletion manager");
+		Stopwatch.start("depletion manager");
 		DepletionManager.process(responseMaps);
-		Stopwatch.end("deletion manager");
+		Stopwatch.end("depletion manager");
 		
 		Stopwatch.start("locked doors");
 		LockedDoorManager.process(responseMaps);
@@ -645,10 +649,45 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.end("refresh npc locations");
 	}
 	
+	private void updateLocalShipLocations(Player player, ResponseMaps responseMaps) {
+		final Set<Integer> currentInRangeShips = player.getInRangeShips();
+		final Set<Ship> newInRangeShips = LocationManager.getLocalShips(player.getFloor(), player.getTileId(), 12)
+				.stream()
+				.collect(Collectors.toSet());
+		final Set<Integer> newInRangeShipInstances = newInRangeShips.stream()
+			.map(Ship::getCaptainId)
+			.collect(Collectors.toSet());
+		
+		final Set<Integer> removedShips = currentInRangeShips.stream()
+				.filter(e -> !newInRangeShipInstances.contains(e))
+				.collect(Collectors.toSet());
+		
+		if (!removedShips.isEmpty()) {
+			final ShipOutOfRangeResponse shipsOutOfRange = new ShipOutOfRangeResponse();
+			shipsOutOfRange.setInstances(removedShips);
+			responseMaps.addClientOnlyResponse(player, shipsOutOfRange);
+		}
+		
+		final Set<Ship> addedShips = newInRangeShips.stream()
+				.filter(e -> !currentInRangeShips.contains(e.getCaptainId()))
+				.collect(Collectors.toSet());
+		
+		if (!addedShips.isEmpty()) {
+			final ShipInRangeResponse shipsInRange = new ShipInRangeResponse();
+			shipsInRange.addInstances(addedShips);
+			responseMaps.addClientOnlyResponse(player, shipsInRange);
+			
+			ClientResourceManager.addShips(player, newInRangeShips.stream().map(Ship::getHullSceneryId).collect(Collectors.toSet()));
+		}
+		
+		player.setInRangeShips(newInRangeShipInstances);
+	}
+	
 	private void updateThingsLocalToPlayer(ResponseMaps responseMaps) {
 		for (Player player : playerSessions.values()) {			
 			updateLocalGroundTexturesAndScenery(player, responseMaps);
 			updateLocalNpcLocations(player, responseMaps);
+			updateLocalShipLocations(player, responseMaps);
 			updateLocalGroundItems(player, responseMaps);
 		}
 	}

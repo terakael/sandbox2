@@ -51,6 +51,11 @@ public class Pet extends NPC {
 
 	@Override
 	public void process(int currentTick, ResponseMaps responseMaps) {
+		if (master != null && PathFinder.tileIsSailable(master.getFloor(), master.getTileId())) {
+			// master is sailing; we are on the boat too so hide from the land
+			return;
+		}
+		
 		// if the pet has walkableTiles then it means it's in a house.
 		// house pets shouldn't follow their master; they should walk around the house.
 		if (master == null || walkableTiles != null) {

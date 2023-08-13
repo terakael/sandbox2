@@ -15,12 +15,14 @@ import database.entity.insert.InsertHousingConstructableEntity;
 import processing.PathFinder;
 import processing.scenery.constructable.BleedingTotemPole;
 import processing.scenery.constructable.Constructable;
+import processing.scenery.constructable.CrudeHull;
 import processing.scenery.constructable.HolyTotemPole;
 import processing.scenery.constructable.LargeStorageChest;
 import processing.scenery.constructable.NaturesShrine;
 import processing.scenery.constructable.SmallStorageChest;
 import responses.ResponseMaps;
 import responses.SceneryDespawnResponse;
+import types.ConstructionLandTypes;
 import utils.Utils;
 
 public class ConstructableManager {
@@ -34,6 +36,7 @@ public class ConstructableManager {
 		constructables.put(140, NaturesShrine.class);
 		constructables.put(141, SmallStorageChest.class);
 		constructables.put(147, LargeStorageChest.class);
+		constructables.put(184, CrudeHull.class);
 	}
 	
 	public static void setupCaches() {
@@ -48,11 +51,13 @@ public class ConstructableManager {
 			housingConstructableInstances.get(floor).add(tileId);
 			
 			final Constructable constructableInstance = newConstructableInstance(
+					HousingManager.getOwningPlayerId(floor, tileId),
 					floor, 
 					tileId, 
 					ConstructableDao.getConstructableBySceneryId(constructableId), 
 					Integer.MAX_VALUE,
-					true);
+					true,
+					null);
 			
 			if (constructableInstance != null) {
 				constructableInstances.putIfAbsent(floor, new HashMap<>());
@@ -91,14 +96,18 @@ public class ConstructableManager {
 		return constructableInstances.get(floor).get(tileId).getDto().getResultingSceneryId();
 	}
 	
-	public static void add(int floor, int tileId, ConstructableDto constructable, int lifetimeTicks) {
+	public static void add(int playerId, int floor, int tileId, ConstructableDto constructable, int lifetimeTicks, ResponseMaps responseMaps) {
+		if (!(((constructable.getLandType() & ConstructionLandTypes.land.getValue()) != 0 && PathFinder.tileIsWalkable(floor, tileId)) ||
+			((constructable.getLandType() & ConstructionLandTypes.water.getValue()) != 0 && PathFinder.tileIsSailable(floor, tileId))))
+			return;
+		
 		// if something already exists here then bail
-		if (!PathFinder.tileIsValid(floor, tileId) || SceneryDao.getSceneryIdByTileId(floor, tileId) != -1 || getConstructableIdByTileId(floor, tileId) != -1)
+		if (SceneryDao.getSceneryIdByTileId(floor, tileId) != -1 || getConstructableIdByTileId(floor, tileId) != -1)
 			return;
 		
 		final boolean onHousingTile = HousingManager.getHouseIdFromFloorAndTileId(floor, tileId) > 0;
 		
-		final Constructable constructableInstance = newConstructableInstance(floor, tileId, constructable, lifetimeTicks, onHousingTile);
+		final Constructable constructableInstance = newConstructableInstance(playerId, floor, tileId, constructable, lifetimeTicks, onHousingTile, responseMaps);
 		if (constructableInstance == null)
 			return;
 		
@@ -116,19 +125,19 @@ public class ConstructableManager {
 		}
 	}
 	
-	private static Constructable newConstructableInstance(int floor, int tileId, ConstructableDto constructable, int lifetimeTicks, boolean onHousingTile) {
+	private static Constructable newConstructableInstance(int playerId, int floor, int tileId, ConstructableDto constructable, int lifetimeTicks, boolean onHousingTile, ResponseMaps responseMaps) {
 		Constructable newConstructableInstance = null;
 		if (constructables.containsKey(constructable.getResultingSceneryId())) {
 			try {
 				newConstructableInstance = constructables.get(constructable.getResultingSceneryId())
-						.getDeclaredConstructor(int.class, int.class, int.class, ConstructableDto.class, boolean.class)
-						.newInstance(floor, tileId, lifetimeTicks, constructable, onHousingTile);
+						.getDeclaredConstructor(int.class, int.class, int.class, int.class, ConstructableDto.class, boolean.class, ResponseMaps.class)
+						.newInstance(playerId, floor, tileId, lifetimeTicks, constructable, onHousingTile, responseMaps);
 			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
 			}
 		} else {
-			newConstructableInstance = new Constructable(floor, tileId, lifetimeTicks, constructable, onHousingTile); // generic constructable, represents constructables that don't have special process logic
+			newConstructableInstance = new Constructable(playerId, floor, tileId, lifetimeTicks, constructable, onHousingTile, responseMaps); // generic constructable, represents constructables that don't have special process logic
 		}
 		
 		return newConstructableInstance;

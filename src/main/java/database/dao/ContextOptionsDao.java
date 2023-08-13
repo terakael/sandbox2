@@ -11,6 +11,7 @@ public class ContextOptionsDao {
 	@Getter private static List<ContextOptionsDto> itemContextOptions;
 	@Getter private static List<ContextOptionsDto> npcContextOptions;
 	@Getter private static List<ContextOptionsDto> sceneryContextOptions;
+	@Getter private static List<ContextOptionsDto> shipContextOptions;
 	
 	private ContextOptionsDao() {};
 	
@@ -18,6 +19,7 @@ public class ContextOptionsDao {
 		itemContextOptions = cacheContextOptions("item");
 		npcContextOptions = cacheContextOptions("npc");
 		sceneryContextOptions = cacheContextOptions("scenery");
+		shipContextOptions = cacheContextOptions("ship");
 	}
 	
 	public static List<ContextOptionsDto> cacheContextOptions(String category) {

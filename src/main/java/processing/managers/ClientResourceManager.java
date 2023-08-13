@@ -3,7 +3,6 @@ package processing.managers;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -15,6 +14,7 @@ import database.dao.ItemDao;
 import database.dao.NPCDao;
 import database.dao.PlayerBaseAnimationsDao;
 import database.dao.SceneryDao;
+import database.dao.ShipDao;
 import database.dao.SpriteFrameDao;
 import database.dao.SpriteMapDao;
 import database.dto.CastableDto;
@@ -23,9 +23,9 @@ import database.dto.ItemDto;
 import database.dto.NPCDto;
 import database.dto.PlayerAnimationDto;
 import database.dto.SceneryDto;
+import database.dto.ShipDto;
 import database.dto.SpriteFrameDto;
 import database.dto.SpriteMapDto;
-import processing.WorldProcessor;
 import processing.attackable.Player;
 import responses.AddResourceResponse;
 import responses.ResponseMaps;
@@ -37,6 +37,7 @@ public class ClientResourceManager {
 	private static Map<Integer, Set<Integer>> loadedSpriteFrameIds = new HashMap<>();
 	private static Map<Integer, Set<Integer>> loadedSceneryIds = new HashMap<>();
 	private static Map<Integer, Set<Integer>> loadedNpcIds = new HashMap<>();
+	private static Map<Integer, Set<Integer>> loadedShipIds = new HashMap<>();
 	private static Map<Integer, Set<Integer>> loadedGroundTextureIds = new HashMap<>();
 	
 	// loaded each tick, sent to the appropriate players, then cleared
@@ -46,6 +47,7 @@ public class ClientResourceManager {
 	private static Map<Player, Set<SpriteFrameDto>> spriteFrames = new HashMap<>();
 	private static Map<Player, Set<SceneryDto>> scenery = new HashMap<>();
 	private static Map<Player, Set<NPCDto>> npcs = new HashMap<>();
+	private static Map<Player, Set<ShipDto>> ships= new HashMap<>();
 	private static Map<Player, Set<GroundTextureDto>> groundTextures = new HashMap<>();
 	
 	public static void addGroundTextures(Player player, Set<Integer> groundTextureIds) {
@@ -176,6 +178,28 @@ public class ClientResourceManager {
 		addSpriteFramesAndSpriteMaps(player, selectedSpriteFrameIds);
 	}
 	
+	public static void addShips(Player player, Set<Integer> hullSceneryIds) {
+		Set<Integer> selectedShipIds = extractUnloadedShipIds(player, hullSceneryIds);
+		if (selectedShipIds.isEmpty())
+			return;
+		
+		Set<ShipDto> selectedShips = ShipDao.getShipDtos().stream()
+				.filter(e -> selectedShipIds.contains(e.getHullSceneryId()))
+				.collect(Collectors.toSet());
+		
+		ships.putIfAbsent(player, new HashSet<>());
+		addLoadedShipIds(player, selectedShips.stream().map(ShipDto::getHullSceneryId).collect(Collectors.toSet()));
+		ships.get(player).addAll(selectedShips);
+		
+		Set<Integer> selectedSpriteFrameIds = new HashSet<>();
+		selectedSpriteFrameIds.addAll(selectedShips.stream().map(ShipDto::getUpId).collect(Collectors.toSet()));
+		selectedSpriteFrameIds.addAll(selectedShips.stream().map(ShipDto::getDownId).collect(Collectors.toSet()));
+		selectedSpriteFrameIds.addAll(selectedShips.stream().map(ShipDto::getLeftId).collect(Collectors.toSet()));
+		selectedSpriteFrameIds.addAll(selectedShips.stream().map(ShipDto::getRightId).collect(Collectors.toSet()));
+		
+		addSpriteFramesAndSpriteMaps(player, selectedSpriteFrameIds);
+	}
+	
 	public static void addItems(Player player, Set<Integer> itemIds) {
 		Set<Integer> selectedItemIds = extractUnloadedItemIds(player, itemIds);
 		if (selectedItemIds.isEmpty())
@@ -262,6 +286,7 @@ public class ClientResourceManager {
 		spriteFrames.clear();
 		scenery.clear();
 		npcs.clear();
+		ships.clear();
 		groundTextures.clear();
 	}
 	
@@ -273,6 +298,7 @@ public class ClientResourceManager {
 		players.addAll(spriteFrames.keySet());
 		players.addAll(scenery.keySet());
 		players.addAll(npcs.keySet());
+		players.addAll(ships.keySet());
 		players.addAll(groundTextures.keySet());
 		
 		for (Player player : players) {
@@ -295,6 +321,9 @@ public class ClientResourceManager {
 			
 			if (npcs.containsKey(player))
 				response.setNpcs(npcs.get(player));
+		
+			if (ships.containsKey(player))
+				response.setShips(ships.get(player));
 			
 			if (groundTextures.containsKey(player))
 				response.setGroundTextures(groundTextures.get(player));
@@ -347,10 +376,22 @@ public class ClientResourceManager {
 		return npcIds.stream().filter(e -> !loadedNpcIds.get(player.getId()).contains(e)).collect(Collectors.toSet());
 	}
 	
+	public static Set<Integer> extractUnloadedShipIds(Player player, Set<Integer> shipIds) {
+		if (!loadedShipIds.containsKey(player.getId()))
+			return shipIds;
+		return shipIds.stream().filter(e -> !loadedShipIds.get(player.getId()).contains(e)).collect(Collectors.toSet());
+	}
+	
 	public static void addLoadedNpcIds(Player player, Set<Integer> npcIds) {
 		if (!loadedNpcIds.containsKey(player.getId()))
 			loadedNpcIds.put(player.getId(), new HashSet<>());
 		loadedNpcIds.get(player.getId()).addAll(npcIds);
+	}
+	
+	public static void addLoadedShipIds(Player player, Set<Integer> hullSceneryIds) {
+		if (!loadedShipIds.containsKey(player.getId()))
+			loadedShipIds.put(player.getId(), new HashSet<>());
+		loadedShipIds.get(player.getId()).addAll(hullSceneryIds);
 	}
 	
 	public static Set<Integer> extractUnloadedItemIds(Player player, Set<Integer> itemIds) {
@@ -383,6 +424,7 @@ public class ClientResourceManager {
 		loadedSpriteFrameIds.remove(player.getId());
 		loadedSceneryIds.remove(player.getId());
 		loadedNpcIds.remove(player.getId());
+		loadedShipIds.remove(player.getId());
 		loadedGroundTextureIds.remove(player.getId());
 	}
 }

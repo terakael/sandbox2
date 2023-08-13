@@ -253,6 +253,14 @@ public class ResponseFactory {
 			response = new GetHouseInfoResponse();
 			break;
 			
+		case "build":
+			response = new BuildResponse();
+			break;
+			
+		case "board":
+			response = new BoardResponse();
+			break;
+			
 		default:
 			response = new UnknownResponse();
 			break;

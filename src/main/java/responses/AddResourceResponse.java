@@ -2,13 +2,14 @@ package responses;
 
 import java.util.Set;
 
-import lombok.Setter;
 import database.dto.GroundTextureDto;
 import database.dto.ItemDto;
 import database.dto.NPCDto;
 import database.dto.SceneryDto;
+import database.dto.ShipDto;
 import database.dto.SpriteFrameDto;
 import database.dto.SpriteMapDto;
+import lombok.Setter;
 import processing.attackable.Player;
 import requests.Request;
 
@@ -19,6 +20,7 @@ public class AddResourceResponse extends Response {
 	@Setter private Set<ItemDto> items = null;
 	@Setter private Set<SceneryDto> scenery = null;
 	@Setter private Set<NPCDto> npcs = null;
+	@Setter private Set<ShipDto> ships = null;
 	@Setter private Set<GroundTextureDto> groundTextures = null;
 	
 	public AddResourceResponse() {

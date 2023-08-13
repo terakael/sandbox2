@@ -9,12 +9,14 @@ import database.dao.NPCDao;
 import database.dao.PlayerDao;
 import database.dao.PlayerStorageDao;
 import database.dao.SceneryDao;
+import database.dao.ShipDao;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.managers.ConstructableManager;
 import processing.managers.HousingManager;
 import processing.managers.LocationManager;
 import processing.managers.LockedDoorManager;
+import processing.managers.ShipManager;
 import processing.managers.TimeManager;
 import requests.ExamineRequest;
 import requests.Request;
@@ -108,6 +110,11 @@ public class ExamineResponse extends Response {
 			if (npc != null)
 				examineText = npcExamineMap.get(npc.getId());
 			break;
+		}
+		case "ship": {
+			final int captainId = ShipManager.getShipCaptainId(player.getFloor(), request.getTileId());
+			if (captainId != -1)
+				examineText = String.format("a ship captained by %s.", PlayerDao.getNameFromId(captainId));
 		}
 		default:
 			break;

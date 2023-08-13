@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -27,59 +28,62 @@ public class PathFinder {
 	private static PathFinder instance;
 	
 	public static final int LENGTH = 46325; // the biggest number divisible by minimap segments whose square fits in a max int (albeit signed) TODO look unto unsigned int
-	private static Map<Integer, Map<Integer, PathNode>> nodesByFloor; // floor, <tileId, node> (the tileId map is so we can quickly retrieve by tileId)
+	private static Map<Integer, Map<Integer, PathNode>> nodesByFloor = new HashMap<>(); // floor, <tileId, node> (the tileId map is so we can quickly retrieve by tileId)
+	private static Map<Integer, Map<Integer, PathNode>> sailableNodesByFloor = new HashMap<>();
 	
 	private PathFinder() {
-		nodesByFloor = new HashMap<>();
 		Set<Integer> distinctFloors = GroundTextureDao.getDistinctFloors();
 		for (int floor : distinctFloors) {
-			Set<Integer> tileIds = GroundTextureDao.getAllWalkableTileIdsByFloor(floor);
-			if (tileIds.isEmpty())
-				continue;
+			loadNodesByFloor(floor, nodesByFloor, GroundTextureDao.getAllWalkableTileIdsByFloor(floor));
+			loadNodesByFloor(floor, sailableNodesByFloor, GroundTextureDao.getAllSailableTileIdsByFloor(floor));
+		}
+	}
+	
+	private void loadNodesByFloor(int floor, Map<Integer, Map<Integer, PathNode>> nodes, Set<Integer> tileIds) {
+		if (tileIds.isEmpty())
+			return;
+		
+		nodes.put(floor, new HashMap<>());
+		
+		// we want any tileId that has scenery and/or wall on it.
+		// if it has both, we want the combined impassable of the two.
+		final Set<Integer> sceneryTileIds = SceneryDao.getAllSceneryInstancesByFloor(floor).values().stream()
+			.flatMap(Set::stream)
+			.collect(Collectors.toSet());
+		sceneryTileIds.addAll(WallManager.getWallTileIdsByFloor(floor));
+		
+		final Map<Integer, Integer> tileIdImpassability = sceneryTileIds.stream()
+				.collect(Collectors.toMap(Function.identity(), tileId -> {
+					return SceneryDao.getImpassableTypeByFloorAndTileId(floor, tileId) | 
+							WallManager.getImpassableTypeByFloorAndTileId(floor, tileId);
+				}));
+		
+		for (int tileId : tileIds) {
+			PathNode node = new PathNode();
+			node.setId(tileId);
+			node.setImpassableTypes(tileIdImpassability.get(tileId) == null ? 0 : tileIdImpassability.get(tileId));
+			nodes.get(floor).put(tileId, node);
+		}
+		
+		for (int tileId : tileIds) {
+			int[] tileIdsToCheck = {
+				tileId - LENGTH - 1,	// top left
+				tileId - LENGTH,		// top
+				tileId - LENGTH + 1,	// top right
+				tileId - 1,				// left
+				tileId + 1,				// right
+				tileId + LENGTH - 1,	// bottom left
+				tileId + LENGTH,		// bottom
+				tileId + LENGTH + 1		// bottom right
+			};
 			
-			nodesByFloor.put(floor, new HashMap<>());
-//			HashMap<Integer, Integer> tileIdImpassability = SceneryDao.getImpassableTileIdsByFloor(floor);
-			
-			// we want any tileId that has scenery and/or wall on it.
-			// if it has both, we want the combined impassable of the two.
-			final Set<Integer> sceneryTileIds = SceneryDao.getAllSceneryInstancesByFloor(floor).values().stream()
-				.flatMap(Set::stream)
-				.collect(Collectors.toSet());
-			sceneryTileIds.addAll(WallManager.getWallTileIdsByFloor(floor));
-			
-			final Map<Integer, Integer> tileIdImpassability = sceneryTileIds.stream()
-					.collect(Collectors.toMap(Function.identity(), tileId -> {
-						return SceneryDao.getImpassableTypeByFloorAndTileId(floor, tileId) | 
-								WallManager.getImpassableTypeByFloorAndTileId(floor, tileId);
-					}));
-			
-			for (int tileId : tileIds) {
-				PathNode node = new PathNode();
-				node.setId(tileId);
-				node.setImpassableTypes(tileIdImpassability.get(tileId) == null ? 0 : tileIdImpassability.get(tileId));
-				nodesByFloor.get(floor).put(tileId, node);
+			PathNode currentNode = nodes.get(floor).get(tileId); 
+			PathNode[] siblings = new PathNode[tileIdsToCheck.length];
+			for (int i = 0; i < tileIdsToCheck.length; ++i) {
+				siblings[i] = nodes.get(floor).get(tileIdsToCheck[i]);
 			}
 			
-			for (int tileId : tileIds) {
-				int[] tileIdsToCheck = {
-					tileId - LENGTH - 1,	// top left
-					tileId - LENGTH,		// top
-					tileId - LENGTH + 1,	// top right
-					tileId - 1,				// left
-					tileId + 1,				// right
-					tileId + LENGTH - 1,	// bottom left
-					tileId + LENGTH,		// bottom
-					tileId + LENGTH + 1		// bottom right
-				};
-				
-				PathNode currentNode = nodesByFloor.get(floor).get(tileId); 
-				PathNode[] siblings = new PathNode[tileIdsToCheck.length];
-				for (int i = 0; i < tileIdsToCheck.length; ++i) {
-					siblings[i] = nodesByFloor.get(floor).get(tileIdsToCheck[i]);
-				}
-				
-				currentNode.setSiblings(siblings);
-			}
+			currentNode.setSiblings(siblings);
 		}
 	}
 	
@@ -321,7 +325,7 @@ public class PathFinder {
 				Collections.shuffle(nonDiagonalTiles);
 				
 				for (Integer tileId : nonDiagonalTiles) {
-					if (tileIsValid(floor, tileId) && isNextTo(floor, tileId, to)) {
+					if (tileIsWalkable(floor, tileId) && isNextTo(floor, tileId, to)) {
 						output.push(tileId);
 						return output;
 					}
@@ -329,13 +333,13 @@ public class PathFinder {
 			}
 		}
 
-		Map<Integer, PathNode> nodes = nodesByFloor.get(floor);
-		if (!nodes.containsKey(from)) // TODO remove, this is for debugging ground texture migration
+		// chooses land- or water-based nodes based on the "from" tile
+		Map<Integer, PathNode> nodes = getNodeMapByFloorAndTileId(floor, from);
+		if (nodes == null)
 			return output;
 		
 		if (!nodes.containsKey(to)) {
 			// find the closest walkable tile from the "to" tile closest to the "from"
-			
 			int fromX = from % LENGTH;
 			int fromY = from / LENGTH;
 			
@@ -678,17 +682,88 @@ public class PathFinder {
 		return (retreatY * LENGTH) + retreatX;
 	}
 	
-	public static boolean tileIsValid(int floor, int tileId) {
+	public static boolean tileIsWalkable(int floor, int tileId) {
 		if (!nodesByFloor.containsKey(floor))
 			return false;
 		
 		return nodesByFloor.get(floor).containsKey(tileId);
 	}
 	
+	public static boolean tileIsSailable(int floor, int tileId) {
+		if (!sailableNodesByFloor.containsKey(floor))
+			return false;
+		
+		return sailableNodesByFloor.get(floor).containsKey(tileId);
+	}
+	
+	public static boolean isNextToWater(int floor, int tileId) {
+		// we're on the land, but one of our adjacent tiles is water
+		return tileIsWalkable(floor, tileId) &&
+				(tileIsSailable(floor, tileId - 1) ||
+				 tileIsSailable(floor, tileId + 1) ||
+				 tileIsSailable(floor, tileId - LENGTH) ||
+				 tileIsSailable(floor, tileId + LENGTH));
+	}
+	
+	public static int getClosestSailableTile(int floor, int tileId) {
+		// assuming we're standing on tileId, branch out from there
+		// i.e. tileId, then the eight surrounding tiles, then the 15 outside that
+		
+		// check a radius of 12 tiles (that's a 24x24 square)
+		for (int i = 0; i <= 12; ++i) {
+			int topLeft = tileId - i - (i * PathFinder.LENGTH);
+			int bottomRight = tileId + i + (i * PathFinder.LENGTH);
+			Set<Integer> checkTiles = new HashSet<>();
+			for (int j = 0; j < (i * 2) + 1; ++j) {
+				checkTiles.add(topLeft + j);
+				checkTiles.add(topLeft + (j * LENGTH));
+				
+				checkTiles.add(bottomRight - j);
+				checkTiles.add(bottomRight - (j * LENGTH));
+			}
+			
+			int closestCheckTile = -1;
+			
+			checkTiles.removeIf(checkTileId -> !tileIsSailable(floor, checkTileId));
+			if (!checkTiles.isEmpty()) {
+				// we have sailable tiles; return the closest one with a valid path
+				for (int checkTileId : checkTiles) {
+					// if we're already next to it then that's the closest
+					if (PathFinder.isAdjacent(checkTileId, tileId)) {
+						// can't get much closer than next-to
+						return checkTileId;
+					}
+					
+					if (closestCheckTile == -1 || getCloserTile(tileId, checkTileId, closestCheckTile) == checkTileId) {
+						final Stack<Integer> path = PathFinder.findPath(floor, tileId, checkTileId, true);
+						if (!path.isEmpty())
+							closestCheckTile = checkTileId;
+					}
+				}
+			}
+			
+			if (closestCheckTile != -1)
+				return closestCheckTile;
+		}
+		
+		return -1;
+	}
+	
+	public static Map<Integer, PathNode> getNodeMapByFloorAndTileId(int floor, int tileId) {
+		if (tileIsWalkable(floor, tileId))
+			return nodesByFloor.get(floor);
+		
+		if (tileIsSailable(floor, tileId))
+			return sailableNodesByFloor.get(floor);
+		
+		return null;
+	}
+	
 	public static int getImpassableByTileId(int floor, int tileId) {
-		if (!tileIsValid(floor, tileId))
+		final Map<Integer, PathNode> nodes = getNodeMapByFloorAndTileId(floor, tileId);
+		if (nodes == null)
 			return 0;
-		return nodesByFloor.get(floor).get(tileId).getImpassableTypes();
+		return nodes.get(tileId).getImpassableTypes();		
 	}
 	
 	public static String getDirection(int srcTileId, int destTileId) {
@@ -740,7 +815,7 @@ public class PathFinder {
 		
 		final List<Integer> localTiles = Utils.getLocalTiles(tileId, radius).stream().collect(Collectors.toList());
 		for (int localTileId : localTiles) {
-			if (!PathFinder.tileIsValid(floor, localTileId))
+			if (!PathFinder.tileIsWalkable(floor, localTileId))
 				continue;
 			
 			if ((PathFinder.getImpassableByTileId(floor, localTileId) & 15) == 15) // there's something impassable on it

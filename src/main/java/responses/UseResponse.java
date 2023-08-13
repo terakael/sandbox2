@@ -40,6 +40,7 @@ import requests.AttackRequest;
 import requests.ConstructionRequest;
 import requests.Request;
 import requests.UseRequest;
+import types.ConstructionLandTypes;
 import types.DuelRules;
 import types.Items;
 import types.NpcAttributes;
@@ -77,6 +78,10 @@ public class UseResponse extends Response {
 			break;
 		case "player":
 			if (handleUseOnPlayer(request, player, responseMaps))
+				return;
+			break;
+		case "ship":
+			if (handleUseOnShip(request, player, responseMaps))
 				return;
 			break;
 		default:
@@ -220,6 +225,10 @@ public class UseResponse extends Response {
 		responseMaps.addLocalResponse(player.getFloor(), player.getTileId(), 
 				new ActionBubbleResponse(player, ItemDao.getItem(dto.getResultingItemId())));
 		return true;
+	}
+	
+	private boolean handleUseOnShip(UseRequest request, Player player, ResponseMaps responseMaps) {
+		return false;
 	}
 
 	private boolean handleUseOnNpc(UseRequest request, Player player, ResponseMaps responseMaps) {		
@@ -541,6 +550,7 @@ public class UseResponse extends Response {
 		// so we run through all matching tools and all matching constructables that use said tools and material
 		final Set<ConstructableDto> constructables = new HashSet<>();
 		allPotentialTools.forEach(e -> constructables.addAll(ConstructableDao.getAllConstructablesWithMaterials(e, materialId)));
+		
 		if (constructables.isEmpty()) {
 			return false; // no matches; nothing interesting happens (e.g. use tinderbox on helmet or whatevs)
 		}

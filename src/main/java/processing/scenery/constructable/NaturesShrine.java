@@ -20,8 +20,8 @@ public class NaturesShrine extends RadialConstructable {
 	private final static int GROW_TIMER = 5;
 	private int growOffset;
 	
-	public NaturesShrine(int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile) {
-		super(floor, tileId, lifetimeTicks, dto, onHousingTile, 2);
+	public NaturesShrine(int playerId, int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile, ResponseMaps responseMaps) {
+		super(playerId, floor, tileId, lifetimeTicks, dto, onHousingTile, responseMaps, 2);
 		
 		growOffset = RandomUtil.getRandom(0, GROW_TIMER); // used so flowers grow on different ticks when there's multiple Natures Shrines around.  Looks weird otherwise.
 		

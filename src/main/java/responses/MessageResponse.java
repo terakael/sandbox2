@@ -226,7 +226,7 @@ public class MessageResponse extends Response {
 				destTileId = destPlayer.getTileId();
 		}
 		
-		if (!PathFinder.tileIsValid(player.getFloor(), destTileId)) {
+		if (!PathFinder.tileIsWalkable(player.getFloor(), destTileId) && !PathFinder.tileIsSailable(player.getFloor(), destTileId)) {
 			setRecoAndResponseText(0, "invalid teleport destination.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;

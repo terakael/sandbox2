@@ -62,6 +62,7 @@ public class CachedResourcesResponse extends Response {
 		contextOptions.put("item", ContextOptionsDao.getItemContextOptions());
 		contextOptions.put("npc", ContextOptionsDao.getNpcContextOptions());
 		contextOptions.put("scenery", ContextOptionsDao.getSceneryContextOptions());
+		contextOptions.put("ship", ContextOptionsDao.getShipContextOptions());
 		statMap = StatsDao.getCachedStats();
 		expMap = StatsDao.getExpMap();
 		DbConnection.load("select id, name from attack_styles", 

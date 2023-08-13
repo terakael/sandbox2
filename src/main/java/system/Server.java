@@ -46,6 +46,7 @@ import database.dao.ReinforcementBonusesDao;
 import database.dao.RespawnableDao;
 import database.dao.SawmillableDao;
 import database.dao.SceneryDao;
+import database.dao.ShipDao;
 import database.dao.ShopDao;
 import database.dao.SmeltableDao;
 import database.dao.SmithableDao;
@@ -284,6 +285,9 @@ public class Server {
 		
 		System.out.println("caching house pets");
 		HousePetsManager.setupCaches();
+		
+		System.out.println("caching ships");
+		ShipDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

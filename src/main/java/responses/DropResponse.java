@@ -6,6 +6,7 @@ import database.dao.EquipmentDao;
 import database.dao.ItemDao;
 import database.dao.PlayerStorageDao;
 import database.dto.InventoryItemDto;
+import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
@@ -34,12 +35,6 @@ public class DropResponse extends Response {
 			setRecoAndResponseText(0, "funny business");
 			return;
 		}
-		
-//		if (FightManager.fightWithFighterExists(player)) {
-//			setRecoAndResponseText(0, "you can't drop anything during combat.");
-//			responseMaps.addClientOnlyResponse(player, this);
-//			return;
-//		}
 		
 		DropRequest dropReq = (DropRequest)req;
 		InventoryItemDto itemToDrop = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getDto().getId(), StorageTypes.INVENTORY, dropReq.getSlot());
@@ -72,10 +67,25 @@ public class DropResponse extends Response {
 					responseMaps.addClientOnlyResponse(player, this);
 					return;
 				}
+				
+				if (PathFinder.tileIsSailable(player.getFloor(), player.getTileId())) {
+					setRecoAndResponseText(0, "you seriously trying to drown your pet?");
+					responseMaps.addClientOnlyResponse(player, this);
+					return; // you can't drop shit in the ocean
+				}
+				
 				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.PET, 0, itemToDrop.getItemId(), 1, 0);
 				player.setPet(itemToDrop.getItemId());
 			}
 		} else {
+			// I think it's ok to be able to drop stuff in the water (i.e. if you're on a boat)
+			// opinion may change though, in which case uncomment this
+//			if (PathFinder.tileIsSailable(player.getFloor(), player.getTileId())) {
+//				setRecoAndResponseText(0, "don't fill up the oceans with your litter.");
+//				responseMaps.addClientOnlyResponse(player, this);
+//				return; // you can't drop shit in the ocean
+//			}
+			
 			GroundItemManager.add(player.getFloor(), player.getId(), itemToDrop.getItemId(), player.getTileId(), itemToDrop.getCount(), itemToDrop.getCharges());
 		}
 		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, dropReq.getSlot(), 0, 1, 0);

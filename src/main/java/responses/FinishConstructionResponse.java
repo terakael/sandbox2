@@ -18,6 +18,7 @@ import processing.attackable.Player.PlayerState;
 import processing.managers.ArtisanManager;
 import processing.managers.ClientResourceManager;
 import processing.managers.ConstructableManager;
+import processing.managers.ShipManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.ConstructTaskUpdate;
 import requests.AddExpRequest;
@@ -25,6 +26,7 @@ import requests.ConstructionRequest;
 import requests.Request;
 import types.ItemAttributes;
 import types.Items;
+import types.SceneryContextOptions;
 import types.Stats;
 import types.StorageTypes;
 
@@ -80,7 +82,7 @@ public class FinishConstructionResponse extends Response {
 				}
 			}
 			
-			ConstructableManager.add(player.getFloor(), request.getTileId(), constructable, lifetimeTicks);
+			ConstructableManager.add(player.getId(), player.getFloor(), request.getTileId(), constructable, lifetimeTicks, responseMaps);
 			ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
 			TybaltsTaskManager.check(player, new ConstructTaskUpdate(constructable.getResultingSceneryId()), responseMaps);
 			

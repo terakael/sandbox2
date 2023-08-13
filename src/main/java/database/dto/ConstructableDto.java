@@ -18,4 +18,5 @@ public class ConstructableDto {
 	private final int tertiaryAmount;
 	private final transient int lifetimeTicks;
 	private final int flatpackItemId;
+	private final int landType; // bitmap: 1=land, 2=water, 4=lava?
 }

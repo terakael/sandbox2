@@ -19,7 +19,7 @@ public class ConstructableDao {
 	}
 	
 	private static void cacheConstructables() {
-		final String query = "select resulting_scenery_id, level, exp, tool_id, plank_id, plank_amount, bar_id, bar_amount, tertiary_id, tertiary_amount, lifetime_ticks, flatpack_item_id from constructable";
+		final String query = "select resulting_scenery_id, level, exp, tool_id, plank_id, plank_amount, bar_id, bar_amount, tertiary_id, tertiary_amount, lifetime_ticks, flatpack_item_id, land_type from constructable";
 		DbConnection.load(query, rs -> {
 			constructables.add(new ConstructableDto(
 					rs.getInt("resulting_scenery_id"),
@@ -33,7 +33,8 @@ public class ConstructableDao {
 					rs.getInt("tertiary_id"),
 					rs.getInt("tertiary_amount"),
 					rs.getInt("lifetime_ticks"),
-					rs.getInt("flatpack_item_id")));
+					rs.getInt("flatpack_item_id"),
+					rs.getInt("land_type")));
 		});
 		
 		constructionToolIds = constructables.stream().map(ConstructableDto::getToolId).distinct().collect(Collectors.toSet());

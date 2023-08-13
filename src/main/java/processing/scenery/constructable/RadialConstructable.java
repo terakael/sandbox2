@@ -7,6 +7,7 @@ import database.dto.ConstructableDto;
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.managers.LocationManager;
+import responses.ResponseMaps;
 import utils.Utils;
 
 // RadialConstructable is just a constructable that has a radius effect (Totem Poles etc)
@@ -14,8 +15,8 @@ public abstract class RadialConstructable extends Constructable {
 	protected final int range;
 	protected final Set<Integer> affectingTileIds;
 
-	public RadialConstructable(int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile, int range) {
-		super(floor, tileId, lifetimeTicks, dto, onHousingTile);
+	public RadialConstructable(int playerId, int floor, int tileId, int lifetimeTicks, ConstructableDto dto, boolean onHousingTile, ResponseMaps responseMaps, int range) {
+		super(playerId, floor, tileId, lifetimeTicks, dto, onHousingTile, responseMaps);
 		
 		this.range = range;
 		affectingTileIds = Utils.getLocalTiles(tileId, range).stream()

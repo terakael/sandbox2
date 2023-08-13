@@ -15,7 +15,8 @@ public enum SceneryContextOptions {
 	REPAIR(2048),
 	DRINK_FROM(4096),
 	LOOT(8192),
-	CLIMB_THROUGH(16384);
+	CLIMB_THROUGH(16384),
+	BUILD(32678);
 	
 	@Getter private int value;
 	SceneryContextOptions(int value) {
