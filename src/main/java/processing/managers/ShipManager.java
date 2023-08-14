@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import database.dto.ShipDto;
+import processing.attackable.Player;
 import processing.attackable.Ship;
 import responses.ResponseMaps;
 
@@ -81,6 +82,18 @@ public class ShipManager {
 		return shipsByPlayerId.values().stream()
 				.filter(ship -> ship.getFloor() == floor && ship.getTileId() == tileId)
 				.collect(Collectors.toSet());
+	}
+	
+	public static Ship getShipWithPlayer(Player player) {
+		for (Ship ship : LocationManager.getLocalShips(player.getFloor(), player.getTileId(), 3)) {
+			if (ship.playerIsAboard(player.getId()))
+				return ship;
+		}
+		return null;
+	}
+	
+	public static void process(int tick, ResponseMaps responseMaps) {
+		shipsByPlayerId.values().forEach(ship -> ship.process(tick, responseMaps));
 	}
 	
 //	public static int getShipIdByAboardPlayerId(int playerId) {

@@ -31,6 +31,7 @@ import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
 import processing.managers.LockedDoorManager;
+import processing.managers.ShipManager;
 import processing.managers.ShopManager;
 import processing.managers.TimeManager;
 import processing.managers.UndeadArmyManager;
@@ -125,6 +126,7 @@ public class WorldProcessor implements Runnable {
 		TimeManager.process(tickId, responseMaps);
 		
 		UndeadArmyManager.process(responseMaps);
+		ShipManager.process(tickId, responseMaps);
 
 		Stopwatch.start("player requests");
 		// process player requests for this tick
@@ -280,7 +282,7 @@ public class WorldProcessor implements Runnable {
 	private void compileLocalResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
 		for (var localResponseMapByFloor : responseMaps.getLocalResponses().entrySet()) {
 			for (var localResponseMap : localResponseMapByFloor.getValue().entrySet()) {
-				List<Player> localPlayers = getPlayersNearTile(localResponseMapByFloor.getKey(), localResponseMap.getKey(), 15);
+				Set<Player> localPlayers = LocationManager.getLocalPlayers(localResponseMapByFloor.getKey(), localResponseMap.getKey(), 15);
 				for (Player localPlayer : localPlayers) {
 					if (!clientResponses.containsKey(localPlayer))
 						clientResponses.put(localPlayer, new ArrayList<>());
@@ -333,8 +335,9 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("updating in-range players");
 		for (var entry : playerSessions.entrySet()) {
 			Set<Integer> currentInRangePlayers = entry.getValue().getInRangePlayers();
-			Set<Integer> newInRangePlayers = WorldProcessor.getPlayersNearTile(entry.getValue().getFloor(), entry.getValue().getTileId(), 15)
+			Set<Integer> newInRangePlayers = LocationManager.getLocalPlayers(entry.getValue().getFloor(), entry.getValue().getTileId(), 15)
 														   .stream()
+														   .filter(player -> ShipManager.getShipWithPlayer(player) == null)
 														   .map(Player::getId)
 														   .collect(Collectors.toSet());
 			

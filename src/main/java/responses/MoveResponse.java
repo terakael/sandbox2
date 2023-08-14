@@ -3,11 +3,10 @@ package responses;
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
-import processing.managers.FightManager;
-import processing.managers.FightManager.Fight;
+import processing.attackable.Ship;
+import processing.managers.ShipManager;
 import requests.MoveRequest;
 import requests.Request;
-import types.DuelRules;
 
 public class MoveResponse extends Response {
 	public MoveResponse() {
@@ -40,13 +39,21 @@ public class MoveResponse extends Response {
 //		FightManager.cancelFight(player, responseMaps);
 		
 		if (player != null) {
-			player.setState(PlayerState.walking);
-			player.setSavedRequest(null);
-			
 			int destX = moveReq.getX() / 32;
 			int destY = moveReq.getY() / 32;
 			
 			int destTile = destX + (destY * PathFinder.LENGTH);
+			
+			final Ship ship = ShipManager.getShipWithPlayer(player);
+			if (ship != null) {
+				// we're on a ship so we can't walk
+				if (ship.getCaptainId() == player.getId()) {
+					ship.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), destTile, true));
+				}
+				return;
+			}
+			player.setState(PlayerState.walking);
+			player.setSavedRequest(null);
 			
 			player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), destTile, true));
 		}

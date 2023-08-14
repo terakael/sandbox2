@@ -705,6 +705,50 @@ public class PathFinder {
 				 tileIsSailable(floor, tileId + LENGTH));
 	}
 	
+	public static int getClosestWalkableTile(int floor, int tileId) {
+		// assuming we're standing on tileId, branch out from there
+		// i.e. tileId, then the eight surrounding tiles, then the 15 outside that
+		
+		// check a radius of 12 tiles (that's a 24x24 square)
+		for (int i = 0; i <= 12; ++i) {
+			int topLeft = tileId - i - (i * PathFinder.LENGTH);
+			int bottomRight = tileId + i + (i * PathFinder.LENGTH);
+			Set<Integer> checkTiles = new HashSet<>();
+			for (int j = 0; j < (i * 2) + 1; ++j) {
+				checkTiles.add(topLeft + j);
+				checkTiles.add(topLeft + (j * LENGTH));
+				
+				checkTiles.add(bottomRight - j);
+				checkTiles.add(bottomRight - (j * LENGTH));
+			}
+			
+			int closestCheckTile = -1;
+			
+			checkTiles.removeIf(checkTileId -> !tileIsWalkable(floor, checkTileId));
+			if (!checkTiles.isEmpty()) {
+				// we have sailable tiles; return the closest one with a valid path
+				for (int checkTileId : checkTiles) {
+					// if we're already next to it then that's the closest
+					if (PathFinder.isAdjacent(checkTileId, tileId)) {
+						// can't get much closer than next-to
+						return checkTileId;
+					}
+					
+					if (closestCheckTile == -1 || getCloserTile(tileId, checkTileId, closestCheckTile) == checkTileId) {
+						final Stack<Integer> path = PathFinder.findPath(floor, tileId, checkTileId, true);
+						if (!path.isEmpty())
+							closestCheckTile = checkTileId;
+					}
+				}
+			}
+			
+			if (closestCheckTile != -1)
+				return closestCheckTile;
+		}
+		
+		return -1;
+	}
+	
 	public static int getClosestSailableTile(int floor, int tileId) {
 		// assuming we're standing on tileId, branch out from there
 		// i.e. tileId, then the eight surrounding tiles, then the 15 outside that

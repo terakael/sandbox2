@@ -5,7 +5,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import database.dto.ShipDto;
+import database.entity.update.UpdatePlayerEntity;
 import lombok.Getter;
+import processing.managers.DatabaseUpdater;
+import processing.managers.LocationManager;
+import responses.PlayerUpdateResponse;
 import responses.ResponseMaps;
 import responses.ShipUpdateResponse;
 import types.DamageTypes;
@@ -32,23 +36,37 @@ public class Ship extends Attackable {
 		final int maxPassengers = (int)Arrays.stream(slots).filter(e -> e == 0).count() * 2;
 		if (passengers.size() < maxPassengers) {
 			passengers.add(player);
+			player.setTileId(tileId);
 			return true;
 		}
 		return false;
 	}
 	
-//	public boolean playerIsAboard(int playerId) {
-//		return passengers.contains(playerId);
-//	}
+	public boolean disembarkPlayer(Player player) {
+		return passengers.remove(player);
+	}
+	
+	public boolean playerIsAboard(int playerId) {
+		return passengers.stream().anyMatch(player -> player.getId() == playerId);
+	}
 	
 	public void process(int tick, ResponseMaps responseMaps) {
 		if (popPath(responseMaps)) {
+			LocationManager.addShip(this);
+			
 			ShipUpdateResponse updateResponse = new ShipUpdateResponse();
 			updateResponse.setCaptainId(captainId);
 			updateResponse.setTileId(tileId);
 			responseMaps.addLocalResponse(floor, tileId, updateResponse);
 			
-			passengers.forEach(player -> player.setTileId(tileId));
+			passengers.forEach(player -> {
+				player.setTileId(tileId);
+			
+				PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+				playerUpdateResponse.setId(player.getId());
+				playerUpdateResponse.setTileId(getTileId());
+				responseMaps.addClientOnlyResponse(player, playerUpdateResponse);
+			});
 		}
 	}
 

@@ -26,6 +26,7 @@ public class PlayerUpdateResponse extends Response {
 	@Setter private Boolean respawn = null;
 	@Setter private String faceDirection = null;
 	@Setter private Boolean doAttack = null;
+	@Setter private Boolean boardedShip = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> baseAnimations = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> equipAnimations = null;
 	@Setter private EquipmentTypes weaponType = null;

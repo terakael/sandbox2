@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 import database.dao.BuryableDao;
@@ -17,10 +16,10 @@ import database.dto.NpcDropDto;
 import lombok.Getter;
 import lombok.Setter;
 import processing.PathFinder;
-import processing.WorldProcessor;
 import processing.attackable.Player.PlayerState;
 import processing.managers.ConstructableManager;
 import processing.managers.FightManager;
+import processing.managers.LocationManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.ItemDropFromNpcUpdate;
 import responses.BuryResponse;
@@ -36,7 +35,6 @@ import types.NpcAttributes;
 import types.Prayers;
 import types.Stats;
 import utils.RandomUtil;
-import utils.Utils;
 
 public class NPC extends Attackable {
 	@Getter protected NPCDto dto;
@@ -123,7 +121,7 @@ public class NPC extends Attackable {
 		if ((dto.getAttributes() & NpcAttributes.AGGRESSIVE.getValue()) == NpcAttributes.AGGRESSIVE.getValue() && !isInCombat()) {
 			// aggressive monster; look for targets
 			if (--huntTimer <= 0) { // technically could use the deltaTick here but who cares, it's not really noticeable.
-				List<Player> closePlayers = WorldProcessor.getPlayersNearTile(floor, tileId, dto.getRoamRadius()/2);
+				List<Player> closePlayers = new ArrayList<>(LocationManager.getLocalPlayers(floor, tileId, dto.getRoamRadius()/2));
 				
 				if (dto.getId() == 18 || dto.getId() == 22) { // goblins won't attack anyone with the goblin stank buff
 					closePlayers = closePlayers.stream()
