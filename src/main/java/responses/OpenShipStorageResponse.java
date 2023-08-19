@@ -1,8 +1,6 @@
 package responses;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import database.dto.InventoryItemDto;
 import processing.PathFinder;
@@ -16,33 +14,33 @@ public class OpenShipStorageResponse extends WalkAndDoResponse {
 	private List<InventoryItemDto> items = null;
 	private String name = "ship storage";
 	private int tileId;
+	private transient Ship ship = null;
 	
 	protected boolean setTarget(Request req, Player player, ResponseMaps responseMaps) {
-		OpenShipStorageRequest request = (OpenShipStorageRequest)req;
-		final Ship ship = ShipManager.getShipByCaptainId(request.getObjectId());
-		if (ship == null) {
-			// ship doesn't exist.
-			return false;
+		ship = ShipManager.getShipByCaptainId(((OpenShipStorageRequest)req).getObjectId());
+		if (ship != null) {
+			walkingTargetTileId = PathFinder.getClosestWalkableTile(ship.getFloor(), ship.getTileId());
+			return true;
 		}
 		
-		target = ship;
-		return true;
+		return false;
 	}
 	
 	@Override
 	protected boolean nextToTarget(Request request, Player player, ResponseMaps responseMaps) {
-		return PathFinder.isAdjacent(player.getTileId(), target.getTileId()) || ShipManager.getShipWithPlayer(player) == target;
+		if (ship.playerIsAboard(player.getId()))
+			return true;
+		
+		return PathFinder.isNextTo(ship.getFloor(), player.getTileId(), walkingTargetTileId);
 	}
 	
 	@Override
 	protected void walkToTarget(Request request, Player player, ResponseMaps responseMaps) {
-		player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), target.getTileId(), true));
+		player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), walkingTargetTileId, true));
 	}
 
 	@Override
 	protected void doAction(Request req, Player player, ResponseMaps responseMaps) {
-		final Ship ship = (Ship)target;
-		
 		if (ship.getCaptainId() != player.getId()) {
 			setRecoAndResponseText(0, "the captain wouldn't want you snooping in there.");
 			responseMaps.addClientOnlyResponse(player, this);

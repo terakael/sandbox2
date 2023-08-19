@@ -126,7 +126,6 @@ public class WorldProcessor implements Runnable {
 		TimeManager.process(tickId, responseMaps);
 		
 		UndeadArmyManager.process(responseMaps);
-		ShipManager.process(tickId, responseMaps);
 
 		Stopwatch.start("player requests");
 		// process player requests for this tick
@@ -143,6 +142,8 @@ public class WorldProcessor implements Runnable {
 			}
 		});
 		Stopwatch.end("player requests");
+		
+		ShipManager.process(tickId, responseMaps);
 		
 		Stopwatch.start("process players");
 		// process players

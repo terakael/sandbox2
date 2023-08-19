@@ -6,13 +6,29 @@ import processing.attackable.Player;
 import processing.attackable.Ship;
 import processing.managers.ShipManager;
 import requests.BoardRequest;
+import requests.OpenShipStorageRequest;
 import requests.Request;
 
 public class BoardResponse extends WalkAndDoResponse {
 	
+	private transient Ship ship = null;
+	
+	protected boolean setTarget(Request req, Player player, ResponseMaps responseMaps) {
+		ship = ShipManager.getShipByCaptainId(((BoardRequest)req).getObjectId());
+		if (ship != null) {
+			walkingTargetTileId = PathFinder.getClosestWalkableTile(ship.getFloor(), ship.getTileId());
+			return true;
+		}
+		
+		return false;
+	}
+	
 	@Override
 	protected boolean nextToTarget(Request request, Player player, ResponseMaps responseMaps) {
-		return PathFinder.isAdjacent(player.getTileId(), walkingTargetTileId) || player.getTileId() == walkingTargetTileId;
+		if (ship.playerIsAboard(player.getId()))
+			return true;
+		
+		return PathFinder.isNextTo(ship.getFloor(), player.getTileId(), walkingTargetTileId);
 	}
 	
 	@Override
@@ -43,10 +59,6 @@ public class BoardResponse extends WalkAndDoResponse {
 			}
 			return;
 		}
-		
-		final Ship ship = ShipManager.getShipByCaptainId(request.getObjectId());
-		if (ship == null)
-			return;
 		
 		if (!ship.boardPlayer(player)) {
 			setRecoAndResponseText(0, "boat's full.");

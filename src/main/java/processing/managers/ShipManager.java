@@ -101,13 +101,4 @@ public class ShipManager {
 	public static void process(int tick, ResponseMaps responseMaps) {
 		shipsByPlayerId.values().forEach(ship -> ship.process(tick, responseMaps));
 	}
-	
-//	public static int getShipIdByAboardPlayerId(int playerId) {
-//		// shipId is just the playerId (but the one aboard may not be the captain)
-//		return shipsByPlayerId.values().stream()
-//			.filter(ship -> ship.playerIsAboard(playerId))
-//			.map(Ship::getCaptainId)
-//			.findFirst()
-//			.orElse(-1);
-//	}
 }
