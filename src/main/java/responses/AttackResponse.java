@@ -1,13 +1,12 @@
 package responses;
 
 import database.dao.NPCDao;
-import processing.PathFinder;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
 import processing.managers.LocationManager;
-import processing.managers.TimeManager;
+import processing.managers.ShipManager;
 import requests.AttackRequest;
 import requests.Request;
 import types.NpcAttributes;
@@ -33,6 +32,12 @@ public class AttackResponse extends WalkAndDoResponse {
 
 	@Override
 	protected void doAction(Request request, Player player, ResponseMaps responseMaps) {
+		if (ShipManager.getShipWithPlayer(player) != null) {
+			// if we're on a boat then don't start a fight
+			// (TODO ship cannon)
+			return;
+		}
+		
 		NPC npc = (NPC)target;
 		
 		if (FightManager.fightWithFighterExists(npc)) {

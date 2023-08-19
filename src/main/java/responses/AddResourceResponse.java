@@ -6,6 +6,7 @@ import database.dto.GroundTextureDto;
 import database.dto.ItemDto;
 import database.dto.NPCDto;
 import database.dto.SceneryDto;
+import database.dto.ShipAccessoryDto;
 import database.dto.ShipDto;
 import database.dto.SpriteFrameDto;
 import database.dto.SpriteMapDto;

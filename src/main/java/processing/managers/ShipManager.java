@@ -45,7 +45,6 @@ public class ShipManager {
 	public static Ship removeHull(int floor, int tileId, ResponseMaps responseMaps) {
 		if (hulls.containsKey(floor)) {
 			final Ship removedHull = hulls.get(floor).remove(tileId); 
-			ConstructableManager.destroyConstructableInstanceByTileId(floor, tileId, responseMaps);
 			return removedHull;
 		}
 		return null;
@@ -55,6 +54,9 @@ public class ShipManager {
 		final Ship ship = removeHull(floor, tileId, responseMaps);
 		if (ship == null)
 			return;
+		
+		// remove the hull scenery
+		ConstructableManager.destroyConstructableInstanceByTileId(floor, tileId, responseMaps);
 		
 		// if a ship already exists from this player, get rid of it
 		destroyShip(ship.getCaptainId());
@@ -76,6 +78,10 @@ public class ShipManager {
 				return ship.getCaptainId();
 		}
 		return -1;
+	}
+	
+	public static Ship getShipByCaptainId(int captainId) {
+		return shipsByPlayerId.get(captainId);
 	}
 	
 	public static Set<Ship> getShipsAt(int floor, int tileId) {

@@ -3,8 +3,11 @@ package responses;
 import java.util.List;
 
 import database.dto.InventoryItemDto;
+import processing.PathFinder;
 import processing.attackable.Player;
+import processing.attackable.Ship;
 import processing.managers.ConstructableManager;
+import processing.managers.ShipManager;
 import processing.scenery.constructable.Constructable;
 import processing.scenery.constructable.StorageChest;
 import requests.Request;
@@ -26,6 +29,14 @@ public class StorageMoveResponse extends Response {
 	@Override
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		StorageMoveRequest request = (StorageMoveRequest)req;
+		
+		// check ship storage first
+		Ship ship = ShipManager.getShipByCaptainId(player.getId());
+		if (ship != null && ship.getTileId() == request.getTileId() && (PathFinder.isAdjacent(player.getTileId(), request.getTileId()) || ShipManager.getShipWithPlayer(player) == ship)) {
+			ship.getStorage().swapSlotContents(request.getSrc(), request.getDest());
+			items = ship.getStorage().getItems();
+			return;
+		}
 		
 		final Constructable constructable = ConstructableManager.getConstructableInstanceByTileId(player.getFloor(), request.getTileId());
 		if (constructable == null)

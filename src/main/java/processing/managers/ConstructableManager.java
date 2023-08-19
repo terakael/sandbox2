@@ -68,15 +68,11 @@ public class ConstructableManager {
 	
 	public static void process(int tickId, ResponseMaps responseMaps) {
 		constructableInstances.forEach((floor, tileIdMap) -> {
-			final boolean housingConstructablesExist = housingConstructableInstances.containsKey(floor); 
-			
 			Set<Integer> tileIdsToRemove = new HashSet<>();
 			tileIdMap.forEach((tileId, constructable) -> {
 				constructable.process(tickId, responseMaps);
-				if (housingConstructablesExist && housingConstructableInstances.get(floor).contains(tileId)) {
-					constructable.repair(); // housing constructables should never lose ticks
-				}
-				else if (constructable.getRemainingTicks() <= 0) {
+
+				if (constructable.getRemainingTicks() <= 0) {
 					tileIdsToRemove.add(tileId);
 					responseMaps.addLocalResponse(floor, tileId, new SceneryDespawnResponse(constructable.getDto().getResultingSceneryId(), tileId));
 				}

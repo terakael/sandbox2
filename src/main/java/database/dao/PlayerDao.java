@@ -27,7 +27,7 @@ public class PlayerDao {
 	}
 	
 	public static PlayerDto getPlayerByUsernameAndPassword(String username, String password) {
-		final String query = "select id, name, password, tile_id, floor, house_id, attack_style_id from player where name = ? and password = ?";
+		final String query = "select id, name, password, tile_id, floor, house_id, attack_style_id, boarded_ship_id from player where name = ? and password = ?";
 		try (
 			Connection connection = DbConnection.get();
 			PreparedStatement ps = connection.prepareStatement(query)
@@ -51,7 +51,8 @@ public class PlayerDao {
 							rs.getInt("attack_style_id"), 
 							PlayerBaseAnimationsDao.getBaseAnimationsBasedOnEquipmentTypes(rs.getInt("id")),
 							EquipmentDao.getEquipmentAnimationsByPlayerId(rs.getInt("id")),
-							EquipmentDao.getEquipmentTypeByEquipmentId(EquipmentDao.getWeaponIdByPlayerId(rs.getInt("id"))));
+							EquipmentDao.getEquipmentTypeByEquipmentId(EquipmentDao.getWeaponIdByPlayerId(rs.getInt("id"))),
+							rs.getInt("boarded_ship_id"));
 				
 				return null;
 			}

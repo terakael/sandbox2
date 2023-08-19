@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 import javax.websocket.Session;
@@ -39,6 +40,7 @@ import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
 import processing.managers.LockedDoorManager;
+import processing.managers.ShipManager;
 import processing.managers.TimeManager;
 import processing.managers.TybaltsTaskManager;
 import processing.tybaltstasks.updates.KillNpcTaskUpdate;
@@ -51,6 +53,7 @@ import requests.RequestFactory;
 import requests.SmithRequest;
 import requests.UseRequest;
 import responses.AddExpResponse;
+import responses.BuildResponse;
 import responses.ChopResponse;
 import responses.ConstructionResponse;
 import responses.DaylightResponse;
@@ -113,6 +116,7 @@ public class Player extends Attackable {
 		cooking,
 		fishing,
 		growing_zombie,
+		shipbuilding,
 		dead
 	};
 	
@@ -299,7 +303,7 @@ public class Player extends Attackable {
 			}
 			
 			if (!PathFinder.isNextTo(floor, tileId, target.getTileId())) {
-				path = PathFinder.findPath(floor, tileId, target.getTileId(), false);
+				setPath(PathFinder.findPath(floor, tileId, target.getTileId(), false));
 			} else {
 				if (savedRequest != null) {
 					Request req = savedRequest;
@@ -325,7 +329,7 @@ public class Player extends Attackable {
 			}
 			
 			if (!PathFinder.lineOfSightIsClear(floor, tileId, target.getTileId(), range)) {
-				path = PathFinder.findPathInRange(floor, tileId, target.getTileId(), range);
+				setPath(PathFinder.findPathInRange(floor, tileId, target.getTileId(), range));
 			} else {
 				// start the fight
 				if (savedRequest != null) {
@@ -512,6 +516,15 @@ public class Player extends Attackable {
 				
 				// mainly to reset the bonuses
 				new EquipResponse().process(null, this, responseMaps);
+			}
+			break;
+		}
+		
+		case shipbuilding: {
+			if (--tickCounter <= 0) {
+				new BuildResponse().reprocessHook(savedRequest, this, responseMaps);
+				savedRequest = null;
+				state = PlayerState.idle;
 			}
 			break;
 		}
@@ -1291,5 +1304,16 @@ public class Player extends Attackable {
 		pet = new Pet(deepCopy, floor, getId());
 		pet.setMaster(this);
 		pet.setTileId(getTileId()); // sets the correct tileId, and adds it to the locationManager
+	}
+	
+	@Override
+	public void setPath(Stack<Integer> path) {
+		final Ship ship = ShipManager.getShipWithPlayer(this);
+		if (ship != null) {
+			if (ship.getCaptainId() == getId())
+				ship.setPath(path);
+			return;
+		}
+		super.setPath(path);
 	}
 }

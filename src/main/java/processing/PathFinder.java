@@ -709,10 +709,9 @@ public class PathFinder {
 		// assuming we're standing on tileId, branch out from there
 		// i.e. tileId, then the eight surrounding tiles, then the 15 outside that
 		
-		// check a radius of 12 tiles (that's a 24x24 square)
-		for (int i = 0; i <= 12; ++i) {
-			int topLeft = tileId - i - (i * PathFinder.LENGTH);
-			int bottomRight = tileId + i + (i * PathFinder.LENGTH);
+		for (int i = 0; i <= LENGTH; ++i) {
+			int topLeft = tileId - i - (i * LENGTH);
+			int bottomRight = tileId + i + (i * LENGTH);
 			Set<Integer> checkTiles = new HashSet<>();
 			for (int j = 0; j < (i * 2) + 1; ++j) {
 				checkTiles.add(topLeft + j);

@@ -12,18 +12,23 @@ import database.dao.EquipmentDao;
 import database.dao.PlayerDao;
 import database.dao.PlayerStorageDao;
 import database.dao.StatsDao;
+import database.dao.TeleportableDao;
 import database.dto.EquipmentBonusDto;
 import database.dto.InventoryItemDto;
 import database.dto.PlayerDto;
 import database.entity.update.UpdatePlayerEntity;
+import processing.PathFinder;
 import processing.WorldProcessor;
 import processing.attackable.Player;
+import processing.attackable.Ship;
 import processing.managers.ClientResourceManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.LocationManager;
+import processing.managers.ShipManager;
 import processing.managers.TimeManager;
 import requests.LogonRequest;
 import requests.Request;
+import types.Items;
 import types.StorageTypes;
 
 @SuppressWarnings("unused")
@@ -70,6 +75,26 @@ public class LogonResponse extends Response {
 				.id(player.getId())
 				.lastLoggedIn(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()))
 				.build());
+		
+		if (playerDto.getBoardedShipId() != 0) {
+			// we were on a ship - is the ship available and within range?
+			final Ship boardedShip = ShipManager.getShipByCaptainId(playerDto.getBoardedShipId());
+			if (boardedShip == null || (boardedShip.isFull() && boardedShip.getCaptainId() != player.getId())) {
+				// ship no longer exists (or is too far away); move to closest land
+				playerDto.setBoardedShipId(0);
+				DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(player.getId()).boardedShipId(0).build());
+				
+				int closestLandTile = PathFinder.getClosestWalkableTile(player.getFloor(), player.getTileId());
+				if (closestLandTile != -1) {
+					player.setTileId(closestLandTile);
+					playerDto.setTileId(closestLandTile);
+				} else {
+					// no walkable tiles?  tyrotown i guess TODO
+				}
+			} else {
+				boardedShip.boardPlayer(player);
+			}
+		}
 		LocationManager.addPlayer(player);
 		
 		// TODO this should be done when we create the player, but the creation process doesn't exist yet

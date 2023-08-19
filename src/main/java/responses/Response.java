@@ -6,6 +6,7 @@ import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
 import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
+import processing.managers.ShipManager;
 import requests.MessageRequest;
 import requests.Request;
 import types.DuelRules;
@@ -65,6 +66,9 @@ public abstract class Response {
 			FightManager.cancelFight(player, responseMaps);
 		return true;
 	}
+	
+	// hook used by player states, for example as a replacement for the Response/FinishResponse pattern
+	public void reprocessHook(Request req, Player player, ResponseMaps responseMaps) {}
 
 	public abstract void process(Request req, Player player, ResponseMaps responseMaps);
 

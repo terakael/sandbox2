@@ -261,6 +261,14 @@ public class ResponseFactory {
 			response = new BoardResponse();
 			break;
 			
+		case "show_ship_accessory_materials":
+			response = new ShowShipAccessoryMaterialsResponse();
+			break;
+			
+		case "storage":
+			response = new OpenShipStorageResponse();
+			break;
+			
 		default:
 			response = new UnknownResponse();
 			break;

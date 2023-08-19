@@ -27,6 +27,9 @@ public class BoardResponse extends WalkAndDoResponse {
 		// if we're already onboard a ship, then get off at the nearest land
 		final Ship boardedShip = ShipManager.getShipWithPlayer(player);
 		if (boardedShip != null) {
+			if (boardedShip.getCaptainId() != request.getObjectId())
+				return; // trying to disembark a boat we're nto on
+			
 			int closestLandTile = PathFinder.getClosestWalkableTile(boardedShip.getFloor(), boardedShip.getTileId());
 			if (closestLandTile != -1) {
 				boardedShip.disembarkPlayer(player);
@@ -41,11 +44,7 @@ public class BoardResponse extends WalkAndDoResponse {
 			return;
 		}
 		
-		final Ship ship = ShipManager.getShipsAt(player.getFloor(), request.getTileId()).stream()
-			.filter(e -> e.getCaptainId() == request.getObjectId())
-			.findFirst()
-			.orElse(null);
-		
+		final Ship ship = ShipManager.getShipByCaptainId(request.getObjectId());
 		if (ship == null)
 			return;
 		

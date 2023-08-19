@@ -12,8 +12,10 @@ import javax.websocket.server.ServerEndpoint;
 
 import processing.WorldProcessor;
 import processing.attackable.Player;
+import processing.attackable.Ship;
 import processing.managers.ClientResourceManager;
 import processing.managers.LocationManager;
+import processing.managers.ShipManager;
 import processing.managers.TradeManager;
 import processing.managers.TradeManager.Trade;
 import requests.CancelTradeRequest;
@@ -87,6 +89,10 @@ public class Endpoint {
 		
 		if (playerToRemove.getPet() != null)
 			LocationManager.removePetIfExists(playerToRemove.getPet());
+		
+		final Ship boardedShip = ShipManager.getShipWithPlayer(playerToRemove);
+		if (boardedShip != null)
+			boardedShip.removeLoggedOutPlayer(playerToRemove);
 		
 		// if the player made any requests since the last tick before logout, remove them
 		requestMap.remove(session);

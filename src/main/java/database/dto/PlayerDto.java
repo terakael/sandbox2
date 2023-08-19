@@ -26,4 +26,5 @@ public class PlayerDto {
 	private Map<PlayerPartType, PlayerAnimationDto> baseAnimations;
 	private Map<PlayerPartType, PlayerAnimationDto> equipAnimations;
 	private EquipmentTypes weaponType = null;
+	private int boardedShipId;
 }

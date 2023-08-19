@@ -30,4 +30,7 @@ public class UpdatePlayerEntity extends UpdateableEntity {
 	
 	@Column("house_id")
 	private Integer houseId;
+	
+	@Column("boarded_ship_id")
+	private Integer boardedShipId;
 }

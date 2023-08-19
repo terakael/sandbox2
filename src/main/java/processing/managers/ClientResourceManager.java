@@ -14,6 +14,7 @@ import database.dao.ItemDao;
 import database.dao.NPCDao;
 import database.dao.PlayerBaseAnimationsDao;
 import database.dao.SceneryDao;
+import database.dao.ShipAccessoryDao;
 import database.dao.ShipDao;
 import database.dao.SpriteFrameDao;
 import database.dao.SpriteMapDao;
@@ -23,6 +24,7 @@ import database.dto.ItemDto;
 import database.dto.NPCDto;
 import database.dto.PlayerAnimationDto;
 import database.dto.SceneryDto;
+import database.dto.ShipAccessoryDto;
 import database.dto.ShipDto;
 import database.dto.SpriteFrameDto;
 import database.dto.SpriteMapDto;
@@ -47,7 +49,7 @@ public class ClientResourceManager {
 	private static Map<Player, Set<SpriteFrameDto>> spriteFrames = new HashMap<>();
 	private static Map<Player, Set<SceneryDto>> scenery = new HashMap<>();
 	private static Map<Player, Set<NPCDto>> npcs = new HashMap<>();
-	private static Map<Player, Set<ShipDto>> ships= new HashMap<>();
+	private static Map<Player, Set<ShipDto>> ships = new HashMap<>();
 	private static Map<Player, Set<GroundTextureDto>> groundTextures = new HashMap<>();
 	
 	public static void addGroundTextures(Player player, Set<Integer> groundTextureIds) {
@@ -324,7 +326,7 @@ public class ClientResourceManager {
 		
 			if (ships.containsKey(player))
 				response.setShips(ships.get(player));
-			
+		
 			if (groundTextures.containsKey(player))
 				response.setGroundTextures(groundTextures.get(player));
 			

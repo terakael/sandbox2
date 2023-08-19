@@ -46,6 +46,7 @@ import database.dao.ReinforcementBonusesDao;
 import database.dao.RespawnableDao;
 import database.dao.SawmillableDao;
 import database.dao.SceneryDao;
+import database.dao.ShipAccessoryDao;
 import database.dao.ShipDao;
 import database.dao.ShopDao;
 import database.dao.SmeltableDao;
@@ -288,6 +289,9 @@ public class Server {
 		
 		System.out.println("caching ships");
 		ShipDao.setupCaches();
+		
+		System.out.println("caching ship accessories");
+		ShipAccessoryDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up
