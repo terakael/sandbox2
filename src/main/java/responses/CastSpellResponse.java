@@ -35,14 +35,14 @@ import utils.RandomUtil;
 
 @SuppressWarnings("unused")
 public class CastSpellResponse extends Response {
-	private int playerId;
+	private int sourceTileId;
 	private int targetId;
 	private String targetType = null;
 	private int spriteFrameId;
 
-	public CastSpellResponse(int playerId, int targetId, String targetType, int spriteFrameId) {
+	public CastSpellResponse(int sourceTileId, int targetId, String targetType, int spriteFrameId) {
 		setAction("cast_spell");
-		this.playerId = playerId;
+		this.sourceTileId = sourceTileId;
 		this.targetId = targetId;
 		this.targetType = targetType;
 		this.spriteFrameId = spriteFrameId;

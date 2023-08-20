@@ -48,7 +48,7 @@ public class NecromancerSecondForm extends UndeadArmyNpc {
 			// second form gets health from all players within five tiles
 			players.forEach(player -> {
 				final int spriteFrameId = getGhostSpriteFrameFromPlayerPosition(getTileId(), player.getTileId());
-				responseMaps.addLocalResponse(0, getTileId(), new CastSpellResponse(player.getId(), instanceId, "npc", spriteFrameId)); // ghost spriteframe id
+				responseMaps.addLocalResponse(0, getTileId(), new CastSpellResponse(player.getTileId(), instanceId, "npc", spriteFrameId)); // ghost spriteframe id
 				
 				// if a player was to log in while players are mid-fight with the necromancer, they need to load the ghost sprite frames.
 				ClientResourceManager.addSpriteFramesAndSpriteMaps(player, Collections.singleton(spriteFrameId));

@@ -492,6 +492,16 @@ public class PathFinder {
 		return Math.abs(src % LENGTH - dest % LENGTH) + Math.abs(src / LENGTH - dest / LENGTH);
 	}
 	
+	public static double calculateDistance(int src, int dest) {
+		final int x0 = src % LENGTH;
+		final int y0 = src / LENGTH;
+		
+		final int x1 = dest % LENGTH;
+		final int y1 = dest / LENGTH;
+		
+		return Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
+	}
+	
 	public static boolean lineOfSightIsClear(int floor, int srcTileId, int destTileId, int range)
 	{
 		final int x0 = srcTileId % LENGTH;

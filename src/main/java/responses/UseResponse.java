@@ -389,7 +389,7 @@ public class UseResponse extends Response {
 			
 			// at this point we're good to cast the spell.		
 			if (CastSpellResponse.castOffensiveSpell(castable, player, targetNpc, responseMaps)) {
-				new CastSpellResponse(player.getId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId()).process(request, player, responseMaps);
+				new CastSpellResponse(player.getTileId(), targetNpc.getInstanceId(), "npc", castable.getSpriteFrameId()).process(request, player, responseMaps);
 			}
 			
 			player.setState(PlayerState.idle);
@@ -522,7 +522,7 @@ public class UseResponse extends Response {
 				}
 				
 				if (CastSpellResponse.castOffensiveSpell(castable, player, targetPlayer, responseMaps)) {
-					new CastSpellResponse(player.getId(), targetPlayer.getId(), "player", castable.getSpriteFrameId()).process(request, player, responseMaps);
+					new CastSpellResponse(player.getTileId(), targetPlayer.getId(), "player", castable.getSpriteFrameId()).process(request, player, responseMaps);
 				}
 				
 				player.setState(PlayerState.idle);

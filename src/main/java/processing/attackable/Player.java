@@ -117,6 +117,12 @@ public class Player extends Attackable {
 		fishing,
 		growing_zombie,
 		shipbuilding,
+		
+		// ship-specific player states
+		charging_cannon,
+		repairing_ship,
+		moving_ship,
+		
 		dead
 	};
 	
@@ -1310,8 +1316,10 @@ public class Player extends Attackable {
 	public void setPath(Stack<Integer> path) {
 		final Ship ship = ShipManager.getShipWithPlayer(this);
 		if (ship != null) {
-			if (ship.getCaptainId() == getId())
+			if (ship.getCaptainId() == getId()) {
 				ship.setPath(path);
+				setState(PlayerState.moving_ship);
+			}
 			return;
 		}
 		super.setPath(path);

@@ -23,7 +23,7 @@ public class ShipDao {
 					rs.getInt("left_id"), 
 					rs.getInt("right_id"),
 					1,
-					2));
+					6));
 		});
 	}
 	

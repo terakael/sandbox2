@@ -16,6 +16,7 @@ public class OpenShipStorageResponse extends WalkAndDoResponse {
 	private int tileId;
 	private transient Ship ship = null;
 	
+	@Override
 	protected boolean setTarget(Request req, Player player, ResponseMaps responseMaps) {
 		ship = ShipManager.getShipByCaptainId(((OpenShipStorageRequest)req).getObjectId());
 		if (ship != null) {
