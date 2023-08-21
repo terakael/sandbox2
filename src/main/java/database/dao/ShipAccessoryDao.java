@@ -11,7 +11,7 @@ public class ShipAccessoryDao {
 	@Getter private static Set<ShipAccessoryDto> shipAccessories = new HashSet<>();
 	
 	public static void setupCaches() {
-		final String query = "select id, name, sprite_frame_id, level, primary_material_id, primary_material_count, secondary_material_id, secondary_material_count, offense, defense, fishing, storage from ship_accessories";
+		final String query = "select id, name, sprite_frame_id, level, primary_material_id, primary_material_count, secondary_material_id, secondary_material_count, offense, defense, fishing, storage, crew from ship_accessories";
 		DbConnection.load(query, rs -> shipAccessories.add(
 				new ShipAccessoryDto(
 						rs.getInt("id"),
@@ -25,7 +25,8 @@ public class ShipAccessoryDao {
 						rs.getInt("offense"),
 						rs.getInt("defense"),
 						rs.getInt("fishing"),
-						rs.getInt("storage"))));
+						rs.getInt("storage"),
+						rs.getInt("crew"))));
 	}
 	
 	public static ShipAccessoryDto getAccessoryById(int id) {

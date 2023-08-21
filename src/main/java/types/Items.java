@@ -497,7 +497,8 @@ public enum Items {
 	
 	HOUSE_TELEPORT_RUNE(505),
 
-	STEEL_CANNONBALL(506)
+	CANNONBALL(506),
+	GOLDEN_CANNONBALL(507)
 	;
 
 	@Getter private int value;

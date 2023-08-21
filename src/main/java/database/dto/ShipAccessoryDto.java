@@ -18,4 +18,5 @@ public class ShipAccessoryDto {
 	private final int defense;
 	private final int fishing;
 	private final int storage;
+	private final int crew;
 }

@@ -1,6 +1,7 @@
 package types;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,17 @@ public class Storage {
 	
 	public boolean contains(int itemId) {
 		return getItemById(itemId) != null;
+	}
+	
+	public boolean contains(Items itemId) {
+		return contains(itemId.getValue());
+	}
+	
+	public InventoryItemDto getFirstItemOf(Items... itemIds) {
+		return _storage.values().stream()
+				.filter(e -> Arrays.stream(itemIds).anyMatch(f -> f.getValue() == e.getItemId()))
+				.min((i1, i2) -> Integer.compare(i1.getSlot(), i2.getSlot()))
+				.orElse(null);
 	}
 	
 	public int getEmptySlotCount(int playerId) {

@@ -37,7 +37,12 @@ public class RepairResponse extends WalkAndDoResponse {
 
 	@Override
 	protected void doAction(Request request, Player player, ResponseMaps responseMaps) {
-		player.setState(PlayerState.repairing_ship);
+		if (ship.playerIsAboard(player.getId())) {
+			player.setState(PlayerState.repairing_ship);
+		} else {
+			setRecoAndResponseText(0, "you need to be onboard to make repairs.");
+			responseMaps.addClientOnlyResponse(player, this);
+		}
 	}
 
 //	@Override

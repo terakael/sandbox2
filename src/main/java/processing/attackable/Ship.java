@@ -7,8 +7,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import database.dao.ConstructableDao;
 import database.dao.ItemDao;
 import database.dao.ShipAccessoryDao;
+import database.dto.InventoryItemDto;
 import database.dto.ShipAccessoryDto;
 import database.dto.ShipDto;
 import database.entity.update.UpdatePlayerEntity;
@@ -17,6 +19,7 @@ import processing.PathFinder;
 import processing.WorldProcessor;
 import processing.attackable.Player.PlayerState;
 import processing.managers.ClientResourceManager;
+import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.LocationManager;
 import responses.ActionBubbleResponse;
@@ -36,12 +39,14 @@ public class Ship extends Attackable {
 	private final ShipDto dto;
 	private int[] slots;
 	private Set<Player> passengers = new HashSet<>();
+	private int crewPoints = 0;
 	private int fishingPoints = 0;
 	private int offensePoints = 0;
 	private int defensePoints = 0; // hp boost too? higher repair rates?
 	private int storagePoints = 0;
 	Storage storage = null;
 	
+	private static final Items[] cannonballs = new Items[] {Items.CANNONBALL, Items.GOLDEN_CANNONBALL};
 	private final int cannonChargeTicks = 5;
 	private int currentCannonChargeTicks = 0;
 	private int readyCannons = 0;
@@ -100,6 +105,7 @@ public class Ship extends Attackable {
 				offensePoints += dto.getOffense();
 				defensePoints += dto.getDefense();
 				storagePoints += dto.getStorage();
+				crewPoints += dto.getCrew();
 				return true;
 			}
 		}
@@ -111,11 +117,14 @@ public class Ship extends Attackable {
 	}
 	
 	private int getMaxPassengers() {
-		return (int)Arrays.stream(slots).filter(e -> e == 0).count() * 2;
+		return crewPoints * 2;
 	}
 	
 	public boolean isFull() {
-		return passengers.size() >= getMaxPassengers();
+		// don't count the captain when checking the crew count
+		return passengers.stream()
+				.filter(e -> e.getId() != captainId)
+				.count() >= getMaxPassengers();
 	}
 	
 	public boolean boardPlayer(Player player) {
@@ -148,51 +157,82 @@ public class Ship extends Attackable {
 				.orElse(null);
 	}
 	
-	public void process(int tick, ResponseMaps responseMaps) {
+	private void processCannon(ResponseMaps responseMaps) {
 		final Player cannoner = passengerWithState(PlayerState.charging_cannon);
-		if (cannoner != null) {
-			if (currentCannonChargeTicks == 0) {
-				// just started charging
-				responseMaps.addLocalResponse(floor, tileId, 
-						new ActionBubbleResponse(this, cannoner.getId(), ItemDao.getItem(Items.STEEL_CANNONBALL.getValue())));
-			}
-			
-			if (++currentCannonChargeTicks >= cannonChargeTicks) {
-				if (currentCannonChargeTicks == cannonChargeTicks) {
-					// we've just become ready, so set the ready cannons
-					readyCannons = offensePoints;
-				}
-				fireCannon(responseMaps);
-				
-				if (--readyCannons <= 0)
-					currentCannonChargeTicks = 0;
-			}
-		} else {
+		if (cannoner == null) {
 			currentCannonChargeTicks = 0;
+			return;
 		}
 		
+		if (currentCannonChargeTicks == 0) {
+			// just started charging
+			final InventoryItemDto firstCannonball = storage.getFirstItemOf(cannonballs);
+			if (firstCannonball == null) {
+				// somehow verified successfully but now there's no cannonballs?
+				changePassengerState(PlayerState.charging_cannon, PlayerState.idle);
+				return;
+			}
+			
+			responseMaps.addLocalResponse(floor, tileId, 
+					new ActionBubbleResponse(this, cannoner.getId(), ItemDao.getItem(firstCannonball.getItemId())));
+		}
+		
+		if (++currentCannonChargeTicks >= cannonChargeTicks) {
+			if (currentCannonChargeTicks == cannonChargeTicks) {
+				// we've just become ready, so set the ready cannons
+				readyCannons = offensePoints;
+			}
+			fireCannon(responseMaps);
+			
+			if (--readyCannons <= 0)
+				currentCannonChargeTicks = 0;
+		}
+	}
+	
+	private void changePassengerState(PlayerState from, PlayerState to) {
+		passengers.stream()
+			.filter(e -> e.getState() == from)
+			.forEach(e -> e.setState(to));
+	}
+	
+	private void processRepairs(ResponseMaps responseMaps) {
 		if (passengerWithState(PlayerState.repairing_ship) == null) {
 			currentRepairTicks.clear();
 		} else {
+			// we repair the ship with the same planks used to build it
+			final int repairPlankId = ConstructableDao.getConstructableBySceneryId(dto.getHullSceneryId()).getPlankId();
+			final String noSuppliesMessage = String.format("there's no %s available in storage to repair the ship.", ItemDao.getItem(repairPlankId).getNamePlural());
+			
 			passengers.stream()
 				.filter(e -> e.getState() == PlayerState.repairing_ship)
 				.forEach(e -> {
-					if (currentRepairTicks.putIfAbsent(e.getId(), 0) != null)
+					if (currentRepairTicks.putIfAbsent(e.getId(), 0) != null) {
 						currentRepairTicks.put(e.getId(), currentRepairTicks.get(e.getId()) + 1);
-					else {
-						responseMaps.addLocalResponse(floor, tileId, 
-							new ActionBubbleResponse(this, e.getId(), ItemDao.getItem(Items.HAMMER.getValue())));
+					} else {
+						if (storage.contains(repairPlankId)) {
+							responseMaps.addLocalResponse(floor, tileId, 
+								new ActionBubbleResponse(this, e.getId(), ItemDao.getItem(Items.HAMMER.getValue())));
+						} else {
+							responseMaps.addClientOnlyResponse(e, MessageResponse.newMessageResponse(noSuppliesMessage, "white"));
+							e.setState(PlayerState.idle);
+						}
 					}
 					
 					if (currentRepairTicks.remove(e.getId(), repairTicks)) {
-						// do the repair
-						responseMaps.addClientOnlyResponse(e, MessageResponse.newMessageResponse("you make some repairs.", "white"));
+						InventoryItemDto firstPlank = storage.getItemById(repairPlankId);
+						if (firstPlank != null) {
+							responseMaps.addClientOnlyResponse(e, MessageResponse.newMessageResponse("you make some repairs.", "white"));
+							storage.remove(firstPlank.getSlot());
+						} else {
+							responseMaps.addClientOnlyResponse(e, MessageResponse.newMessageResponse(noSuppliesMessage, "white"));
+							e.setState(PlayerState.idle);
+						}
 					}
 				});
 		}
-		
-		
-		
+	}
+	
+	private void processMovement(ResponseMaps responseMaps) {
 		// the idea here is the captain can only do one thing at a time:
 		// moving ship, firing cannons, repairing etc.
 		// if you're firing cannons then your move/repair states get cancelled out.
@@ -227,6 +267,12 @@ public class Ship extends Attackable {
 		}
 	}
 	
+	public void process(int tick, ResponseMaps responseMaps) {
+		processCannon(responseMaps);
+		processRepairs(responseMaps);
+		processMovement(responseMaps);
+	}
+	
 	private void fireCannon(ResponseMaps responseMaps) {
 		if (target == null)
 			return;
@@ -254,10 +300,13 @@ public class Ship extends Attackable {
 		if (shooter == null)
 			shooter = passengers.iterator().next();
 		
-		LocationManager.getLocalPlayers(floor, tileId, 15)
-			.forEach(localPlayer -> ClientResourceManager.addSpriteFramesAndSpriteMaps(localPlayer, Collections.singleton(1614)));
+		final InventoryItemDto firstCannonball = storage.getFirstItemOf(cannonballs);
+		final int firstCannonballSpriteFrameId = ItemDao.getItem(firstCannonball.getItemId()).getSpriteFrameId();
 		
-		final CastSpellResponse projectile = new CastSpellResponse(tileId, ((NPC)target).getInstanceId(), "npc", 1614);
+		LocationManager.getLocalPlayers(floor, tileId, 15)
+			.forEach(localPlayer -> ClientResourceManager.addSpriteFramesAndSpriteMaps(localPlayer, Collections.singleton(firstCannonballSpriteFrameId)));
+		
+		final CastSpellResponse projectile = new CastSpellResponse(tileId, ((NPC)target).getInstanceId(), "npc", firstCannonballSpriteFrameId);
 		responseMaps.addLocalResponse(floor, tileId, projectile);
 		
 		// TODO hit should take opponent defense into account
@@ -270,6 +319,8 @@ public class Ship extends Attackable {
 				.filter(e -> e.getState() == PlayerState.charging_cannon)
 				.forEach(e -> e.setState(PlayerState.idle));
 		}
+		
+		storage.remove(firstCannonball.getSlot());
 	}
 	
 	public String verifyFireCannon(Attackable attackable) {
@@ -285,13 +336,15 @@ public class Ship extends Attackable {
 			return "you don't have a clear shot.";
 		}
 		
-		// TODO cannonball check
+		if (!storage.contains(Items.CANNONBALL) && !storage.contains(Items.GOLDEN_CANNONBALL)) {
+			return "you don't have any cannonballs.";
+		}
 		
 		return "";
 	}
 	
 	public int getCannonRange() {
-		return 12;
+		return 10;
 	}
 
 	@Override

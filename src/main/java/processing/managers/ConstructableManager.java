@@ -18,6 +18,7 @@ import processing.scenery.constructable.Constructable;
 import processing.scenery.constructable.CrudeHull;
 import processing.scenery.constructable.HolyTotemPole;
 import processing.scenery.constructable.LargeStorageChest;
+import processing.scenery.constructable.MagicBargeHull;
 import processing.scenery.constructable.NaturesShrine;
 import processing.scenery.constructable.SmallStorageChest;
 import responses.ResponseMaps;
@@ -37,6 +38,7 @@ public class ConstructableManager {
 		constructables.put(141, SmallStorageChest.class);
 		constructables.put(147, LargeStorageChest.class);
 		constructables.put(184, CrudeHull.class);
+		constructables.put(185, MagicBargeHull.class);
 	}
 	
 	public static void setupCaches() {

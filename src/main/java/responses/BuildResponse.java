@@ -71,6 +71,7 @@ public class BuildResponse extends WalkAndDoResponse {
 		if (!ship.hasFreeSlots()) {
 			// we've filled it up so finish the ship
 			ShipManager.finishShip(player.getFloor(), request.getTileId(), responseMaps);
+			ship.getStorage(); // inits storage if not exists
 		}
 		
 		setRecoAndResponseText(1, String.format("you mount the %s to the ship.", accessory.getName()));

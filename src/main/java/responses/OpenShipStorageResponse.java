@@ -42,6 +42,12 @@ public class OpenShipStorageResponse extends WalkAndDoResponse {
 
 	@Override
 	protected void doAction(Request req, Player player, ResponseMaps responseMaps) {
+		if (!ship.playerIsAboard(player.getId())) {
+			setRecoAndResponseText(0, "you can't see the storage from outside the ship.");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		
 		if (ship.getCaptainId() != player.getId()) {
 			setRecoAndResponseText(0, "the captain wouldn't want you snooping in there.");
 			responseMaps.addClientOnlyResponse(player, this);
