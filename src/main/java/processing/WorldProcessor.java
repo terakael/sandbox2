@@ -31,6 +31,7 @@ import processing.managers.FightManager;
 import processing.managers.FightManager.Fight;
 import processing.managers.LocationManager;
 import processing.managers.LockedDoorManager;
+import processing.managers.OceanFishingManager;
 import processing.managers.ShipManager;
 import processing.managers.ShopManager;
 import processing.managers.TimeManager;
@@ -126,6 +127,7 @@ public class WorldProcessor implements Runnable {
 		TimeManager.process(tickId, responseMaps);
 		
 		UndeadArmyManager.process(responseMaps);
+		OceanFishingManager.process(tickId, responseMaps);
 
 		Stopwatch.start("player requests");
 		// process player requests for this tick

@@ -235,7 +235,7 @@ public abstract class StorageChest extends Constructable {
 	public int getEmptySlotCount(int playerId) {
 		if (!storage.containsKey(playerId))
 			return getMaxSlots();
-		return storage.get(playerId).getEmptySlotCount(playerId);
+		return storage.get(playerId).getEmptySlotCount();
 	}
 
 	public abstract int getMaxSlots();

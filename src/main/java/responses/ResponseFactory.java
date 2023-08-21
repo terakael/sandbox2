@@ -269,6 +269,10 @@ public class ResponseFactory {
 			response = new OpenShipStorageResponse();
 			break;
 			
+		case "cast net":
+			response = new CastNetResponse();
+			break;
+			
 		default:
 			response = new UnknownResponse();
 			break;

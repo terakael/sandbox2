@@ -122,6 +122,7 @@ public class Player extends Attackable {
 		charging_cannon,
 		repairing_ship,
 		moving_ship,
+		casting_net,
 		
 		dead
 	};
@@ -650,6 +651,8 @@ public class Player extends Attackable {
 	}
 	
 	public void setTileId(int tileId) {
+		// TODO if we're on a boat and we tele off, we should disembark (unless its the boat setting the tileId)
+		
 		this.tileId = tileId;
 		LocationManager.addPlayer(this);
 		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(dto.getId()).tileId(tileId).build());

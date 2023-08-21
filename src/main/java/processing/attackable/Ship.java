@@ -1,13 +1,19 @@
 package processing.attackable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import database.dao.ConstructableDao;
+import database.dao.FishingDepthDao;
 import database.dao.ItemDao;
 import database.dao.ShipAccessoryDao;
 import database.dto.InventoryItemDto;
@@ -15,17 +21,21 @@ import database.dto.ShipAccessoryDto;
 import database.dto.ShipDto;
 import database.entity.update.UpdatePlayerEntity;
 import lombok.Getter;
+import lombok.Setter;
 import processing.PathFinder;
 import processing.WorldProcessor;
 import processing.attackable.Player.PlayerState;
 import processing.managers.ClientResourceManager;
-import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.LocationManager;
+import processing.managers.OceanFishingManager;
+import requests.Request;
 import responses.ActionBubbleResponse;
 import responses.CastSpellResponse;
 import responses.MessageResponse;
 import responses.PlayerUpdateResponse;
+import responses.Response;
+import responses.ResponseFactory;
 import responses.ResponseMaps;
 import responses.ShipUpdateResponse;
 import types.DamageTypes;
@@ -54,6 +64,11 @@ public class Ship extends Attackable {
 	// multiple people can repair the ship at the same time
 	private final int repairTicks = 5;
 	private Map<Integer, Integer> currentRepairTicks = new HashMap<>();
+	
+	private final int fishingTicks = 5;
+	private Map<Integer, Integer> currentFishingTicks = new HashMap<>();
+	
+	@Setter private Request savedRequest;
 	
 	public Storage getStorage() {
 		if (storage == null) {
@@ -251,14 +266,22 @@ public class Ship extends Attackable {
 					passengers.forEach(player -> {
 						player.setTileId(tileId);
 					
+						// clientOnlyResponse because other players can't see a player on a boat
 						PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 						playerUpdateResponse.setId(player.getId());
 						playerUpdateResponse.setTileId(getTileId());
 						responseMaps.addClientOnlyResponse(player, playerUpdateResponse);
 					});
-				} else {
+				} else if (captain.getState() != PlayerState.idle) {
 					// we were in moving_ship state but path has become empty, so now set to idle
 					captain.setState(PlayerState.idle);
+					
+					Request requestToUse = savedRequest;
+					savedRequest = null;
+					if (requestToUse != null) {
+						Response response = ResponseFactory.create(requestToUse.getAction());
+						response.process(requestToUse, captain, responseMaps);
+					}
 				}
 			} else {
 				// if the captain is not in moving_ship state then stop moving the ship
@@ -267,10 +290,98 @@ public class Ship extends Attackable {
 		}
 	}
 	
+	private void processFishing(ResponseMaps responseMaps) {
+		if (passengerWithState(PlayerState.casting_net) == null) {
+			currentFishingTicks.clear();
+		} else {
+			passengers.stream()
+				.filter(e -> e.getState() == PlayerState.casting_net)
+				.forEach(e -> {
+					if (currentFishingTicks.putIfAbsent(e.getId(), 0) != null) {
+						currentFishingTicks.put(e.getId(), currentFishingTicks.get(e.getId()) + 1);
+					} else {
+						if (storage.getEmptySlotCount() > 0) {
+							responseMaps.addLocalResponse(floor, tileId, 
+								new ActionBubbleResponse(this, e.getId(), ItemDao.getItem(Items.NET.getValue())));
+						} else {
+							responseMaps.addClientOnlyResponse(e, MessageResponse.newMessageResponse("vessel storage is full.", "white"));
+							e.setState(PlayerState.idle);
+						}
+					}
+					
+					if (currentFishingTicks.remove(e.getId(), repairTicks)) {
+						int deepness = 0;
+						final int closestLand = PathFinder.getClosestWalkableTile(floor, tileId);
+						if (closestLand == -1) {
+							// deep ocean; good fishing loot out here.
+							deepness = 50;
+						} else {
+							deepness = (int)PathFinder.calculateDistance(closestLand, tileId);
+						}
+						
+						System.out.println(String.format("deepness: %d", deepness));
+						
+						List<Integer> caughtItems = new ArrayList<>();
+						for (int i = 0; i < fishingPoints; ++i) {
+							if (storage.getEmptySlotCount() > 0) {
+								// if this tile or nearby tiles have been fished on, this will get closer to 1.0
+								final double tileDifficulty = OceanFishingManager.getTileDifficulty(floor, tileId);
+								System.out.println(String.format("tile difficulty: %.4f", tileDifficulty));
+								
+								if (RandomUtil.chance((int)(tileDifficulty * 100))) {
+									continue;
+								}
+								
+								// different fish live in different deepness
+								final List<Pair<Double, Integer>> weightedItems = FishingDepthDao.getWeightedItems(deepness);
+								
+								for (var weightedItem : weightedItems) {
+									System.out.println(String.format("left: %.4f; right: %d", weightedItem.getLeft(), weightedItem.getRight()));
+								}
+								
+								for (var weightedItem : weightedItems) {
+									final int chance = (int)(weightedItem.getLeft() * (100 - deepness));
+									System.out.println(String.format("pct chance for %d: %d", weightedItem.getRight(), chance));
+									if (RandomUtil.chance(chance)) {
+										caughtItems.add(weightedItem.getRight());
+										storage.add(new InventoryItemDto(weightedItem.getRight(), 0, 1, 0), 1);
+										OceanFishingManager.increaseTileDifficulty(floor, tileId);
+										break;
+									}
+								}
+							} else {
+								
+								e.setState(PlayerState.idle);
+								break;
+							}
+						}
+						
+						String catchMessage = "you retrieve an empty net.";
+						if (caughtItems.size() == 1) {
+							catchMessage = String.format("you catch a %s.", ItemDao.getNameFromId(caughtItems.get(0), false));
+						}
+						else if (!caughtItems.isEmpty())
+							catchMessage = String.format("you catch %s.", caughtItems.stream()
+								.collect(Collectors.groupingBy(
+									Integer::intValue,
+									Collectors.counting())).entrySet().stream()
+								.map(entry -> String.format("%dx %s", entry.getValue(), ItemDao.getNameFromId(entry.getKey(), entry.getValue() != 1)))
+								.collect(Collectors.joining(", ")));
+										
+						responseMaps.addClientOnlyResponse(e, MessageResponse.newMessageResponse(catchMessage, "white"));
+						
+						if (storage.getEmptySlotCount() == 0)
+							responseMaps.addClientOnlyResponse(e, MessageResponse.newMessageResponse("vessel storage is full.", "white"));
+					}
+				});
+		}
+	}
+	
 	public void process(int tick, ResponseMaps responseMaps) {
 		processCannon(responseMaps);
 		processRepairs(responseMaps);
 		processMovement(responseMaps);
+		processFishing(responseMaps);
 	}
 	
 	private void fireCannon(ResponseMaps responseMaps) {

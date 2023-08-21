@@ -88,6 +88,7 @@ public class RequestFactory {
 		map.put("board", BoardRequest.class);
 		map.put("show_ship_accessory_materials", ShowShipAccessoryMaterialsRequest.class);
 		map.put("storage", OpenShipStorageRequest.class);
+		map.put("cast net", CastNetRequest.class);
 	}
 	public static Request create(String action, String jsonText) {
 		if (map.containsKey(action))

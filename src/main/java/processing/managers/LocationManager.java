@@ -24,6 +24,7 @@ public class LocationManager {
 	private static Map<Integer, Map<Integer, Set<NPC>>> pets = new HashMap<>();
 	private static Map<Integer, Map<Integer, Set<Player>>> players = new HashMap<>(); // floor, <segmentId, <players>>
 	private static Map<Integer, Map<Integer, Set<Ship>>> ships = new HashMap<>(); // floor, <segmentId, <players>>
+	private static Map<Integer, Map<Integer, Set<Integer>>> oceanFishedTiles = new HashMap<>();
 	
 	// TODO scenery, pickables etc should be here too
 	
@@ -75,6 +76,47 @@ public class LocationManager {
 		});
 		
 		return localNpcs;
+	}
+	
+	public static Set<Integer> getLocalFishedTiles(int floor, int tileId, int radius) {
+		Set<Integer> localFishedTiles = new HashSet<>();
+		if (!oceanFishedTiles.containsKey(floor))
+			return localFishedTiles;
+		
+		final int centreTileX = tileId % PathFinder.LENGTH;
+		final int centreTileY = tileId / PathFinder.LENGTH;
+		
+		getLocalSegments(tileId, radius).forEach(segment -> {
+			if (oceanFishedTiles.get(floor).containsKey(segment)) {
+				localFishedTiles.addAll(oceanFishedTiles.get(floor).get(segment).stream()
+					.filter(fishedTileId -> {
+						final int x = fishedTileId % PathFinder.LENGTH;
+						final int y = fishedTileId / PathFinder.LENGTH;
+						
+						return Math.abs(centreTileX - x) <= radius && 
+							Math.abs(centreTileY - y) <= radius;
+					}).collect(Collectors.toSet()));
+			}
+		});
+		
+		return localFishedTiles;
+	}
+	
+	public static void addOceanFishedTile(int floor, int tileId) {
+		// first check if the fished tile already exists in its current segments
+		getLocalSegments(tileId, 6).forEach(currentSegment -> {
+			oceanFishedTiles.putIfAbsent(floor, new HashMap<>());
+			oceanFishedTiles.get(floor).putIfAbsent(currentSegment, new HashSet<>());
+			oceanFishedTiles.get(floor).get(currentSegment).add(tileId);
+		});
+	}
+	
+	public static void removeOceanFishedTilesIfExist(int checkFloor, Set<Integer> checkTileIds) {
+		oceanFishedTiles.forEach((floor, segmentMap) -> {
+			segmentMap.forEach((segment, tileIds) -> tileIds.removeIf(e -> checkTileIds.contains(e)));
+			segmentMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+		});
+		oceanFishedTiles.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 	}
 	
 	public static Set<Ship> getLocalShips(int floor, int tileId, int radius) {

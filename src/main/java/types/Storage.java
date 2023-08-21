@@ -94,7 +94,7 @@ public class Storage {
 				.orElse(null);
 	}
 	
-	public int getEmptySlotCount(int playerId) {
+	public int getEmptySlotCount() {
 		return (int)_storage.values().stream().filter(e -> e.getItemId() == 0).count();
 	}
 	

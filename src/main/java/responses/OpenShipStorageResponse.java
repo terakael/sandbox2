@@ -1,11 +1,14 @@
 package responses;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import database.dto.InventoryItemDto;
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Ship;
+import processing.managers.ClientResourceManager;
 import processing.managers.ShipManager;
 import requests.OpenShipStorageRequest;
 import requests.Request;
@@ -55,6 +58,8 @@ public class OpenShipStorageResponse extends WalkAndDoResponse {
 		}
 		
 		items = ship.getStorage().getItems();
+		ClientResourceManager.addItems(player, items.stream().map(InventoryItemDto::getItemId).collect(Collectors.toSet()));
+		
 		tileId = ship.getTileId();
 		
 		responseMaps.addClientOnlyResponse(player, this);

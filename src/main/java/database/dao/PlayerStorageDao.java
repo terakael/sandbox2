@@ -22,10 +22,12 @@ import processing.managers.DatabaseUpdater;
 import system.GroundItemManager;
 import types.ItemAttributes;
 import types.Items;
+import types.Storage;
 import types.StorageTypes;
 
 public class PlayerStorageDao {
 	private static Map<Integer, Map<StorageTypes, Map<Integer, PlayerStorageDto>>> playerStorage = new HashMap<>(); // playerId, <storageTypeId, <slot, dto>>
+//	private static Map<Integer, Map<StorageTypes, Storage>> playerStorage = new HashMap<>();
 	
 	private PlayerStorageDao() {}
 	

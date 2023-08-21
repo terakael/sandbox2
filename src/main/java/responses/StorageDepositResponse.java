@@ -42,7 +42,7 @@ public abstract class StorageDepositResponse extends Response {
 		
 		int actualCount = request.getAmount() == -1 ? Integer.MAX_VALUE : request.getAmount();
 		
-		int remainingEmptySlots = storage.getEmptySlotCount(player.getId());
+		int remainingEmptySlots = storage.getEmptySlotCount();
 		if (remainingEmptySlots == 0 && !(itemIsStackable && storage.contains(itemDto.getItemId()))) {
 			setRecoAndResponseText(0, "there's no more room.");
 			responseMaps.addClientOnlyResponse(player, this);
@@ -60,7 +60,7 @@ public abstract class StorageDepositResponse extends Response {
 			
 			storage.addStackable(itemDto, actualCount);
 		} else {
-			actualCount = Math.min(actualCount, storage.getEmptySlotCount(player.getId()));
+			actualCount = Math.min(actualCount, storage.getEmptySlotCount());
 			
 			List<Integer> slotsToDeposit = new ArrayList<>();
 			slotsToDeposit.add(request.getSlot());

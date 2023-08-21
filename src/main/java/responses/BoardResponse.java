@@ -1,18 +1,17 @@
 package responses;
 
-import database.dao.PlayerDao;
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Ship;
 import processing.managers.ShipManager;
 import requests.BoardRequest;
-import requests.OpenShipStorageRequest;
 import requests.Request;
 
 public class BoardResponse extends WalkAndDoResponse {
 	
 	private transient Ship ship = null;
 	
+	@Override
 	protected boolean setTarget(Request req, Player player, ResponseMaps responseMaps) {
 		ship = ShipManager.getShipByCaptainId(((BoardRequest)req).getObjectId());
 		if (ship != null) {
@@ -24,10 +23,14 @@ public class BoardResponse extends WalkAndDoResponse {
 	}
 	
 	@Override
+	protected void handleShipPassenger(Request request, Player player, ResponseMaps responseMaps) {
+		handleDisembark((BoardRequest)request, player, responseMaps);
+	}
+	
+	@Override
 	protected boolean nextToTarget(Request request, Player player, ResponseMaps responseMaps) {
 		if (ship.playerIsAboard(player.getId()))
-			return true;
-		
+			return PathFinder.isAdjacent(ship.getTileId(), walkingTargetTileId);
 		return PathFinder.isNextTo(ship.getFloor(), player.getTileId(), walkingTargetTileId);
 	}
 	
@@ -40,25 +43,13 @@ public class BoardResponse extends WalkAndDoResponse {
 	protected void doAction(Request req, Player player, ResponseMaps responseMaps) {
 		BoardRequest request = (BoardRequest)req;
 		
-		// if we're already onboard a ship, then get off at the nearest land
-		final Ship boardedShip = ShipManager.getShipWithPlayer(player);
-		if (boardedShip != null) {
-			if (boardedShip.getCaptainId() != request.getObjectId())
-				return; // trying to disembark a boat we're nto on
-			
-			int closestLandTile = PathFinder.getClosestWalkableTile(boardedShip.getFloor(), boardedShip.getTileId());
-			if (closestLandTile != -1) {
-				boardedShip.disembarkPlayer(player);
-				player.setTileId(closestLandTile);
-				
-				PlayerUpdateResponse disembarkResponse = new PlayerUpdateResponse();
-				disembarkResponse.setId(player.getId());
-				disembarkResponse.setBoardedShip(false);
-				disembarkResponse.setTileId(closestLandTile);
-				responseMaps.addClientOnlyResponse(player, disembarkResponse);
-			}
+		if (handleDisembark(request, player, responseMaps))
 			return;
-		}
+		
+		// we're checking nextToTarget() as "next to the closest walkable tile to the ship".
+		// but actually, if the ship is away from the land, we should return out.
+		if (!PathFinder.isAdjacent(player.getTileId(), ship.getTileId()))
+			return;
 		
 		if (!ship.boardPlayer(player)) {
 			setRecoAndResponseText(0, "boat's full.");
@@ -72,6 +63,26 @@ public class BoardResponse extends WalkAndDoResponse {
 			onboardResponse.setTileId(ship.getTileId());
 			responseMaps.addClientOnlyResponse(player, onboardResponse);
 		}
+	}
+	
+	private boolean handleDisembark(BoardRequest request, Player player, ResponseMaps responseMaps) {
+		// if we're already onboard a ship, then get off at the nearest land
+		final Ship boardedShip = ShipManager.getShipWithPlayer(player);
+		if (boardedShip == null || boardedShip.getCaptainId() != request.getObjectId())
+			return false; // we're not on a ship or the request's objectId doesn't match
+		
+		int closestLandTile = PathFinder.getClosestWalkableTile(boardedShip.getFloor(), boardedShip.getTileId());
+		if (closestLandTile != -1) {
+			boardedShip.disembarkPlayer(player);
+			player.setTileId(closestLandTile);
+			
+			PlayerUpdateResponse disembarkResponse = new PlayerUpdateResponse();
+			disembarkResponse.setId(player.getId());
+			disembarkResponse.setBoardedShip(false);
+			disembarkResponse.setTileId(closestLandTile);
+			responseMaps.addClientOnlyResponse(player, disembarkResponse);
+		}
+		return true;
 	}
 
 }

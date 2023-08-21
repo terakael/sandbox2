@@ -27,6 +27,7 @@ import database.dao.DoorDao;
 import database.dao.EmptyableDao;
 import database.dao.EquipmentDao;
 import database.dao.FishableDao;
+import database.dao.FishingDepthDao;
 import database.dao.GroundTextureDao;
 import database.dao.ItemDao;
 import database.dao.MineableDao;
@@ -292,6 +293,9 @@ public class Server {
 		
 		System.out.println("caching ship accessories");
 		ShipAccessoryDao.setupCaches();
+		
+		System.out.println("caching fishing depths");
+		FishingDepthDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up
