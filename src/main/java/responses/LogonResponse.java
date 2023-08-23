@@ -92,7 +92,7 @@ public class LogonResponse extends Response {
 					// no walkable tiles?  tyrotown i guess TODO
 				}
 			} else {
-				boardedShip.boardPlayer(player);
+				boardedShip.boardPlayer(player, responseMaps);
 			}
 		}
 		LocationManager.addPlayer(player);

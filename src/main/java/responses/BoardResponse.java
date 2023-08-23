@@ -1,8 +1,16 @@
 package responses;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import database.dao.ShipAccessoryDao;
 import processing.PathFinder;
 import processing.attackable.Player;
 import processing.attackable.Ship;
+import processing.managers.ClientResourceManager;
+import processing.managers.OceanFishingManager;
 import processing.managers.ShipManager;
 import requests.BoardRequest;
 import requests.Request;
@@ -51,17 +59,9 @@ public class BoardResponse extends WalkAndDoResponse {
 		if (!PathFinder.isAdjacent(player.getTileId(), ship.getTileId()))
 			return;
 		
-		if (!ship.boardPlayer(player)) {
+		if (!ship.boardPlayer(player, responseMaps)) {
 			setRecoAndResponseText(0, "boat's full.");
 			responseMaps.addClientOnlyResponse(player, this);
-		} else {
-			// send a boardedShip update to the local player.
-			// other players boarding a ship will get a playerOutOfRange response
-			PlayerUpdateResponse onboardResponse = new PlayerUpdateResponse();
-			onboardResponse.setId(player.getId());
-			onboardResponse.setBoardedShip(true);
-			onboardResponse.setTileId(ship.getTileId());
-			responseMaps.addClientOnlyResponse(player, onboardResponse);
 		}
 	}
 	
@@ -73,12 +73,12 @@ public class BoardResponse extends WalkAndDoResponse {
 		
 		int closestLandTile = PathFinder.getClosestWalkableTile(boardedShip.getFloor(), boardedShip.getTileId());
 		if (closestLandTile != -1) {
-			boardedShip.disembarkPlayer(player);
+			boardedShip.disembarkPlayer(player, responseMaps);
 			player.setTileId(closestLandTile);
 			
 			PlayerUpdateResponse disembarkResponse = new PlayerUpdateResponse();
 			disembarkResponse.setId(player.getId());
-			disembarkResponse.setBoardedShip(false);
+			disembarkResponse.setBoardedShipId(0);
 			disembarkResponse.setTileId(closestLandTile);
 			responseMaps.addClientOnlyResponse(player, disembarkResponse);
 		}

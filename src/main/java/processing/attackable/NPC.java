@@ -353,4 +353,9 @@ public class NPC extends Attackable {
 	public int getOwnerId() {
 		return -1; // pets override this to return the id of the player which owns it
 	}
+	
+	@Override
+	public String getType() {
+		return "npc";
+	}
 }

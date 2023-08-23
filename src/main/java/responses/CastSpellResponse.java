@@ -39,13 +39,15 @@ public class CastSpellResponse extends Response {
 	private int targetId;
 	private String targetType = null;
 	private int spriteFrameId;
+	private double lifetime;
 
-	public CastSpellResponse(int sourceTileId, int targetId, String targetType, int spriteFrameId) {
+	public CastSpellResponse(int sourceTileId, int targetId, String targetType, int spriteFrameId, double lifetime) {
 		setAction("cast_spell");
 		this.sourceTileId = sourceTileId;
 		this.targetId = targetId;
 		this.targetType = targetType;
 		this.spriteFrameId = spriteFrameId;
+		this.lifetime = lifetime;
 	}
 	
 	@Override

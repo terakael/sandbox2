@@ -19,6 +19,8 @@ public class ShipInRangeResponse extends Response {
 		private int captainId;
 		private int tileId;
 		private int remainingTicks;
+		private int maxHp;
+		private int maxArmour;
 	}
 	private List<ShipLocation> ships = new ArrayList<>();
 	
@@ -32,7 +34,13 @@ public class ShipInRangeResponse extends Response {
 	}
 	
 	public void addInstances(Set<Ship> instances) {
-		instances.forEach(ship -> ships.add(new ShipLocation(ship.getHullSceneryId(), ship.getCaptainId(), ship.getTileId(), ship.getRemainingTicks())));
+		instances.forEach(ship -> ships.add(new ShipLocation(
+				ship.getHullSceneryId(), 
+				ship.getCaptainId(), 
+				ship.getTileId(), 
+				ship.getRemainingTicks(),
+				ship.getMaxHp(),
+				ship.getMaxArmour())));
 	}
 	
 	@Override

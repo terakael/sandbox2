@@ -90,9 +90,9 @@ public class Endpoint {
 		if (playerToRemove.getPet() != null)
 			LocationManager.removePetIfExists(playerToRemove.getPet());
 		
-		final Ship boardedShip = ShipManager.getShipWithPlayer(playerToRemove);
-		if (boardedShip != null)
-			boardedShip.removeLoggedOutPlayer(playerToRemove);
+//		final Ship boardedShip = ShipManager.getShipWithPlayer(playerToRemove);
+//		if (boardedShip != null)
+//			boardedShip.removeLoggedOutPlayer(playerToRemove);
 		
 		// if the player made any requests since the last tick before logout, remove them
 		requestMap.remove(session);

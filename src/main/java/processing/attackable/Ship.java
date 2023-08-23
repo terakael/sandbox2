@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -37,6 +38,7 @@ import responses.PlayerUpdateResponse;
 import responses.Response;
 import responses.ResponseFactory;
 import responses.ResponseMaps;
+import responses.ShipUiUpdateResponse;
 import responses.ShipUpdateResponse;
 import types.DamageTypes;
 import types.Items;
@@ -47,14 +49,19 @@ public class Ship extends Attackable {
 	@Getter private final int captainId; // player who owns the ship
 	@Getter private int remainingTicks;
 	private final ShipDto dto;
-	private int[] slots;
-	private Set<Player> passengers = new HashSet<>();
+	private int[] accessorySlots;
+	@Getter private Set<Player> passengers = new HashSet<>();
 	private int crewPoints = 0;
 	private int fishingPoints = 0;
 	private int offensePoints = 0;
 	private int defensePoints = 0; // hp boost too? higher repair rates?
 	private int storagePoints = 0;
 	Storage storage = null;
+	
+	@Getter private int maxArmour = 0;
+	private int currentArmour = 0;
+	
+	@Getter private int maxHp = 0;
 	
 	private static final Items[] cannonballs = new Items[] {Items.CANNONBALL, Items.GOLDEN_CANNONBALL};
 	private final int cannonChargeTicks = 5;
@@ -71,18 +78,24 @@ public class Ship extends Attackable {
 	@Setter private Request savedRequest;
 	
 	public Storage getStorage() {
-		if (storage == null) {
-			storage = new Storage(25 + (storagePoints * 25));
-		}
-		
 		return storage;
 	}
 	
 	public Ship(int captainId, ShipDto dto) {
 		this.captainId = captainId;
 		this.dto = dto;
-		slots = new int[dto.getSlotSize()];
-		Arrays.fill(slots, 0);
+		accessorySlots = new int[dto.getSlotSize()];
+		Arrays.fill(accessorySlots, 0);
+	}
+	
+	public void onFinishBuilding() {
+		storage = new Storage(25 + (storagePoints * 25));
+		
+		maxArmour = defensePoints * 100;
+		currentArmour = maxArmour;
+		
+		maxHp = 100;
+		currentHp = maxHp;
 	}
 	
 	public Player getCaptain() {
@@ -97,7 +110,7 @@ public class Ship extends Attackable {
 	}
 	
 	public boolean hasFreeSlots() {
-		return (int)Arrays.stream(slots).filter(e -> e == 0).count() > 0;
+		return (int)Arrays.stream(accessorySlots).filter(e -> e == 0).count() > 0;
 	}
 	
 	public int getNumCannons() {
@@ -108,14 +121,18 @@ public class Ship extends Attackable {
 		return currentCannonChargeTicks >= cannonChargeTicks;
 	}
 	
+	public boolean canFish() {
+		return fishingPoints > 0;
+	}
+	
 	public boolean setFreeSlot(int accessoryId) {
 		ShipAccessoryDto dto = ShipAccessoryDao.getAccessoryById(accessoryId);
 		if (dto == null)
 			return false;
 		
-		for (int i = 0; i < slots.length; ++i) {
-			if (slots[i] == 0) {
-				slots[i] = accessoryId;
+		for (int i = 0; i < accessorySlots.length; ++i) {
+			if (accessorySlots[i] == 0) {
+				accessorySlots[i] = accessoryId;
 				fishingPoints += dto.getFishing();
 				offensePoints += dto.getOffense();
 				defensePoints += dto.getDefense();
@@ -142,23 +159,44 @@ public class Ship extends Attackable {
 				.count() >= getMaxPassengers();
 	}
 	
-	public boolean boardPlayer(Player player) {
+	public boolean boardPlayer(Player player, ResponseMaps responseMaps) {
 		if (isFull() && captainId != player.getId())
 			return false;
+		
+		// let the other passengers know a player is boarding
+		ShipUiUpdateResponse.builder()
+			.boardedPlayers(Collections.singletonList(player.getDto().getName()))
+			.build().passengerResponse(this, responseMaps);
 		
 		passengers.add(player);
 		player.setTileId(tileId);
 		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(player.getId()).boardedShipId(captainId).build());
+
+		// send a boardedShip update to the local player.
+		// other players boarding a ship will get a playerOutOfRange response
+		PlayerUpdateResponse onboardResponse = new PlayerUpdateResponse();
+		onboardResponse.setId(player.getId());
+		onboardResponse.setBoardedShipId(captainId);
+		onboardResponse.setTileId(getTileId());
+		responseMaps.addClientOnlyResponse(player, onboardResponse);
+		
+		sendUiDataToClient(player, responseMaps);
+		
 		return true;
 	}
 	
-	public boolean disembarkPlayer(Player player) {
+	public boolean disembarkPlayer(Player player, ResponseMaps responseMaps) {
 		DatabaseUpdater.enqueue(UpdatePlayerEntity.builder().id(player.getId()).boardedShipId(0).build());
-		return passengers.remove(player);
-	}
-	
-	public void removeLoggedOutPlayer(Player player) {
-		passengers.remove(player);
+		boolean playerRemoved = passengers.remove(player);
+		
+		if (playerRemoved) {
+			// tell the remaining passengers
+			ShipUiUpdateResponse.builder()
+				.disembarkedPlayers(List.of(player.getDto().getName()))
+				.build().passengerResponse(this, responseMaps);
+		}
+		
+		return playerRemoved;
 	}
 	
 	public boolean playerIsAboard(int playerId) {
@@ -267,10 +305,19 @@ public class Ship extends Attackable {
 						player.setTileId(tileId);
 					
 						// clientOnlyResponse because other players can't see a player on a boat
-						PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
+						final PlayerUpdateResponse playerUpdateResponse = new PlayerUpdateResponse();
 						playerUpdateResponse.setId(player.getId());
 						playerUpdateResponse.setTileId(getTileId());
 						responseMaps.addClientOnlyResponse(player, playerUpdateResponse);
+						
+						final ShipUiUpdateResponse uiUpdate = new ShipUiUpdateResponse();
+						uiUpdate.setDepth(getDepth());
+						
+						if (canFish()) {
+							uiUpdate.setFishPopulation(getFishPopulationString());
+						}
+						
+						responseMaps.addClientOnlyResponse(player, uiUpdate);
 					});
 				} else if (captain.getState() != PlayerState.idle) {
 					// we were in moving_ship state but path has become empty, so now set to idle
@@ -309,43 +356,27 @@ public class Ship extends Attackable {
 						}
 					}
 					
-					if (currentFishingTicks.remove(e.getId(), repairTicks)) {
-						int deepness = 0;
-						final int closestLand = PathFinder.getClosestWalkableTile(floor, tileId);
-						if (closestLand == -1) {
-							// deep ocean; good fishing loot out here.
-							deepness = 50;
-						} else {
-							deepness = (int)PathFinder.calculateDistance(closestLand, tileId);
-						}
-						
-						System.out.println(String.format("deepness: %d", deepness));
+					if (currentFishingTicks.remove(e.getId(), fishingTicks)) {
+						final int depth = getDepth();
 						
 						List<Integer> caughtItems = new ArrayList<>();
 						for (int i = 0; i < fishingPoints; ++i) {
 							if (storage.getEmptySlotCount() > 0) {
 								// if this tile or nearby tiles have been fished on, this will get closer to 1.0
-								final double tileDifficulty = OceanFishingManager.getTileDifficulty(floor, tileId);
-								System.out.println(String.format("tile difficulty: %.4f", tileDifficulty));
+								final double tileDifficulty = getFishPopulation();
 								
-								if (RandomUtil.chance((int)(tileDifficulty * 100))) {
+								if (RandomUtil.chance((int)(tileDifficulty * 100)))
 									continue;
-								}
 								
 								// different fish live in different deepness
-								final List<Pair<Double, Integer>> weightedItems = FishingDepthDao.getWeightedItems(deepness);
+								final List<Pair<Double, Integer>> weightedItems = FishingDepthDao.getWeightedItems(depth);
 								
 								for (var weightedItem : weightedItems) {
-									System.out.println(String.format("left: %.4f; right: %d", weightedItem.getLeft(), weightedItem.getRight()));
-								}
-								
-								for (var weightedItem : weightedItems) {
-									final int chance = (int)(weightedItem.getLeft() * (100 - deepness));
-									System.out.println(String.format("pct chance for %d: %d", weightedItem.getRight(), chance));
+									final int chance = (int)(weightedItem.getLeft() * (100 - depth));
 									if (RandomUtil.chance(chance)) {
 										caughtItems.add(weightedItem.getRight());
 										storage.add(new InventoryItemDto(weightedItem.getRight(), 0, 1, 0), 1);
-										OceanFishingManager.increaseTileDifficulty(floor, tileId);
+										OceanFishingManager.increaseTileDifficulty(floor, tileId, responseMaps);
 										break;
 									}
 								}
@@ -377,7 +408,48 @@ public class Ship extends Attackable {
 		}
 	}
 	
+	public int getDepth() {
+		final int closestLand = PathFinder.getClosestWalkableTile(floor, tileId);
+		if (closestLand == -1) {
+			// deep ocean; good fishing loot out here.
+			return 50;
+		}
+		
+		return (int)PathFinder.calculateDistance(closestLand, tileId);
+	}
+	
+	public Double getFishPopulation() {
+		if (!canFish())
+			return null;
+		return OceanFishingManager.getTileDifficulty(floor, tileId);
+	}
+	
+	public String getFishPopulationString() {
+		final Double difficulty = getFishPopulation();
+		if (difficulty == null)
+			return "unknown";
+		
+		if (difficulty < 0.2)
+			return "lots";
+		
+		if (difficulty < 0.6)
+			return "some";
+		
+		if (difficulty < 0.9)
+			return "few";
+		
+		return "bare";
+	}
+	
 	public void process(int tick, ResponseMaps responseMaps) {
+		final Set<Player> loggedOutPassengers = passengers.stream()
+				.filter(player -> !WorldProcessor.sessionExistsByPlayerId(player.getId()))
+				.collect(Collectors.toSet());
+		passengers.removeAll(loggedOutPassengers);
+		ShipUiUpdateResponse.builder()
+			.disembarkedPlayers(loggedOutPassengers.stream().map(player -> player.getDto().getName()).collect(Collectors.toList()))
+			.build().passengerResponse(this, responseMaps);
+		
 		processCannon(responseMaps);
 		processRepairs(responseMaps);
 		processMovement(responseMaps);
@@ -417,7 +489,7 @@ public class Ship extends Attackable {
 		LocationManager.getLocalPlayers(floor, tileId, 15)
 			.forEach(localPlayer -> ClientResourceManager.addSpriteFramesAndSpriteMaps(localPlayer, Collections.singleton(firstCannonballSpriteFrameId)));
 		
-		final CastSpellResponse projectile = new CastSpellResponse(tileId, ((NPC)target).getInstanceId(), "npc", firstCannonballSpriteFrameId);
+		final CastSpellResponse projectile = new CastSpellResponse(tileId, target.getInstanceId(), target.getType(), firstCannonballSpriteFrameId, 0.5);
 		responseMaps.addLocalResponse(floor, tileId, projectile);
 		
 		// TODO hit should take opponent defense into account
@@ -454,6 +526,25 @@ public class Ship extends Attackable {
 		return "";
 	}
 	
+	public void sendUiDataToClient(Player player, ResponseMaps responseMaps) {
+		final List<Integer> accessorySpriteFrameIds = IntStream.of(accessorySlots)
+				.map(accessoryId -> ShipAccessoryDao.getAccessoryById(accessoryId).getSpriteFrameId())
+				.boxed()
+				.collect(Collectors.toList());
+		
+		ShipUiUpdateResponse.builder()
+			.accessorySpriteIds(accessorySpriteFrameIds)
+			.depth(getDepth())
+			.fishPopulation(getFishPopulationString())
+			.boardedPlayers(passengers.stream()
+					.map(passenger -> passenger.getDto().getName())
+					.collect(Collectors.toList()))
+			.build()
+			.clientOnlyResponse(player, responseMaps);
+		
+		ClientResourceManager.addSpriteFramesAndSpriteMaps(player, new HashSet<>(accessorySpriteFrameIds));
+	}
+	
 	public int getCannonRange() {
 		return 10;
 	}
@@ -470,7 +561,23 @@ public class Ship extends Attackable {
 
 	@Override
 	public void onHit(int damage, DamageTypes type, ResponseMaps responseMaps) {
+		if (currentArmour > 0 && Math.random() < ((double)defensePoints / (double)(defensePoints + 1))) {
+			type = DamageTypes.BLOCK;
+			currentArmour -= damage;
+			if (currentArmour < 0) {
+				currentHp += currentArmour;
+				currentArmour = 0;
+			}
+		} else {
+			currentHp -= damage;
+		}
 		
+		final ShipUpdateResponse response = new ShipUpdateResponse();
+		response.setCaptainId(captainId);
+		response.setHp(currentHp);
+		response.setArmour(currentArmour);
+		response.setDamage(damage, type);
+		responseMaps.addLocalResponse(floor, tileId, response);
 	}
 
 	@Override
@@ -483,5 +590,15 @@ public class Ship extends Attackable {
 	@Override
 	public int getExp() {
 		return 0;
+	}
+	
+	@Override
+	public String getType() {
+		return "ship";
+	}
+	
+	@Override
+	public int getInstanceId() {
+		return captainId;
 	}
 }

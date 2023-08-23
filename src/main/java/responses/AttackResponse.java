@@ -1,7 +1,6 @@
 package responses;
 
 import database.dao.NPCDao;
-import processing.PathFinder;
 import processing.attackable.NPC;
 import processing.attackable.Player;
 import processing.attackable.Player.PlayerState;
@@ -22,12 +21,24 @@ public class AttackResponse extends WalkAndDoResponse {
 	}
 
 	@Override
-	protected boolean setTarget(Request request, Player player, ResponseMaps responseMaps) {		
-		target = LocationManager.getNpcNearPlayerByInstanceId(player, ((AttackRequest)request).getObjectId());
-		if (target == null || !NPCDao.npcHasAttribute(((NPC)target).getId(), NpcAttributes.ATTACKABLE)) {
-			setRecoAndResponseText(0, "you can't attack that.");
-			responseMaps.addClientOnlyResponse(player, this);
-			return false;
+	protected boolean setTarget(Request req, Player player, ResponseMaps responseMaps) {
+		final AttackRequest request = (AttackRequest)req;
+		switch (request.getType()) {
+		case "npc": {
+			target = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
+			if (target == null || !NPCDao.npcHasAttribute(((NPC)target).getId(), NpcAttributes.ATTACKABLE)) {
+				setRecoAndResponseText(0, "you can't attack that.");
+				responseMaps.addClientOnlyResponse(player, this);
+				return false;
+			}
+			break;
+		}
+		case "ship": {
+			target = ShipManager.getShipByCaptainId(request.getObjectId());
+			if (target == null)
+				return false;
+			break;
+		}
 		}
 		
 		// i think any player aboard can fire the cannons?  good for co-op

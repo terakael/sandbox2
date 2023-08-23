@@ -23,15 +23,17 @@ public abstract class StorageWithdrawResponse extends Response {
 	
 	protected void withdraw(Player player, Storage storage, WithdrawRequest request, ResponseMaps responseMaps) {
 		List<InventoryItemDto> storageItems = storage.getItems();
-		InventoryItemDto targetItem = storageItems.get(request.getSlot());
+		InventoryItemDto targetItem = new InventoryItemDto(storageItems.get(request.getSlot()));
 		if (targetItem.getItemId() == 0)
 			return;
 		
 		List<Integer> inventoryItems = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
 		int freeInventorySlots = Collections.frequency(inventoryItems, 0);
 		
+		final boolean itemIsStackable = ItemDao.itemHasAttribute(targetItem.getItemId(), ItemAttributes.STACKABLE);
+		
 		int actualCount = request.getAmount() == -1 ? Integer.MAX_VALUE : request.getAmount();
-		if (ItemDao.itemHasAttribute(targetItem.getItemId(), ItemAttributes.STACKABLE)) {
+		if (itemIsStackable || storage.isAllItemsStackable()) {
 			if (freeInventorySlots == 0 && !inventoryItems.contains(targetItem.getItemId())) {
 				setRecoAndResponseText(0, "your inventory is full.");
 				responseMaps.addClientOnlyResponse(player, this);
@@ -39,7 +41,15 @@ public abstract class StorageWithdrawResponse extends Response {
 			}
 			
 			actualCount = Math.min(targetItem.getCount(), actualCount);
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, targetItem.getItemId(), actualCount, targetItem.getCharges());
+			if (itemIsStackable) {
+				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, targetItem.getItemId(), actualCount, targetItem.getCharges());
+			} else {
+				// not actually stackable, but storage stores it as stackable (i.e. bank)
+				actualCount = Math.min(actualCount, freeInventorySlots);
+				for (int i = 0; i < actualCount; ++i)
+					PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, targetItem.getItemId(), 1, targetItem.getCharges());
+			}
+			
 			storage.addStackable(targetItem, -actualCount);
 		} else {
 			if (freeInventorySlots == 0) {
@@ -52,10 +62,11 @@ public abstract class StorageWithdrawResponse extends Response {
 			actualCount = Math.min(actualCount, (int)storageItems.stream().filter(item -> item.getItemId() == targetItem.getItemId()).count());
 			actualCount = Math.min(actualCount, freeInventorySlots);
 			
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, targetItem.getItemId(), 1, targetItem.getCharges());
+			
 			// remove the first one from the correct slot
 			storage.remove(request.getSlot());
-			storageItems.set(request.getSlot(), new InventoryItemDto(0, request.getSlot(), 0, 0)); // exclude the item from the temporary variable
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, targetItem.getItemId(), 1, targetItem.getCharges());
+//			storageItems.set(request.getSlot(), new InventoryItemDto(0, request.getSlot(), 0, 0)); // exclude the item from the temporary variable
 			
 			List<Integer> matchingItemSlots = storageItems.stream()
 					.filter(e -> e.getItemId() == targetItem.getItemId() && e.getCharges() == targetItem.getCharges())

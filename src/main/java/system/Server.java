@@ -60,6 +60,7 @@ import database.dao.UseItemOnItemDao;
 import processing.PathFinder;
 import processing.WorldProcessor;
 import processing.managers.ArtisanManager;
+import processing.managers.BankManager;
 import processing.managers.ConstructableManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.HousePetsManager;
@@ -296,6 +297,9 @@ public class Server {
 		
 		System.out.println("caching fishing depths");
 		FishingDepthDao.setupCaches();
+		
+		System.out.println("caching banks");
+		BankManager.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

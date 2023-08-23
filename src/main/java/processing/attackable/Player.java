@@ -1327,4 +1327,14 @@ public class Player extends Attackable {
 		}
 		super.setPath(path);
 	}
+	
+	@Override
+	public String getType() {
+		return "player";
+	}
+	
+	@Override
+	public int getInstanceId() {
+		return getId();
+	}
 }

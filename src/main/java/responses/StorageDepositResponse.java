@@ -112,7 +112,11 @@ public abstract class StorageDepositResponse extends Response {
 			for (int slotToClear : slotsToDeposit) {
 				PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slotToClear, 0, 1, 0);
 				
-				storage.add(itemDto, itemDto.getCount());
+				if (storage.isAllItemsStackable()) {
+					storage.addStackable(itemDto, itemDto.getCount());
+				} else {
+					storage.add(itemDto, itemDto.getCount());
+				}
 			}
 		}
 		

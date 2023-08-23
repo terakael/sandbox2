@@ -1,5 +1,6 @@
 package processing.managers;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,6 +14,8 @@ import database.dto.ConstructableDto;
 import database.entity.delete.DeleteHousingConstructableEntity;
 import database.entity.insert.InsertHousingConstructableEntity;
 import processing.PathFinder;
+import processing.WorldProcessor;
+import processing.attackable.Player;
 import processing.scenery.constructable.BleedingTotemPole;
 import processing.scenery.constructable.Constructable;
 import processing.scenery.constructable.CrudeHull;
@@ -21,6 +24,7 @@ import processing.scenery.constructable.LargeStorageChest;
 import processing.scenery.constructable.MagicBargeHull;
 import processing.scenery.constructable.NaturesShrine;
 import processing.scenery.constructable.SmallStorageChest;
+import responses.AddSceneryInstancesResponse;
 import responses.ResponseMaps;
 import responses.SceneryDespawnResponse;
 import types.ConstructionLandTypes;
@@ -121,6 +125,21 @@ public class ConstructableManager {
 			
 			DatabaseUpdater.enqueue(new InsertHousingConstructableEntity(floor, tileId, constructable.getResultingSceneryId()));
 		}
+		
+		Map<Integer, Set<Integer>> instances = new HashMap<>();
+		instances.put(constructable.getResultingSceneryId(), Collections.singleton(tileId));
+		
+		AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
+		inRangeResponse.setInstances(instances);
+		
+		final Player player = WorldProcessor.getPlayerById(playerId);
+		
+		// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
+		inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
+		inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
+		responseMaps.addLocalResponse(player.getFloor(), tileId, inRangeResponse);
+		
+		ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
 	}
 	
 	private static Constructable newConstructableInstance(int playerId, int floor, int tileId, ConstructableDto constructable, int lifetimeTicks, boolean onHousingTile, ResponseMaps responseMaps) {

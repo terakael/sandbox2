@@ -14,6 +14,13 @@ public class CastNetResponse extends Response {
 		if (ship == null) {
 			setRecoAndResponseText(0, "you need to be onboard to cast the net.");
 			responseMaps.addClientOnlyResponse(player, this);
+			return;
+		}
+		
+		if (!ship.canFish()) {
+			setRecoAndResponseText(0, "the ship has no nets mounted!");
+			responseMaps.addClientOnlyResponse(player, this);
+			return;
 		}
 		
 		setRecoAndResponseText(1, "you cast out the net...");

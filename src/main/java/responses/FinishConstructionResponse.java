@@ -83,22 +83,10 @@ public class FinishConstructionResponse extends Response {
 			}
 			
 			ConstructableManager.add(player.getId(), player.getFloor(), request.getTileId(), constructable, lifetimeTicks, responseMaps);
-			ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
 			TybaltsTaskManager.check(player, new ConstructTaskUpdate(constructable.getResultingSceneryId()), responseMaps);
 			
 			if (constructable.getFlatpackItemId() != 0)
 				ArtisanManager.check(player, constructable.getFlatpackItemId(), responseMaps); // artisan task still counts even if its not a flatpack
-			
-			Map<Integer, Set<Integer>> instances = new HashMap<>();
-			instances.put(constructable.getResultingSceneryId(), Collections.singleton(request.getTileId()));
-			
-			AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
-			inRangeResponse.setInstances(instances);
-			
-			// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
-			inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
-			inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
-			responseMaps.addLocalResponse(player.getFloor(), request.getTileId(), inRangeResponse);
 		} else {
 			// check that we're next to the workbench
 			if (SceneryDao.getSceneryIdByTileId(player.getFloor(), request.getTileId()) != 151 || !PathFinder.isNextTo(player.getFloor(), player.getTileId(), request.getTileId())) {

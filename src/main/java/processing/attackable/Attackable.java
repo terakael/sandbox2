@@ -47,6 +47,8 @@ public abstract class Attackable {
 	public abstract void onAttack(int damage, DamageTypes type, ResponseMaps responseMaps);
 	public abstract void setStatsAndBonuses();
 	public abstract int getExp();
+	public abstract String getType();
+	public abstract int getInstanceId();
 	
 	protected boolean popPath(ResponseMaps responseMaps) {
 		if (path.isEmpty())

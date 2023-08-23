@@ -36,19 +36,7 @@ public class FinishAssembleResponse extends Response {
 			return;
 		
 		ConstructableManager.add(player.getId(), player.getFloor(), req.getTileId(), constructable, constructable.getLifetimeTicks(), responseMaps);
-		ClientResourceManager.addLocalScenery(player, Collections.singleton(constructable.getResultingSceneryId()));
 //		TybaltsTaskManager.check(player, new ConstructTaskUpdate(constructable.getResultingSceneryId()), responseMaps);
-		
-		Map<Integer, Set<Integer>> instances = new HashMap<>();
-		instances.put(constructable.getResultingSceneryId(), Collections.singleton(req.getTileId()));
-		
-		AddSceneryInstancesResponse inRangeResponse = new AddSceneryInstancesResponse();
-		inRangeResponse.setInstances(instances);
-		
-		// whenever we update the scenery the doors/depleted scenery are reset, so we need to reset them.
-		inRangeResponse.setOpenDoors(player.getFloor(), player.getLocalTiles());
-		inRangeResponse.setDepletedScenery(player.getFloor(), player.getLocalTiles());
-		responseMaps.addLocalResponse(player.getFloor(), req.getTileId(), inRangeResponse);
 		
 		PlayerStorageDao.setItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, slot, 0, 0, 0);
 		InventoryUpdateResponse.sendUpdate(player, responseMaps);

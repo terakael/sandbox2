@@ -5,14 +5,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import database.dao.ConstructableDao;
+import database.dto.ConstructableDto;
 import database.dto.ShipDto;
 import processing.attackable.Player;
 import processing.attackable.Ship;
 import responses.ResponseMaps;
+import responses.ShipUiUpdateResponse;
 
 public class ShipManager {
 	private static Map<Integer, Ship> shipsByPlayerId = new HashMap<>();
 	private static Map<Integer, Map<Integer, Ship>> hulls = new HashMap<>(); // floor, tileId, hull
+	private static Map<Integer, Map<Integer, Integer>> hullShipwrecks = new HashMap<>(); // floor, <tileId, remainingticks>
 	
 	public static void addHull(int floor, int tileId, int playerId, ShipDto dto, ResponseMaps responseMaps) {
 		// if a ship or hull already exists with this player, clear it out
@@ -20,6 +24,10 @@ public class ShipManager {
 		if (existingHull != null) {
 			System.out.println("found existing hull, removing");
 			removeHull(existingHull.getFloor(), existingHull.getTileId(), responseMaps);
+			ConstructableManager.destroyConstructableInstanceByTileId(existingHull.getFloor(), existingHull.getTileId(), responseMaps);
+			
+			// add a shipwreck in its place
+			addHullShipwreck(playerId, existingHull.getFloor(), existingHull.getTileId(), responseMaps);
 		}
 		
 		// if there's an existing ship then destroy it
@@ -48,6 +56,34 @@ public class ShipManager {
 			return removedHull;
 		}
 		return null;
+	}
+	
+	public static void addHullShipwreck(int playerId, int floor, int tileId, ResponseMaps responseMaps) {
+		if (hullShipwrecks.containsKey(floor) && hullShipwrecks.get(floor).containsKey(tileId)) {
+			// there's already a shipwreck here, no need to stack them.
+			hullShipwrecks.get(floor).put(tileId, 50); // just reset the existing timer
+			return;
+		}
+		
+		hullShipwrecks.putIfAbsent(floor, new HashMap<>());
+		hullShipwrecks.get(floor).put(tileId, 50);
+		
+		final ConstructableDto shipwreck = ConstructableDao.getConstructableBySceneryId(186);
+		ConstructableManager.add(playerId, floor, tileId, shipwreck, shipwreck.getLifetimeTicks(), responseMaps);
+	}
+	
+	public static void processHullShipwrecks(ResponseMaps responseMaps) {
+		hullShipwrecks.forEach((floor, tileMap) -> {
+			tileMap.replaceAll((tileId, counter) -> --counter);
+			Set<Integer> tileIdsToRemove = tileMap.entrySet().stream()
+				.filter(e -> e.getValue() <= 0)
+				.map(Map.Entry::getKey)
+				.collect(Collectors.toSet());
+			
+			tileIdsToRemove.forEach(tileId -> ConstructableManager.destroyConstructableInstanceByTileId(floor, tileId, responseMaps));
+			
+			tileMap.keySet().removeAll(tileIdsToRemove);
+		});
 	}
 	
 	public static void finishShip(int floor, int tileId, ResponseMaps responseMaps) {		
@@ -100,5 +136,6 @@ public class ShipManager {
 	
 	public static void process(int tick, ResponseMaps responseMaps) {
 		shipsByPlayerId.values().forEach(ship -> ship.process(tick, responseMaps));
+		processHullShipwrecks(responseMaps);
 	}
 }

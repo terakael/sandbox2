@@ -42,6 +42,9 @@ public class NpcUpdateResponse extends Response {
 		case MAGIC:
 			damageSpriteFrameId = 1027;
 			break;
+		case BLOCK:
+			damageSpriteFrameId = 1621;
+			break;
 		}
 	}
 }

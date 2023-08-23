@@ -5,7 +5,8 @@ import lombok.Getter;
 public enum DamageTypes {
 	STANDARD(0),
 	POISON(1),
-	MAGIC(2);
+	MAGIC(2),
+	BLOCK(3);
 	
 	@Getter private int value;
 	DamageTypes(int value) {

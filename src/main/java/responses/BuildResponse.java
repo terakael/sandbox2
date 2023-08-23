@@ -1,6 +1,8 @@
 package responses;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import database.dao.ArtisanToolEquivalentDao;
 import database.dao.ItemDao;
@@ -10,8 +12,8 @@ import database.dao.StatsDao;
 import database.dto.ShipAccessoryDto;
 import processing.PathFinder;
 import processing.attackable.Player;
-import processing.attackable.Ship;
 import processing.attackable.Player.PlayerState;
+import processing.attackable.Ship;
 import processing.managers.ShipManager;
 import requests.BuildRequest;
 import requests.Request;
@@ -71,7 +73,7 @@ public class BuildResponse extends WalkAndDoResponse {
 		if (!ship.hasFreeSlots()) {
 			// we've filled it up so finish the ship
 			ShipManager.finishShip(player.getFloor(), request.getTileId(), responseMaps);
-			ship.getStorage(); // inits storage if not exists
+			ship.onFinishBuilding();
 		}
 		
 		setRecoAndResponseText(1, String.format("you mount the %s to the ship.", accessory.getName()));

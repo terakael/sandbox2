@@ -6,7 +6,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import processing.PathFinder;
+import processing.attackable.Ship;
 import responses.ResponseMaps;
+import responses.ShipUiUpdateResponse;
 
 public class OceanFishingManager {
 	private static Map<Integer, Map<Integer, Integer>> fishedTiles = new HashMap<>(); // floor, <tileId, counter>
@@ -22,15 +24,36 @@ public class OceanFishingManager {
 					.collect(Collectors.toSet());
 				
 				LocationManager.removeOceanFishedTilesIfExist(floor, tileIdsToRemove);
+				
+				tileMap.keySet().stream()
+					.map(tileId -> LocationManager.getLocalShips(floor, tileId, MAX_RADIUS))
+					.flatMap(Set::stream)
+					.filter(Ship::canFish)
+					.forEach(ship -> {
+						ShipUiUpdateResponse.builder()
+							.fishPopulation(ship.getFishPopulationString())
+							.build()
+							.passengerResponse(ship, responseMaps);
+					});
+				
 				tileMap.keySet().removeAll(tileIdsToRemove);
 			});
 		}
 	}
 	
-	public static void increaseTileDifficulty(int floor, int tileId) {
+	public static void increaseTileDifficulty(int floor, int tileId, ResponseMaps responseMaps) {
 		fishedTiles.putIfAbsent(floor, new HashMap<>());
 		fishedTiles.get(floor).merge(tileId, 1, Integer::sum);
 		LocationManager.addOceanFishedTile(floor, tileId);
+		
+		LocationManager.getLocalShips(floor, tileId, MAX_RADIUS).stream()
+			.filter(Ship::canFish)
+			.forEach(ship -> {
+				ShipUiUpdateResponse.builder()
+					.fishPopulation(ship.getFishPopulationString())
+					.build()
+					.passengerResponse(ship, responseMaps);
+			});
 	}
 	
 	public static double getTileDifficulty(int floor, int tileId) {
@@ -43,7 +66,7 @@ public class OceanFishingManager {
 		final Set<Integer> nearTileIds = LocationManager.getLocalFishedTiles(floor, tileId, MAX_RADIUS);
 		return fishedTiles.get(floor).entrySet().stream()
 			.filter(e -> nearTileIds.contains(e.getKey()))
-			.map(e -> (double)(Math.min(e.getValue(), MAX_RADIUS) - PathFinder.calculateDistance(e.getKey(), tileId)) / (double)MAX_RADIUS)
+			.map(e -> Math.max(0, (double)(Math.min(e.getValue(), MAX_RADIUS) - PathFinder.calculateDistance(e.getKey(), tileId)) / (double)MAX_RADIUS))
 			.max(Double::compareTo)
 			.orElse(0.0);
 	}

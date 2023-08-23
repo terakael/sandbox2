@@ -26,7 +26,7 @@ public class PlayerUpdateResponse extends Response {
 	@Setter private Boolean respawn = null;
 	@Setter private String faceDirection = null;
 	@Setter private Boolean doAttack = null;
-	@Setter private Boolean boardedShip = null;
+	@Setter private Integer boardedShipId = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> baseAnimations = null;
 	@Setter private Map<PlayerPartType, PlayerAnimationDto> equipAnimations = null;
 	@Setter private EquipmentTypes weaponType = null;
@@ -59,6 +59,9 @@ public class PlayerUpdateResponse extends Response {
 			break;
 		case MAGIC:
 			damageSpriteFrameId = 1027;
+			break;
+		case BLOCK:
+			damageSpriteFrameId = 1621;
 			break;
 		}
 	}
