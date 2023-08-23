@@ -44,7 +44,6 @@ public class ClientResourceManager {
 	
 	// loaded each tick, sent to the appropriate players, then cleared
 	private static Map<Player, Set<SpriteMapDto>> spriteMaps = new HashMap<>();
-//	private static Map<Player, Set<Integer>> groundTextureSpriteMapIds = new HashMap<>();
 	private static Map<Player, Set<ItemDto>> items = new HashMap<>();
 	private static Map<Player, Set<SpriteFrameDto>> spriteFrames = new HashMap<>();
 	private static Map<Player, Set<SceneryDto>> scenery = new HashMap<>();

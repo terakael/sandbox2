@@ -18,6 +18,7 @@ import database.dao.CatchableDao;
 import database.dao.ChoppableDao;
 import database.dao.ClimbableDao;
 import database.dao.ClockDao;
+import database.dao.ColourPaletteDao;
 import database.dao.ConstructableDao;
 import database.dao.ConsumableDao;
 import database.dao.ContextOptionsDao;
@@ -300,6 +301,9 @@ public class Server {
 		
 		System.out.println("caching banks");
 		BankManager.setupCaches();
+		
+		System.out.println("caching colour palette");
+		ColourPaletteDao.setupCaches();
 		
 		System.out.println("caching client resources");
 		// should be last after all the other caches are set up

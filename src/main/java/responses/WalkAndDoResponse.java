@@ -22,7 +22,7 @@ public abstract class WalkAndDoResponse extends Response {
 	}
 	
 	protected void walkToTarget(Request request, Player player, ResponseMaps responseMaps) {
-		player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), walkingTargetTileId, false));
+		player.setPath(PathFinder.findPath(player.getFloor(), player.getTileId(), target == null ? walkingTargetTileId : target.getTileId(), false));
 	}
 	
 	protected void handleShipPassenger(Request request, Player player, ResponseMaps responseMaps) {

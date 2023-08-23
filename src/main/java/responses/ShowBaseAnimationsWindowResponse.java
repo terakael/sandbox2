@@ -2,9 +2,11 @@ package responses;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import database.dao.BaseAnimationsDao;
+import database.dao.ColourPaletteDao;
 import database.dao.PlayerBaseAnimationsDao;
 import database.dto.PlayerAnimationDto;
 import processing.attackable.Player;
@@ -15,6 +17,7 @@ import types.PlayerPartType;
 public class ShowBaseAnimationsWindowResponse extends Response {
 	private Map<PlayerPartType, PlayerAnimationDto> baseAnimations = null;
 	private Map<PlayerPartType, PlayerAnimationDto> customizableAnimations = null;
+	private List<Integer> palette = null;
 	
 	public ShowBaseAnimationsWindowResponse() {
 		setAction("show_base_animations_window");
@@ -39,6 +42,8 @@ public class ShowBaseAnimationsWindowResponse extends Response {
 		BaseAnimationsDao.getCustomizableParts().forEach(part -> {
 			customizableAnimations.put(part, playerAnimations.containsKey(part) ? playerAnimations.get(part) : dummy);
 		});
+		
+		palette = ColourPaletteDao.getPalette();
 		
 		responseMaps.addClientOnlyResponse(player, this);
 		ClientResourceManager.addAnimationDtos(player, new HashSet<>(playerAnimations.values()));
