@@ -1,0 +1,1 @@
+mysqldump -u root -pppL34kn4g local_schema > data.sql

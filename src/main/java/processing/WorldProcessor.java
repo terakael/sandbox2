@@ -285,7 +285,7 @@ public class WorldProcessor implements Runnable {
 	private void compileLocalResponses(Map<Player, List<Response>> clientResponses, ResponseMaps responseMaps) {
 		for (var localResponseMapByFloor : responseMaps.getLocalResponses().entrySet()) {
 			for (var localResponseMap : localResponseMapByFloor.getValue().entrySet()) {
-				Set<Player> localPlayers = LocationManager.getLocalPlayers(localResponseMapByFloor.getKey(), localResponseMap.getKey(), 15);
+				Set<Player> localPlayers = LocationManager.getLocalPlayers(localResponseMapByFloor.getKey(), localResponseMap.getKey(), 12);
 				for (Player localPlayer : localPlayers) {
 					if (!clientResponses.containsKey(localPlayer))
 						clientResponses.put(localPlayer, new ArrayList<>());
@@ -338,7 +338,7 @@ public class WorldProcessor implements Runnable {
 		Stopwatch.start("updating in-range players");
 		for (var entry : playerSessions.entrySet()) {
 			Set<Integer> currentInRangePlayers = entry.getValue().getInRangePlayers();
-			Set<Integer> newInRangePlayers = LocationManager.getLocalPlayers(entry.getValue().getFloor(), entry.getValue().getTileId(), 15)
+			Set<Integer> newInRangePlayers = LocationManager.getLocalPlayers(entry.getValue().getFloor(), entry.getValue().getTileId(), 12)
 														   .stream()
 														   .filter(player -> ShipManager.getShipWithPlayer(player) == null)
 														   .map(Player::getId)
@@ -398,7 +398,7 @@ public class WorldProcessor implements Runnable {
 	private void updateLocalGroundItems(Player player, ResponseMaps responseMaps) {
 		Stopwatch.start("refresh ground items");
 		Map<Integer, List<Integer>> currentInRangeGroundItems = player.getInRangeGroundItems();
-		Map<Integer, List<Integer>> newInRangeGroundItems = GroundItemManager.getItemIdsNearTile(player.getFloor(), player.getId(), player.getTileId(), 15);
+		Map<Integer, List<Integer>> newInRangeGroundItems = GroundItemManager.getItemIdsNearTile(player.getFloor(), player.getId(), player.getTileId(), 12);
 		
 		Map<Integer, List<Integer>> removedGroundItems = new HashMap<>();
 		for (var currentEntry : currentInRangeGroundItems.entrySet()) {

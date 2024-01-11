@@ -11,8 +11,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import database.dao.ConstructableDao;
 import database.dao.FishingDepthDao;
 import database.dao.ItemDao;
@@ -26,6 +24,7 @@ import lombok.Setter;
 import processing.PathFinder;
 import processing.WorldProcessor;
 import processing.attackable.Player.PlayerState;
+import processing.attackable.bosses.Kraken;
 import processing.managers.ClientResourceManager;
 import processing.managers.DatabaseUpdater;
 import processing.managers.LocationManager;
@@ -358,6 +357,7 @@ public class Ship extends Attackable {
 					
 					if (currentFishingTicks.remove(e.getId(), fishingTicks)) {
 						final int depth = getDepth();
+						new Kraken(floor, tileId);
 						
 						List<Integer> caughtItems = new ArrayList<>();
 						for (int i = 0; i < fishingPoints; ++i) {
@@ -368,10 +368,35 @@ public class Ship extends Attackable {
 								if (RandomUtil.chance((int)(tileDifficulty * 100)))
 									continue;
 								
-								// different fish live in different deepness
-								final List<Pair<Double, Integer>> weightedItems = FishingDepthDao.getWeightedItems(depth);
+								if (depth >= 30) {
+									// small chance of giant squid
+									final boolean nearBabyColossal = OceanFishingManager.isNearBabyColossalTile(floor, tileId);
+									if (RandomUtil.chance(50 + (Boolean.compare(nearBabyColossal, false) * 15))) {
+										int caughtItemId = Items.RAW_GIANT_SQUID.getValue();
+										
+										if (!nearBabyColossal) {
+											// catching a raw giant squid triggers the baby colossal zone
+											OceanFishingManager.addBabyColossalTile(floor, tileId);
+										} else {
+											// we just caught a giant squid while already in the baby colossal zone - small chance it's a baby colossal
+											if (RandomUtil.chance(75)) {
+												OceanFishingManager.removeBabyColossalTile(floor, tileId);
+												caughtItemId = Items.RAW_BABY_COLOSSAL_SQUID.getValue();
+												
+												// caught a baby colossal!  here comes papa
+											}
+										}
+										
+										caughtItems.add(caughtItemId);
+										storage.add(new InventoryItemDto(caughtItemId, 0, 1, 0), 1);
+										OceanFishingManager.increaseTileDifficulty(floor, tileId, responseMaps);
+									}
+									
+									
+								}
 								
-								for (var weightedItem : weightedItems) {
+								// different fish live in different deepness
+								for (var weightedItem : FishingDepthDao.getWeightedItems(depth)) {
 									final int chance = (int)(weightedItem.getLeft() * (100 - depth));
 									if (RandomUtil.chance(chance)) {
 										caughtItems.add(weightedItem.getRight());
@@ -428,6 +453,9 @@ public class Ship extends Attackable {
 		final Double difficulty = getFishPopulation();
 		if (difficulty == null)
 			return "unknown";
+		
+		if (OceanFishingManager.isNearBabyColossalTile(floor, tileId))
+			return "danger";
 		
 		if (difficulty < 0.2)
 			return "lots";
@@ -486,10 +514,10 @@ public class Ship extends Attackable {
 		final InventoryItemDto firstCannonball = storage.getFirstItemOf(cannonballs);
 		final int firstCannonballSpriteFrameId = ItemDao.getItem(firstCannonball.getItemId()).getSpriteFrameId();
 		
-		LocationManager.getLocalPlayers(floor, tileId, 15)
+		LocationManager.getLocalPlayers(floor, tileId, 12)
 			.forEach(localPlayer -> ClientResourceManager.addSpriteFramesAndSpriteMaps(localPlayer, Collections.singleton(firstCannonballSpriteFrameId)));
 		
-		final CastSpellResponse projectile = new CastSpellResponse(tileId, target.getInstanceId(), target.getType(), firstCannonballSpriteFrameId, 0.5);
+		final CastSpellResponse projectile = new CastSpellResponse(tileId, target.getInstanceId(), target.getType(), firstCannonballSpriteFrameId, 0.25, 2);
 		responseMaps.addLocalResponse(floor, tileId, projectile);
 		
 		// TODO hit should take opponent defense into account

@@ -15,6 +15,7 @@ import types.NpcAttributes;
 import utils.Utils;
 
 public class LocationManager {
+	private static final int LOCAL_RADIUS = 12;
 	private static final int SEGMENT_SIZE = 25;
 	private static final int SEGMENTS_PER_ROW = PathFinder.LENGTH / SEGMENT_SIZE;
 	
@@ -29,7 +30,7 @@ public class LocationManager {
 	// TODO scenery, pickables etc should be here too
 	
 	public static NPC getNpcNearPlayerByInstanceId(Player player, int instanceId) {
-		return LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), 12).stream()
+		return LocationManager.getLocalNpcs(player.getFloor(), player.getTileId(), LOCAL_RADIUS).stream()
 				.filter(e -> e.getInstanceId() == instanceId)
 				.findFirst()
 				.orElse(null);
@@ -145,7 +146,7 @@ public class LocationManager {
 	
 	public static void addShip(Ship ship) {
 		// first check if the ship already exists in its current segments
-		final Set<Integer> currentSegments = getLocalSegments(ship.getTileId(), 12);
+		final Set<Integer> currentSegments = getLocalSegments(ship.getTileId(), LOCAL_RADIUS);
 		if (ships.containsKey(ship.getFloor())) {
 			boolean containsCurrentSegments = true;
 			for (int segment : currentSegments) {
@@ -333,7 +334,7 @@ public class LocationManager {
 	
 	public static void addPlayer(Player player) {
 		// first check if the player already exists in its current segments
-		final Set<Integer> currentSegments = getLocalSegments(player.getTileId(), 12);
+		final Set<Integer> currentSegments = getLocalSegments(player.getTileId(), LOCAL_RADIUS);
 		if (players.containsKey(player.getFloor())) {
 			boolean containsCurrentSegments = true;
 			for (int segment : currentSegments) {
@@ -367,7 +368,7 @@ public class LocationManager {
 	
 	public static void addPet(NPC pet) {
 		// first check if the pet already exists in its current segments
-		final Set<Integer> currentSegments = getLocalSegments(pet.getTileId(), 12);
+		final Set<Integer> currentSegments = getLocalSegments(pet.getTileId(), LOCAL_RADIUS);
 		if (pets.containsKey(pet.getFloor())) {
 			boolean containsCurrentSegments = true;
 			for (int segment : currentSegments) {

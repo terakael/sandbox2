@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import database.dao.ItemDao;
 import database.dto.InventoryItemDto;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,7 +46,11 @@ public class Storage {
 	}
 	
 	public void add(InventoryItemDto itemDto, int count) {
-		add(itemDto.getItemId(), count, itemDto.getCharges());
+		if (ItemDao.itemHasAttribute(itemDto.getItemId(), ItemAttributes.STACKABLE)) {
+			addStackable(itemDto, count);
+		} else {
+			add(itemDto.getItemId(), count, itemDto.getCharges());
+		}
 	}
 	
 	public void add(int itemId, int count, int charges) {

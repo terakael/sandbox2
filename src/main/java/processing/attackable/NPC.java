@@ -118,6 +118,30 @@ public class NPC extends Attackable {
 		
 		processPoison(responseMaps);
 		
+		findTarget(responseMaps);
+		
+		
+		
+		if (popPath(responseMaps)) {
+			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
+			updateResponse.setInstanceId(instanceId);
+			updateResponse.setTileId(tileId);
+			responseMaps.addLocalResponse(floor, tileId, updateResponse);
+		}
+		
+		if (target == null) {
+			if (--tickCounter < 0) {
+				Random r = new Random();
+				tickCounter = r.nextInt((maxTickCount - minTickCount) + 1) + minTickCount;
+				
+				setPathToRandomTileInRadius(responseMaps);
+			}
+		} else if (postCombatCooldown <= 0) {
+			handleActiveTarget(responseMaps);
+		}
+	}
+	
+	protected void findTarget(ResponseMaps responseMaps) {
 		if ((dto.getAttributes() & NpcAttributes.AGGRESSIVE.getValue()) == NpcAttributes.AGGRESSIVE.getValue() && !isInCombat()) {
 			// aggressive monster; look for targets
 			if (--huntTimer <= 0) { // technically could use the deltaTick here but who cares, it's not really noticeable.
@@ -160,54 +184,40 @@ public class NPC extends Attackable {
 				huntTimer = MAX_HUNT_TIMER;
 			}
 		}
-		
-		if (popPath(responseMaps)) {
-			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-			updateResponse.setInstanceId(instanceId);
-			updateResponse.setTileId(tileId);
-			responseMaps.addLocalResponse(floor, tileId, updateResponse);
-		}
-		
-		if (target == null) {
-			if (--tickCounter < 0) {
-				Random r = new Random();
-				tickCounter = r.nextInt((maxTickCount - minTickCount) + 1) + minTickCount;
+	}
+	
+	protected void handleActiveTarget(ResponseMaps responseMaps) {
+		// chase the target if not next to it
+		if (!PathFinder.isNextTo(floor, tileId, target.getTileId())) {
+			if (target.getFloor() == floor && PathFinder.tileWithinRadius(target.getTileId(), instanceId, dto.getRoamRadius() + 2)) {
+				path = PathFinder.findPath(floor, tileId, target.getTileId(), true);
+			} else {
+				int retreatTileId = PathFinder.findRetreatTile(target.getTileId(), tileId, instanceId, dto.getRoamRadius());
+				System.out.println("retreating to tile " + retreatTileId + "(retreating from " + target.getTileId() + ", currently at " + tileId + ", anchor=" + instanceId + ", radius = " + dto.getRoamRadius() + ")");
 				
-				setPathToRandomTileInRadius(responseMaps);
+				path = PathFinder.findPath(floor, tileId, retreatTileId, true);
+				target = null;
 			}
-		} else if (postCombatCooldown <= 0) {
-			// chase the target if not next to it
-			if (!PathFinder.isNextTo(floor, tileId, target.getTileId())) {
-				if (target.getFloor() == floor && PathFinder.tileWithinRadius(target.getTileId(), instanceId, dto.getRoamRadius() + 2)) {
-					path = PathFinder.findPath(floor, tileId, target.getTileId(), true);
-				} else {
-					int retreatTileId = PathFinder.findRetreatTile(target.getTileId(), tileId, instanceId, dto.getRoamRadius());
-					System.out.println("retreating to tile " + retreatTileId + "(retreating from " + target.getTileId() + ", currently at " + tileId + ", anchor=" + instanceId + ", radius = " + dto.getRoamRadius() + ")");
-					
+		} else {
+			if (target.isInCombat()) {
+				if (!FightManager.fightingWith(this, target)) {
+					int retreatTileId = PathFinder.findRetreatTile(target.getTileId(), tileId, instanceId, dto.getRoamRadius());						
 					path = PathFinder.findPath(floor, tileId, retreatTileId, true);
 					target = null;
 				}
 			} else {
-				if (target.isInCombat()) {
-					if (!FightManager.fightingWith(this, target)) {
-						int retreatTileId = PathFinder.findRetreatTile(target.getTileId(), tileId, instanceId, dto.getRoamRadius());						
-						path = PathFinder.findPath(floor, tileId, retreatTileId, true);
-						target = null;
-					}
-				} else {
-					Player p = (Player)target;
-					p.setState(PlayerState.fighting);
-					setTileId(p.getTileId());// npc is attacking the player so move to the player's tile
-					p.clearPath();
-					clearPath();
-					FightManager.addFight(p, this, false);
-					
-					PvmStartResponse pvmStart = new PvmStartResponse();
-					pvmStart.setPlayerId(p.getId());
-					pvmStart.setMonsterId(instanceId);
-					pvmStart.setTileId(getTileId());
-					responseMaps.addLocalResponse(p.getFloor(), getTileId(), pvmStart);
-				}
+				Player p = (Player)target;
+				p.setState(PlayerState.fighting);
+				setTileId(p.getTileId());// npc is attacking the player so move to the player's tile
+				p.clearPath();
+				clearPath();
+				FightManager.addFight(p, this, false);
+				
+				PvmStartResponse pvmStart = new PvmStartResponse();
+				pvmStart.setPlayerId(p.getId());
+				pvmStart.setMonsterId(instanceId);
+				pvmStart.setTileId(getTileId());
+				responseMaps.addLocalResponse(p.getFloor(), getTileId(), pvmStart);
 			}
 		}
 	}
@@ -325,18 +335,23 @@ public class NPC extends Attackable {
 	protected void handleRespawn(ResponseMaps responseMaps, int deltaTicks) {
 		deathTimer -= deltaTicks;
 		if (deathTimer <= 0) {
-			deathTimer = 0;
-			currentHp = dto.getHp();
-			tileId = instanceId;
-			
-			NpcUpdateResponse updateResponse = new NpcUpdateResponse();
-			updateResponse.setInstanceId(instanceId);
-			updateResponse.setHp(currentHp);
-			updateResponse.setTileId(tileId);
-			updateResponse.setSnapToTile(true);
-			responseMaps.addLocalResponse(floor, tileId, updateResponse);
+			onRespawn(responseMaps);
 		}
 	}
+	
+	protected void onRespawn(ResponseMaps responseMaps) {
+		deathTimer = 0;
+		currentHp = dto.getHp();
+		tileId = instanceId;
+		
+		NpcUpdateResponse updateResponse = new NpcUpdateResponse();
+		updateResponse.setInstanceId(instanceId);
+		updateResponse.setHp(currentHp);
+		updateResponse.setTileId(tileId);
+		updateResponse.setSnapToTile(true);
+		responseMaps.addLocalResponse(floor, tileId, updateResponse);
+	}
+	
 	
 	public void clearPath() {
 		path.clear();
