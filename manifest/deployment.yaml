@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: danscape-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: danscape-server
+  template:
+    metadata:
+      labels:
+        app: danscape-server
+    spec:
+      containers:
+      - name: danscape-server
+        image: docker.io/terakael/rdyrgm:20250403_19
+        ports:
+        - containerPort: 45555
+          name: ws-main
+        - containerPort: 45556
+          name: ws-resource
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"

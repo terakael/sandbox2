@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: danscape
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: danscape-server-service
+            port:
+              name: http-ws-main
+        path: /game
+        pathType: Prefix
+      - backend:
+          service:
+            name: danscape-server-service
+            port:
+              name: http-ws-res
+        path: /resources
+        pathType: Prefix
+      - backend:
+          service:
+            name: danscape-frontend-service
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - danscape

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: danscape-server-service
+spec:
+  type: ClusterIP
+  selector:
+    app: danscape-server
+  ports:
+  - name: http-ws-main
+    protocol: TCP
+    port: 45555
+    targetPort: ws-main
+  - name: http-ws-res
+    protocol: TCP
+    port: 45556
+    targetPort: ws-resource
