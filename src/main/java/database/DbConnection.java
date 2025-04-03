@@ -14,16 +14,16 @@ public class DbConnection {
 	private static final BasicDataSource dataSource = new BasicDataSource();
 	static {
 		dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
-		dataSource.setUrl("jdbc:mysql://localhost:3306/local_schema?autoReconnect=true&useSSL=false");
-		dataSource.setUsername("root");
-		dataSource.setPassword("ppL34kn4g");
+		dataSource.setUrl("jdbc:mysql://pc.bearded-quail.ts.net:3306/local_schema?autoReconnect=true");
+		dataSource.setUsername("danscape");
+		dataSource.setPassword("danscape");
 		System.out.println("datasource set");
 	}
-	
+
 	private DbConnection() {
 		//
 	}
-	
+
 	public static Connection get() {
 		try {
 			return dataSource.getConnection();
@@ -32,12 +32,11 @@ public class DbConnection {
 			return null;
 		}
 	}
-	
+
 	public static void load(String query, ThrowingConsumer<ResultSet, SQLException> fn) {
 		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
+				Connection connection = DbConnection.get();
+				PreparedStatement ps = connection.prepareStatement(query);) {
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
 					fn.accept(rs);
@@ -46,15 +45,14 @@ public class DbConnection {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void load(String query, ThrowingConsumer<ResultSet, SQLException> fn, Integer... params) {
 		try (
-			Connection connection = DbConnection.get();
-			PreparedStatement ps = connection.prepareStatement(query);
-		) {
+				Connection connection = DbConnection.get();
+				PreparedStatement ps = connection.prepareStatement(query);) {
 			for (int i = 0; i < params.length; ++i)
 				ps.setInt(i + 1, params[i]);
-			
+
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next())
 					fn.accept(rs);

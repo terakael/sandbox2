@@ -29,7 +29,7 @@ public abstract class Attackable {
 	@Getter protected Attackable lastTarget = null;// record the last person to attack in the case we die of poison (and therefore have no current target)
 	
 	@Setter protected int maxCooldown = 5;
-	@Setter @Getter protected int cooldown = maxCooldown;
+	@Setter @Getter protected int cooldown = 0;
 	
 	private int poisonDamage = 0;// decreases by one each time it hits, until it hits zero.
 	
@@ -79,9 +79,10 @@ public abstract class Attackable {
 	}
 	
 	public boolean readyToHit() {
-		if (cooldown == 0)
-			return true;
-		return --cooldown == 0;
+		return cooldown == 0;
+		// if (cooldown == 0)
+			// return true;
+		// return --cooldown == 0;
 	}
 	
 	public int hit(Attackable target, ResponseMaps responseMaps) {
@@ -171,5 +172,9 @@ public abstract class Attackable {
 	
 	protected int postBlockChanceModifications(int blockChance) {
 		return blockChance;
+	}
+	public void process(ResponseMaps responseMaps) {
+		if (cooldown > 0)
+			--cooldown;
 	}
 }

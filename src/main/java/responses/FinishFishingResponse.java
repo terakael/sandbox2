@@ -26,7 +26,7 @@ import types.StorageTypes;
 import utils.RandomUtil;
 
 public class FinishFishingResponse extends Response {
-	
+
 	public FinishFishingResponse() {
 		setAction("finish_fishing");
 	}
@@ -35,28 +35,32 @@ public class FinishFishingResponse extends Response {
 	public void process(Request req, Player player, ResponseMaps responseMaps) {
 		if (!(req instanceof FishRequest))
 			return;
-		
-		FishRequest request = (FishRequest)req;
-		FishableDto fishable = FishableDao.getFishableDtoByTileId(request.getTileId());
+
+		FishRequest request = (FishRequest) req;
+		FishableDto fishable = FishableDao.getFishableDtoByTileId(player.getFloor(), request.getTileId());
 		if (fishable == null) {
 			FishResponse fishResponse = new FishResponse();
 			fishResponse.setRecoAndResponseText(0, "you can't fish that.");
 			responseMaps.addClientOnlyResponse(player, fishResponse);
 			return;
 		}
-		
+
 		// sometimes scenery only appears at night or day
-		final boolean isDiurnal = SceneryDao.sceneryContainsAttribute(fishable.getSceneryId(), SceneryAttributes.DIURNAL);
-		final boolean isNocturnal = SceneryDao.sceneryContainsAttribute(fishable.getSceneryId(), SceneryAttributes.NOCTURNAL);
+		final boolean isDiurnal = SceneryDao.sceneryContainsAttribute(fishable.getSceneryId(),
+				SceneryAttributes.DIURNAL);
+		final boolean isNocturnal = SceneryDao.sceneryContainsAttribute(fishable.getSceneryId(),
+				SceneryAttributes.NOCTURNAL);
 		if ((TimeManager.isDaytime() && !isDiurnal) || (!TimeManager.isDaytime() && !isNocturnal))
 			return;
-		
-		final List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(), StorageTypes.INVENTORY);
-		
-		if (fishable.getBaitId() != 0) {			
+
+		final List<Integer> invItemIds = PlayerStorageDao.getStorageListByPlayerId(player.getId(),
+				StorageTypes.INVENTORY);
+
+		if (fishable.getBaitId() != 0) {
 			final int baitSlot = invItemIds.indexOf(fishable.getBaitId());
 			if (baitSlot == -1) {
-				// enhanced fishing rod is a charged item that requires no bait; it uses a charge instead.
+				// enhanced fishing rod is a charged item that requires no bait; it uses a
+				// charge instead.
 				// however, if bait is supplied, use it first without consuming a charge.
 				final int enhancedFishingRodSlot = invItemIds.indexOf(Items.ENHANCED_FISHING_ROD.getValue());
 				if (enhancedFishingRodSlot != -1) {
@@ -65,45 +69,50 @@ public class FinishFishingResponse extends Response {
 					return; // no bait, no enhanced fishing rod, no fish bitch
 				}
 			} else {
-				int remainingBait = PlayerStorageDao.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, baitSlot).getCount();
+				int remainingBait = PlayerStorageDao
+						.getStorageItemFromPlayerIdAndSlot(player.getId(), StorageTypes.INVENTORY, baitSlot).getCount();
 				PlayerStorageDao.setCountOnSlot(player.getId(), StorageTypes.INVENTORY, baitSlot, remainingBait - 1);
 			}
 		}
-		
+
 		final int scorchTippedSpearIndex = invItemIds.indexOf(Items.SCORCH_TIPPED_FISHING_SPEAR.getValue());
-		if (scorchTippedSpearIndex != -1) // a charge is used for every fish caught, regardless of if we proc or not.
+		if (scorchTippedSpearIndex != -1) { // a charge is used for every fish caught, regardless of if we proc or not.
 			PlayerStorageDao.reduceCharge(player.getId(), scorchTippedSpearIndex, 1);
-		
-		if (scorchTippedSpearIndex != 0 && RandomUtil.chance(20)) {
-			// if we have a scorch-tipped fishing spear, then use it
-			CookableDto cookable = CookableDao.getCookable(fishable.getItemId());
-			if (cookable != null) {
-				PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, cookable.getCookedItemId(), 1, ItemDao.getMaxCharges(cookable.getCookedItemId()));
-				
-				AddExpRequest cookExpReq = new AddExpRequest();
-				cookExpReq.setStatId(Stats.COOKING.getValue());
-				cookExpReq.setExp(cookable.getExp());
-				new AddExpResponse().process(cookExpReq, player, responseMaps);
+			if (RandomUtil.chance(20)) {
+				// if we have a scorch-tipped fishing spear, then use it
+				CookableDto cookable = CookableDao.getCookable(fishable.getItemId());
+				if (cookable != null) {
+					PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY,
+							cookable.getCookedItemId(), 1, ItemDao.getMaxCharges(cookable.getCookedItemId()));
+
+					AddExpRequest cookExpReq = new AddExpRequest();
+					cookExpReq.setStatId(Stats.COOKING.getValue());
+					cookExpReq.setExp(cookable.getExp());
+					new AddExpResponse().process(cookExpReq, player, responseMaps);
+				}
 			}
 		} else {
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, fishable.getItemId(), 1, ItemDao.getMaxCharges(fishable.getItemId()));
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, fishable.getItemId(), 1,
+					ItemDao.getMaxCharges(fishable.getItemId()));
 		}
-		
+
 		// 20% chance to catch a double fish if near a fishing totem pole
-		if (ConstructableManager.constructableIsInRadius(player.getFloor(), player.getTileId(), 137, 3) && RandomUtil.chance(20)) {
-			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, fishable.getItemId(), 1, ItemDao.getMaxCharges(fishable.getItemId()));
+		if (ConstructableManager.constructableIsInRadius(player.getFloor(), player.getTileId(), 137, 3)
+				&& RandomUtil.chance(20)) {
+			PlayerStorageDao.addItemToFirstFreeSlot(player.getId(), StorageTypes.INVENTORY, fishable.getItemId(), 1,
+					ItemDao.getMaxCharges(fishable.getItemId()));
 		}
-		
+
 		AddExpRequest addExpReq = new AddExpRequest();
 		addExpReq.setStatId(Stats.FISHING.getValue());
 		addExpReq.setExp(fishable.getExp());
-		
+
 		new AddExpResponse().process(addExpReq, player, responseMaps);
 		new InventoryUpdateResponse().process(RequestFactory.create("dummy", player.getId()), player, responseMaps);
-		
+
 		setResponseText(String.format("you catch some %s.", ItemDao.getNameFromId(fishable.getItemId(), false)));
 		responseMaps.addClientOnlyResponse(player, this);
-		
+
 		TybaltsTaskManager.check(player, new FishTaskUpdate(fishable.getItemId()), responseMaps);
 		ArtisanManager.check(player, fishable.getItemId(), responseMaps);
 	}

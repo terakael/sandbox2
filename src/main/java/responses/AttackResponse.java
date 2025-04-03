@@ -14,7 +14,7 @@ import types.NpcAttributes;
 
 public class AttackResponse extends WalkAndDoResponse {
 	private transient Ship ship = null;
-	
+
 	public AttackResponse() {
 		setCombatLockedMessage("you're already fighting!");
 		setCombatInterrupt(false); // even after the combat lock expires, don't allow hopping to a new fight
@@ -22,44 +22,54 @@ public class AttackResponse extends WalkAndDoResponse {
 
 	@Override
 	protected boolean setTarget(Request req, Player player, ResponseMaps responseMaps) {
-		final AttackRequest request = (AttackRequest)req;
+		final AttackRequest request = (AttackRequest) req;
 		switch (request.getType()) {
-		case "npc": {
-			target = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
-			if (target == null || !NPCDao.npcHasAttribute(((NPC)target).getId(), NpcAttributes.ATTACKABLE)) {
-				setRecoAndResponseText(0, "you can't attack that.");
-				responseMaps.addClientOnlyResponse(player, this);
-				return false;
+			case "npc": {
+				target = LocationManager.getNpcNearPlayerByInstanceId(player, request.getObjectId());
+				if (target == null || !NPCDao.npcHasAttribute(((NPC) target).getId(), NpcAttributes.ATTACKABLE)) {
+					setRecoAndResponseText(0, "you can't attack that.");
+					responseMaps.addClientOnlyResponse(player, this);
+					return false;
+				}
+				break;
 			}
-			break;
+			case "ship": {
+				target = ShipManager.getShipByCaptainId(request.getObjectId());
+				if (target == null)
+					return false;
+				break;
+			}
 		}
-		case "ship": {
-			target = ShipManager.getShipByCaptainId(request.getObjectId());
-			if (target == null)
-				return false;
-			break;
-		}
-		}
-		
-		// i think any player aboard can fire the cannons?  good for co-op
+
+		// i think any player aboard can fire the cannons? good for co-op
 		ship = ShipManager.getShipWithPlayer(player);
-		
+
 		return true;
 	}
-	
+
 	@Override
 	protected boolean nextToTarget(Request request, Player player, ResponseMaps responseMaps) {
-		// if we're attacking from a ship, the ship won't move automatically towards the target.
+		// if we're attacking from a ship, the ship won't move automatically towards the
+		// target.
 		// the captain needs to manually get as close as possible and then someone will
-		// need to attack the target.  Closer to the target, more accurate the cannon.
+		// need to attack the target. Closer to the target, more accurate the cannon.
 		// however if they're on the same tile then move the ship away a bit
 		if (ship != null && ship.getTileId() != target.getTileId())
 			return true;
+
+		if (player.getCooldown() > 0) {
+			// if the player has just killed something and is already next to the next
+			// target,
+			// they need to wait for their cooldown to wear off first,
+			// so they can't just insta-hit everything around them
+			return false;
+		}
+
 		return super.nextToTarget(request, player, responseMaps);
 	}
 
 	@Override
-	protected void doAction(Request request, Player player, ResponseMaps responseMaps) {		
+	protected void doAction(Request request, Player player, ResponseMaps responseMaps) {
 		if (ship != null) {
 			final String res = ship.verifyFireCannon(target);
 			if (!res.isEmpty()) {
@@ -67,32 +77,33 @@ public class AttackResponse extends WalkAndDoResponse {
 				responseMaps.addClientOnlyResponse(player, this);
 				return;
 			}
-			
+
 			ship.setTarget(target);
 			player.setState(PlayerState.charging_cannon);
-			
+
 			setRecoAndResponseText(0, "you start loading the cannon...");
 			responseMaps.addClientOnlyResponse(player, this);
-			
+
 			return;
 		}
-		
-		NPC npc = (NPC)target;
-		
+
+		NPC npc = (NPC) target;
+		if (npc.isDead()) {
+			return;
+		}
+
 		if (FightManager.fightWithFighterExists(npc)) {
 			setRecoAndResponseText(0, "someone is already fighting that.");
 			responseMaps.addClientOnlyResponse(player, this);
 			return;
 		}
-		
-		
-		
+
 		player.setState(PlayerState.fighting);
 		player.setTileId(npc.getTileId());
 		npc.clearPath();
 		player.clearPath();
 		FightManager.addFight(player, npc, true);
-		
+
 		PvmStartResponse pvmStart = new PvmStartResponse();
 		pvmStart.setPlayerId(player.getId());
 		pvmStart.setMonsterId(npc.getInstanceId());
